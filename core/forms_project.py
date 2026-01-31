@@ -1,5 +1,5 @@
 from django import forms
-from .models import Project, Document, Request, Partner, Event, Direction, Budget, Employee, Milestone, ProjectFolder, ProjectDocument, ProjectMember, ProjectNeed
+from .models import Project, Document, Request, Partner, Event, Direction, Budget, Employee, Milestone, ProjectFolder, ProjectDocument, ProjectMember, ProjectNeed, ProjectComment
 
 
 class ProjectForm(forms.ModelForm):
@@ -122,6 +122,21 @@ class ProjectNeedForm(forms.ModelForm):
         fields = ['title', 'description', 'priority']
         widgets = {
             'description': forms.Textarea(attrs={'rows': 3}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
+
+
+class ProjectCommentForm(forms.ModelForm):
+    """Formulaire pour les commentaires de projet"""
+    class Meta:
+        model = ProjectComment
+        fields = ['message']
+        widgets = {
+            'message': forms.Textarea(attrs={'rows': 3}),
         }
 
     def __init__(self, *args, **kwargs):

@@ -14,7 +14,7 @@ from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
 from reportlab.pdfgen import canvas
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
-from .models import Direction, Project, Document, Partner, Event, Request, Employee, Budget, UserProfile, UserActivity, ProjectMember, Milestone, ProjectNeed
+from .models import Direction, Project, Document, Partner, Event, Request, Employee, Budget, UserProfile, UserActivity, ProjectMember, Milestone, ProjectNeed, ProjectComment
 
 
 def login_view(request):
@@ -864,7 +864,7 @@ def get_client_ip(request):
 def project_detail(request, project_id):
     """Détail d'un projet"""
     project = get_object_or_404(
-        Project.objects.select_related('direction').prefetch_related('milestones', 'needs'),
+        Project.objects.select_related('direction').prefetch_related('milestones', 'needs', 'comments'),
         pk=project_id,
     )
 
@@ -894,6 +894,7 @@ def project_detail(request, project_id):
         'project': project,
         'milestones': project.milestones.all(),
         'needs': project.needs.all(),
+        'comments': project.comments.all(),
     }
     return render(request, 'core/project_detail.html', context)
 
@@ -931,6 +932,43 @@ def project_need_create(request, project_id):
         messages.success(request, "Besoin ajouté avec succès.")
     else:
         messages.error(request, "Impossible d'ajouter le besoin. Vérifiez le formulaire.")
+
+    return redirect('core:project_detail', project_id=project.id)
+
+
+@login_required
+def project_comment_create(request, project_id):
+    """Créer un commentaire sur un projet"""
+    from .forms_project import ProjectCommentForm
+
+    project = get_object_or_404(Project, pk=project_id)
+
+    # Permission check (mêmes règles que jalons / besoins)
+    if not (request.user.profile.is_directeur_general() or request.user.is_staff):
+        if request.user.profile.is_directeur():
+            if project.direction != request.user.profile.direction:
+                messages.error(request, "Vous n'avez pas accès à ce projet.")
+                return redirect('core:projects')
+        else:
+            user_name = request.user.get_full_name() or request.user.username
+            is_manager = project.manager and user_name in project.manager
+            is_member = project.members.filter(employee__name=user_name).exists()
+            if not (is_manager or is_member):
+                messages.error(request, "Vous n'avez pas accès à ce projet.")
+                return redirect('core:projects')
+
+    if request.method != 'POST':
+        return redirect('core:project_detail', project_id=project.id)
+
+    form = ProjectCommentForm(request.POST)
+    if form.is_valid():
+        comment = form.save(commit=False)
+        comment.project = project
+        comment.created_by = request.user.get_full_name() or request.user.username
+        comment.save()
+        messages.success(request, "Commentaire ajouté.")
+    else:
+        messages.error(request, "Impossible d'ajouter le commentaire. Vérifiez le formulaire.")
 
     return redirect('core:project_detail', project_id=project.id)
 

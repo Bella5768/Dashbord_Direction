@@ -219,6 +219,21 @@ class ProjectNeed(models.Model):
         return f"{self.project.name} - {self.title}"
 
 
+class ProjectComment(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='comments', verbose_name="Projet")
+    message = models.TextField(verbose_name="Commentaire")
+    created_by = models.CharField(max_length=100, verbose_name="Créé par")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Commentaire de projet"
+        verbose_name_plural = "Commentaires de projet"
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"{self.project.name} - {self.created_by}"
+
+
 @receiver(post_save, sender=Milestone)
 def update_project_progress_on_milestone_save(sender, instance, **kwargs):
     instance.project.recalculate_progress(save=True)

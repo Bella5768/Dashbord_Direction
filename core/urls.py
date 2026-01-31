@@ -32,6 +32,7 @@ urlpatterns = [
     # Project CRUD
     path('projets/<int:project_id>/', views.project_detail, name='project_detail'),
     path('projets/<int:project_id>/besoins/nouveau/', views.project_need_create, name='project_need_create'),
+    path('projets/<int:project_id>/commentaires/nouveau/', views.project_comment_create, name='project_comment_create'),
     path('projets/nouveau/', views.project_create, name='project_create'),
     path('projets/<int:project_id>/modifier/', views.project_edit, name='project_edit'),
     path('projets/<int:project_id>/supprimer/', views.project_delete, name='project_delete'),
