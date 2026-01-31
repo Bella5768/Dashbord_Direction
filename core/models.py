@@ -18,10 +18,17 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='visiteur', verbose_name="Rôle")
     direction = models.ForeignKey('Direction', on_delete=models.SET_NULL, null=True, blank=True, 
-                                   related_name='users', verbose_name="Direction")
+                                  related_name='users', verbose_name="Direction")
+    employee = models.ForeignKey('Employee', on_delete=models.SET_NULL, null=True, blank=True,
+                                 related_name='user_profiles', verbose_name="Employé")
     phone = models.CharField(max_length=20, blank=True, verbose_name="Téléphone")
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True, verbose_name="Photo")
     is_active_profile = models.BooleanField(default=True, verbose_name="Profil actif")
+
+    budget_view = models.BooleanField(default=False, verbose_name="Peut voir les budgets")
+    budget_manage = models.BooleanField(default=False, verbose_name="Peut gérer les budgets")
+    budget_view_all_directions = models.BooleanField(default=False, verbose_name="Peut voir les budgets de toutes les directions")
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -54,7 +61,13 @@ class UserProfile(models.Model):
         return self.role in ['admin', 'directeur_general']
     
     def can_manage_budgets(self):
-        return self.role in ['admin', 'directeur_general', 'directeur']
+        return self.role in ['admin', 'directeur_general', 'directeur'] or self.budget_manage
+
+    def can_view_budgets(self):
+        return self.can_manage_budgets() or self.budget_view
+
+    def can_view_all_budget_directions(self):
+        return self.is_directeur() or self.budget_view_all_directions
     
     def can_approve_documents(self):
         return self.role in ['admin', 'directeur_general', 'directeur']

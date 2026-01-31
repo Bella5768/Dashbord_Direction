@@ -84,6 +84,38 @@
                         </select>
                     </div>
                 </div>
+
+                <div class="grid grid-2" style="gap: 16px; margin-bottom: 24px;">
+                    <div class="form-group">
+                        <label for="id_employee">Employé</label>
+                        <select name="employee" id="id_employee" class="form-control">
+                            <option value="">-- Aucun employé --</option>
+                            {% for emp in form.employee.field.queryset %}
+                            <option value="{{ emp.id }}" {% if form.employee.value|stringformat:"s" == emp.id|stringformat:"s" %}selected{% endif %}>{{ emp.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div></div>
+                </div>
+
+                <div class="grid grid-2" style="gap: 16px; margin-bottom: 24px;">
+                    <div class="form-group">
+                        <label style="display: block; margin-bottom: 8px;">Permissions budgets</label>
+                        <label class="remember-me" style="cursor: pointer; display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+                            <input type="checkbox" name="budget_view" {% if form.budget_view.value %}checked{% endif %}>
+                            <span>Peut voir les budgets</span>
+                        </label>
+                        <label class="remember-me" style="cursor: pointer; display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+                            <input type="checkbox" name="budget_manage" {% if form.budget_manage.value %}checked{% endif %}>
+                            <span>Peut gérer les budgets (créer / modifier / supprimer)</span>
+                        </label>
+                        <label class="remember-me" style="cursor: pointer; display: flex; gap: 8px; align-items: center;">
+                            <input type="checkbox" name="budget_view_all_directions" {% if form.budget_view_all_directions.value %}checked{% endif %}>
+                            <span>Peut voir les budgets de toutes les directions</span>
+                        </label>
+                    </div>
+                    <div></div>
+                </div>
                 
                 <div class="grid grid-2" style="gap: 16px; margin-bottom: 24px;">
                     <div class="form-group">

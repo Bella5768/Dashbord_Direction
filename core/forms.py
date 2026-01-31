@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
-from .models import UserProfile, Direction
+from .models import UserProfile, Direction, Employee
 
 
 class UserCreateForm(UserCreationForm):
@@ -17,6 +17,15 @@ class UserCreateForm(UserCreationForm):
         label="Direction",
         empty_label="-- Aucune direction --"
     )
+    employee = forms.ModelChoiceField(
+        queryset=Employee.objects.all(),
+        required=False,
+        label="Employé",
+        empty_label="-- Aucun employé --"
+    )
+    budget_view = forms.BooleanField(required=False, label="Peut voir les budgets")
+    budget_manage = forms.BooleanField(required=False, label="Peut gérer les budgets")
+    budget_view_all_directions = forms.BooleanField(required=False, label="Peut voir les budgets de toutes les directions")
     phone = forms.CharField(max_length=20, required=False, label="Téléphone")
     
     class Meta:
@@ -44,6 +53,10 @@ class UserCreateForm(UserCreationForm):
             profile, created = UserProfile.objects.get_or_create(user=user)
             profile.role = self.cleaned_data['role']
             profile.direction = self.cleaned_data.get('direction')
+            profile.employee = self.cleaned_data.get('employee')
+            profile.budget_view = self.cleaned_data.get('budget_view', False)
+            profile.budget_manage = self.cleaned_data.get('budget_manage', False)
+            profile.budget_view_all_directions = self.cleaned_data.get('budget_view_all_directions', False)
             profile.phone = self.cleaned_data.get('phone', '')
             profile.save()
         
@@ -64,6 +77,15 @@ class UserUpdateForm(forms.ModelForm):
         label="Direction",
         empty_label="-- Aucune direction --"
     )
+    employee = forms.ModelChoiceField(
+        queryset=Employee.objects.all(),
+        required=False,
+        label="Employé",
+        empty_label="-- Aucun employé --"
+    )
+    budget_view = forms.BooleanField(required=False, label="Peut voir les budgets")
+    budget_manage = forms.BooleanField(required=False, label="Peut gérer les budgets")
+    budget_view_all_directions = forms.BooleanField(required=False, label="Peut voir les budgets de toutes les directions")
     phone = forms.CharField(max_length=20, required=False, label="Téléphone")
     
     class Meta:
@@ -80,6 +102,10 @@ class UserUpdateForm(forms.ModelForm):
         if self.instance and hasattr(self.instance, 'profile'):
             self.fields['role'].initial = self.instance.profile.role
             self.fields['direction'].initial = self.instance.profile.direction
+            self.fields['employee'].initial = self.instance.profile.employee
+            self.fields['budget_view'].initial = self.instance.profile.budget_view
+            self.fields['budget_manage'].initial = self.instance.profile.budget_manage
+            self.fields['budget_view_all_directions'].initial = self.instance.profile.budget_view_all_directions
             self.fields['phone'].initial = self.instance.profile.phone
     
     def save(self, commit=True):
@@ -91,6 +117,10 @@ class UserUpdateForm(forms.ModelForm):
             profile = user.profile
             profile.role = self.cleaned_data['role']
             profile.direction = self.cleaned_data.get('direction')
+            profile.employee = self.cleaned_data.get('employee')
+            profile.budget_view = self.cleaned_data.get('budget_view', False)
+            profile.budget_manage = self.cleaned_data.get('budget_manage', False)
+            profile.budget_view_all_directions = self.cleaned_data.get('budget_view_all_directions', False)
             profile.phone = self.cleaned_data.get('phone', '')
             profile.save()
         

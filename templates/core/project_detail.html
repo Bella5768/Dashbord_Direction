@@ -233,12 +233,14 @@
     <div class="card" style="grid-column: span 3;">
         <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
             <h3 class="card-title">Membres</h3>
+            {% if can_manage_members %}
             <a href="{% url 'core:project_member_add' project.id %}" class="btn btn-primary btn-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
                 Ajouter un membre
             </a>
+            {% endif %}
         </div>
         <div class="card-content">
             {% with members=project.members.all %}
@@ -257,6 +259,7 @@
                             </div>
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <span class="badge {% if member.role == 'manager' %}badge-danger{% elif member.role == 'member' %}badge-info{% else %}badge-secondary{% endif %}">{{ member.get_role_display }}</span>
+                                {% if can_manage_members %}
                                 <div class="flex gap-1">
                                     <a href="{% url 'core:project_member_edit' member.id %}" class="action-btn" title="Modifier le rôle">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
@@ -269,6 +272,7 @@
                                         </svg>
                                     </a>
                                 </div>
+                                {% endif %}
                             </div>
                         </div>
                         {% endfor %}
@@ -280,7 +284,9 @@
                         </svg>
                         <p class="text-gray-500">Aucun membre dans ce projet.</p>
                         <div style="margin-top: 16px;">
+                            {% if can_manage_members %}
                             <a href="{% url 'core:project_member_add' project.id %}" class="btn btn-primary btn-sm">Ajouter un membre</a>
+                            {% endif %}
                         </div>
                     </div>
                 {% endif %}

@@ -71,14 +71,19 @@
 <div class="card">
     <div class="card-header">
         <h3 class="card-title">Détail des budgets par direction</h3>
+        {% if can_manage_budgets %}
         <a href="{% url 'core:budget_create' %}" class="btn btn-primary btn-sm">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
             Affecter un budget
         </a>
+        {% endif %}
     </div>
     <div class="card-content">
+        {% if not can_view_budgets %}
+            <p class="text-gray-500">Vous n'avez pas les permissions pour voir les budgets.</p>
+        {% else %}
         <div class="table-container">
             <table>
                 <thead>
@@ -121,6 +126,7 @@
                             </span>
                         </td>
                         <td style="text-align: center;">
+                            {% if can_manage_budgets %}
                             <div class="flex gap-2 justify-center">
                                 <a href="{% url 'core:budget_edit' budget.id %}" class="action-btn" title="Modifier">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
@@ -133,12 +139,14 @@
                                     </svg>
                                 </a>
                             </div>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+        {% endif %}
     </div>
 </div>
 

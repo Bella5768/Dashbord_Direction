@@ -139,12 +139,15 @@ def projects(request):
         
         # Récupérer le nom de l'utilisateur
         user_name = request.user.get_full_name() or request.user.username
+        employee_id = getattr(request.user.profile, 'employee_id', None)
         
         # Projets où l'utilisateur est manager (champ texte) OU membre (table ProjectMember)
-        projects_qs = projects_qs.filter(
-            Q(manager__icontains=user_name) | 
-            Q(members__employee__name=user_name)
-        ).distinct()
+        member_q = (
+            Q(members__employee_id=employee_id)
+            if employee_id
+            else Q(members__employee__name__iexact=user_name) | Q(members__employee__name__icontains=request.user.username)
+        )
+        projects_qs = projects_qs.filter(Q(manager__icontains=user_name) | member_q).distinct()
     
     if status_filter != 'all':
         projects_qs = projects_qs.filter(status=status_filter)
@@ -168,12 +171,15 @@ def projects(request):
         
         # Récupérer le nom de l'utilisateur
         user_name = request.user.get_full_name() or request.user.username
+        employee_id = getattr(request.user.profile, 'employee_id', None)
         
         # Projets où l'utilisateur est manager (champ texte) OU membre (table ProjectMember)
-        base_qs = Project.objects.filter(
-            Q(manager__icontains=user_name) | 
-            Q(members__employee__name=user_name)
-        ).distinct()
+        member_q = (
+            Q(members__employee_id=employee_id)
+            if employee_id
+            else Q(members__employee__name__iexact=user_name) | Q(members__employee__name__icontains=request.user.username)
+        )
+        base_qs = Project.objects.filter(Q(manager__icontains=user_name) | member_q).distinct()
     stats = {
         'total': base_qs.count(),
         'en_cours': base_qs.filter(status='en_cours').count(),
@@ -198,7 +204,17 @@ def resources(request):
     tab = request.GET.get('tab', 'budget')
     
     # Budget data
-    budgets = Budget.objects.select_related('direction').all()
+    can_view_budgets = request.user.profile.can_view_budgets()
+    can_manage_budgets = request.user.profile.can_manage_budgets()
+    can_view_all_budget_directions = request.user.profile.can_view_all_budget_directions()
+
+    budgets = Budget.objects.select_related('direction')
+    if not can_view_budgets:
+        budgets = budgets.none()
+    elif not can_view_all_budget_directions:
+        budgets = budgets.filter(direction=request.user.profile.direction)
+
+    budgets = budgets.all()
     total_allocated = budgets.aggregate(total=Sum('allocated'))['total'] or 0
     total_consumed = budgets.aggregate(total=Sum('consumed'))['total'] or 0
     
@@ -216,6 +232,9 @@ def resources(request):
         'total_consumed': total_consumed,
         'total_available': total_allocated - total_consumed,
         'consumption_rate': round((float(total_consumed) / float(total_allocated) * 100), 1) if total_allocated > 0 else 0,
+        'can_view_budgets': can_view_budgets,
+        'can_manage_budgets': can_manage_budgets,
+        'can_view_all_budget_directions': can_view_all_budget_directions,
         'employees': employees,
         'avg_workload': round(avg_workload),
         'overloaded': overloaded,
@@ -868,6 +887,10 @@ def project_detail(request, project_id):
         pk=project_id,
     )
 
+    employee_id = getattr(request.user.profile, 'employee_id', None)
+    is_lead = bool(employee_id and project.members.filter(employee_id=employee_id, role='manager').exists())
+    can_manage_members = bool((request.user.profile.is_directeur_general() or request.user.is_staff) or is_lead)
+
     # Permission check
     if not (request.user.profile.is_directeur_general() or request.user.is_staff):
         if request.user.profile.is_directeur():
@@ -881,10 +904,17 @@ def project_detail(request, project_id):
             
             # Récupérer le nom de l'utilisateur
             user_name = request.user.get_full_name() or request.user.username
+            employee_id = getattr(request.user.profile, 'employee_id', None)
             
             # Vérifier si l'utilisateur est manager OU membre du projet
             is_manager = project.manager and user_name in project.manager
-            is_member = project.members.filter(employee__name=user_name).exists()
+            if employee_id:
+                is_member = project.members.filter(employee_id=employee_id).exists()
+            else:
+                is_member = (
+                    project.members.filter(employee__name__iexact=user_name).exists() or
+                    project.members.filter(employee__name__icontains=request.user.username).exists()
+                )
             
             if not (is_manager or is_member):
                 messages.error(request, "Vous n'avez pas accès à ce projet.")
@@ -895,6 +925,7 @@ def project_detail(request, project_id):
         'milestones': project.milestones.all(),
         'needs': project.needs.all(),
         'comments': project.comments.all(),
+        'can_manage_members': can_manage_members,
     }
     return render(request, 'core/project_detail.html', context)
 
@@ -1411,6 +1442,13 @@ def project_member_add(request, project_id):
     from .forms_project import ProjectMemberForm
     
     project = get_object_or_404(Project, pk=project_id)
+
+    employee_id = getattr(request.user.profile, 'employee_id', None)
+    is_lead = bool(employee_id and project.members.filter(employee_id=employee_id, role='manager').exists())
+    can_manage_members = bool((request.user.profile.is_directeur_general() or request.user.is_staff) or is_lead)
+    if not can_manage_members:
+        messages.error(request, "Seul le responsable principal (lead) peut gérer les membres de ce projet.")
+        return redirect('core:project_detail', project_id=project.id)
     
     # Permission check
     if not (request.user.profile.is_directeur_general() or request.user.is_staff):
@@ -1455,6 +1493,13 @@ def project_member_edit(request, member_id):
     
     member = get_object_or_404(ProjectMember.objects.select_related('project', 'employee'), pk=member_id)
     project = member.project
+
+    employee_id = getattr(request.user.profile, 'employee_id', None)
+    is_lead = bool(employee_id and project.members.filter(employee_id=employee_id, role='manager').exists())
+    can_manage_members = bool((request.user.profile.is_directeur_general() or request.user.is_staff) or is_lead)
+    if not can_manage_members:
+        messages.error(request, "Seul le responsable principal (lead) peut gérer les membres de ce projet.")
+        return redirect('core:project_detail', project_id=project.id)
     
     # Permission check
     if not (request.user.profile.is_directeur_general() or request.user.is_staff):
@@ -1495,6 +1540,13 @@ def project_member_delete(request, member_id):
     """Supprimer un membre d'un projet"""
     member = get_object_or_404(ProjectMember.objects.select_related('project', 'employee'), pk=member_id)
     project = member.project
+
+    employee_id = getattr(request.user.profile, 'employee_id', None)
+    is_lead = bool(employee_id and project.members.filter(employee_id=employee_id, role='manager').exists())
+    can_manage_members = bool((request.user.profile.is_directeur_general() or request.user.is_staff) or is_lead)
+    if not can_manage_members:
+        messages.error(request, "Seul le responsable principal (lead) peut gérer les membres de ce projet.")
+        return redirect('core:project_detail', project_id=project.id)
     
     # Permission check
     if not (request.user.profile.is_directeur_general() or request.user.is_staff):
@@ -1856,7 +1908,16 @@ def budget_delete(request, budget_id):
 # API endpoints pour les graphiques
 def api_budget_data(request):
     """API pour les données de budget"""
-    budgets = Budget.objects.select_related('direction').all()
+    can_view_budgets = request.user.profile.can_view_budgets()
+    can_view_all_budget_directions = request.user.profile.can_view_all_budget_directions()
+
+    budgets = Budget.objects.select_related('direction')
+    if not can_view_budgets:
+        budgets = budgets.none()
+    elif not can_view_all_budget_directions:
+        budgets = budgets.filter(direction=request.user.profile.direction)
+
+    budgets = budgets.all()
     data = []
     for budget in budgets:
         data.append({
