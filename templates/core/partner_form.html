@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block page_subtitle %}{% if partner %}Modifier le partenaire{% else %}Ajouter un nouveau partenaire{% endif %}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 700px;">
+    <div class="card-header">
+        <h3 class="card-title">Informations du partenaire</h3>
+    </div>
+    <div class="card-content">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label for="id_name">Nom *</label>
+                {{ form.name }}
+            </div>
+            
+            <div class="grid grid-2" style="gap: 16px; margin-bottom: 16px;">
+                <div class="form-group">
+                    <label for="id_partner_type">Type *</label>
+                    {{ form.partner_type }}
+                </div>
+                <div class="form-group">
+                    <label for="id_status">Statut</label>
+                    {{ form.status }}
+                </div>
+            </div>
+            
+            <div class="grid grid-2" style="gap: 16px; margin-bottom: 16px;">
+                <div class="form-group">
+                    <label for="id_contact_person">Personne de contact *</label>
+                    {{ form.contact_person }}
+                </div>
+                <div class="form-group">
+                    <label for="id_email">Email *</label>
+                    {{ form.email }}
+                </div>
+            </div>
+            
+            <div class="grid grid-2" style="gap: 16px; margin-bottom: 16px;">
+                <div class="form-group">
+                    <label for="id_phone">Téléphone *</label>
+                    {{ form.phone }}
+                </div>
+                <div class="form-group">
+                    <label for="id_start_date">Date de début</label>
+                    {{ form.start_date }}
+                </div>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label for="id_logo">Logo</label>
+                {{ form.logo }}
+            </div>
+            
+            <div class="flex gap-3">
+                <button type="submit" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    {% if partner %}Enregistrer{% else %}Ajouter{% endif %}
+                </button>
+                <a href="{% url 'core:partners' %}" class="btn btn-outline">Annuler</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,349 @@
+{% extends 'base.html' %}
+
+{% block title %}Tableau de bord{% endblock %}
+{% block page_title %}Tableau de bord{% endblock %}
+{% block page_subtitle %}Vue d'ensemble des activités de la CSIG{% endblock %}
+
+{% block content %}
+<!-- KPI Cards -->
+<div class="stats-row">
+    <a class="stat-card stat-card-blue stat-card-link" href="{% url 'core:projects' %}">
+        <div class="stat-card-header">
+            <div>
+                <p class="stat-card-label">Projets en cours</p>
+                <p class="stat-card-value">{{ projects_in_progress }}</p>
+                <p class="stat-card-subtitle">{{ total_projects }} projets au total</p>
+            </div>
+            <div class="stat-card-icon blue">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                </svg>
+            </div>
+        </div>
+    </a>
+    
+    <a class="stat-card stat-card-amber stat-card-link" href="{% url 'core:resources' %}">
+        <div class="stat-card-header">
+            <div>
+                <p class="stat-card-label">Budget consommé</p>
+                <p class="stat-card-value">{{ budget_percentage }}%</p>
+                <p class="stat-card-subtitle">{{ total_consumed|floatformat:0 }} GNF</p>
+            </div>
+            <div class="stat-card-icon amber">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+            </div>
+        </div>
+    </a>
+    
+    <a class="stat-card stat-card-green stat-card-link" href="{% url 'core:partners' %}">
+        <div class="stat-card-header">
+            <div>
+                <p class="stat-card-label">Partenaires actifs</p>
+                <p class="stat-card-value">{{ active_partners }}</p>
+                <p class="stat-card-subtitle">Collaborations en cours</p>
+            </div>
+            <div class="stat-card-icon green">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+            </div>
+        </div>
+    </a>
+    
+    <a class="stat-card stat-card-red stat-card-link" href="{% url 'core:documents' %}">
+        <div class="stat-card-header">
+            <div>
+                <p class="stat-card-label">Documents en attente</p>
+                <p class="stat-card-value">{{ pending_documents }}</p>
+                <p class="stat-card-subtitle">{{ pending_requests }} demandes à traiter</p>
+            </div>
+            <div class="stat-card-icon red">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+            </div>
+        </div>
+    </a>
+</div>
+
+<!-- Charts Row -->
+<div class="grid grid-2 mb-6">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Budget par direction (en millions GNF)</h3>
+        </div>
+        <div class="card-content">
+            <div class="chart-container">
+                <canvas id="budgetChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Évolution des projets</h3>
+        </div>
+        <div class="card-content">
+            <div class="chart-container">
+                <canvas id="progressChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Projects and Documents -->
+<div class="grid grid-2 mb-6">
+    <!-- Active Projects -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Projets en cours</h3>
+            <a href="{% url 'core:projects' %}" class="card-link">Voir tout →</a>
+        </div>
+        <div class="card-content">
+            <div class="item-list">
+                {% for project in active_projects %}
+                <div class="project-card">
+                    <div class="project-card-header">
+                        <div class="project-card-badges">
+                            <span class="badge badge-info">En cours</span>
+                            <span class="badge {% if project.priority == 'haute' %}badge-danger{% elif project.priority == 'moyenne' %}badge-warning{% else %}badge-secondary{% endif %}">
+                                {{ project.get_priority_display }}
+                            </span>
+                        </div>
+                        <span class="project-card-direction">{{ project.direction.code }}</span>
+                    </div>
+                    <h4 class="project-card-title">{{ project.name }}</h4>
+                    <div class="project-card-progress">
+                        <div class="project-card-progress-header">
+                            <span class="project-card-progress-label">Progression</span>
+                            <span class="project-card-progress-value">{{ project.progress }}%</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar {% if project.progress >= 80 %}green{% elif project.progress >= 50 %}blue{% elif project.progress >= 25 %}amber{% else %}red{% endif %}" style="width: {{ project.progress }}%"></div>
+                        </div>
+                    </div>
+                    <div class="project-card-meta">
+                        <span class="project-card-meta-item">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {{ project.end_date|date:"d/m/Y" }}
+                        </span>
+                        <span class="project-card-meta-item">
+                            Budget: {{ project.budget_percentage }}% consommé
+                        </span>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-gray-500">Aucun projet en cours</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Pending Documents -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Documents en attente</h3>
+            <a href="{% url 'core:documents' %}" class="card-link">Voir tout →</a>
+        </div>
+        <div class="card-content">
+            <div class="item-list">
+                {% for doc in pending_docs %}
+                <div class="document-item">
+                    <div class="document-icon {% if doc.status == 'a_signer' %}sign{% else %}validate{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                    <div class="document-info">
+                        <p class="document-title">{{ doc.title }}</p>
+                        <p class="document-meta">{{ doc.get_doc_type_display }} • {{ doc.direction.code }}</p>
+                    </div>
+                    <div class="document-status">
+                        <span class="badge {% if doc.status == 'a_signer' %}badge-danger{% else %}badge-warning{% endif %}">
+                            {{ doc.get_status_display }}
+                        </span>
+                        <p class="document-date">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {{ doc.due_date|date:"d/m/Y" }}
+                        </p>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-gray-500">Aucun document en attente</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Requests and Events -->
+<div class="grid grid-2">
+    <!-- Pending Requests -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Demandes des directions</h3>
+            <a href="{% url 'core:requests' %}" class="card-link">Voir tout →</a>
+        </div>
+        <div class="card-content">
+            <div class="item-list">
+                {% for req in pending_reqs %}
+                <div class="request-item">
+                    <div class="request-header">
+                        <div class="request-badges">
+                            <span class="badge {% if req.priority == 'haute' %}badge-danger{% elif req.priority == 'moyenne' %}badge-warning{% else %}badge-secondary{% endif %}">
+                                {{ req.get_priority_display }}
+                            </span>
+                            <span class="request-direction">{{ req.direction.code }}</span>
+                        </div>
+                        <span class="badge badge-warning">{{ req.get_status_display }}</span>
+                    </div>
+                    <h4 class="request-title">{{ req.title }}</h4>
+                    <p class="request-description">{{ req.description }}</p>
+                    <div class="request-footer">
+                        <span>Par {{ req.created_by }}</span>
+                        <span class="request-footer-item">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {{ req.created_at|date:"d/m/Y" }}
+                        </span>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-gray-500">Aucune demande en attente</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Upcoming Events -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Événements à venir</h3>
+            <a href="{% url 'core:calendar' %}" class="card-link">Voir tout →</a>
+        </div>
+        <div class="card-content">
+            <div class="item-list">
+                {% for event in upcoming_events %}
+                <div class="event-item">
+                    <div class="event-date-box">
+                        <span class="event-date-month">{{ event.date|date:"M" }}</span>
+                        <span class="event-date-day">{{ event.date|date:"d" }}</span>
+                    </div>
+                    <div class="event-info">
+                        <div class="event-type-indicator">
+                            <span class="event-type-dot {{ event.event_type }}"></span>
+                            <span class="badge {% if event.event_type == 'reunion' %}badge-info{% elif event.event_type == 'evenement' %}badge-success{% else %}badge-danger{% endif %}">
+                                {{ event.get_event_type_display }}
+                            </span>
+                        </div>
+                        <h4 class="event-title">{{ event.title }}</h4>
+                        <div class="event-meta">
+                            <span class="event-meta-item">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                {{ event.time|time:"H:i" }}
+                            </span>
+                            {% if event.location %}
+                            <span class="event-meta-item">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                {{ event.location }}
+                            </span>
+                            {% endif %}
+                            <span class="event-meta-item">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                </svg>
+                                {{ event.participants.count }} participants
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-gray-500">Aucun événement à venir</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Budget Chart
+const budgetCtx = document.getElementById('budgetChart').getContext('2d');
+const budgetData = {{ budget_data|safe }};
+
+new Chart(budgetCtx, {
+    type: 'bar',
+    data: {
+        labels: budgetData.map(d => d.direction),
+        datasets: [
+            {
+                label: 'Alloué',
+                data: budgetData.map(d => d.allocated),
+                backgroundColor: '#3b82f6',
+                borderRadius: 4,
+            },
+            {
+                label: 'Consommé',
+                data: budgetData.map(d => d.consumed),
+                backgroundColor: '#10b981',
+                borderRadius: 4,
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top',
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Millions GNF'
+                }
+            }
+        }
+    }
+});
+
+// Progress Chart
+const progressCtx = document.getElementById('progressChart').getContext('2d');
+new Chart(progressCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['En cours', 'Terminés', 'Planifiés'],
+        datasets: [{
+            data: [{{ projects_in_progress }}, {{ projects_completed }}, {{ projects_planned }}],
+            backgroundColor: ['#3b82f6', '#10b981', '#6b7280'],
+            borderWidth: 0,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'right',
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

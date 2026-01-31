@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestion des utilisateurs{% endblock %}
+{% block page_title %}Gestion des Utilisateurs{% endblock %}
+{% block page_subtitle %}Gérer les comptes, rôles et permissions{% endblock %}
+
+{% block content %}
+<!-- Stats -->
+<div class="stats-row">
+    <a class="stat-box stat-box-link" href="{% url 'core:users_list' %}?status=all">
+        <p class="stat-box-label">Total utilisateurs</p>
+        <p class="stat-box-value">{{ stats.total }}</p>
+    </a>
+    <a class="stat-box green stat-box-link" href="{% url 'core:users_list' %}?status=active">
+        <p class="stat-box-label">Comptes actifs</p>
+        <p class="stat-box-value">{{ stats.active }}</p>
+    </a>
+    <a class="stat-box red stat-box-link" href="{% url 'core:users_list' %}?status=inactive">
+        <p class="stat-box-label">Comptes inactifs</p>
+        <p class="stat-box-value">{{ stats.inactive }}</p>
+    </a>
+    <a class="stat-box blue stat-box-link" href="{% url 'core:user_activities' %}">
+        <p class="stat-box-label">Connexions récentes</p>
+        <p class="stat-box-value">{{ recent_activities|length }}</p>
+    </a>
+</div>
+
+<!-- Filters -->
+<form method="get" class="filters-bar">
+    <div class="search-box">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <input type="text" name="search" placeholder="Rechercher un utilisateur..." value="{{ search }}" class="form-control">
+    </div>
+    <select name="role" class="form-control" onchange="this.form.submit()">
+        <option value="all" {% if current_role == 'all' %}selected{% endif %}>Tous les rôles</option>
+        {% for value, label in role_choices %}
+        <option value="{{ value }}" {% if current_role == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    <select name="status" class="form-control" onchange="this.form.submit()">
+        <option value="all" {% if current_status == 'all' %}selected{% endif %}>Tous les statuts</option>
+        <option value="active" {% if current_status == 'active' %}selected{% endif %}>Actifs</option>
+        <option value="inactive" {% if current_status == 'inactive' %}selected{% endif %}>Inactifs</option>
+    </select>
+    <a href="{% url 'core:user_create' %}" class="btn btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        Nouvel utilisateur
+    </a>
+    <a href="{% url 'core:user_activities' %}" class="btn btn-outline">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Journal
+    </a>
+</form>
+
+<!-- Users Table -->
+<div class="card">
+    <div class="card-content" style="padding: 0;">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Utilisateur</th>
+                        <th>Email</th>
+                        <th>Rôle</th>
+                        <th>Direction</th>
+                        <th style="text-align: center;">Statut</th>
+                        <th>Dernière connexion</th>
+                        <th style="text-align: center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td>
+                            <div class="flex items-center gap-3">
+                                <div class="sidebar-avatar" style="width: 40px; height: 40px; font-size: 14px; background: linear-gradient(135deg, #2a4a6f, #4a7a9f);">
+                                    {% if u.profile %}{{ u.profile.get_initials }}{% else %}{{ u.username|slice:":2"|upper }}{% endif %}
+                                </div>
+                                <div>
+                                    <p class="font-medium">{{ u.get_full_name|default:u.username }}</p>
+                                    <p class="text-xs text-gray-500">@{{ u.username }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ u.email|default:"-" }}</td>
+                        <td>
+                            {% if u.profile %}
+                            <span class="badge {% if u.profile.role == 'admin' %}badge-danger{% elif u.profile.role == 'directeur_general' %}badge-warning{% elif u.profile.role == 'directeur' %}badge-info{% else %}badge-secondary{% endif %}">
+                                {{ u.profile.get_role_display }}
+                            </span>
+                            {% else %}
+                            <span class="badge badge-secondary">Non défini</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if u.profile and u.profile.direction %}
+                                {{ u.profile.direction.code }}
+                            {% else %}
+                                <span class="text-gray-400">-</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center;">
+                            {% if u.is_active %}
+                            <span class="badge badge-success">Actif</span>
+                            {% else %}
+                            <span class="badge badge-danger">Inactif</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if u.last_login %}
+                                {{ u.last_login|date:"d/m/Y H:i" }}
+                            {% else %}
+                                <span class="text-gray-400">Jamais</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="flex items-center justify-center gap-1">
+                                <a href="{% url 'core:user_edit' u.id %}" class="action-btn" title="Modifier">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                </a>
+                                <a href="{% url 'core:user_change_password' u.id %}" class="action-btn" title="Changer mot de passe">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                    </svg>
+                                </a>
+                                {% if u != request.user %}
+                                <a href="{% url 'core:user_toggle_status' u.id %}" class="action-btn {% if u.is_active %}danger{% else %}success{% endif %}" title="{% if u.is_active %}Désactiver{% else %}Activer{% endif %}">
+                                    {% if u.is_active %}
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                    </svg>
+                                    {% else %}
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    {% endif %}
+                                </a>
+                                <a href="{% url 'core:user_delete' u.id %}" class="action-btn danger" title="Supprimer">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 48px;">
+                            <p class="text-gray-500">Aucun utilisateur trouvé</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activities -->
+{% if recent_activities %}
+<div class="card mt-6">
+    <div class="card-header">
+        <h3 class="card-title">Activités récentes</h3>
+        <a href="{% url 'core:user_activities' %}" class="card-link">Voir tout →</a>
+    </div>
+    <div class="card-content">
+        <div class="item-list">
+            {% for activity in recent_activities %}
+            <div class="flex items-center gap-4" style="padding: 8px 0; border-bottom: 1px solid #f1f5f9;">
+                <div class="document-icon {% if activity.action == 'login' %}signed{% elif activity.action == 'logout' %}validate{% elif activity.action == 'create' %}sign{% else %}validate{% endif %}" style="width: 36px; height: 36px;">
+                    {% if activity.action == 'login' %}
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="18" height="18">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                    </svg>
+                    {% elif activity.action == 'logout' %}
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="18" height="18">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    {% else %}
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="18" height="18">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    {% endif %}
+                </div>
+                <div style="flex: 1;">
+                    <p class="font-medium text-sm">{{ activity.user.get_full_name|default:activity.user.username }}</p>
+                    <p class="text-xs text-gray-500">{{ activity.description|default:activity.get_action_display }}</p>
+                </div>
+                <div class="text-xs text-gray-400">
+                    {{ activity.created_at|date:"d/m/Y H:i" }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

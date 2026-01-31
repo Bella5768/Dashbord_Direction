@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block title %}Partenaires{% endblock %}
+{% block page_title %}Partenaires et Événements{% endblock %}
+{% block page_subtitle %}Gestion des partenariats et activités conjointes{% endblock %}
+
+{% block content %}
+<!-- Stats -->
+<div class="stats-row">
+    <a class="stat-box stat-box-link" href="{% url 'core:partners' %}?status=all&type=all">
+        <p class="stat-box-label">Total partenaires</p>
+        <p class="stat-box-value">{{ stats.total }}</p>
+    </a>
+    <a class="stat-box green stat-box-link" href="{% url 'core:partners' %}?status=actif&type=all">
+        <p class="stat-box-label">Partenariats actifs</p>
+        <p class="stat-box-value">{{ stats.actif }}</p>
+    </a>
+    <a class="stat-box amber stat-box-link" href="{% url 'core:partners' %}?status=en_discussion&type=all">
+        <p class="stat-box-label">En discussion</p>
+        <p class="stat-box-value">{{ stats.en_discussion }}</p>
+    </a>
+    <a class="stat-box blue stat-box-link" href="{% url 'core:calendar' %}">
+        <p class="stat-box-label">Événements à venir</p>
+        <p class="stat-box-value">{{ upcoming_events.count }}</p>
+    </a>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+    <!-- Partners List -->
+    <div>
+        <!-- Filters -->
+        <form method="get" class="filters-bar">
+            <div class="search-box" style="flex: 1;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input type="text" name="search" placeholder="Rechercher un partenaire..." value="{{ search }}" class="form-control" style="width: 100%;">
+            </div>
+            <select name="type" class="form-control" onchange="this.form.submit()">
+                <option value="all" {% if current_type == 'all' %}selected{% endif %}>Tous les types</option>
+                <option value="entreprise" {% if current_type == 'entreprise' %}selected{% endif %}>Entreprise</option>
+                <option value="universite" {% if current_type == 'universite' %}selected{% endif %}>Université</option>
+                <option value="institution" {% if current_type == 'institution' %}selected{% endif %}>Institution</option>
+                <option value="ong" {% if current_type == 'ong' %}selected{% endif %}>ONG</option>
+            </select>
+            <select name="status" class="form-control" onchange="this.form.submit()">
+                <option value="all" {% if current_status == 'all' %}selected{% endif %}>Tous les statuts</option>
+                <option value="actif" {% if current_status == 'actif' %}selected{% endif %}>Actif</option>
+                <option value="en_discussion" {% if current_status == 'en_discussion' %}selected{% endif %}>En discussion</option>
+            </select>
+            <a href="{% url 'core:partner_create' %}" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Nouveau
+            </a>
+        </form>
+        
+        <!-- Partners Grid -->
+        <div class="grid grid-2">
+            {% for partner in partners %}
+            <div class="partner-card {% if partner.status == 'actif' %}card-green{% else %}card-amber{% endif %}" data-id="{{ partner.id }}" data-href="{% url 'core:partner_edit' partner.id %}">
+                <div class="partner-header">
+                    <div class="partner-icon {{ partner.partner_type }}">
+                        {% if partner.partner_type == 'entreprise' %}
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        {% elif partner.partner_type == 'universite' %}
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                        </svg>
+                        {% elif partner.partner_type == 'institution' %}
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                        </svg>
+                        {% else %}
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                        {% endif %}
+                    </div>
+                    <div class="partner-info">
+                        <span class="badge {% if partner.status == 'actif' %}badge-success{% else %}badge-warning{% endif %}" style="margin-bottom: 4px;">
+                            {{ partner.get_status_display }}
+                        </span>
+                        <h3 class="partner-name">{{ partner.name }}</h3>
+                        <p class="partner-contact">{{ partner.contact_person }}</p>
+                    </div>
+                </div>
+                
+                <div class="partner-details">
+                    <div class="partner-detail-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        <span>{{ partner.email }}</span>
+                    </div>
+                    <div class="partner-detail-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                        <span>{{ partner.phone }}</span>
+                    </div>
+                    {% if partner.start_date %}
+                    <div class="partner-detail-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span>Depuis {{ partner.start_date|date:"d/m/Y" }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="flex gap-2" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                    <a href="{% url 'core:partner_edit' partner.id %}" class="btn btn-outline btn-sm">Modifier</a>
+                    <a href="{% url 'core:partner_delete' partner.id %}" class="btn btn-sm" style="background: var(--red-50); color: var(--red-600);">Supprimer</a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="card" style="grid-column: span 2;">
+                <div class="card-content" style="text-align: center; padding: 48px;">
+                    <p class="text-gray-500">Aucun partenaire trouvé</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Sidebar -->
+    <div>
+        <!-- Upcoming Events -->
+        <div class="card mb-6">
+            <div class="card-header">
+                <h3 class="card-title flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Événements à venir
+                </h3>
+            </div>
+            <div class="card-content">
+                <div class="item-list">
+                    {% for event in upcoming_events %}
+                    <div class="event-item">
+                        <div class="event-date-box" style="background-color: #dcfce7;">
+                            <span class="event-date-month" style="color: #16a34a;">{{ event.date|date:"M" }}</span>
+                            <span class="event-date-day" style="color: #15803d;">{{ event.date|date:"d" }}</span>
+                        </div>
+                        <div class="event-info">
+                            <h4 class="event-title" style="font-size: 14px;">{{ event.title }}</h4>
+                            <p class="text-xs text-gray-500 mt-1">{{ event.description }}</p>
+                            <div class="event-meta">
+                                <span class="event-meta-item">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                    </svg>
+                                    {{ event.participants.count }} participants
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-gray-500">Aucun événement à venir</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Partner Types Legend -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Types de partenaires</h3>
+            </div>
+            <div class="card-content">
+                <div class="item-list" style="gap: 8px;">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="partner-icon entreprise" style="width: 32px; height: 32px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                            </div>
+                            <span class="text-sm text-gray-600">Entreprise</span>
+                        </div>
+                        <span class="text-sm font-medium">{{ type_counts.entreprise }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="partner-icon universite" style="width: 32px; height: 32px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z" />
+                                </svg>
+                            </div>
+                            <span class="text-sm text-gray-600">Université</span>
+                        </div>
+                        <span class="text-sm font-medium">{{ type_counts.universite }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="partner-icon institution" style="width: 32px; height: 32px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                                </svg>
+                            </div>
+                            <span class="text-sm text-gray-600">Institution</span>
+                        </div>
+                        <span class="text-sm font-medium">{{ type_counts.institution }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="partner-icon ong" style="width: 32px; height: 32px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                            </div>
+                            <span class="text-sm text-gray-600">ONG</span>
+                        </div>
+                        <span class="text-sm font-medium">{{ type_counts.ong }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

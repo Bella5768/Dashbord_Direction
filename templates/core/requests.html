@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block title %}Demandes{% endblock %}
+{% block page_title %}Demandes des Directions{% endblock %}
+{% block page_subtitle %}Gestion des demandes et besoins exprimés par les directions{% endblock %}
+
+{% block content %}
+<!-- Stats -->
+<div class="stats-row">
+    <a class="stat-box stat-box-link" href="{% url 'core:requests' %}?status=all">
+        <p class="stat-box-label">Total demandes</p>
+        <p class="stat-box-value">{{ stats.total }}</p>
+    </a>
+    <a class="stat-box amber stat-box-link" href="{% url 'core:requests' %}?status=en_attente">
+        <p class="stat-box-label">En attente</p>
+        <p class="stat-box-value">{{ stats.en_attente }}</p>
+    </a>
+    <a class="stat-box green stat-box-link" href="{% url 'core:requests' %}?status=approuve">
+        <p class="stat-box-label">Approuvées</p>
+        <p class="stat-box-value">{{ stats.approuve }}</p>
+    </a>
+    <a class="stat-box red stat-box-link" href="{% url 'core:requests' %}?status=rejete">
+        <p class="stat-box-label">Rejetées</p>
+        <p class="stat-box-value">{{ stats.rejete }}</p>
+    </a>
+</div>
+
+<!-- Filters -->
+<form method="get" class="filters-bar">
+    <div class="search-box">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <input type="text" name="search" placeholder="Rechercher une demande..." value="{{ search }}" class="form-control">
+    </div>
+    <select name="status" class="form-control" onchange="this.form.submit()">
+        <option value="all" {% if current_status == 'all' %}selected{% endif %}>Tous les statuts</option>
+        <option value="en_attente" {% if current_status == 'en_attente' %}selected{% endif %}>En attente</option>
+        <option value="approuve" {% if current_status == 'approuve' %}selected{% endif %}>Approuvé</option>
+        <option value="rejete" {% if current_status == 'rejete' %}selected{% endif %}>Rejeté</option>
+    </select>
+    <select name="direction" class="form-control" onchange="this.form.submit()">
+        <option value="all" {% if current_direction == 'all' %}selected{% endif %}>Toutes les directions</option>
+        {% for dir in directions %}
+        <option value="{{ dir.code }}" {% if current_direction == dir.code %}selected{% endif %}>{{ dir.code }}</option>
+        {% endfor %}
+    </select>
+    <a href="{% url 'core:request_create' %}" class="btn btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        Nouvelle demande
+    </a>
+</form>
+
+<!-- Requests List -->
+<div class="item-list">
+    {% for req in requests %}
+    <div class="card {% if req.status == 'en_attente' %}card-amber{% elif req.status == 'approuve' %}card-green{% else %}card-red{% endif %}" data-href="{% url 'core:requests' %}?status={{ req.status }}">
+        <div class="card-content">
+            <div class="flex justify-between items-start mb-4">
+                <div class="flex items-start gap-4">
+                    <div class="document-icon {% if req.status == 'en_attente' %}validate{% elif req.status == 'approuve' %}signed{% else %}sign{% endif %}">
+                        {% if req.status == 'en_attente' %}
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {% elif req.status == 'approuve' %}
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {% else %}
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="badge {% if req.priority == 'haute' %}badge-danger{% elif req.priority == 'moyenne' %}badge-warning{% else %}badge-secondary{% endif %}">
+                                {{ req.get_priority_display }}
+                            </span>
+                            <span class="badge badge-secondary">{{ req.direction.code }}</span>
+                        </div>
+                        <h3 class="font-semibold" style="font-size: 16px;">{{ req.title }}</h3>
+                        <p class="text-sm text-gray-500 mt-1">{{ req.description }}</p>
+                    </div>
+                </div>
+                <span class="badge {% if req.status == 'en_attente' %}badge-warning{% elif req.status == 'approuve' %}badge-success{% else %}badge-danger{% endif %}">
+                    {{ req.get_status_display }}
+                </span>
+            </div>
+            
+            <div class="flex justify-between items-center" style="padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                <div class="flex items-center gap-4 text-sm text-gray-500">
+                    <span>Par {{ req.created_by }}</span>
+                    <span class="flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {{ req.created_at|date:"d/m/Y" }}
+                    </span>
+                    {% if req.approved_at %}
+                    <span style="color: #16a34a;">Approuvé le {{ req.approved_at|date:"d/m/Y" }}</span>
+                    {% endif %}
+                </div>
+                
+                {% if req.status == 'en_attente' %}
+                <div class="flex gap-2">
+                    <a href="{% url 'core:request_reject' req.id %}" class="btn btn-outline btn-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="color: #dc2626;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Rejeter
+                    </a>
+                    <a href="{% url 'core:request_approve' req.id %}" class="btn btn-primary btn-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Approuver
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="card">
+        <div class="card-content" style="text-align: center; padding: 48px;">
+            <p class="text-gray-500">Aucune demande trouvée</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

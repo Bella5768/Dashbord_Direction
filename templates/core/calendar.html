@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Calendrier{% endblock %}
+{% block page_title %}Calendrier{% endblock %}
+{% block page_subtitle %}Agenda partagé et événements à venir{% endblock %}
+
+{% block content %}
+<!-- Stats Row -->
+<div class="stats-row">
+    <a class="stat-box blue stat-box-link" href="{% url 'core:calendar' %}">
+        <p class="stat-box-label">Réunions ce mois</p>
+        <p class="stat-box-value">{{ stats.reunions }}</p>
+    </a>
+    <a class="stat-box green stat-box-link" href="{% url 'core:calendar' %}#upcoming">
+        <p class="stat-box-label">Événements</p>
+        <p class="stat-box-value">{{ stats.evenements }}</p>
+    </a>
+    <a class="stat-box red stat-box-link" href="{% url 'core:calendar' %}#upcoming">
+        <p class="stat-box-label">Deadlines</p>
+        <p class="stat-box-value">{{ stats.deadlines }}</p>
+    </a>
+    <a class="stat-box amber stat-box-link" href="{% url 'core:calendar' %}">
+        <p class="stat-box-label">Total ce mois</p>
+        <p class="stat-box-value">{{ stats.total }}</p>
+    </a>
+</div>
+
+<div class="calendar-container">
+    <!-- Calendar -->
+    <div>
+        <div class="card">
+            <div class="card-header">
+                <div class="calendar-header">
+                    <div class="calendar-nav">
+                        <a href="?year={{ prev_year }}&month={{ prev_month }}" class="calendar-nav-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </a>
+                        <h3 class="calendar-month-title">{{ month_name }} {{ year }}</h3>
+                        <a href="?year={{ next_year }}&month={{ next_month }}" class="calendar-nav-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+                <button class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Nouvel événement
+                </button>
+            </div>
+            <div class="card-content">
+                <!-- Days header -->
+                <div class="calendar-grid" style="margin-bottom: 8px;">
+                    <div class="calendar-day-header">Lun</div>
+                    <div class="calendar-day-header">Mar</div>
+                    <div class="calendar-day-header">Mer</div>
+                    <div class="calendar-day-header">Jeu</div>
+                    <div class="calendar-day-header">Ven</div>
+                    <div class="calendar-day-header">Sam</div>
+                    <div class="calendar-day-header">Dim</div>
+                </div>
+                
+                <!-- Calendar grid -->
+                <div class="calendar-grid">
+                    {% for week in month_days %}
+                        {% for day in week %}
+                            {% if day == 0 %}
+                            <div class="calendar-day empty"></div>
+                            {% else %}
+                            <div class="calendar-day {% if day == today.day and month == today.month and year == today.year %}today{% endif %}" data-day="{{ day }}">
+                                <div class="calendar-day-number">{{ day }}</div>
+                                <div class="calendar-day-events">
+                                    {% with day_events=events_by_day|get_item:day %}
+                                        {% for evt in day_events %}
+                                        <div class="calendar-event-pill {{ evt.event_type }}">{{ evt.title }}</div>
+                                        {% endfor %}
+                                    {% endwith %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar -->
+    <div>
+        <!-- Upcoming Events -->
+        <div class="card mb-6" id="upcoming">
+            <div class="card-header">
+                <h3 class="card-title flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Prochains événements
+                </h3>
+            </div>
+            <div class="card-content">
+                <div class="item-list">
+                    {% for event in upcoming_events %}
+                    <div class="event-item">
+                        <div class="event-date-box {% if event.event_type == 'reunion' %}event-date-blue{% elif event.event_type == 'evenement' %}event-date-green{% else %}event-date-red{% endif %}">
+                            <span class="event-date-month">{{ event.date|date:"M" }}</span>
+                            <span class="event-date-day">{{ event.date|date:"d" }}</span>
+                        </div>
+                        <div class="event-info">
+                            <div class="event-type-indicator">
+                                <span class="event-type-dot {{ event.event_type }}"></span>
+                                <span class="badge {% if event.event_type == 'reunion' %}badge-info{% elif event.event_type == 'evenement' %}badge-success{% else %}badge-danger{% endif %}">
+                                    {{ event.get_event_type_display }}
+                                </span>
+                            </div>
+                            <h4 class="event-title">{{ event.title }}</h4>
+                            <div class="event-meta">
+                                <span class="event-meta-item">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    {{ event.time|time:"H:i" }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-gray-500">Aucun événement à venir</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Legend -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Légende</h3>
+            </div>
+            <div class="card-content">
+                <div class="item-list" style="gap: 8px;">
+                    <div class="flex items-center gap-2">
+                        <span class="event-type-dot reunion"></span>
+                        <span class="text-sm text-gray-600">Réunion</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="event-type-dot evenement"></span>
+                        <span class="text-sm text-gray-600">Événement</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="event-type-dot deadline"></span>
+                        <span class="text-sm text-gray-600">Deadline</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

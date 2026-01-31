@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Journal des activités{% endblock %}
+{% block page_title %}Journal des Activités{% endblock %}
+{% block page_subtitle %}Historique des connexions et actions des utilisateurs{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Activités récentes</h3>
+        <a href="{% url 'core:users_list' %}" class="btn btn-outline btn-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Retour aux utilisateurs
+        </a>
+    </div>
+    <div class="card-content" style="padding: 0;">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Utilisateur</th>
+                        <th>Action</th>
+                        <th>Description</th>
+                        <th>Adresse IP</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for activity in activities %}
+                    <tr>
+                        <td>
+                            <div class="flex items-center gap-2">
+                                <div class="sidebar-avatar" style="width: 32px; height: 32px; font-size: 12px; background: linear-gradient(135deg, #2a4a6f, #4a7a9f);">
+                                    {% if activity.user.profile %}{{ activity.user.profile.get_initials }}{% else %}{{ activity.user.username|slice:":2"|upper }}{% endif %}
+                                </div>
+                                <span class="font-medium">{{ activity.user.get_full_name|default:activity.user.username }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge {% if activity.action == 'login' %}badge-success{% elif activity.action == 'logout' %}badge-secondary{% elif activity.action == 'create' %}badge-info{% elif activity.action == 'delete' %}badge-danger{% else %}badge-warning{% endif %}">
+                                {{ activity.get_action_display }}
+                            </span>
+                        </td>
+                        <td>{{ activity.description|default:"-" }}</td>
+                        <td class="text-gray-500">{{ activity.ip_address|default:"-" }}</td>
+                        <td class="text-gray-500">{{ activity.created_at|date:"d/m/Y H:i:s" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 48px;">
+                            <p class="text-gray-500">Aucune activité enregistrée</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

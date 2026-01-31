@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block title %}Projets{% endblock %}
+{% block page_title %}Suivi des Projets{% endblock %}
+{% block page_subtitle %}Gestion et suivi de l'avancement des projets{% endblock %}
+
+{% block content %}
+<!-- Stats -->
+<div class="stats-row">
+    <a class="stat-box stat-box-link" href="{% url 'core:projects' %}?status=all">
+        <p class="stat-box-label">Total projets</p>
+        <p class="stat-box-value">{{ stats.total }}</p>
+    </a>
+    <a class="stat-box blue stat-box-link" href="{% url 'core:projects' %}?status=en_cours">
+        <p class="stat-box-label">En cours</p>
+        <p class="stat-box-value">{{ stats.en_cours }}</p>
+    </a>
+    <a class="stat-box green stat-box-link" href="{% url 'core:projects' %}?status=termine">
+        <p class="stat-box-label">Terminés</p>
+        <p class="stat-box-value">{{ stats.termine }}</p>
+    </a>
+    <a class="stat-box stat-box-link" href="{% url 'core:projects' %}?status=planifie">
+        <p class="stat-box-label">Planifiés</p>
+        <p class="stat-box-value">{{ stats.planifie }}</p>
+    </a>
+</div>
+
+<!-- Filters -->
+<form method="get" class="filters-bar">
+    <div class="search-box">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <input type="text" name="search" placeholder="Rechercher un projet..." value="{{ search }}" class="form-control">
+    </div>
+    <select name="status" class="form-control" onchange="this.form.submit()">
+        <option value="all" {% if current_status == 'all' %}selected{% endif %}>Tous les statuts</option>
+        <option value="en_cours" {% if current_status == 'en_cours' %}selected{% endif %}>En cours</option>
+        <option value="termine" {% if current_status == 'termine' %}selected{% endif %}>Terminé</option>
+        <option value="planifie" {% if current_status == 'planifie' %}selected{% endif %}>Planifié</option>
+    </select>
+    <select name="direction" class="form-control" onchange="this.form.submit()">
+        <option value="all" {% if current_direction == 'all' %}selected{% endif %}>Toutes les directions</option>
+        {% for dir in directions %}
+        <option value="{{ dir.code }}" {% if current_direction == dir.code %}selected{% endif %}>{{ dir.code }}</option>
+        {% endfor %}
+    </select>
+    <a href="{% url 'core:project_create' %}" class="btn btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        Nouveau projet
+    </a>
+</form>
+
+<!-- Projects Grid -->
+<div class="grid grid-3">
+    {% for project in projects %}
+    <div class="card {% if project.status == 'en_cours' %}card-blue{% elif project.status == 'termine' %}card-green{% elif project.status == 'suspendu' %}card-red{% else %}card-amber{% endif %}" data-href="{% url 'core:project_detail' project.id %}">
+        <div class="card-content">
+            <div class="project-card-header">
+                <div class="project-card-badges">
+                    <span class="badge {% if project.status == 'en_cours' %}badge-info{% elif project.status == 'termine' %}badge-success{% else %}badge-secondary{% endif %}">
+                        {{ project.get_status_display }}
+                    </span>
+                    <span class="badge {% if project.priority == 'haute' %}badge-danger{% elif project.priority == 'moyenne' %}badge-warning{% else %}badge-secondary{% endif %}">
+                        {{ project.get_priority_display }}
+                    </span>
+                </div>
+                <span class="project-card-direction">{{ project.direction.code }}</span>
+            </div>
+            
+            <h3 class="project-card-title">{{ project.name }}</h3>
+            <p class="project-card-description">{{ project.description }}</p>
+            
+            <div class="project-card-progress">
+                <div class="project-card-progress-header">
+                    <span class="project-card-progress-label">Progression</span>
+                    <span class="project-card-progress-value">{{ project.progress }}%</span>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar {% if project.progress >= 80 %}green{% elif project.progress >= 50 %}blue{% elif project.progress >= 25 %}amber{% else %}red{% endif %}" style="width: {{ project.progress }}%"></div>
+                </div>
+            </div>
+            
+            <div class="project-card-meta">
+                <span class="project-card-meta-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                    </svg>
+                    {{ project.budget|floatformat:0 }} GNF
+                </span>
+                <span class="project-card-meta-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {{ project.end_date|date:"d/m/Y" }}
+                </span>
+            </div>
+            
+            <div class="mt-4" style="padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                <div class="flex items-center gap-2 text-sm text-gray-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <span>Responsable: {{ project.manager }}</span>
+                </div>
+            </div>
+            
+            {% if project.milestones.exists %}
+            <div class="mt-4" style="padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                <p class="text-sm font-medium text-gray-600 mb-2">Jalons du projet</p>
+                {% for milestone in project.milestones.all %}
+                <div class="milestone-item">
+                    <span class="milestone-indicator" style="width: 14px; height: 14px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; border: 2px solid rgba(255, 255, 255, 0.95); background-color: rgba(255, 255, 255, 0.14); font-weight: 800; font-size: 12px; line-height: 12px; color: rgba(255, 255, 255, 0.95);">
+                        {% if milestone.completed %}✓{% endif %}
+                    </span>
+                    <span class="milestone-text">{{ milestone.name }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <div class="flex gap-2" style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                <a href="{% url 'core:project_detail' project.id %}" class="btn btn-primary btn-sm">Ouvrir</a>
+                {% if user.profile.is_directeur_general %}
+                <a href="{% url 'core:project_edit' project.id %}" class="btn btn-outline btn-sm">Modifier</a>
+                <a href="{% url 'core:project_delete' project.id %}" class="btn btn-sm" style="background: var(--red-50); color: var(--red-600);">Supprimer</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="card" style="grid-column: span 3;">
+        <div class="card-content" style="text-align: center; padding: 48px;">
+            <p class="text-gray-500">Aucun projet trouvé</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

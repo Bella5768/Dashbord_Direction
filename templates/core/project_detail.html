@@ -1,0 +1,379 @@
+{% extends 'base.html' %}
+
+{% block title %}Projet - {{ project.name }}{% endblock %}
+{% block page_title %}{{ project.name }}{% endblock %}
+{% block page_subtitle %}Aperçu et suivi du projet{% endblock %}
+
+{% block content %}
+<div class="grid grid-3" style="gap: 16px;">
+    <div class="card" style="grid-column: span 2;">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3 class="card-title">Overview</h3>
+                <p class="text-sm text-gray-500">Résumé général du projet</p>
+            </div>
+            <div class="flex gap-2">
+                <a href="{% url 'core:project_edit' project.id %}" class="btn btn-outline btn-sm">Modifier</a>
+                <a href="{% url 'core:projects' %}" class="btn btn-outline btn-sm">Retour</a>
+            </div>
+        </div>
+        <div class="card-content">
+            <div class="flex items-center justify-between" style="margin-bottom: 12px;">
+                <div class="flex items-center gap-2">
+                    <span class="badge {% if project.status == 'en_cours' %}badge-info{% elif project.status == 'termine' %}badge-success{% elif project.status == 'en_retard' %}badge-danger{% else %}badge-secondary{% endif %}">{{ project.get_status_display }}</span>
+                    <span class="badge {% if project.priority == 'haute' %}badge-danger{% elif project.priority == 'moyenne' %}badge-warning{% else %}badge-secondary{% endif %}">{{ project.get_priority_display }}</span>
+                    <span class="badge badge-secondary">{{ project.direction.code }}</span>
+                </div>
+                <div class="text-sm text-gray-500">Mis à jour le {{ project.updated_at|date:"d/m/Y" }}</div>
+            </div>
+
+            <p class="text-gray-700" style="margin-bottom: 16px;">{% if project.description %}{{ project.description }}{% else %}<span class="text-gray-500">Aucune description</span>{% endif %}</p>
+
+            <div>
+                <div class="flex items-center justify-between" style="margin-bottom: 8px;">
+                    <span class="text-sm font-medium text-gray-600">Avancement du projet</span>
+                    <span class="text-sm font-semibold">{{ project.progress }}%</span>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar {% if project.progress >= 80 %}green{% elif project.progress >= 50 %}blue{% elif project.progress >= 25 %}amber{% else %}red{% endif %}" style="width: {{ project.progress }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Détails</h3>
+        </div>
+        <div class="card-content">
+            <div class="flex justify-between" style="margin-bottom: 10px;">
+                <span class="text-sm text-gray-500">Responsable</span>
+                <span class="text-sm font-medium">{{ project.manager }}</span>
+            </div>
+            <div class="flex justify-between" style="margin-bottom: 10px;">
+                <span class="text-sm text-gray-500">Début</span>
+                <span class="text-sm font-medium">{{ project.start_date|date:"d/m/Y" }}</span>
+            </div>
+            <div class="flex justify-between" style="margin-bottom: 10px;">
+                <span class="text-sm text-gray-500">Fin</span>
+                <span class="text-sm font-medium">{{ project.end_date|date:"d/m/Y" }}</span>
+            </div>
+            <div class="flex justify-between" style="margin-bottom: 10px;">
+                <span class="text-sm text-gray-500">Budget alloué</span>
+                <span class="text-sm font-medium">{{ project.budget|floatformat:0 }} GNF</span>
+            </div>
+            <div class="flex justify-between" style="margin-bottom: 10px;">
+                <span class="text-sm text-gray-500">Consommé</span>
+                <span class="text-sm font-medium">{{ project.budget_consumed|floatformat:0 }} GNF</span>
+            </div>
+            <div style="margin-top: 12px;">
+                <div class="flex items-center justify-between" style="margin-bottom: 8px;">
+                    <span class="text-sm font-medium text-gray-600">Consommation budget</span>
+                    <span class="text-sm font-semibold">{{ project.budget_percentage }}%</span>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar {% if project.budget_percentage > 80 %}red{% elif project.budget_percentage > 60 %}amber{% else %}green{% endif %}" style="width: {{ project.budget_percentage }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="grid-column: span 2;">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 class="card-title">Étapes / Jalons</h3>
+            <a href="{% url 'core:milestone_create' project.id %}" class="btn btn-primary btn-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Ajouter
+            </a>
+        </div>
+        <div class="card-content">
+            {% if milestones %}
+                <div class="grid grid-2" style="gap: 10px;">
+                    {% for milestone in milestones %}
+                    <div class="flex items-center justify-between" style="padding: 10px; border: 1px solid #e5e7eb; border-radius: 10px; {% if milestone.completed %}background-color: #dcfce7; border-left: 4px solid #16a34a;{% else %}background-color: #fef3c7; border-left: 4px solid #f59e0b;{% endif %}">
+                        <div class="flex items-center gap-2">
+                            <span class="milestone-indicator" style="width: 14px; height: 14px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; border: 2px solid #64748b; background-color: rgba(100, 116, 139, 0.12); font-weight: 800; font-size: 12px; line-height: 12px; color: #16a34a;">
+                                {% if milestone.completed %}✓{% endif %}
+                            </span>
+                            <span class="milestone-text">{{ milestone.name }}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-gray-500">#{{ milestone.order }}</span>
+                            <a href="{% url 'core:milestone_edit' milestone.id %}" class="action-btn" title="Modifier">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                            </a>
+                            <a href="{% url 'core:milestone_delete' milestone.id %}" class="action-btn danger" title="Supprimer">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-500">Aucun jalon défini pour ce projet.</p>
+                <div style="margin-top: 16px;">
+                    <a href="{% url 'core:milestone_create' project.id %}" class="btn btn-primary btn-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        Ajouter un jalon
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card" style="grid-column: span 2;">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 class="card-title">Besoins</h3>
+        </div>
+        <div class="card-content">
+            {% if needs %}
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
+                    {% for need in needs %}
+                    <div style="padding: 12px; border: 1px solid #e5e7eb; border-radius: 10px; background: #f8fafc;">
+                        <div class="flex items-center justify-between" style="gap: 12px;">
+                            <div>
+                                <div class="text-sm font-medium">{{ need.title }}</div>
+                                {% if need.description %}
+                                    <div class="text-xs text-gray-500" style="margin-top: 4px;">{{ need.description }}</div>
+                                {% endif %}
+                                <div class="text-xs text-gray-500" style="margin-top: 6px;">par {{ need.created_by }} • {{ need.created_at|date:"d/m/Y" }}</div>
+                            </div>
+                            <span class="badge {% if need.priority == 'haute' %}badge-danger{% elif need.priority == 'moyenne' %}badge-warning{% else %}badge-secondary{% endif %}">{{ need.get_priority_display }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-500" style="margin-bottom: 16px;">Aucun besoin défini pour ce projet.</p>
+            {% endif %}
+
+            <form method="post" action="{% url 'core:project_need_create' project.id %}">
+                {% csrf_token %}
+                <div class="grid grid-2" style="gap: 12px;">
+                    <div>
+                        <label class="text-sm text-gray-500">Titre</label>
+                        <input class="form-control" type="text" name="title" required />
+                    </div>
+                    <div>
+                        <label class="text-sm text-gray-500">Priorité</label>
+                        <select class="form-control" name="priority">
+                            <option value="basse">Basse</option>
+                            <option value="moyenne" selected>Moyenne</option>
+                            <option value="haute">Haute</option>
+                        </select>
+                    </div>
+                    <div style="grid-column: span 2;">
+                        <label class="text-sm text-gray-500">Description</label>
+                        <textarea class="form-control" name="description" rows="3"></textarea>
+                    </div>
+                </div>
+                <div style="margin-top: 12px; display: flex; justify-content: flex-end;">
+                    <button type="submit" class="btn btn-primary btn-sm">Ajouter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Suivi & mise à jour</h3>
+        </div>
+        <div class="card-content">
+            <p class="text-sm text-gray-500" style="margin-bottom: 12px;">Options rapides pour suivre et mettre à jour le projet.</p>
+            <div class="grid" style="gap: 8px;">
+                {% if user.profile.is_directeur_general %}
+                <a href="{% url 'core:project_edit' project.id %}" class="btn btn-primary btn-sm">Mettre à jour le projet</a>
+                <a href="{% url 'core:project_delete' project.id %}" class="btn btn-sm" style="background: var(--red-50); color: var(--red-600);">Supprimer</a>
+                {% endif %}
+                <a href="{% url 'core:projects' %}" class="btn btn-outline btn-sm">Retour</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <div class="card" style="grid-column: span 3;">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 class="card-title">Membres</h3>
+            <a href="{% url 'core:project_member_add' project.id %}" class="btn btn-primary btn-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Ajouter un membre
+            </a>
+        </div>
+        <div class="card-content">
+            {% with members=project.members.all %}
+                {% if members %}
+                    <div class="grid grid-3" style="gap: 12px;">
+                        {% for member in members %}
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="width: 40px; height: 40px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-weight: 600; color: #64748b;">
+                                    {{ member.employee.name.0 }}
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium">{{ member.employee.name }}</div>
+                                    <div class="text-xs text-gray-500">{{ member.employee.role }}</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="badge {% if member.role == 'manager' %}badge-danger{% elif member.role == 'member' %}badge-info{% else %}badge-secondary{% endif %}">{{ member.get_role_display }}</span>
+                                <div class="flex gap-1">
+                                    <a href="{% url 'core:project_member_edit' member.id %}" class="action-btn" title="Modifier le rôle">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                    </a>
+                                    <a href="{% url 'core:project_member_delete' member.id %}" class="action-btn danger" title="Retirer du projet">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div style="text-align: center; padding: 40px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="48" height="48" style="color: #d1d5db; margin: 0 auto 16px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        <p class="text-gray-500">Aucun membre dans ce projet.</p>
+                        <div style="margin-top: 16px;">
+                            <a href="{% url 'core:project_member_add' project.id %}" class="btn btn-primary btn-sm">Ajouter un membre</a>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+
+    <div class="card" style="grid-column: span 3;">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 class="card-title">Documents</h3>
+            <div class="flex gap-2">
+                <a href="{% url 'core:project_folder_create' project.id %}" class="btn btn-outline btn-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                    </svg>
+                    Nouveau dossier
+                </a>
+                <a href="{% url 'core:project_document_create' project.id %}" class="btn btn-primary btn-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Nouveau document
+                </a>
+            </div>
+        </div>
+        <div class="card-content">
+            {% with folders=project.folders.all documents=project.project_documents.all %}
+                {% if folders or documents %}
+                    <div class="grid grid-2" style="gap: 20px;">
+                        <!-- Dossiers -->
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-700 mb-3" style="display: flex; align-items: center; gap: 6px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                                </svg>
+                                Dossiers ({{ folders|length }})
+                            </h4>
+                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                {% for folder in folders %}
+                                <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+                                    <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="color: #3b82f6;">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                                        </svg>
+                                        <span class="text-sm font-medium">{{ folder.name }}</span>
+                                        {% if folder.parent %}<span class="text-xs text-gray-500">dans {{ folder.parent.name }}</span>{% endif %}
+                                    </div>
+                                    <div class="flex gap-1">
+                                        <a href="{% url 'core:project_folder_edit' folder.id %}" class="action-btn" title="Modifier">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                        </a>
+                                        <a href="{% url 'core:project_folder_delete' folder.id %}" class="action-btn danger" title="Supprimer">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- Documents -->
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-700 mb-3" style="display: flex; align-items: center; gap: 6px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Documents ({{ documents|length }})
+                            </h4>
+                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                {% for doc in documents %}
+                                <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+                                    <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="color: #6b7280;">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        <div>
+                                            <div class="text-sm font-medium">{{ doc.title }}</div>
+                                            <div class="text-xs text-gray-500">
+                                                {% if doc.folder %}{{ doc.folder.name }} • {% endif %}par {{ doc.uploaded_by }} • {{ doc.uploaded_at|date:"d/m/Y" }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-1">
+                                        {% if doc.file %}
+                                        <a href="{{ doc.file.url }}" target="_blank" class="action-btn" title="Télécharger">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                            </svg>
+                                        </a>
+                                        {% endif %}
+                                        <a href="{% url 'core:project_document_edit' doc.id %}" class="action-btn" title="Modifier">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                        </a>
+                                        <a href="{% url 'core:project_document_delete' doc.id %}" class="action-btn danger" title="Supprimer">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div style="text-align: center; padding: 40px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="48" height="48" style="color: #d1d5db; margin: 0 auto 16px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                        </svg>
+                        <p class="text-gray-500">Aucun dossier ou document dans ce projet.</p>
+                        <div style="margin-top: 16px;">
+                            <a href="{% url 'core:project_folder_create' project.id %}" class="btn btn-outline btn-sm">Créer un dossier</a>
+                            <a href="{% url 'core:project_document_create' project.id %}" class="btn btn-primary btn-sm">Ajouter un document</a>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+</div>
+{% endblock %}

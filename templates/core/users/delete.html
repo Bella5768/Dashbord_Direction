@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Supprimer {{ user_obj.username }}{% endblock %}
+{% block page_title %}Supprimer l'utilisateur{% endblock %}
+{% block page_subtitle %}Cette action est irréversible{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 600px;">
+    <div class="card-content" style="text-align: center; padding: 48px;">
+        <div style="width: 80px; height: 80px; background: #fef2f2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#dc2626" width="40" height="40">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+        </div>
+        
+        <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 8px;">Confirmer la suppression</h2>
+        <p class="text-gray-500" style="margin-bottom: 24px;">
+            Êtes-vous sûr de vouloir supprimer l'utilisateur <strong>{{ user_obj.get_full_name|default:user_obj.username }}</strong> (@{{ user_obj.username }}) ?
+        </p>
+        
+        <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 16px; margin-bottom: 24px; text-align: left;">
+            <p class="text-sm" style="color: #b91c1c;">
+                <strong>Attention :</strong> Cette action supprimera définitivement :
+            </p>
+            <ul style="margin-top: 8px; padding-left: 20px; color: #b91c1c; font-size: 14px;">
+                <li>Le compte utilisateur</li>
+                <li>Le profil et les permissions</li>
+                <li>L'historique des activités</li>
+            </ul>
+        </div>
+        
+        <form method="post" style="display: flex; gap: 12px; justify-content: center;">
+            {% csrf_token %}
+            <a href="{% url 'core:users_list' %}" class="btn btn-outline">Annuler</a>
+            <button type="submit" class="btn" style="background: #dc2626; color: white;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Supprimer définitivement
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

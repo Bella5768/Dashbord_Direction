@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block page_subtitle %}{% if user_obj %}Modifier les informations de {{ user_obj.username }}{% else %}Créer un nouveau compte utilisateur{% endif %}{% endblock %}
+
+{% block content %}
+<div class="grid" style="grid-template-columns: 2fr 1fr; gap: 24px;">
+    <!-- Form -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Informations de l'utilisateur</h3>
+        </div>
+        <div class="card-content">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="grid grid-2" style="gap: 16px; margin-bottom: 24px;">
+                    <div class="form-group">
+                        <label for="id_username">Nom d'utilisateur *</label>
+                        <input type="text" name="username" id="id_username" class="form-control" value="{{ form.username.value|default:'' }}" required>
+                        {% if form.username.errors %}
+                        <p class="text-xs" style="color: var(--red-600); margin-top: 4px;">{{ form.username.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label for="id_email">Email *</label>
+                        <input type="email" name="email" id="id_email" class="form-control" value="{{ form.email.value|default:'' }}" required>
+                        {% if form.email.errors %}
+                        <p class="text-xs" style="color: var(--red-600); margin-top: 4px;">{{ form.email.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="grid grid-2" style="gap: 16px; margin-bottom: 24px;">
+                    <div class="form-group">
+                        <label for="id_first_name">Prénom *</label>
+                        <input type="text" name="first_name" id="id_first_name" class="form-control" value="{{ form.first_name.value|default:'' }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="id_last_name">Nom *</label>
+                        <input type="text" name="last_name" id="id_last_name" class="form-control" value="{{ form.last_name.value|default:'' }}" required>
+                    </div>
+                </div>
+                
+                {% if not user_obj %}
+                <div class="grid grid-2" style="gap: 16px; margin-bottom: 24px;">
+                    <div class="form-group">
+                        <label for="id_password1">Mot de passe *</label>
+                        <input type="password" name="password1" id="id_password1" class="form-control" required>
+                        {% if form.password1.errors %}
+                        <p class="text-xs" style="color: var(--red-600); margin-top: 4px;">{{ form.password1.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label for="id_password2">Confirmer le mot de passe *</label>
+                        <input type="password" name="password2" id="id_password2" class="form-control" required>
+                        {% if form.password2.errors %}
+                        <p class="text-xs" style="color: var(--red-600); margin-top: 4px;">{{ form.password2.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
+                <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Rôle et permissions</h4>
+                
+                <div class="grid grid-2" style="gap: 16px; margin-bottom: 24px;">
+                    <div class="form-group">
+                        <label for="id_role">Rôle *</label>
+                        <select name="role" id="id_role" class="form-control" required>
+                            {% for value, label in form.role.field.choices %}
+                            <option value="{{ value }}" {% if form.role.value == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="id_direction">Direction</label>
+                        <select name="direction" id="id_direction" class="form-control">
+                            <option value="">-- Aucune direction --</option>
+                            {% for dir in form.direction.field.queryset %}
+                            <option value="{{ dir.id }}" {% if form.direction.value|stringformat:"s" == dir.id|stringformat:"s" %}selected{% endif %}>{{ dir.code }} - {{ dir.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="grid grid-2" style="gap: 16px; margin-bottom: 24px;">
+                    <div class="form-group">
+                        <label for="id_phone">Téléphone</label>
+                        <input type="text" name="phone" id="id_phone" class="form-control" value="{{ form.phone.value|default:'' }}">
+                    </div>
+                    {% if user_obj %}
+                    <div class="form-group">
+                        <label style="display: block; margin-bottom: 8px;">Statut du compte</label>
+                        <label class="remember-me" style="cursor: pointer;">
+                            <input type="checkbox" name="is_active" {% if form.is_active.value %}checked{% endif %}>
+                            <span>Compte actif</span>
+                        </label>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="flex gap-3" style="margin-top: 32px;">
+                    <button type="submit" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        {% if user_obj %}Enregistrer les modifications{% else %}Créer l'utilisateur{% endif %}
+                    </button>
+                    <a href="{% url 'core:users_list' %}" class="btn btn-outline">Annuler</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Sidebar -->
+    <div>
+        <!-- Role Info -->
+        <div class="card mb-6">
+            <div class="card-header">
+                <h3 class="card-title">Niveaux de permissions</h3>
+            </div>
+            <div class="card-content">
+                <div class="item-list" style="gap: 12px;">
+                    <div style="padding: 12px; background: #fef2f2; border-radius: 8px; border-left: 4px solid #ef4444;">
+                        <p class="font-medium text-sm" style="color: #b91c1c;">Administrateur</p>
+                        <p class="text-xs text-gray-500">Accès total à toutes les fonctionnalités</p>
+                    </div>
+                    <div style="padding: 12px; background: #fffbeb; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                        <p class="font-medium text-sm" style="color: #b45309;">Directeur Général</p>
+                        <p class="text-xs text-gray-500">Gestion complète, approbation demandes</p>
+                    </div>
+                    <div style="padding: 12px; background: #e8eef5; border-radius: 8px; border-left: 4px solid #2a4a6f;">
+                        <p class="font-medium text-sm" style="color: #1c3550;">Directeur</p>
+                        <p class="text-xs text-gray-500">Projets, budgets, documents, partenaires</p>
+                    </div>
+                    <div style="padding: 12px; background: #f0fdf4; border-radius: 8px; border-left: 4px solid #22c55e;">
+                        <p class="font-medium text-sm" style="color: #15803d;">Chef de Projet</p>
+                        <p class="text-xs text-gray-500">Projets, rapports</p>
+                    </div>
+                    <div style="padding: 12px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #94a3b8;">
+                        <p class="font-medium text-sm" style="color: #475569;">Employé</p>
+                        <p class="text-xs text-gray-500">Tableau de bord, calendrier</p>
+                    </div>
+                    <div style="padding: 12px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #cbd5e1;">
+                        <p class="font-medium text-sm" style="color: #64748b;">Visiteur</p>
+                        <p class="text-xs text-gray-500">Tableau de bord uniquement</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% if user_obj %}
+        <!-- User Info -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Informations</h3>
+            </div>
+            <div class="card-content">
+                <div class="item-list" style="gap: 8px;">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-500">Créé le</span>
+                        <span class="font-medium">{{ user_obj.date_joined|date:"d/m/Y" }}</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-500">Dernière connexion</span>
+                        <span class="font-medium">{{ user_obj.last_login|date:"d/m/Y H:i"|default:"Jamais" }}</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-500">Statut</span>
+                        <span class="badge {% if user_obj.is_active %}badge-success{% else %}badge-danger{% endif %}">
+                            {% if user_obj.is_active %}Actif{% else %}Inactif{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block page_subtitle %}Projet : {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 600px;">
+    <div class="card-header">
+        <h3 class="card-title">Informations du jalon</h3>
+    </div>
+    <div class="card-content">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label for="id_name">Nom du jalon *</label>
+                {{ form.name }}
+                {% if form.name.errors %}<p class="text-xs" style="color: var(--red-600);">{{ form.name.errors.0 }}</p>{% endif %}
+            </div>
+            
+            <div class="grid grid-2" style="gap: 16px; margin-bottom: 24px;">
+                <div class="form-group">
+                    <label for="id_order">Ordre</label>
+                    {{ form.order }}
+                </div>
+                <div class="form-group">
+                    <div style="margin-top: 24px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            {{ form.completed }}
+                            <span>Complété</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex gap-3">
+                <button type="submit" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    {% if milestone %}Enregistrer{% else %}Créer le jalon{% endif %}
+                </button>
+                <a href="{% url 'core:project_detail' project.id %}" class="btn btn-outline">Annuler</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

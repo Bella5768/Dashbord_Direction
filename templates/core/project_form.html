@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block page_subtitle %}{% if project %}Modifier les informations du projet{% else %}Créer un nouveau projet{% endif %}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px;">
+    <div class="card-header">
+        <h3 class="card-title">Informations du projet</h3>
+    </div>
+    <div class="card-content">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label for="id_name">Nom du projet *</label>
+                {{ form.name }}
+                {% if form.name.errors %}<p class="text-xs" style="color: var(--red-600);">{{ form.name.errors.0 }}</p>{% endif %}
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label for="id_description">Description</label>
+                {{ form.description }}
+            </div>
+            
+            <div class="grid grid-2" style="gap: 16px; margin-bottom: 16px;">
+                <div class="form-group">
+                    <label for="id_direction">Direction *</label>
+                    {{ form.direction }}
+                </div>
+                <div class="form-group">
+                    <label for="id_manager">Responsable *</label>
+                    {{ form.manager }}
+                </div>
+            </div>
+            
+            <div class="grid grid-3" style="gap: 16px; margin-bottom: 16px;">
+                <div class="form-group">
+                    <label for="id_status">Statut</label>
+                    {{ form.status }}
+                </div>
+                <div class="form-group">
+                    <label for="id_priority">Priorité</label>
+                    {{ form.priority }}
+                </div>
+            </div>
+            
+            <div class="grid grid-2" style="gap: 16px; margin-bottom: 16px;">
+                <div class="form-group">
+                    <label for="id_budget">Budget alloué (GNF)</label>
+                    {{ form.budget }}
+                </div>
+                <div class="form-group">
+                    <label for="id_budget_consumed">Budget consommé (GNF)</label>
+                    {{ form.budget_consumed }}
+                </div>
+            </div>
+            
+            <div class="grid grid-2" style="gap: 16px; margin-bottom: 24px;">
+                <div class="form-group">
+                    <label for="id_start_date">Date de début *</label>
+                    {{ form.start_date }}
+                </div>
+                <div class="form-group">
+                    <label for="id_end_date">Date de fin *</label>
+                    {{ form.end_date }}
+                </div>
+            </div>
+            
+            <div class="flex gap-3">
+                <button type="submit" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    {% if project %}Enregistrer{% else %}Créer le projet{% endif %}
+                </button>
+                <a href="{% url 'core:projects' %}" class="btn btn-outline">Annuler</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
