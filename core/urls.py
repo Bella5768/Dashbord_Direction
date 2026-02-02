@@ -12,7 +12,6 @@ urlpatterns = [
     path('', views.dashboard, name='dashboard'),
     path('projets/', views.projects, name='projects'),
     path('ressources/', views.resources, name='resources'),
-    path('documents/', views.documents, name='documents'),
     path('demandes/', views.requests_view, name='requests'),
     path('calendrier/', views.calendar, name='calendar'),
     # Reports
@@ -56,12 +55,6 @@ urlpatterns = [
     path('projets/membres/<int:member_id>/modifier/', views.project_member_edit, name='project_member_edit'),
     path('projets/membres/<int:member_id>/supprimer/', views.project_member_delete, name='project_member_delete'),
     
-    # Document CRUD
-    path('documents/nouveau/', views.document_create, name='document_create'),
-    path('documents/<int:doc_id>/modifier/', views.document_edit, name='document_edit'),
-    path('documents/<int:doc_id>/supprimer/', views.document_delete, name='document_delete'),
-    path('documents/<int:doc_id>/signer/', views.document_sign, name='document_sign'),
-    path('documents/<int:doc_id>/valider/', views.document_validate, name='document_validate'),
     
     # Request CRUD
     path('demandes/nouveau/', views.request_create, name='request_create'),
