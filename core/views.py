@@ -370,6 +370,60 @@ def calendar(request):
 
 
 @login_required
+def event_create(request):
+    """Créer un événement"""
+    from .forms import EventForm
+    
+    if request.method == 'POST':
+        form = EventForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Événement créé avec succès.")
+            return redirect('core:calendar')
+    else:
+        # Pré-remplir la date si fournie dans l'URL
+        initial = {}
+        date_str = request.GET.get('date')
+        if date_str:
+            initial['date'] = date_str
+        form = EventForm(initial=initial)
+    
+    return render(request, 'core/event_form.html', {'form': form, 'title': 'Nouvel événement'})
+
+
+@login_required
+def event_edit(request, event_id):
+    """Modifier un événement"""
+    from .forms import EventForm
+    
+    event = get_object_or_404(Event, pk=event_id)
+    
+    if request.method == 'POST':
+        form = EventForm(request.POST, instance=event)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Événement modifié avec succès.")
+            return redirect('core:calendar')
+    else:
+        form = EventForm(instance=event)
+    
+    return render(request, 'core/event_form.html', {'form': form, 'event': event, 'title': f'Modifier {event.title}'})
+
+
+@login_required
+def event_delete(request, event_id):
+    """Supprimer un événement"""
+    event = get_object_or_404(Event, pk=event_id)
+    
+    if request.method == 'POST':
+        event.delete()
+        messages.success(request, "Événement supprimé avec succès.")
+        return redirect('core:calendar')
+    
+    return render(request, 'core/event_confirm_delete.html', {'event': event})
+
+
+@login_required
 def reports(request):
     """Vue des rapports"""
     # Projets par direction

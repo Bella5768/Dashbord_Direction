@@ -14,6 +14,12 @@ urlpatterns = [
     path('ressources/', views.resources, name='resources'),
     path('demandes/', views.requests_view, name='requests'),
     path('calendrier/', views.calendar, name='calendar'),
+    
+    # Event CRUD
+    path('evenements/nouveau/', views.event_create, name='event_create'),
+    path('evenements/<int:event_id>/modifier/', views.event_edit, name='event_edit'),
+    path('evenements/<int:event_id>/supprimer/', views.event_delete, name='event_delete'),
+    
     # Reports
     path('rapports/', views.reports, name='reports'),
     path('rapports/export/pdf/', views.export_reports_pdf, name='export_reports_pdf'),
