@@ -143,43 +143,6 @@
         </div>
     </div>
     
-    <!-- Pending Documents -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Documents en attente</h3>
-            <a href="{% url 'core:documents' %}" class="card-link">Voir tout →</a>
-        </div>
-        <div class="card-content">
-            <div class="item-list">
-                {% for doc in pending_docs %}
-                <div class="document-item">
-                    <div class="document-icon {% if doc.status == 'a_signer' %}sign{% else %}validate{% endif %}">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                    </div>
-                    <div class="document-info">
-                        <p class="document-title">{{ doc.title }}</p>
-                        <p class="document-meta">{{ doc.get_doc_type_display }} • {{ doc.direction.code }}</p>
-                    </div>
-                    <div class="document-status">
-                        <span class="badge {% if doc.status == 'a_signer' %}badge-danger{% else %}badge-warning{% endif %}">
-                            {{ doc.get_status_display }}
-                        </span>
-                        <p class="document-date">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            {{ doc.due_date|date:"d/m/Y" }}
-                        </p>
-                    </div>
-                </div>
-                {% empty %}
-                <p class="text-gray-500">Aucun document en attente</p>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
 </div>
 
 <!-- Requests and Events -->
