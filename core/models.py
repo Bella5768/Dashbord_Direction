@@ -197,6 +197,7 @@ class ProjectMember(models.Model):
 class Milestone(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='milestones', verbose_name="Projet")
     name = models.CharField(max_length=200, verbose_name="Nom du jalon")
+    assigned_to = models.ForeignKey('Employee', on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_milestones', verbose_name="Responsable")
     completed = models.BooleanField(default=False, verbose_name="Complété")
     order = models.IntegerField(default=0, verbose_name="Ordre")
     

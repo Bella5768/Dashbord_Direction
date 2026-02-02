@@ -39,15 +39,20 @@ class MilestoneForm(forms.ModelForm):
     """Formulaire pour les jalons"""
     class Meta:
         model = Milestone
-        fields = ['name', 'completed', 'order']
+        fields = ['name', 'assigned_to', 'completed', 'order']
         widgets = {
             'order': forms.NumberInput(attrs={'min': 0, 'style': 'width: 100px;'}),
+            'assigned_to': forms.Select(attrs={'class': 'form-control'}),
         }
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, project=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
+        if project:
+            from .models import Employee
+            project_member_ids = project.members.values_list('employee_id', flat=True)
+            self.fields['assigned_to'].queryset = Employee.objects.filter(id__in=project_member_ids)
 
 
 class ProjectFolderForm(forms.ModelForm):

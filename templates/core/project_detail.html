@@ -93,11 +93,21 @@
                 <div class="grid grid-2" style="gap: 10px;">
                     {% for milestone in milestones %}
                     <div class="flex items-center justify-between" style="padding: 10px; border: 1px solid #e5e7eb; border-radius: 10px; {% if milestone.completed %}background-color: #dcfce7; border-left: 4px solid #16a34a;{% else %}background-color: #fef3c7; border-left: 4px solid #f59e0b;{% endif %}">
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2" style="flex: 1;">
                             <span class="milestone-indicator" style="width: 14px; height: 14px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; border: 2px solid #64748b; background-color: rgba(100, 116, 139, 0.12); font-weight: 800; font-size: 12px; line-height: 12px; color: #16a34a;">
                                 {% if milestone.completed %}✓{% endif %}
                             </span>
-                            <span class="milestone-text">{{ milestone.name }}</span>
+                            <div>
+                                <span class="milestone-text">{{ milestone.name }}</span>
+                                {% if milestone.assigned_to %}
+                                <div class="text-xs text-gray-500" style="margin-top: 2px;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12" style="display: inline; vertical-align: middle;">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                    {{ milestone.assigned_to.name }}
+                                </div>
+                                {% endif %}
+                            </div>
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="text-xs text-gray-500">#{{ milestone.order }}</span>

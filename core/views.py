@@ -1098,7 +1098,7 @@ def milestone_create(request, project_id):
                 return redirect('core:projects')
     
     if request.method == 'POST':
-        form = MilestoneForm(request.POST)
+        form = MilestoneForm(project=project, data=request.POST)
         if form.is_valid():
             milestone = form.save(commit=False)
             milestone.project = project
@@ -1106,7 +1106,7 @@ def milestone_create(request, project_id):
             messages.success(request, "Jalon créé avec succès.")
             return redirect('core:project_detail', project_id=project.id)
     else:
-        form = MilestoneForm()
+        form = MilestoneForm(project=project)
     
     return render(request, 'core/milestone_form.html', {'form': form, 'project': project, 'title': 'Nouveau jalon'})
 
@@ -1142,13 +1142,13 @@ def milestone_edit(request, milestone_id):
                 return redirect('core:projects')
     
     if request.method == 'POST':
-        form = MilestoneForm(request.POST, instance=milestone)
+        form = MilestoneForm(project=project, data=request.POST, instance=milestone)
         if form.is_valid():
             form.save()
             messages.success(request, "Jalon modifié avec succès.")
             return redirect('core:project_detail', project_id=project.id)
     else:
-        form = MilestoneForm(instance=milestone)
+        form = MilestoneForm(project=project, instance=milestone)
     
     return render(request, 'core/milestone_form.html', {'form': form, 'project': project, 'milestone': milestone, 'title': f'Modifier {milestone.name}'})
 
