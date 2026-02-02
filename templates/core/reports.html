@@ -46,9 +46,9 @@
         <p class="stat-box-value" style="color: #7c3aed;">{{ active_partners }}</p>
         <p class="stat-box-label">Partenaires actifs</p>
     </a>
-    <a class="stat-box stat-box-link" href="{% url 'core:documents' %}?status=all" style="text-align: center;">
-        <p class="stat-box-value" style="color: #d97706;">{{ pending_docs }}</p>
-        <p class="stat-box-label">Documents en attente</p>
+    <a class="stat-box stat-box-link" href="{% url 'core:requests' %}" style="text-align: center;">
+        <p class="stat-box-value" style="color: #d97706;">{{ pending_requests }}</p>
+        <p class="stat-box-label">Demandes en attente</p>
     </a>
 </div>
 
