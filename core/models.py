@@ -174,14 +174,16 @@ class Project(models.Model):
 class ProjectMember(models.Model):
     """Membres d'un projet"""
     ROLE_CHOICES = [
-        ('manager', 'Responsable'),
-        ('member', 'Membre'),
-        ('observer', 'Observateur'),
+        ('responsable', 'Responsable'),
+        ('membre', 'Membre'),
+        ('observateur', 'Observateur'),
+        ('personne_ressource', 'Personne ressource'),
+        ('ressource_externe', 'Ressource externe'),
     ]
     
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='members', verbose_name="Projet")
     employee = models.ForeignKey('Employee', on_delete=models.CASCADE, related_name='project_memberships', verbose_name="Employé")
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='member', verbose_name="Rôle")
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='membre', verbose_name="Rôle")
     joined_at = models.DateTimeField(auto_now_add=True, verbose_name="Date d'ajout")
     
     class Meta:
