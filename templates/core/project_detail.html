@@ -331,10 +331,20 @@
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="color: #3b82f6;">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                                         </svg>
-                                        <span class="text-sm font-medium">{{ folder.name }}</span>
+                                        <a href="{% url 'core:project_folder_detail' folder.id %}" class="text-sm font-medium" style="color: inherit; text-decoration: none;">{{ folder.name }}</a>
                                         {% if folder.parent %}<span class="text-xs text-gray-500">dans {{ folder.parent.name }}</span>{% endif %}
                                     </div>
                                     <div class="flex gap-1">
+                                        <a href="{% url 'core:project_folder_create' project.id %}?parent={{ folder.id }}" class="action-btn" title="Créer un sous-dossier">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m-6-6h12" />
+                                            </svg>
+                                        </a>
+                                        <a href="{% url 'core:project_document_create' project.id %}?folder={{ folder.id }}" class="action-btn" title="Ajouter un document dans ce dossier">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                        </a>
                                         <a href="{% url 'core:project_folder_edit' folder.id %}" class="action-btn" title="Modifier">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />

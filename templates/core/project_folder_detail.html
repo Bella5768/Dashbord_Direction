@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}Dossier - {{ folder.name }}{% endblock %}
+{% block page_title %}{{ folder.name }}{% endblock %}
+{% block page_subtitle %}Projet : {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="card" style="grid-column: span 3;">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h3 class="card-title">{{ folder.full_path }}</h3>
+            <p class="text-sm text-gray-500">Navigation dans les dossiers</p>
+        </div>
+        <div class="flex gap-2">
+            {% if folder.parent %}
+            <a href="{% url 'core:project_folder_detail' folder.parent.id %}" class="btn btn-outline btn-sm">Retour</a>
+            {% else %}
+            <a href="{% url 'core:project_detail' project.id %}" class="btn btn-outline btn-sm">Retour</a>
+            {% endif %}
+            <a href="{% url 'core:project_folder_edit' folder.id %}" class="btn btn-outline btn-sm">Modifier</a>
+        </div>
+    </div>
+    <div class="card-content">
+        <div class="flex gap-2" style="margin-bottom: 16px;">
+            <a href="{% url 'core:project_folder_create' project.id %}?parent={{ folder.id }}" class="btn btn-outline btn-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                </svg>
+                Nouveau sous-dossier
+            </a>
+            <a href="{% url 'core:project_document_create' project.id %}?folder={{ folder.id }}" class="btn btn-primary btn-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Ajouter un document
+            </a>
+        </div>
+
+        <div class="grid grid-2" style="gap: 20px;">
+            <div>
+                <h4 class="text-sm font-semibold text-gray-700 mb-3" style="display: flex; align-items: center; gap: 6px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                    </svg>
+                    Sous-dossiers ({{ subfolders|length }})
+                </h4>
+
+                {% if subfolders %}
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    {% for sub in subfolders %}
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+                        <a href="{% url 'core:project_folder_detail' sub.id %}" class="text-sm font-medium" style="display: flex; align-items: center; gap: 8px; color: inherit; text-decoration: none; flex: 1;">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="color: #3b82f6;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                            </svg>
+                            {{ sub.name }}
+                        </a>
+                        <div class="flex gap-1">
+                            <a href="{% url 'core:project_folder_edit' sub.id %}" class="action-btn" title="Modifier">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                            </a>
+                            <a href="{% url 'core:project_folder_delete' sub.id %}" class="action-btn danger" title="Supprimer">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-gray-500">Aucun sous-dossier.</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <h4 class="text-sm font-semibold text-gray-700 mb-3" style="display: flex; align-items: center; gap: 6px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Documents ({{ documents|length }})
+                </h4>
+
+                {% if documents %}
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    {% for doc in documents %}
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+                        <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="color: #6b7280;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <div>
+                                <div class="text-sm font-medium">{{ doc.title }}</div>
+                                <div class="text-xs text-gray-500">par {{ doc.uploaded_by }} • {{ doc.uploaded_at|date:"d/m/Y" }}</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-1">
+                            {% if doc.file %}
+                            <a href="{{ doc.file.url }}" target="_blank" class="action-btn" title="Télécharger">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                            </a>
+                            {% endif %}
+                            <a href="{% url 'core:project_document_edit' doc.id %}" class="action-btn" title="Modifier">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                            </a>
+                            <a href="{% url 'core:project_document_delete' doc.id %}" class="action-btn danger" title="Supprimer">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-gray-500">Aucun document dans ce dossier.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

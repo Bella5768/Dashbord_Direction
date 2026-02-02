@@ -1197,6 +1197,10 @@ def project_folder_create(request, project_id):
     from .forms_project import ProjectFolderForm
     
     project = get_object_or_404(Project, pk=project_id)
+    parent_id = request.GET.get('parent')
+    parent_folder = None
+    if parent_id:
+        parent_folder = get_object_or_404(ProjectFolder, pk=parent_id, project=project)
     
     # Permission check
     if not (request.user.profile.is_directeur_general() or request.user.is_staff):
@@ -1227,11 +1231,50 @@ def project_folder_create(request, project_id):
             folder.project = project
             folder.save()
             messages.success(request, "Dossier créé avec succès.")
+            if folder.parent_id:
+                return redirect('core:project_folder_detail', folder_id=folder.id)
             return redirect('core:project_detail', project_id=project.id)
     else:
-        form = ProjectFolderForm(project)
+        if parent_folder:
+            form = ProjectFolderForm(project, initial={'parent': parent_folder})
+        else:
+            form = ProjectFolderForm(project)
     
     return render(request, 'core/project_folder_form.html', {'form': form, 'project': project, 'title': 'Nouveau dossier'})
+
+
+@login_required
+def project_folder_detail(request, folder_id):
+    """Détail d'un dossier de projet (sous-dossiers + documents)"""
+    folder = get_object_or_404(ProjectFolder.objects.select_related('project', 'parent'), pk=folder_id)
+    project = folder.project
+
+    # Permission check
+    if not (request.user.profile.is_directeur_general() or request.user.is_staff):
+        if request.user.profile.is_directeur():
+            # Directeur ne peut voir que les projets de sa direction
+            if project.direction != request.user.profile.direction:
+                messages.error(request, "Vous n'avez pas accès à ce projet.")
+                return redirect('core:projects')
+        else:
+            # Chef de projet et autres voient les projets où ils sont manager OU membres
+            user_name = request.user.get_full_name() or request.user.username
+            is_manager = project.manager and user_name in project.manager
+            is_member = project.members.filter(employee__name=user_name).exists()
+            if not (is_manager or is_member):
+                messages.error(request, "Vous n'avez pas accès à ce projet.")
+                return redirect('core:projects')
+
+    subfolders = folder.subfolders.all().order_by('name')
+    documents = folder.documents.all().order_by('-uploaded_at')
+
+    context = {
+        'project': project,
+        'folder': folder,
+        'subfolders': subfolders,
+        'documents': documents,
+    }
+    return render(request, 'core/project_folder_detail.html', context)
 
 
 @login_required
@@ -1318,6 +1361,10 @@ def project_document_create(request, project_id):
     from .forms_project import ProjectDocumentForm
     
     project = get_object_or_404(Project, pk=project_id)
+    folder_id = request.GET.get('folder')
+    initial_folder = None
+    if folder_id:
+        initial_folder = get_object_or_404(ProjectFolder, pk=folder_id, project=project)
     
     # Permission check
     if not (request.user.profile.is_directeur_general() or request.user.is_staff):
@@ -1349,9 +1396,14 @@ def project_document_create(request, project_id):
             doc.uploaded_by = request.user.get_full_name() or request.user.username
             doc.save()
             messages.success(request, "Document ajouté avec succès.")
+            if doc.folder_id:
+                return redirect('core:project_folder_detail', folder_id=doc.folder_id)
             return redirect('core:project_detail', project_id=project.id)
     else:
-        form = ProjectDocumentForm(project)
+        if initial_folder:
+            form = ProjectDocumentForm(project, initial={'folder': initial_folder})
+        else:
+            form = ProjectDocumentForm(project)
     
     return render(request, 'core/project_document_form.html', {'form': form, 'project': project, 'title': 'Nouveau document'})
 

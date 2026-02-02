@@ -44,6 +44,7 @@ urlpatterns = [
     
     # Project Folder & Document CRUD
     path('projets/<int:project_id>/dossiers/nouveau/', views.project_folder_create, name='project_folder_create'),
+    path('dossiers/<int:folder_id>/', views.project_folder_detail, name='project_folder_detail'),
     path('dossiers/<int:folder_id>/modifier/', views.project_folder_edit, name='project_folder_edit'),
     path('dossiers/<int:folder_id>/supprimer/', views.project_folder_delete, name='project_folder_delete'),
     path('projets/<int:project_id>/documents/nouveau/', views.project_document_create, name='project_document_create'),
