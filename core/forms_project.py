@@ -221,10 +221,12 @@ class EmployeeForm(forms.ModelForm):
     """Formulaire pour les employés"""
     class Meta:
         model = Employee
-        fields = ['name', 'direction', 'role']
+        fields = ['name', 'direction', 'role', 'phone', 'email']
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
         self.fields['name'].label = 'Nom complet'
+        self.fields['phone'].label = 'Téléphone'
+        self.fields['email'].label = 'Email'

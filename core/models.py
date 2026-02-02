@@ -428,6 +428,8 @@ class Employee(models.Model):
     name = models.CharField(max_length=100, verbose_name="Nom")
     direction = models.ForeignKey(Direction, on_delete=models.CASCADE, related_name='employees', verbose_name="Direction")
     role = models.CharField(max_length=100, verbose_name="Rôle")
+    phone = models.CharField(max_length=20, blank=True, verbose_name="Téléphone")
+    email = models.EmailField(blank=True, verbose_name="Email")
     workload = models.IntegerField(default=0, verbose_name="Charge de travail (%)")
     skills = models.TextField(blank=True, verbose_name="Compétences")
     
