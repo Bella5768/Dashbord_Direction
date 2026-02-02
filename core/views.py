@@ -1578,18 +1578,82 @@ def project_member_add(request, project_id):
                 messages.error(request, "Vous n'avez pas accès à ce projet.")
                 return redirect('core:projects')
     
+    directions = Direction.objects.all()
+    context = {
+        'project': project,
+        'title': 'Ajouter un membre',
+        'directions': directions,
+    }
+    
     if request.method == 'POST':
-        form = ProjectMemberForm(project, request.POST)
-        if form.is_valid():
-            member = form.save(commit=False)
-            member.project = project
-            member.save()
-            messages.success(request, "Membre ajouté avec succès.")
+        create_new_employee = request.POST.get('create_new_employee') == 'on'
+        
+        if create_new_employee:
+            # Créer un nouvel employé
+            new_name = request.POST.get('new_employee_name', '').strip()
+            new_direction_id = request.POST.get('new_employee_direction', '')
+            new_role_employee = request.POST.get('new_employee_role', '').strip()
+            new_phone = request.POST.get('new_employee_phone', '').strip()
+            new_email = request.POST.get('new_employee_email', '').strip()
+            project_role = request.POST.get('role', 'membre')
+            
+            # Validation
+            errors = []
+            if not new_name:
+                errors.append("Le nom de l'employé est requis.")
+            if not new_direction_id:
+                errors.append("La direction est requise.")
+            if not new_role_employee:
+                errors.append("Le poste/fonction est requis.")
+            
+            if errors:
+                for error in errors:
+                    messages.error(request, error)
+                context['create_new_employee'] = True
+                context['new_employee_name'] = new_name
+                context['new_employee_direction'] = new_direction_id
+                context['new_employee_role'] = new_role_employee
+                context['new_employee_phone'] = new_phone
+                context['new_employee_email'] = new_email
+                form = ProjectMemberForm(project)
+                context['form'] = form
+                return render(request, 'core/project_member_form.html', context)
+            
+            # Créer l'employé
+            direction = get_object_or_404(Direction, pk=new_direction_id)
+            new_employee = Employee.objects.create(
+                name=new_name,
+                direction=direction,
+                role=new_role_employee,
+                phone=new_phone,
+                email=new_email
+            )
+            
+            # Créer le membre de projet
+            ProjectMember.objects.create(
+                project=project,
+                employee=new_employee,
+                role=project_role
+            )
+            
+            messages.success(request, f"Employé '{new_name}' créé et ajouté au projet avec succès.")
             return redirect('core:project_detail', project_id=project.id)
+        else:
+            # Employé existant
+            form = ProjectMemberForm(project, request.POST)
+            if form.is_valid():
+                member = form.save(commit=False)
+                member.project = project
+                member.save()
+                messages.success(request, "Membre ajouté avec succès.")
+                return redirect('core:project_detail', project_id=project.id)
+            context['form'] = form
+            return render(request, 'core/project_member_form.html', context)
     else:
         form = ProjectMemberForm(project)
     
-    return render(request, 'core/project_member_form.html', {'form': form, 'project': project, 'title': 'Ajouter un membre'})
+    context['form'] = form
+    return render(request, 'core/project_member_form.html', context)
 
 
 @login_required

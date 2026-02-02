@@ -5,7 +5,7 @@
 {% block page_subtitle %}Projet : {{ project.name }}{% endblock %}
 
 {% block content %}
-<div class="card" style="max-width: 600px;">
+<div class="card" style="max-width: 700px;">
     <div class="card-header">
         <h3 class="card-title">Informations du membre</h3>
     </div>
@@ -13,14 +13,63 @@
         <form method="post">
             {% csrf_token %}
             
+            <!-- Toggle entre employé existant et nouveau -->
             <div class="form-group" style="margin-bottom: 16px;">
-                <label for="id_employee">Employé *</label>
-                {{ form.employee }}
-                {% if form.employee.errors %}<p class="text-xs" style="color: var(--red-600);">{{ form.employee.errors.0 }}</p>{% endif %}
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="checkbox" id="toggle_new_employee" name="create_new_employee" style="width: 18px; height: 18px;" {% if create_new_employee %}checked{% endif %}>
+                    <span>Créer un nouvel employé (personne non enregistrée dans le système)</span>
+                </label>
+            </div>
+            
+            <!-- Section employé existant -->
+            <div id="existing_employee_section" {% if create_new_employee %}style="display: none;"{% endif %}>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label for="id_employee">Employé existant *</label>
+                    {{ form.employee }}
+                    {% if form.employee.errors %}<p class="text-xs" style="color: var(--red-600);">{{ form.employee.errors.0 }}</p>{% endif %}
+                </div>
+            </div>
+            
+            <!-- Section nouvel employé -->
+            <div id="new_employee_section" {% if not create_new_employee %}style="display: none;"{% endif %}>
+                <div style="background-color: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                    <h4 style="margin-bottom: 12px; color: #0369a1;">Informations du nouvel employé</h4>
+                    
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label for="new_employee_name">Nom complet *</label>
+                        <input type="text" id="new_employee_name" name="new_employee_name" class="form-control" value="{{ new_employee_name|default:'' }}" placeholder="Ex: Jean Dupont">
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label for="new_employee_direction">Direction *</label>
+                        <select id="new_employee_direction" name="new_employee_direction" class="form-control">
+                            <option value="">-- Sélectionner une direction --</option>
+                            {% for direction in directions %}
+                            <option value="{{ direction.id }}" {% if new_employee_direction == direction.id|stringformat:"s" %}selected{% endif %}>{{ direction.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label for="new_employee_role">Poste/Fonction *</label>
+                        <input type="text" id="new_employee_role" name="new_employee_role" class="form-control" value="{{ new_employee_role|default:'' }}" placeholder="Ex: Analyste, Consultant, etc.">
+                    </div>
+                    
+                    <div class="grid grid-2" style="gap: 12px;">
+                        <div class="form-group">
+                            <label for="new_employee_phone">Téléphone</label>
+                            <input type="text" id="new_employee_phone" name="new_employee_phone" class="form-control" value="{{ new_employee_phone|default:'' }}" placeholder="Ex: 621234567">
+                        </div>
+                        <div class="form-group">
+                            <label for="new_employee_email">Email</label>
+                            <input type="email" id="new_employee_email" name="new_employee_email" class="form-control" value="{{ new_employee_email|default:'' }}" placeholder="Ex: jean@exemple.com">
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <div class="form-group" style="margin-bottom: 24px;">
-                <label for="id_role">Rôle *</label>
+                <label for="id_role">Rôle dans le projet *</label>
                 {{ form.role }}
                 {% if form.role.errors %}<p class="text-xs" style="color: var(--red-600);">{{ form.role.errors.0 }}</p>{% endif %}
             </div>
@@ -37,4 +86,19 @@
         </form>
     </div>
 </div>
+
+<script>
+document.getElementById('toggle_new_employee').addEventListener('change', function() {
+    const existingSection = document.getElementById('existing_employee_section');
+    const newSection = document.getElementById('new_employee_section');
+    
+    if (this.checked) {
+        existingSection.style.display = 'none';
+        newSection.style.display = 'block';
+    } else {
+        existingSection.style.display = 'block';
+        newSection.style.display = 'none';
+    }
+});
+</script>
 {% endblock %}
