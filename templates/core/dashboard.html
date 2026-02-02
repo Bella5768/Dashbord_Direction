@@ -52,16 +52,16 @@
         </div>
     </a>
     
-    <a class="stat-card stat-card-red stat-card-link" href="{% url 'core:documents' %}">
+    <a class="stat-card stat-card-red stat-card-link" href="{% url 'core:requests' %}">
         <div class="stat-card-header">
             <div>
-                <p class="stat-card-label">Documents en attente</p>
-                <p class="stat-card-value">{{ pending_documents }}</p>
-                <p class="stat-card-subtitle">{{ pending_requests }} demandes à traiter</p>
+                <p class="stat-card-label">Demandes en attente</p>
+                <p class="stat-card-value">{{ pending_requests }}</p>
+                <p class="stat-card-subtitle">À traiter</p>
             </div>
             <div class="stat-card-icon red">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                 </svg>
             </div>
         </div>
