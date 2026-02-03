@@ -25,9 +25,23 @@ class UserProfile(models.Model):
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True, verbose_name="Photo")
     is_active_profile = models.BooleanField(default=True, verbose_name="Profil actif")
 
+    # Permissions budgets
     budget_view = models.BooleanField(default=False, verbose_name="Peut voir les budgets")
     budget_manage = models.BooleanField(default=False, verbose_name="Peut gérer les budgets")
     budget_view_all_directions = models.BooleanField(default=False, verbose_name="Peut voir les budgets de toutes les directions")
+    
+    # Permissions projets
+    can_create_project = models.BooleanField(default=False, verbose_name="Peut créer des projets")
+    can_edit_projects = models.BooleanField(default=False, verbose_name="Peut modifier les projets")
+    can_add_milestones = models.BooleanField(default=False, verbose_name="Peut ajouter des jalons")
+    can_add_members = models.BooleanField(default=False, verbose_name="Peut ajouter des membres")
+    
+    # Permissions utilisateurs et demandes
+    can_manage_users = models.BooleanField(default=False, verbose_name="Peut gérer les utilisateurs")
+    can_approve_requests = models.BooleanField(default=False, verbose_name="Peut approuver les demandes")
+    
+    # Permissions événements
+    can_create_events = models.BooleanField(default=False, verbose_name="Peut créer des événements")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -63,12 +77,12 @@ class UserProfile(models.Model):
     def is_visiteur(self):
         return self.role == 'visiteur'
     
-    def can_manage_users(self):
-        """Admin et DG peuvent gérer les utilisateurs"""
-        return self.role in ['admin', 'directeur_general']
+    def has_manage_users_permission(self):
+        """Admin et DG peuvent gérer les utilisateurs, ou permission explicite"""
+        return self.role in ['admin', 'directeur_general'] or self.can_manage_users
     
     def can_manage_budgets(self):
-        """Admin, DG et Directeur peuvent gérer les budgets"""
+        """Admin, DG et Directeur peuvent gérer les budgets, ou permission explicite"""
         return self.role in ['admin', 'directeur_general', 'directeur'] or self.budget_manage
 
     def can_view_budgets(self):
@@ -80,13 +94,13 @@ class UserProfile(models.Model):
     def can_approve_documents(self):
         return self.role in ['admin', 'directeur_general', 'directeur']
     
-    def can_approve_requests(self):
-        """Admin et DG peuvent approuver les demandes"""
-        return self.role in ['admin', 'directeur_general']
+    def has_approve_requests_permission(self):
+        """Admin et DG peuvent approuver les demandes, ou permission explicite"""
+        return self.role in ['admin', 'directeur_general'] or self.can_approve_requests
     
     def can_create_projects(self):
-        """Admin, DG et Directeur peuvent créer des projets"""
-        return self.role in ['admin', 'directeur_general', 'directeur']
+        """Admin, DG et Directeur peuvent créer des projets, ou permission explicite"""
+        return self.role in ['admin', 'directeur_general', 'directeur'] or self.can_create_project
     
     def can_manage_projects(self):
         """Admin, DG, Directeur et Chef de projet peuvent gérer les projets"""
@@ -94,22 +108,30 @@ class UserProfile(models.Model):
     
     def can_edit_project(self, project):
         """Vérifie si l'utilisateur peut modifier un projet spécifique"""
+        # Permission explicite
+        if self.can_edit_projects:
+            if self.direction and self.direction == project.direction:
+                return True
+        # Rôles par défaut
         if self.role in ['admin', 'directeur_general']:
             return True
         if self.role == 'directeur' and self.direction == project.direction:
             return True
         if self.role == 'chef_projet':
-            # Chef de projet peut modifier s'il est manager ou responsable du projet
             user_name = self.user.get_full_name() or self.user.username
             if project.manager and user_name in project.manager:
                 return True
-            # Ou s'il est membre avec rôle responsable
             if self.employee_id:
                 return project.members.filter(employee_id=self.employee_id, role='responsable').exists()
         return False
     
     def can_add_project_members(self, project):
         """Vérifie si l'utilisateur peut ajouter des membres à un projet"""
+        # Permission explicite
+        if self.can_add_members:
+            if self.direction and self.direction == project.direction:
+                return True
+        # Rôles par défaut
         if self.role in ['admin', 'directeur_general']:
             return True
         if self.role == 'directeur' and self.direction == project.direction:
@@ -122,8 +144,12 @@ class UserProfile(models.Model):
                 return project.members.filter(employee_id=self.employee_id, role='responsable').exists()
         return False
     
-    def can_add_milestones(self, project):
+    def can_add_project_milestones(self, project):
         """Vérifie si l'utilisateur peut ajouter des jalons à un projet"""
+        # Permission explicite
+        if self.can_add_milestones:
+            if self.direction and self.direction == project.direction:
+                return True
         return self.can_edit_project(project)
     
     def can_view_project(self, project):
@@ -150,9 +176,9 @@ class UserProfile(models.Model):
         """Tous sauf visiteur peuvent voir le calendrier"""
         return self.role != 'visiteur'
     
-    def can_create_events(self):
-        """Admin, DG, Directeur peuvent créer des événements"""
-        return self.role in ['admin', 'directeur_general', 'directeur']
+    def has_create_events_permission(self):
+        """Admin, DG, Directeur peuvent créer des événements, ou permission explicite"""
+        return self.role in ['admin', 'directeur_general', 'directeur'] or self.can_create_events
 
 
 @receiver(post_save, sender=User)
