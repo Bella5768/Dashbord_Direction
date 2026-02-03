@@ -48,6 +48,11 @@ def logout_view(request):
     return redirect('core:login')
 
 
+def password_reset_info(request):
+    """Page d'information pour mot de passe oublié"""
+    return render(request, 'registration/password_reset.html')
+
+
 @login_required
 def dashboard(request):
     """Vue principale du tableau de bord"""

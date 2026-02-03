@@ -7,6 +7,7 @@ urlpatterns = [
     # Authentication
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
+    path('mot-de-passe-oublie/', views.password_reset_info, name='password_reset_info'),
     
     # Main pages
     path('', views.dashboard, name='dashboard'),

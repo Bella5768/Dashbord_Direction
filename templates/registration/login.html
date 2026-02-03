@@ -459,7 +459,7 @@
                         <input type="checkbox" name="remember">
                         <span>Se souvenir de moi</span>
                     </label>
-                    <a href="#" class="forgot-password">Mot de passe oublié ?</a>
+                    <a href="{% url 'core:password_reset_info' %}" class="forgot-password">Mot de passe oublié ?</a>
                 </div>
                 
                 <button type="submit" class="btn-login">
