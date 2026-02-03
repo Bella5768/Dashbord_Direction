@@ -711,7 +711,7 @@ def users_list(request):
     from .models import UserActivity
     
     # Check permission
-    if not request.user.profile.can_manage_users():
+    if not request.user.profile.has_manage_users_permission():
         messages.error(request, "Vous n'avez pas les permissions pour gérer les utilisateurs.")
         return redirect('core:dashboard')
     
@@ -764,7 +764,7 @@ def user_create(request):
     """Créer un nouvel utilisateur"""
     from .forms import UserCreateForm
     
-    if not request.user.profile.can_manage_users():
+    if not request.user.profile.has_manage_users_permission():
         messages.error(request, "Vous n'avez pas les permissions pour créer des utilisateurs.")
         return redirect('core:dashboard')
     
@@ -800,7 +800,7 @@ def user_edit(request, user_id):
     from django.contrib.auth.models import User
     from .forms import UserUpdateForm
     
-    if not request.user.profile.can_manage_users():
+    if not request.user.profile.has_manage_users_permission():
         messages.error(request, "Vous n'avez pas les permissions pour modifier des utilisateurs.")
         return redirect('core:dashboard')
     
@@ -838,7 +838,7 @@ def user_delete(request, user_id):
     """Supprimer un utilisateur"""
     from django.contrib.auth.models import User
     
-    if not request.user.profile.can_manage_users():
+    if not request.user.profile.has_manage_users_permission():
         messages.error(request, "Vous n'avez pas les permissions pour supprimer des utilisateurs.")
         return redirect('core:dashboard')
     
@@ -875,7 +875,7 @@ def user_toggle_status(request, user_id):
     """Activer/Désactiver un utilisateur"""
     from django.contrib.auth.models import User
     
-    if not request.user.profile.can_manage_users():
+    if not request.user.profile.has_manage_users_permission():
         messages.error(request, "Vous n'avez pas les permissions.")
         return redirect('core:dashboard')
     
@@ -900,7 +900,7 @@ def user_change_password(request, user_id):
     from django.contrib.auth.models import User
     from .forms import PasswordChangeForm
     
-    if not request.user.profile.can_manage_users():
+    if not request.user.profile.has_manage_users_permission():
         messages.error(request, "Vous n'avez pas les permissions.")
         return redirect('core:dashboard')
     
@@ -929,7 +929,7 @@ def user_activities(request):
     """Journal des activités"""
     from .models import UserActivity
     
-    if not request.user.profile.can_manage_users():
+    if not request.user.profile.has_manage_users_permission():
         messages.error(request, "Vous n'avez pas les permissions.")
         return redirect('core:dashboard')
     
