@@ -1213,6 +1213,125 @@ def milestone_delete(request, milestone_id):
     return render(request, 'core/confirm_delete.html', {'object': milestone, 'type': 'jalon', 'back_url': 'core:project_detail', 'back_args': {'project_id': project.id}})
 
 
+# ==================== SUB-MILESTONE CRUD ====================
+
+@login_required
+def sub_milestone_create(request, milestone_id):
+    """Créer une sous-étape pour un jalon"""
+    from .forms_project import SubMilestoneForm
+    from .models import Milestone
+    
+    milestone = get_object_or_404(Milestone.objects.select_related('project'), pk=milestone_id)
+    project = milestone.project
+    
+    # Permission check
+    if not request.user.profile.can_add_project_milestones(project):
+        messages.error(request, "Vous n'avez pas les permissions pour ajouter des sous-étapes.")
+        return redirect('core:project_detail', project_id=project.id)
+    
+    if request.method == 'POST':
+        form = SubMilestoneForm(milestone=milestone, data=request.POST)
+        if form.is_valid():
+            sub_milestone = form.save(commit=False)
+            sub_milestone.milestone = milestone
+            sub_milestone.save()
+            messages.success(request, "Sous-étape ajoutée avec succès.")
+            return redirect('core:project_detail', project_id=project.id)
+    else:
+        form = SubMilestoneForm(milestone=milestone)
+    
+    return render(request, 'core/sub_milestone_form.html', {
+        'form': form, 
+        'milestone': milestone, 
+        'project': project, 
+        'title': f'Nouvelle sous-étape pour "{milestone.name}"'
+    })
+
+
+@login_required
+def sub_milestone_edit(request, sub_milestone_id):
+    """Modifier une sous-étape"""
+    from .forms_project import SubMilestoneForm
+    from .models import SubMilestone
+    
+    sub_milestone = get_object_or_404(SubMilestone.objects.select_related('milestone__project'), pk=sub_milestone_id)
+    milestone = sub_milestone.milestone
+    project = milestone.project
+    
+    # Permission check
+    if not request.user.profile.can_add_project_milestones(project):
+        messages.error(request, "Vous n'avez pas les permissions pour modifier cette sous-étape.")
+        return redirect('core:project_detail', project_id=project.id)
+    
+    if request.method == 'POST':
+        form = SubMilestoneForm(milestone=milestone, data=request.POST, instance=sub_milestone)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Sous-étape modifiée avec succès.")
+            return redirect('core:project_detail', project_id=project.id)
+    else:
+        form = SubMilestoneForm(milestone=milestone, instance=sub_milestone)
+    
+    return render(request, 'core/sub_milestone_form.html', {
+        'form': form, 
+        'milestone': milestone, 
+        'project': project, 
+        'sub_milestone': sub_milestone,
+        'title': f'Modifier "{sub_milestone.name}"'
+    })
+
+
+@login_required
+def sub_milestone_delete(request, sub_milestone_id):
+    """Supprimer une sous-étape"""
+    from .models import SubMilestone
+    
+    sub_milestone = get_object_or_404(SubMilestone.objects.select_related('milestone__project'), pk=sub_milestone_id)
+    milestone = sub_milestone.milestone
+    project = milestone.project
+    
+    # Permission check
+    if not request.user.profile.can_add_project_milestones(project):
+        messages.error(request, "Vous n'avez pas les permissions pour supprimer cette sous-étape.")
+        return redirect('core:project_detail', project_id=project.id)
+    
+    if request.method == 'POST':
+        sub_milestone.delete()
+        milestone.update_completion()
+        project.recalculate_progress()
+        messages.success(request, "Sous-étape supprimée.")
+        return redirect('core:project_detail', project_id=project.id)
+    
+    return render(request, 'core/confirm_delete.html', {
+        'object': sub_milestone, 
+        'type': 'sous-étape', 
+        'back_url': 'core:project_detail', 
+        'back_args': {'project_id': project.id}
+    })
+
+
+@login_required
+def sub_milestone_toggle(request, sub_milestone_id):
+    """Basculer le statut complété d'une sous-étape"""
+    from .models import SubMilestone
+    
+    sub_milestone = get_object_or_404(SubMilestone.objects.select_related('milestone__project'), pk=sub_milestone_id)
+    milestone = sub_milestone.milestone
+    project = milestone.project
+    
+    # Permission check
+    if not request.user.profile.can_add_project_milestones(project):
+        messages.error(request, "Vous n'avez pas les permissions.")
+        return redirect('core:project_detail', project_id=project.id)
+    
+    sub_milestone.completed = not sub_milestone.completed
+    sub_milestone.save()
+    
+    status = "complétée" if sub_milestone.completed else "non complétée"
+    messages.success(request, f"Sous-étape marquée comme {status}.")
+    return redirect('core:project_detail', project_id=project.id)
+
+
 # ==================== PROJECT FOLDER & DOCUMENT CRUD ====================
 
 @login_required

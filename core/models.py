@@ -306,6 +306,46 @@ class Milestone(models.Model):
     
     def __str__(self):
         return f"{self.project.name} - {self.name}"
+    
+    @property
+    def progress(self):
+        """Calcule le pourcentage de progression basé sur les sous-étapes"""
+        total = self.sub_milestones.count()
+        if total == 0:
+            return 100 if self.completed else 0
+        completed = self.sub_milestones.filter(completed=True).count()
+        return round((completed / total) * 100)
+    
+    def update_completion(self):
+        """Met à jour le statut complété basé sur les sous-étapes"""
+        total = self.sub_milestones.count()
+        if total > 0:
+            completed = self.sub_milestones.filter(completed=True).count()
+            self.completed = (completed == total)
+            self.save(update_fields=['completed'])
+
+
+class SubMilestone(models.Model):
+    """Sous-étapes d'un jalon"""
+    milestone = models.ForeignKey(Milestone, on_delete=models.CASCADE, related_name='sub_milestones', verbose_name="Jalon parent")
+    name = models.CharField(max_length=200, verbose_name="Nom de la sous-étape")
+    assigned_to = models.ForeignKey('Employee', on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_sub_milestones', verbose_name="Responsable")
+    completed = models.BooleanField(default=False, verbose_name="Complétée")
+    order = models.IntegerField(default=0, verbose_name="Ordre")
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = "Sous-étape"
+        verbose_name_plural = "Sous-étapes"
+        ordering = ['order', 'created_at']
+    
+    def __str__(self):
+        return f"{self.milestone.name} - {self.name}"
+    
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.milestone.update_completion()
+        self.milestone.project.recalculate_progress()
 
 
 class ProjectNeed(models.Model):

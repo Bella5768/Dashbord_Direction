@@ -1,5 +1,5 @@
 from django import forms
-from .models import Project, Document, Request, Partner, Event, Direction, Budget, Employee, Milestone, ProjectFolder, ProjectDocument, ProjectMember, ProjectNeed, ProjectComment
+from .models import Project, Document, Request, Partner, Event, Direction, Budget, Employee, Milestone, SubMilestone, ProjectFolder, ProjectDocument, ProjectMember, ProjectNeed, ProjectComment
 
 
 class ProjectForm(forms.ModelForm):
@@ -52,6 +52,26 @@ class MilestoneForm(forms.ModelForm):
         if project:
             from .models import Employee
             project_member_ids = project.members.values_list('employee_id', flat=True)
+            self.fields['assigned_to'].queryset = Employee.objects.filter(id__in=project_member_ids)
+
+
+class SubMilestoneForm(forms.ModelForm):
+    """Formulaire pour les sous-étapes"""
+    class Meta:
+        model = SubMilestone
+        fields = ['name', 'assigned_to', 'completed', 'order']
+        widgets = {
+            'order': forms.NumberInput(attrs={'min': 0, 'style': 'width: 100px;'}),
+            'assigned_to': forms.Select(attrs={'class': 'form-control'}),
+        }
+    
+    def __init__(self, milestone=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
+        if milestone:
+            from .models import Employee
+            project_member_ids = milestone.project.members.values_list('employee_id', flat=True)
             self.fields['assigned_to'].queryset = Employee.objects.filter(id__in=project_member_ids)
 
 

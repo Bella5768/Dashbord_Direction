@@ -48,6 +48,12 @@ urlpatterns = [
     path('jalons/<int:milestone_id>/modifier/', views.milestone_edit, name='milestone_edit'),
     path('jalons/<int:milestone_id>/supprimer/', views.milestone_delete, name='milestone_delete'),
     
+    # SubMilestone CRUD
+    path('jalons/<int:milestone_id>/sous-etapes/nouveau/', views.sub_milestone_create, name='sub_milestone_create'),
+    path('sous-etapes/<int:sub_milestone_id>/modifier/', views.sub_milestone_edit, name='sub_milestone_edit'),
+    path('sous-etapes/<int:sub_milestone_id>/supprimer/', views.sub_milestone_delete, name='sub_milestone_delete'),
+    path('sous-etapes/<int:sub_milestone_id>/toggle/', views.sub_milestone_toggle, name='sub_milestone_toggle'),
+    
     # Project Folder & Document CRUD
     path('projets/<int:project_id>/dossiers/nouveau/', views.project_folder_create, name='project_folder_create'),
     path('dossiers/<int:folder_id>/', views.project_folder_detail, name='project_folder_detail'),
