@@ -85,9 +85,9 @@
         }
 
         .branding-logo {
-            width: 100px;
-            height: 100px;
-            background: rgba(255,255,255,0.2);
+            width: 120px;
+            height: 120px;
+            background: rgba(255,255,255,0.95);
             backdrop-filter: blur(10px);
             border-radius: 24px;
             display: flex;
@@ -95,11 +95,14 @@
             justify-content: center;
             margin: 0 auto 32px;
             border: 1px solid rgba(255,255,255,0.3);
+            overflow: hidden;
         }
 
-        .branding-logo svg {
-            width: 56px;
-            height: 56px;
+        .branding-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 8px;
         }
 
         .branding-title {
@@ -364,9 +367,7 @@
         <div class="login-branding">
             <div class="branding-content">
                 <div class="branding-logo">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
+                    <img src="{% static 'logocsig.jpg' %}" alt="Logo CSIG">
                 </div>
                 <h1 class="branding-title">CSIG</h1>
                 <p class="branding-subtitle">Cité des Sciences et de l'Innovation de Guinée</p>
