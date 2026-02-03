@@ -1151,7 +1151,7 @@ def milestone_create(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
     
     # Permission check - utiliser la nouvelle méthode
-    if not request.user.profile.can_add_milestones(project):
+    if not request.user.profile.can_add_project_milestones(project):
         messages.error(request, "Vous n'avez pas les permissions pour ajouter des jalons à ce projet.")
         return redirect('core:projects')
     
@@ -1178,7 +1178,7 @@ def milestone_edit(request, milestone_id):
     project = milestone.project
     
     # Permission check
-    if not request.user.profile.can_add_milestones(project):
+    if not request.user.profile.can_add_project_milestones(project):
         messages.error(request, "Vous n'avez pas les permissions pour modifier ce jalon.")
         return redirect('core:projects')
     
@@ -1201,7 +1201,7 @@ def milestone_delete(request, milestone_id):
     project = milestone.project
     
     # Permission check
-    if not request.user.profile.can_add_milestones(project):
+    if not request.user.profile.can_add_project_milestones(project):
         messages.error(request, "Vous n'avez pas les permissions pour supprimer ce jalon.")
         return redirect('core:projects')
     
