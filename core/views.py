@@ -145,6 +145,7 @@ def projects(request):
         # Récupérer le nom de l'utilisateur
         user_name = request.user.get_full_name() or request.user.username
         employee_id = getattr(request.user.profile, 'employee_id', None)
+        user_direction = request.user.profile.direction
         
         # Projets où l'utilisateur est manager (champ texte) OU membre (table ProjectMember)
         member_q = (
@@ -152,7 +153,14 @@ def projects(request):
             if employee_id
             else Q(members__employee__name__iexact=user_name) | Q(members__employee__name__icontains=request.user.username)
         )
-        projects_qs = projects_qs.filter(Q(manager__icontains=user_name) | member_q).distinct()
+        
+        # Ajouter les projets de sa direction où il est membre
+        if user_direction:
+            projects_qs = projects_qs.filter(
+                Q(manager__icontains=user_name) | member_q | Q(direction=user_direction, members__employee_id=employee_id)
+            ).distinct()
+        else:
+            projects_qs = projects_qs.filter(Q(manager__icontains=user_name) | member_q).distinct()
     
     if status_filter != 'all':
         projects_qs = projects_qs.filter(status=status_filter)
@@ -177,6 +185,7 @@ def projects(request):
         # Récupérer le nom de l'utilisateur
         user_name = request.user.get_full_name() or request.user.username
         employee_id = getattr(request.user.profile, 'employee_id', None)
+        user_direction = request.user.profile.direction
         
         # Projets où l'utilisateur est manager (champ texte) OU membre (table ProjectMember)
         member_q = (
@@ -184,7 +193,14 @@ def projects(request):
             if employee_id
             else Q(members__employee__name__iexact=user_name) | Q(members__employee__name__icontains=request.user.username)
         )
-        base_qs = Project.objects.filter(Q(manager__icontains=user_name) | member_q).distinct()
+        
+        # Ajouter les projets de sa direction où il est membre
+        if user_direction:
+            base_qs = Project.objects.filter(
+                Q(manager__icontains=user_name) | member_q | Q(direction=user_direction, members__employee_id=employee_id)
+            ).distinct()
+        else:
+            base_qs = Project.objects.filter(Q(manager__icontains=user_name) | member_q).distinct()
     stats = {
         'total': base_qs.count(),
         'en_cours': base_qs.filter(status='en_cours').count(),
