@@ -57,10 +57,18 @@ class UserProfile(models.Model):
     def is_chef_projet(self):
         return self.role in ['admin', 'directeur_general', 'directeur', 'chef_projet']
     
+    def is_employe(self):
+        return self.role == 'employe'
+    
+    def is_visiteur(self):
+        return self.role == 'visiteur'
+    
     def can_manage_users(self):
+        """Admin et DG peuvent gérer les utilisateurs"""
         return self.role in ['admin', 'directeur_general']
     
     def can_manage_budgets(self):
+        """Admin, DG et Directeur peuvent gérer les budgets"""
         return self.role in ['admin', 'directeur_general', 'directeur'] or self.budget_manage
 
     def can_view_budgets(self):
@@ -73,15 +81,77 @@ class UserProfile(models.Model):
         return self.role in ['admin', 'directeur_general', 'directeur']
     
     def can_approve_requests(self):
+        """Admin et DG peuvent approuver les demandes"""
         return self.role in ['admin', 'directeur_general']
     
+    def can_create_projects(self):
+        """Admin, DG et Directeur peuvent créer des projets"""
+        return self.role in ['admin', 'directeur_general', 'directeur']
+    
     def can_manage_projects(self):
+        """Admin, DG, Directeur et Chef de projet peuvent gérer les projets"""
         return self.role in ['admin', 'directeur_general', 'directeur', 'chef_projet']
+    
+    def can_edit_project(self, project):
+        """Vérifie si l'utilisateur peut modifier un projet spécifique"""
+        if self.role in ['admin', 'directeur_general']:
+            return True
+        if self.role == 'directeur' and self.direction == project.direction:
+            return True
+        if self.role == 'chef_projet':
+            # Chef de projet peut modifier s'il est manager ou responsable du projet
+            user_name = self.user.get_full_name() or self.user.username
+            if project.manager and user_name in project.manager:
+                return True
+            # Ou s'il est membre avec rôle responsable
+            if self.employee_id:
+                return project.members.filter(employee_id=self.employee_id, role='responsable').exists()
+        return False
+    
+    def can_add_project_members(self, project):
+        """Vérifie si l'utilisateur peut ajouter des membres à un projet"""
+        if self.role in ['admin', 'directeur_general']:
+            return True
+        if self.role == 'directeur' and self.direction == project.direction:
+            return True
+        if self.role == 'chef_projet':
+            user_name = self.user.get_full_name() or self.user.username
+            if project.manager and user_name in project.manager:
+                return True
+            if self.employee_id:
+                return project.members.filter(employee_id=self.employee_id, role='responsable').exists()
+        return False
+    
+    def can_add_milestones(self, project):
+        """Vérifie si l'utilisateur peut ajouter des jalons à un projet"""
+        return self.can_edit_project(project)
+    
+    def can_view_project(self, project):
+        """Vérifie si l'utilisateur peut voir un projet"""
+        if self.role in ['admin', 'directeur_general']:
+            return True
+        if self.role == 'directeur' and self.direction == project.direction:
+            return True
+        if self.role in ['chef_projet', 'employe']:
+            user_name = self.user.get_full_name() or self.user.username
+            if project.manager and user_name in project.manager:
+                return True
+            if self.employee_id:
+                return project.members.filter(employee_id=self.employee_id).exists()
+        return False
     
     def can_view_reports(self):
         return self.role in ['admin', 'directeur_general', 'directeur', 'chef_projet']
     
     def can_manage_partners(self):
+        return self.role in ['admin', 'directeur_general', 'directeur']
+    
+    def can_view_calendar(self):
+        """Tous sauf visiteur peuvent voir le calendrier"""
+        return self.role != 'visiteur'
+    
+    def can_create_events(self):
+        """Admin, DG, Directeur peuvent créer des événements"""
         return self.role in ['admin', 'directeur_general', 'directeur']
 
 

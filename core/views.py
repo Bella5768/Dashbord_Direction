@@ -1083,8 +1083,8 @@ def project_create(request):
     """Créer un nouveau projet"""
     from .forms_project import ProjectForm
     
-    if not request.user.profile.can_manage_projects():
-        messages.error(request, "Vous n'avez pas les permissions.")
+    if not request.user.profile.can_create_projects():
+        messages.error(request, "Vous n'avez pas les permissions pour créer un projet.")
         return redirect('core:projects')
     
     if request.method == 'POST':
@@ -1104,12 +1104,12 @@ def project_edit(request, project_id):
     """Modifier un projet"""
     from .forms_project import ProjectForm
     
-    # Seul le Directeur Général peut modifier un projet
-    if not request.user.profile.is_directeur_general():
-        messages.error(request, "Seul le Directeur Général peut modifier un projet.")
-        return redirect('core:projects')
-    
     project = get_object_or_404(Project, pk=project_id)
+    
+    # Vérifier les permissions
+    if not request.user.profile.can_edit_project(project):
+        messages.error(request, "Vous n'avez pas les permissions pour modifier ce projet.")
+        return redirect('core:projects')
     
     if request.method == 'POST':
         form = ProjectForm(request.POST, instance=project)
@@ -1150,27 +1150,10 @@ def milestone_create(request, project_id):
     
     project = get_object_or_404(Project, pk=project_id)
     
-    # Permission check
-    if not (request.user.profile.is_directeur_general() or request.user.is_staff):
-        if request.user.profile.is_directeur():
-            # Directeur ne peut gérer que les projets de sa direction
-            if project.direction != request.user.profile.direction:
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
-        else:
-            # Chef de projet et autres voient les projets où ils sont manager OU membres
-            from django.db.models import Q
-            
-            # Récupérer le nom de l'utilisateur
-            user_name = request.user.get_full_name() or request.user.username
-            
-            # Vérifier si l'utilisateur est manager OU membre du projet
-            is_manager = project.manager and user_name in project.manager
-            is_member = project.members.filter(employee__name=user_name).exists()
-            
-            if not (is_manager or is_member):
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
+    # Permission check - utiliser la nouvelle méthode
+    if not request.user.profile.can_add_milestones(project):
+        messages.error(request, "Vous n'avez pas les permissions pour ajouter des jalons à ce projet.")
+        return redirect('core:projects')
     
     if request.method == 'POST':
         form = MilestoneForm(project=project, data=request.POST)
@@ -1195,26 +1178,9 @@ def milestone_edit(request, milestone_id):
     project = milestone.project
     
     # Permission check
-    if not (request.user.profile.is_directeur_general() or request.user.is_staff):
-        if request.user.profile.is_directeur():
-            # Directeur ne peut gérer que les projets de sa direction
-            if project.direction != request.user.profile.direction:
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
-        else:
-            # Chef de projet et autres voient les projets où ils sont manager OU membres
-            from django.db.models import Q
-            
-            # Récupérer le nom de l'utilisateur
-            user_name = request.user.get_full_name() or request.user.username
-            
-            # Vérifier si l'utilisateur est manager OU membre du projet
-            is_manager = project.manager and user_name in project.manager
-            is_member = project.members.filter(employee__name=user_name).exists()
-            
-            if not (is_manager or is_member):
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
+    if not request.user.profile.can_add_milestones(project):
+        messages.error(request, "Vous n'avez pas les permissions pour modifier ce jalon.")
+        return redirect('core:projects')
     
     if request.method == 'POST':
         form = MilestoneForm(project=project, data=request.POST, instance=milestone)
@@ -1235,26 +1201,9 @@ def milestone_delete(request, milestone_id):
     project = milestone.project
     
     # Permission check
-    if not (request.user.profile.is_directeur_general() or request.user.is_staff):
-        if request.user.profile.is_directeur():
-            # Directeur ne peut gérer que les projets de sa direction
-            if project.direction != request.user.profile.direction:
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
-        else:
-            # Chef de projet et autres voient les projets où ils sont manager OU membres
-            from django.db.models import Q
-            
-            # Récupérer le nom de l'utilisateur
-            user_name = request.user.get_full_name() or request.user.username
-            
-            # Vérifier si l'utilisateur est manager OU membre du projet
-            is_manager = project.manager and user_name in project.manager
-            is_member = project.members.filter(employee__name=user_name).exists()
-            
-            if not (is_manager or is_member):
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
+    if not request.user.profile.can_add_milestones(project):
+        messages.error(request, "Vous n'avez pas les permissions pour supprimer ce jalon.")
+        return redirect('core:projects')
     
     if request.method == 'POST':
         milestone.delete()
@@ -1570,34 +1519,10 @@ def project_member_add(request, project_id):
     
     project = get_object_or_404(Project, pk=project_id)
 
-    employee_id = getattr(request.user.profile, 'employee_id', None)
-    is_lead = bool(employee_id and project.members.filter(employee_id=employee_id, role='manager').exists())
-    can_manage_members = bool((request.user.profile.is_directeur_general() or request.user.is_staff) or is_lead)
-    if not can_manage_members:
-        messages.error(request, "Seul le responsable principal (lead) peut gérer les membres de ce projet.")
+    # Permission check - utiliser la nouvelle méthode
+    if not request.user.profile.can_add_project_members(project):
+        messages.error(request, "Vous n'avez pas les permissions pour ajouter des membres à ce projet.")
         return redirect('core:project_detail', project_id=project.id)
-    
-    # Permission check
-    if not (request.user.profile.is_directeur_general() or request.user.is_staff):
-        if request.user.profile.is_directeur():
-            # Directeur ne peut gérer que les projets de sa direction
-            if project.direction != request.user.profile.direction:
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
-        else:
-            # Chef de projet et autres voient les projets où ils sont manager OU membres
-            from django.db.models import Q
-            
-            # Récupérer le nom de l'utilisateur
-            user_name = request.user.get_full_name() or request.user.username
-            
-            # Vérifier si l'utilisateur est manager OU membre du projet
-            is_manager = project.manager and user_name in project.manager
-            is_member = project.members.filter(employee__name=user_name).exists()
-            
-            if not (is_manager or is_member):
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
     
     directions = Direction.objects.all()
     context = {
@@ -1685,34 +1610,10 @@ def project_member_edit(request, member_id):
     member = get_object_or_404(ProjectMember.objects.select_related('project', 'employee'), pk=member_id)
     project = member.project
 
-    employee_id = getattr(request.user.profile, 'employee_id', None)
-    is_lead = bool(employee_id and project.members.filter(employee_id=employee_id, role='manager').exists())
-    can_manage_members = bool((request.user.profile.is_directeur_general() or request.user.is_staff) or is_lead)
-    if not can_manage_members:
-        messages.error(request, "Seul le responsable principal (lead) peut gérer les membres de ce projet.")
+    # Permission check - utiliser la nouvelle méthode
+    if not request.user.profile.can_add_project_members(project):
+        messages.error(request, "Vous n'avez pas les permissions pour modifier les membres de ce projet.")
         return redirect('core:project_detail', project_id=project.id)
-    
-    # Permission check
-    if not (request.user.profile.is_directeur_general() or request.user.is_staff):
-        if request.user.profile.is_directeur():
-            # Directeur ne peut gérer que les projets de sa direction
-            if project.direction != request.user.profile.direction:
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
-        else:
-            # Chef de projet et autres voient les projets où ils sont manager OU membres
-            from django.db.models import Q
-            
-            # Récupérer le nom de l'utilisateur
-            user_name = request.user.get_full_name() or request.user.username
-            
-            # Vérifier si l'utilisateur est manager OU membre du projet
-            is_manager = project.manager and user_name in project.manager
-            is_member = project.members.filter(employee__name=user_name).exists()
-            
-            if not (is_manager or is_member):
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
     
     if request.method == 'POST':
         form = ProjectMemberForm(project, request.POST, instance=member)
@@ -1732,34 +1633,10 @@ def project_member_delete(request, member_id):
     member = get_object_or_404(ProjectMember.objects.select_related('project', 'employee'), pk=member_id)
     project = member.project
 
-    employee_id = getattr(request.user.profile, 'employee_id', None)
-    is_lead = bool(employee_id and project.members.filter(employee_id=employee_id, role='manager').exists())
-    can_manage_members = bool((request.user.profile.is_directeur_general() or request.user.is_staff) or is_lead)
-    if not can_manage_members:
-        messages.error(request, "Seul le responsable principal (lead) peut gérer les membres de ce projet.")
+    # Permission check - utiliser la nouvelle méthode
+    if not request.user.profile.can_add_project_members(project):
+        messages.error(request, "Vous n'avez pas les permissions pour supprimer des membres de ce projet.")
         return redirect('core:project_detail', project_id=project.id)
-    
-    # Permission check
-    if not (request.user.profile.is_directeur_general() or request.user.is_staff):
-        if request.user.profile.is_directeur():
-            # Directeur ne peut gérer que les projets de sa direction
-            if project.direction != request.user.profile.direction:
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
-        else:
-            # Chef de projet et autres voient les projets où ils sont manager OU membres
-            from django.db.models import Q
-            
-            # Récupérer le nom de l'utilisateur
-            user_name = request.user.get_full_name() or request.user.username
-            
-            # Vérifier si l'utilisateur est manager OU membre du projet
-            is_manager = project.manager and user_name in project.manager
-            is_member = project.members.filter(employee__name=user_name).exists()
-            
-            if not (is_manager or is_member):
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
     
     if request.method == 'POST':
         member.delete()
