@@ -1,6 +1,6 @@
 from django import forms
 from .models import Project, Document, Request, Partner, Event, Direction, Budget, Employee, Milestone, SubMilestone, ProjectFolder, ProjectDocument, ProjectMember, ProjectNeed, ProjectComment
-from .currencies import CURRENCY_CHOICES
+from .currencies import CURRENCY_CHOICES, convert_currency, format_currency
 
 
 class ProjectForm(forms.ModelForm):
@@ -29,6 +29,17 @@ class ProjectForm(forms.ModelForm):
             self.fields['end_date'].widget.attrs['readonly'] = True
             self.fields['start_date'].help_text = "Date de début originale (non modifiable)"
             self.fields['end_date'].help_text = "Date de fin originale (non modifiable)"
+        
+        # Ajouter des informations sur la conversion de devise
+        if self.instance and self.instance.pk and self.instance.currency:
+            current_currency = self.instance.currency
+            if current_currency != 'GNF':
+                # Afficher l'équivalent en GNF
+                gnf_equivalent = convert_currency(self.instance.budget, current_currency, 'GNF')
+                self.fields['budget'].help_text = f"Équivalent: {format_currency(gnf_equivalent, 'GNF')}"
+                if self.instance.budget_consumed:
+                    consumed_gnf = convert_currency(self.instance.budget_consumed, current_currency, 'GNF')
+                    self.fields['budget_consumed'].help_text = f"Équivalent: {format_currency(consumed_gnf, 'GNF')}"
 
 
 class DocumentForm(forms.ModelForm):

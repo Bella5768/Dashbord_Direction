@@ -168,3 +168,200 @@ CURRENCY_CHOICES = [
     ('TOP', 'TOP - Pa\'anga Tongan'),
     ('XPF', 'XPF - Franc CFP'),
 ]
+
+# Taux de change par rapport à l'USD (taux approximatifs pour 2024)
+EXCHANGE_RATES = {
+    # Devises principales
+    'USD': 1.0,
+    'EUR': 0.92,
+    'GBP': 0.79,
+    'JPY': 149.50,
+    'CNY': 7.24,
+    'CAD': 1.36,
+    'AUD': 1.53,
+    'CHF': 0.88,
+    
+    # Afrique
+    'GNF': 8655.0,
+    'XOF': 606.0,
+    'XAF': 606.0,
+    'NGN': 772.0,
+    'ZAR': 18.85,
+    'EGP': 31.0,
+    'MAD': 10.05,
+    'TND': 3.12,
+    'DZD': 136.5,
+    'KES': 151.5,
+    'GHS': 12.15,
+    'ETB': 56.5,
+    'TZS': 2475.0,
+    'UGX': 3765.0,
+    'RWF': 1315.0,
+    'MUR': 45.5,
+    'SLL': 22775.0,
+    'LRD': 191.5,
+    'GMD': 64.5,
+    'CVE': 102.5,
+    'MZN': 64.05,
+    'AOA': 826.5,
+    'ZMW': 24.85,
+    'BWP': 13.55,
+    'NAD': 18.85,
+    'SZL': 18.85,
+    'LSL': 18.85,
+    'MWK': 1735.0,
+    'ZWL': 3619.0,
+    'SDG': 602.5,
+    'LYD': 4.86,
+    'MRU': 39.5,
+    'SCR': 45.5,
+    'DJF': 177.5,
+    'KMF': 453.0,
+    'ERN': 15.0,
+    'SOS': 570.0,
+    'SSP': 185.5,
+    'STN': 22.65,
+    'BIF': 2855.0,
+    'CDF': 2725.0,
+    'MGA': 4565.0,
+    
+    # Amérique
+    'MXN': 17.15,
+    'GTQ': 7.82,
+    'HNL': 24.65,
+    'NIO': 36.85,
+    'CRC': 543.5,
+    'PAB': 1.0,
+    'DOP': 56.85,
+    'CUP': 24.0,
+    'JMD': 155.5,
+    'HTG': 132.5,
+    'TTD': 6.75,
+    'BBD': 2.0,
+    'BSD': 1.0,
+    'BZD': 2.0,
+    'XCD': 2.7,
+    'AWG': 1.8,
+    'ANG': 1.79,
+    'KYD': 0.83,
+    'BRL': 4.95,
+    'ARS': 835.5,
+    'CLP': 915.5,
+    'COP': 3925.0,
+    'PEN': 3.75,
+    'VES': 3619250.0,
+    'UYU': 38.85,
+    'PYG': 7325.0,
+    'BOB': 6.95,
+    'GYD': 209.5,
+    'SRD': 34.65,
+    'FKP': 0.79,
+    
+    # Europe
+    'NOK': 10.65,
+    'SEK': 10.85,
+    'DKK': 6.85,
+    'PLN': 3.95,
+    'CZK': 22.85,
+    'HUF': 355.5,
+    'RON': 4.62,
+    'BGN': 1.8,
+    'HRK': 7.15,
+    'RSD': 107.5,
+    'UAH': 39.15,
+    'RUB': 89.5,
+    'BYN': 3.25,
+    'MDL': 17.85,
+    'ALL': 94.5,
+    'MKD': 56.5,
+    'BAM': 1.8,
+    'ISK': 137.5,
+    'TRY': 31.5,
+    'GEL': 2.75,
+    'AMD': 387.5,
+    'AZN': 1.7,
+    
+    # Moyen-Orient
+    'AED': 3.67,
+    'SAR': 3.75,
+    'QAR': 3.64,
+    'KWD': 0.31,
+    'BHD': 0.38,
+    'OMR': 0.38,
+    'JOD': 0.71,
+    'LBP': 89500.0,
+    'SYP': 12950.0,
+    'IQD': 1315.0,
+    'IRR': 42250.0,
+    'YER': 250.5,
+    'ILS': 3.65,
+    
+    # Asie
+    'KRW': 1315.0,
+    'INR': 83.15,
+    'IDR': 15650.0,
+    'MYR': 4.65,
+    'SGD': 1.34,
+    'THB': 35.85,
+    'VND': 24450.0,
+    'PHP': 56.5,
+    'PKR': 279.5,
+    'BDT': 117.0,
+    'LKR': 321.5,
+    'NPR': 132.5,
+    'MMK': 2095.0,
+    'KHR': 4105.0,
+    'LAK': 21550.0,
+    'MNT': 3475.0,
+    'KZT': 450.5,
+    'UZS': 12750.0,
+    'TJS': 10.95,
+    'KGS': 89.5,
+    'TMT': 3.5,
+    'AFN': 71.5,
+    'HKD': 7.82,
+    'TWD': 31.5,
+    'MOP': 8.07,
+    'BND': 1.34,
+    'KPW': 900.0,
+    'BTN': 83.15,
+    'MVR': 15.45,
+    
+    # Océanie
+    'NZD': 1.62,
+    'FJD': 2.23,
+    'PGK': 3.85,
+    'SBD': 8.55,
+    'VUV': 119.5,
+    'WST': 2.75,
+    'TOP': 2.45,
+    'XPF': 109.5,
+}
+
+def convert_currency(amount, from_currency, to_currency):
+    """Convertit un montant d'une devise à une autre"""
+    if from_currency == to_currency:
+        return amount
+    
+    # Convertir d'abord en USD si nécessaire
+    if from_currency != 'USD':
+        amount_in_usd = amount / EXCHANGE_RATES.get(from_currency, 1.0)
+    else:
+        amount_in_usd = amount
+    
+    # Puis convertir vers la devise cible
+    if to_currency != 'USD':
+        converted_amount = amount_in_usd * EXCHANGE_RATES.get(to_currency, 1.0)
+    else:
+        converted_amount = amount_in_usd
+    
+    return round(converted_amount, 2)
+
+def format_currency(amount, currency):
+    """Formate un montant selon la devise"""
+    if currency in ['JPY', 'KRW', 'VND', 'CLP', 'COP', 'PYG', 'UGX', 'RWF', 'BIF', 'CDF', 'MGA', 'GNF', 'XOF', 'XAF']:
+        # Devises sans décimales
+        return f"{int(amount):,} {currency}"
+    else:
+        # Devises avec 2 décimales
+        return f"{amount:,.2f} {currency}"
