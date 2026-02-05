@@ -232,6 +232,8 @@ class Project(models.Model):
     currency = models.CharField(max_length=3, default='GNF', verbose_name="Devise")
     start_date = models.DateField(verbose_name="Date de début")
     end_date = models.DateField(verbose_name="Date de fin")
+    original_start_date = models.DateField(null=True, blank=True, editable=False, verbose_name="Date de début originale")
+    original_end_date = models.DateField(null=True, blank=True, editable=False, verbose_name="Date de fin originale")
     manager = models.CharField(max_length=100, verbose_name="Responsable")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -243,6 +245,13 @@ class Project(models.Model):
     
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        """Sauvegarde les dates originales lors de la première création"""
+        if not self.pk:  # Si c'est une nouvelle création
+            self.original_start_date = self.start_date
+            self.original_end_date = self.end_date
+        super().save(*args, **kwargs)
 
     def recalculate_progress(self, save=True):
         """Recalcule la progression basée sur toutes les sous-étapes de tous les jalons"""

@@ -22,6 +22,13 @@ class ProjectForm(forms.ModelForm):
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
         self.fields['currency'].widget.attrs['class'] = 'form-control select-searchable'
+        
+        # Si c'est une édition (projet existant), protéger les dates originales
+        if self.instance and self.instance.pk:
+            self.fields['start_date'].widget.attrs['readonly'] = True
+            self.fields['end_date'].widget.attrs['readonly'] = True
+            self.fields['start_date'].help_text = "Date de début originale (non modifiable)"
+            self.fields['end_date'].help_text = "Date de fin originale (non modifiable)"
 
 
 class DocumentForm(forms.ModelForm):
