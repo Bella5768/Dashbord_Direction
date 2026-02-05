@@ -2071,7 +2071,7 @@ def request_create(request):
 @login_required
 def request_approve(request, req_id):
     """Approuver une demande"""
-    if not request.user.profile.can_approve_requests():
+    if not request.user.profile.can_approve_requests:
         messages.error(request, "Vous n'avez pas les permissions.")
         return redirect('core:requests')
     
@@ -2086,7 +2086,7 @@ def request_approve(request, req_id):
 @login_required
 def request_reject(request, req_id):
     """Rejeter une demande"""
-    if not request.user.profile.can_approve_requests():
+    if not request.user.profile.can_approve_requests:
         messages.error(request, "Vous n'avez pas les permissions.")
         return redirect('core:requests')
     

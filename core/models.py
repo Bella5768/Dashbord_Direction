@@ -21,6 +21,7 @@ class UserProfile(models.Model):
                                   related_name='users', verbose_name="Direction")
     employee = models.ForeignKey('Employee', on_delete=models.SET_NULL, null=True, blank=True,
                                  related_name='user_profiles', verbose_name="Employé")
+    employee_identifier = models.CharField(max_length=50, null=True, blank=True, verbose_name="ID Employé")
     phone = models.CharField(max_length=20, blank=True, verbose_name="Téléphone")
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True, verbose_name="Photo")
     is_active_profile = models.BooleanField(default=True, verbose_name="Profil actif")
@@ -121,7 +122,7 @@ class UserProfile(models.Model):
             user_name = self.user.get_full_name() or self.user.username
             if project.manager and user_name in project.manager:
                 return True
-            if self.employee_id:
+            if self.employee_identifier:
                 return project.members.filter(employee_id=self.employee_id, role='responsable').exists()
         return False
     
@@ -140,7 +141,7 @@ class UserProfile(models.Model):
             user_name = self.user.get_full_name() or self.user.username
             if project.manager and user_name in project.manager:
                 return True
-            if self.employee_id:
+            if self.employee_identifier:
                 return project.members.filter(employee_id=self.employee_id, role='responsable').exists()
         return False
     
@@ -162,7 +163,7 @@ class UserProfile(models.Model):
             user_name = self.user.get_full_name() or self.user.username
             if project.manager and user_name in project.manager:
                 return True
-            if self.employee_id:
+            if self.employee_identifier:
                 return project.members.filter(employee_id=self.employee_id).exists()
         return False
     
