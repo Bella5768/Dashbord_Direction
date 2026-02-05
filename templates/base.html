@@ -120,6 +120,18 @@
                     </li>
                     {% endif %}
                     
+                    <!-- Gestion des directions - Admin et DG -->
+                    {% if user.profile.is_directeur_general or user.is_staff %}
+                    <li>
+                        <a href="{% url 'core:directions_list' %}" {% if 'directions' in request.path %}class="active"{% endif %}>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                            Directions
+                        </a>
+                    </li>
+                    {% endif %}
+                    
                     <!-- Administration - Admin seulement -->
                     {% if user.profile.is_admin or user.is_superuser %}
                     <li>

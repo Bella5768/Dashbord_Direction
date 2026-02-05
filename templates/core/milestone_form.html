@@ -13,6 +13,17 @@
         <form method="post">
             {% csrf_token %}
             
+            {% if form.errors %}
+            <div class="alert alert-danger" style="background: #fee2e2; border: 1px solid #dc2626; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                <p style="color: #dc2626; font-weight: 500;">Erreurs dans le formulaire :</p>
+                <ul style="color: #dc2626; margin: 8px 0 0 16px;">
+                    {% for field, errors in form.errors.items %}
+                        <li>{{ field }}: {{ errors.0 }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            
             <div class="form-group" style="margin-bottom: 16px;">
                 <label for="id_name">Nom du jalon *</label>
                 {{ form.name }}
@@ -31,13 +42,17 @@
                     {{ form.order }}
                 </div>
                 <div class="form-group">
-                    <div style="margin-top: 24px;">
-                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                            {{ form.completed }}
-                            <span>Complété</span>
-                        </label>
-                    </div>
+                    <label for="id_manual_progress">Progression (%)</label>
+                    {{ form.manual_progress }}
+                    <p class="text-xs text-gray-500">Utilisé si le jalon n'a pas de sous-étapes</p>
                 </div>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    {{ form.completed }}
+                    <span>Complété</span>
+                </label>
             </div>
             
             <div class="flex gap-3">

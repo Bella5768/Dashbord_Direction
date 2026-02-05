@@ -14,7 +14,18 @@ from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
 from reportlab.pdfgen import canvas
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
-from .models import Direction, Project, Document, Partner, Event, Request, Employee, Budget, UserProfile, UserActivity, ProjectMember, Milestone, ProjectNeed, ProjectComment, ProjectDocument, ProjectFolder
+from .models import Direction, Project, Document, Partner, Event, Request, Employee, Budget, UserProfile, UserActivity, ProjectMember, Milestone, ProjectNeed, ProjectComment, ProjectDocument, ProjectFolder, ProjectActivity
+
+
+def log_project_activity(project, action, description, user):
+    """Enregistre une activité sur un projet"""
+    username = user.get_full_name() or user.username if hasattr(user, 'get_full_name') else str(user)
+    ProjectActivity.objects.create(
+        project=project,
+        action=action,
+        description=description,
+        user=username
+    )
 
 
 def login_view(request):
@@ -702,6 +713,100 @@ def partners(request):
     return render(request, 'core/partners.html', context)
 
 
+# ==================== DIRECTIONS CRUD ====================
+
+@login_required
+def directions_list(request):
+    """Liste des directions"""
+    # Seuls admin et DG peuvent gérer les directions
+    if not (request.user.profile.is_directeur_general() or request.user.is_staff):
+        messages.error(request, "Vous n'avez pas la permission de gérer les directions.")
+        return redirect('core:dashboard')
+    
+    directions = Direction.objects.annotate(
+        projects_count=Count('projects'),
+        users_count=Count('users')
+    ).order_by('name')
+    
+    context = {
+        'directions': directions,
+    }
+    return render(request, 'core/directions_list.html', context)
+
+
+@login_required
+def direction_create(request):
+    """Créer une nouvelle direction"""
+    if not (request.user.profile.is_directeur_general() or request.user.is_staff):
+        messages.error(request, "Vous n'avez pas la permission de créer des directions.")
+        return redirect('core:dashboard')
+    
+    from .forms import DirectionForm
+    
+    if request.method == 'POST':
+        form = DirectionForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Direction créée avec succès.")
+            return redirect('core:directions_list')
+    else:
+        form = DirectionForm()
+    
+    context = {
+        'form': form,
+        'title': 'Nouvelle direction',
+    }
+    return render(request, 'core/direction_form.html', context)
+
+
+@login_required
+def direction_edit(request, direction_id):
+    """Modifier une direction"""
+    if not (request.user.profile.is_directeur_general() or request.user.is_staff):
+        messages.error(request, "Vous n'avez pas la permission de modifier les directions.")
+        return redirect('core:dashboard')
+    
+    direction = get_object_or_404(Direction, pk=direction_id)
+    from .forms import DirectionForm
+    
+    if request.method == 'POST':
+        form = DirectionForm(request.POST, instance=direction)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Direction modifiée avec succès.")
+            return redirect('core:directions_list')
+    else:
+        form = DirectionForm(instance=direction)
+    
+    context = {
+        'form': form,
+        'direction': direction,
+        'title': f'Modifier {direction.name}',
+    }
+    return render(request, 'core/direction_form.html', context)
+
+
+@login_required
+def direction_delete(request, direction_id):
+    """Supprimer une direction"""
+    if not (request.user.profile.is_directeur_general() or request.user.is_staff):
+        messages.error(request, "Vous n'avez pas la permission de supprimer les directions.")
+        return redirect('core:dashboard')
+    
+    direction = get_object_or_404(Direction, pk=direction_id)
+    
+    if request.method == 'POST':
+        direction.delete()
+        messages.success(request, "Direction supprimée.")
+        return redirect('core:directions_list')
+    
+    return render(request, 'core/confirm_delete.html', {
+        'object': direction,
+        'type': 'direction',
+        'back_url': 'core:directions_list'
+    })
+
+
 # ==================== USER MANAGEMENT ====================
 
 @login_required
@@ -1000,9 +1105,84 @@ def project_detail(request, project_id):
         'milestones': project.milestones.all(),
         'needs': project.needs.all(),
         'comments': project.comments.all(),
+        'activities': project.activities.all()[:20],
         'can_manage_members': can_manage_members,
     }
     return render(request, 'core/project_detail.html', context)
+
+
+@login_required
+def export_project_activities(request, project_id):
+    """Exporter le journal d'activité d'un projet en PDF"""
+    project = get_object_or_404(Project, pk=project_id)
+    activities = project.activities.all()
+    
+    # Créer le PDF
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="journal_activite_{project.name.replace(" ", "_")}.pdf"'
+    
+    doc = SimpleDocTemplate(response, pagesize=A4, topMargin=50, bottomMargin=50)
+    styles = getSampleStyleSheet()
+    
+    # Style personnalisé pour le titre
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=16,
+        alignment=TA_CENTER,
+        spaceAfter=20
+    )
+    
+    subtitle_style = ParagraphStyle(
+        'CustomSubtitle',
+        parent=styles['Normal'],
+        fontSize=10,
+        alignment=TA_CENTER,
+        textColor=colors.grey,
+        spaceAfter=30
+    )
+    
+    elements = []
+    
+    # Titre
+    elements.append(Paragraph(f"Journal d'activité", title_style))
+    elements.append(Paragraph(f"Projet : {project.name}", subtitle_style))
+    elements.append(Paragraph(f"Exporté le {timezone.now().strftime('%d/%m/%Y à %H:%M')}", subtitle_style))
+    elements.append(Spacer(1, 20))
+    
+    if activities:
+        # Tableau des activités
+        data = [['Date', 'Utilisateur', 'Action', 'Description']]
+        
+        for activity in activities:
+            data.append([
+                activity.created_at.strftime('%d/%m/%Y %H:%M'),
+                activity.user,
+                activity.get_action_display(),
+                activity.description[:50] + '...' if len(activity.description) > 50 else activity.description
+            ])
+        
+        table = Table(data, colWidths=[80, 90, 100, 200])
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#3b82f6')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('TOPPADDING', (0, 1), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8fafc')]),
+        ]))
+        elements.append(table)
+    else:
+        elements.append(Paragraph("Aucune activité enregistrée pour ce projet.", styles['Normal']))
+    
+    doc.build(elements)
+    return response
 
 
 @login_required
@@ -1091,6 +1271,7 @@ def project_create(request):
         form = ProjectForm(request.POST)
         if form.is_valid():
             project = form.save()
+            log_project_activity(project, 'creation', f"Création du projet '{project.name}'", request.user)
             messages.success(request, "Projet créé avec succès.")
             return redirect('core:project_detail', project_id=project.id)
     else:
@@ -1115,6 +1296,7 @@ def project_edit(request, project_id):
         form = ProjectForm(request.POST, instance=project)
         if form.is_valid():
             form.save()
+            log_project_activity(project, 'modification', f"Modification des informations du projet", request.user)
             messages.success(request, "Projet modifié avec succès.")
             return redirect('core:project_detail', project_id=project.id)
     else:
@@ -1161,6 +1343,7 @@ def milestone_create(request, project_id):
             milestone = form.save(commit=False)
             milestone.project = project
             milestone.save()
+            log_project_activity(project, 'ajout_jalon', f"Ajout du jalon '{milestone.name}'", request.user)
             messages.success(request, "Jalon créé avec succès.")
             return redirect('core:project_detail', project_id=project.id)
     else:
@@ -1186,6 +1369,7 @@ def milestone_edit(request, milestone_id):
         form = MilestoneForm(project=project, data=request.POST, instance=milestone)
         if form.is_valid():
             form.save()
+            log_project_activity(project, 'modif_jalon', f"Modification du jalon '{milestone.name}'", request.user)
             messages.success(request, "Jalon modifié avec succès.")
             return redirect('core:project_detail', project_id=project.id)
     else:
@@ -1206,7 +1390,9 @@ def milestone_delete(request, milestone_id):
         return redirect('core:projects')
     
     if request.method == 'POST':
+        milestone_name = milestone.name
         milestone.delete()
+        log_project_activity(project, 'suppr_jalon', f"Suppression du jalon '{milestone_name}'", request.user)
         messages.success(request, "Jalon supprimé.")
         return redirect('core:project_detail', project_id=project.id)
     
@@ -1235,6 +1421,7 @@ def sub_milestone_create(request, milestone_id):
             sub_milestone = form.save(commit=False)
             sub_milestone.milestone = milestone
             sub_milestone.save()
+            log_project_activity(project, 'ajout_sous_etape', f"Ajout de la sous-étape '{sub_milestone.name}' au jalon '{milestone.name}'", request.user)
             messages.success(request, "Sous-étape ajoutée avec succès.")
             return redirect('core:project_detail', project_id=project.id)
     else:
@@ -1267,6 +1454,7 @@ def sub_milestone_edit(request, sub_milestone_id):
         form = SubMilestoneForm(milestone=milestone, data=request.POST, instance=sub_milestone)
         if form.is_valid():
             form.save()
+            log_project_activity(project, 'modif_sous_etape', f"Modification de la sous-étape '{sub_milestone.name}'", request.user)
             messages.success(request, "Sous-étape modifiée avec succès.")
             return redirect('core:project_detail', project_id=project.id)
     else:
@@ -1296,9 +1484,11 @@ def sub_milestone_delete(request, sub_milestone_id):
         return redirect('core:project_detail', project_id=project.id)
     
     if request.method == 'POST':
+        sub_name = sub_milestone.name
         sub_milestone.delete()
         milestone.update_completion()
         project.recalculate_progress()
+        log_project_activity(project, 'suppr_sous_etape', f"Suppression de la sous-étape '{sub_name}'", request.user)
         messages.success(request, "Sous-étape supprimée.")
         return redirect('core:project_detail', project_id=project.id)
     
@@ -1328,6 +1518,7 @@ def sub_milestone_toggle(request, sub_milestone_id):
     sub_milestone.save()
     
     status = "complétée" if sub_milestone.completed else "non complétée"
+    log_project_activity(project, 'toggle_sous_etape', f"Sous-étape '{sub_milestone.name}' marquée comme {status}", request.user)
     messages.success(request, f"Sous-étape marquée comme {status}.")
     return redirect('core:project_detail', project_id=project.id)
 
@@ -1538,6 +1729,7 @@ def project_document_create(request, project_id):
             doc.project = project
             doc.uploaded_by = request.user.get_full_name() or request.user.username
             doc.save()
+            log_project_activity(project, 'ajout_document', f"Ajout du document '{doc.title}'", request.user)
             messages.success(request, "Document ajouté avec succès.")
             if doc.folder_id:
                 return redirect('core:project_folder_detail', folder_id=doc.folder_id)
@@ -1656,7 +1848,6 @@ def project_member_add(request, project_id):
         if create_new_employee:
             # Créer un nouvel employé
             new_name = request.POST.get('new_employee_name', '').strip()
-            new_direction_id = request.POST.get('new_employee_direction', '')
             new_role_employee = request.POST.get('new_employee_role', '').strip()
             new_phone = request.POST.get('new_employee_phone', '').strip()
             new_email = request.POST.get('new_employee_email', '').strip()
@@ -1666,8 +1857,6 @@ def project_member_add(request, project_id):
             errors = []
             if not new_name:
                 errors.append("Le nom de l'employé est requis.")
-            if not new_direction_id:
-                errors.append("La direction est requise.")
             if not new_role_employee:
                 errors.append("Le poste/fonction est requis.")
             
@@ -1676,7 +1865,6 @@ def project_member_add(request, project_id):
                     messages.error(request, error)
                 context['create_new_employee'] = True
                 context['new_employee_name'] = new_name
-                context['new_employee_direction'] = new_direction_id
                 context['new_employee_role'] = new_role_employee
                 context['new_employee_phone'] = new_phone
                 context['new_employee_email'] = new_email
@@ -1684,11 +1872,10 @@ def project_member_add(request, project_id):
                 context['form'] = form
                 return render(request, 'core/project_member_form.html', context)
             
-            # Créer l'employé
-            direction = get_object_or_404(Direction, pk=new_direction_id)
+            # Créer l'employé (utiliser la direction du projet)
             new_employee = Employee.objects.create(
                 name=new_name,
-                direction=direction,
+                direction=project.direction,
                 role=new_role_employee,
                 phone=new_phone,
                 email=new_email
@@ -1701,6 +1888,7 @@ def project_member_add(request, project_id):
                 role=project_role
             )
             
+            log_project_activity(project, 'ajout_membre', f"Ajout du membre '{new_name}' ({project_role})", request.user)
             messages.success(request, f"Employé '{new_name}' créé et ajouté au projet avec succès.")
             return redirect('core:project_detail', project_id=project.id)
         else:
@@ -1710,6 +1898,7 @@ def project_member_add(request, project_id):
                 member = form.save(commit=False)
                 member.project = project
                 member.save()
+                log_project_activity(project, 'ajout_membre', f"Ajout du membre '{member.employee.name}' ({member.get_role_display()})", request.user)
                 messages.success(request, "Membre ajouté avec succès.")
                 return redirect('core:project_detail', project_id=project.id)
             context['form'] = form
@@ -1738,6 +1927,7 @@ def project_member_edit(request, member_id):
         form = ProjectMemberForm(project, request.POST, instance=member)
         if form.is_valid():
             form.save()
+            log_project_activity(project, 'ajout_membre', f"Modification du rôle de '{member.employee.name}' en '{member.get_role_display()}'", request.user)
             messages.success(request, "Rôle du membre modifié avec succès.")
             return redirect('core:project_detail', project_id=project.id)
     else:
@@ -1758,7 +1948,9 @@ def project_member_delete(request, member_id):
         return redirect('core:project_detail', project_id=project.id)
     
     if request.method == 'POST':
+        member_name = member.employee.name
         member.delete()
+        log_project_activity(project, 'retrait_membre', f"Retrait du membre '{member_name}'", request.user)
         messages.success(request, "Membre supprimé du projet.")
         return redirect('core:project_detail', project_id=project.id)
     

@@ -37,6 +37,7 @@ urlpatterns = [
     
     # Project CRUD
     path('projets/<int:project_id>/', views.project_detail, name='project_detail'),
+    path('projets/<int:project_id>/activites/export/', views.export_project_activities, name='export_project_activities'),
     path('projets/<int:project_id>/besoins/nouveau/', views.project_need_create, name='project_need_create'),
     path('projets/<int:project_id>/commentaires/nouveau/', views.project_comment_create, name='project_comment_create'),
     path('projets/nouveau/', views.project_create, name='project_create'),
@@ -88,6 +89,12 @@ urlpatterns = [
     path('employes/nouveau/', views.employee_create, name='employee_create'),
     path('employes/<int:employee_id>/modifier/', views.employee_edit, name='employee_edit'),
     path('employes/<int:employee_id>/supprimer/', views.employee_delete, name='employee_delete'),
+    
+    # Direction CRUD
+    path('directions/', views.directions_list, name='directions_list'),
+    path('directions/nouveau/', views.direction_create, name='direction_create'),
+    path('directions/<int:direction_id>/modifier/', views.direction_edit, name='direction_edit'),
+    path('directions/<int:direction_id>/supprimer/', views.direction_delete, name='direction_delete'),
     
     # API endpoints
     path('api/budget/', views.api_budget_data, name='api_budget'),

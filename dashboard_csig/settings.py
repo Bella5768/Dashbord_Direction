@@ -21,6 +21,9 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:49870',
     'http://127.0.0.1:56509',
     'http://127.0.0.1:50239',
+    'http://127.0.0.1:9000',
+    'http://127.0.0.1:65073',
+    'https://*.pythonanywhere.com',
 ]
 
 _extra_csrf = [o.strip() for o in os.getenv('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',') if o.strip()]
@@ -123,7 +126,7 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-MEDIA_URL = 'media/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

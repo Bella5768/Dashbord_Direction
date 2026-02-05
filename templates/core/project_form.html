@@ -48,13 +48,18 @@
             
             <div class="grid grid-2" style="gap: 16px; margin-bottom: 16px;">
                 <div class="form-group">
-                    <label for="id_budget">Budget alloué (GNF)</label>
+                    <label for="id_budget">Budget alloué</label>
                     {{ form.budget }}
                 </div>
                 <div class="form-group">
-                    <label for="id_budget_consumed">Budget consommé (GNF)</label>
+                    <label for="id_budget_consumed">Budget consommé</label>
                     {{ form.budget_consumed }}
                 </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="id_currency">Devise</label>
+                {{ form.currency }}
             </div>
             
             <div class="grid grid-2" style="gap: 16px; margin-bottom: 24px;">

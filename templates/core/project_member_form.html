@@ -41,16 +41,6 @@
                     </div>
                     
                     <div class="form-group" style="margin-bottom: 12px;">
-                        <label for="new_employee_direction">Direction *</label>
-                        <select id="new_employee_direction" name="new_employee_direction" class="form-control">
-                            <option value="">-- Sélectionner une direction --</option>
-                            {% for direction in directions %}
-                            <option value="{{ direction.id }}" {% if new_employee_direction == direction.id|stringformat:"s" %}selected{% endif %}>{{ direction.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    
-                    <div class="form-group" style="margin-bottom: 12px;">
                         <label for="new_employee_role">Poste/Fonction *</label>
                         <input type="text" id="new_employee_role" name="new_employee_role" class="form-control" value="{{ new_employee_role|default:'' }}" placeholder="Ex: Analyste, Consultant, etc.">
                     </div>

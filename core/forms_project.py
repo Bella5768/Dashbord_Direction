@@ -1,13 +1,16 @@
 from django import forms
 from .models import Project, Document, Request, Partner, Event, Direction, Budget, Employee, Milestone, SubMilestone, ProjectFolder, ProjectDocument, ProjectMember, ProjectNeed, ProjectComment
+from .currencies import CURRENCY_CHOICES
 
 
 class ProjectForm(forms.ModelForm):
     """Formulaire pour les projets"""
+    currency = forms.ChoiceField(choices=CURRENCY_CHOICES, initial='GNF', label="Devise")
+    
     class Meta:
         model = Project
         fields = ['name', 'description', 'direction', 'status', 'priority', 
-                  'budget', 'budget_consumed', 'start_date', 'end_date', 'manager']
+                  'budget', 'budget_consumed', 'currency', 'start_date', 'end_date', 'manager']
         widgets = {
             'start_date': forms.DateInput(attrs={'type': 'date'}),
             'end_date': forms.DateInput(attrs={'type': 'date'}),
@@ -18,6 +21,7 @@ class ProjectForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
+        self.fields['currency'].widget.attrs['class'] = 'form-control select-searchable'
 
 
 class DocumentForm(forms.ModelForm):
@@ -39,9 +43,10 @@ class MilestoneForm(forms.ModelForm):
     """Formulaire pour les jalons"""
     class Meta:
         model = Milestone
-        fields = ['name', 'assigned_to', 'completed', 'order']
+        fields = ['name', 'assigned_to', 'manual_progress', 'completed', 'order']
         widgets = {
             'order': forms.NumberInput(attrs={'min': 0, 'style': 'width: 100px;'}),
+            'manual_progress': forms.NumberInput(attrs={'min': 0, 'max': 100, 'style': 'width: 100px;'}),
             'assigned_to': forms.Select(attrs={'class': 'form-control'}),
         }
     
@@ -49,6 +54,8 @@ class MilestoneForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
+        self.fields['manual_progress'].label = 'Progression (%)'
+        self.fields['manual_progress'].help_text = 'Utilisé uniquement si le jalon n\'a pas de sous-étapes'
         if project:
             from .models import Employee
             project_member_ids = project.members.values_list('employee_id', flat=True)
@@ -221,9 +228,11 @@ class EventForm(forms.ModelForm):
 
 class BudgetForm(forms.ModelForm):
     """Formulaire pour les budgets"""
+    currency = forms.ChoiceField(choices=CURRENCY_CHOICES, initial='GNF', label="Devise")
+    
     class Meta:
         model = Budget
-        fields = ['direction', 'allocated', 'consumed']
+        fields = ['direction', 'allocated', 'consumed', 'currency']
         widgets = {
             'allocated': forms.NumberInput(attrs={'step': '0.01', 'min': '0'}),
             'consumed': forms.NumberInput(attrs={'step': '0.01', 'min': '0'}),
@@ -233,8 +242,9 @@ class BudgetForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
-        self.fields['allocated'].label = 'Budget alloué (GNF)'
-        self.fields['consumed'].label = 'Budget consommé (GNF)'
+        self.fields['allocated'].label = 'Budget alloué'
+        self.fields['consumed'].label = 'Budget consommé'
+        self.fields['currency'].widget.attrs['class'] = 'form-control select-searchable'
 
 
 class EmployeeForm(forms.ModelForm):

@@ -228,6 +228,7 @@ class Project(models.Model):
     progress = models.IntegerField(default=0, verbose_name="Progression (%)")
     budget = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name="Budget alloué")
     budget_consumed = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name="Budget consommé")
+    currency = models.CharField(max_length=3, default='GNF', verbose_name="Devise")
     start_date = models.DateField(verbose_name="Date de début")
     end_date = models.DateField(verbose_name="Date de fin")
     manager = models.CharField(max_length=100, verbose_name="Responsable")
@@ -243,12 +244,31 @@ class Project(models.Model):
         return self.name
 
     def recalculate_progress(self, save=True):
-        total = self.milestones.count()
-        if total <= 0:
+        """Recalcule la progression basée sur toutes les sous-étapes de tous les jalons"""
+        milestones = self.milestones.all()
+        total_milestones = milestones.count()
+        
+        if total_milestones <= 0:
             new_progress = 0
         else:
-            completed = self.milestones.filter(completed=True).count()
-            new_progress = round((completed / total) * 100)
+            # Calculer la progression totale en tenant compte de chaque jalon
+            total_progress = 0
+            for milestone in milestones:
+                sub_count = milestone.sub_milestones.count()
+                if sub_count > 0:
+                    # Si le jalon a des sous-étapes, calculer sa progression partielle
+                    completed_subs = milestone.sub_milestones.filter(completed=True).count()
+                    milestone_progress = (completed_subs / sub_count) * 100
+                else:
+                    # Si pas de sous-étapes, utiliser la progression manuelle du jalon
+                    if milestone.completed:
+                        milestone_progress = 100
+                    else:
+                        milestone_progress = milestone.manual_progress
+                total_progress += milestone_progress
+            
+            # Moyenne de la progression de tous les jalons
+            new_progress = round(total_progress / total_milestones)
 
         new_progress = max(0, min(100, int(new_progress)))
 
@@ -273,13 +293,13 @@ class ProjectMember(models.Model):
         ('responsable', 'Responsable'),
         ('membre', 'Membre'),
         ('observateur', 'Observateur'),
-        ('personne_ressource', 'Personne ressource'),
-        ('ressource_externe', 'Ressource externe'),
+        ('ressource_externe_observateur', 'Ressource externe (observateur)'),
+        ('ressource_externe_edit', 'Ressource externe (éditeur)'),
     ]
     
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='members', verbose_name="Projet")
     employee = models.ForeignKey('Employee', on_delete=models.CASCADE, related_name='project_memberships', verbose_name="Employé")
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='membre', verbose_name="Rôle")
+    role = models.CharField(max_length=30, choices=ROLE_CHOICES, default='membre', verbose_name="Rôle")
     joined_at = models.DateTimeField(auto_now_add=True, verbose_name="Date d'ajout")
     
     class Meta:
@@ -297,6 +317,7 @@ class Milestone(models.Model):
     name = models.CharField(max_length=200, verbose_name="Nom du jalon")
     assigned_to = models.ForeignKey('Employee', on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_milestones', verbose_name="Responsable")
     completed = models.BooleanField(default=False, verbose_name="Complété")
+    manual_progress = models.IntegerField(default=0, verbose_name="Progression manuelle (%)")
     order = models.IntegerField(default=0, verbose_name="Ordre")
     
     class Meta:
@@ -309,20 +330,27 @@ class Milestone(models.Model):
     
     @property
     def progress(self):
-        """Calcule le pourcentage de progression basé sur les sous-étapes"""
+        """Calcule le pourcentage de progression basé sur les sous-étapes ou la progression manuelle"""
         total = self.sub_milestones.count()
         if total == 0:
-            return 100 if self.completed else 0
+            # Pas de sous-étapes : utiliser la progression manuelle
+            if self.completed:
+                return 100
+            return self.manual_progress
+        # Avec sous-étapes : calculer automatiquement
         completed = self.sub_milestones.filter(completed=True).count()
         return round((completed / total) * 100)
     
     def update_completion(self):
-        """Met à jour le statut complété basé sur les sous-étapes"""
+        """Met à jour le statut complété basé sur les sous-étapes ou la progression manuelle"""
         total = self.sub_milestones.count()
         if total > 0:
             completed = self.sub_milestones.filter(completed=True).count()
             self.completed = (completed == total)
-            self.save(update_fields=['completed'])
+        else:
+            # Sans sous-étapes : complété si progression manuelle = 100%
+            self.completed = (self.manual_progress >= 100)
+        self.save(update_fields=['completed'])
 
 
 class SubMilestone(models.Model):
@@ -386,6 +414,46 @@ class ProjectComment(models.Model):
         return f"{self.project.name} - {self.created_by}"
 
 
+class ProjectActivity(models.Model):
+    """Journal d'activité pour suivre toutes les modifications sur un projet"""
+    ACTION_CHOICES = [
+        ('creation', 'Création'),
+        ('modification', 'Modification'),
+        ('suppression', 'Suppression'),
+        ('ajout_membre', 'Ajout de membre'),
+        ('retrait_membre', 'Retrait de membre'),
+        ('ajout_jalon', 'Ajout de jalon'),
+        ('modif_jalon', 'Modification de jalon'),
+        ('suppr_jalon', 'Suppression de jalon'),
+        ('ajout_sous_etape', 'Ajout de sous-étape'),
+        ('modif_sous_etape', 'Modification de sous-étape'),
+        ('suppr_sous_etape', 'Suppression de sous-étape'),
+        ('toggle_sous_etape', 'Changement statut sous-étape'),
+        ('ajout_document', 'Ajout de document'),
+        ('suppr_document', 'Suppression de document'),
+        ('ajout_dossier', 'Ajout de dossier'),
+        ('suppr_dossier', 'Suppression de dossier'),
+        ('ajout_besoin', 'Ajout de besoin'),
+        ('ajout_commentaire', 'Ajout de commentaire'),
+        ('changement_statut', 'Changement de statut'),
+        ('changement_progression', 'Changement de progression'),
+    ]
+    
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='activities', verbose_name="Projet")
+    action = models.CharField(max_length=30, choices=ACTION_CHOICES, verbose_name="Action")
+    description = models.TextField(verbose_name="Description")
+    user = models.CharField(max_length=100, verbose_name="Utilisateur")
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = "Activité de projet"
+        verbose_name_plural = "Activités de projet"
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.project.name} - {self.get_action_display()} par {self.user}"
+
+
 @receiver(post_save, sender=Milestone)
 def update_project_progress_on_milestone_save(sender, instance, **kwargs):
     instance.project.recalculate_progress(save=True)
@@ -394,6 +462,20 @@ def update_project_progress_on_milestone_save(sender, instance, **kwargs):
 @receiver(post_delete, sender=Milestone)
 def update_project_progress_on_milestone_delete(sender, instance, **kwargs):
     instance.project.recalculate_progress(save=True)
+
+
+@receiver(post_save, sender=SubMilestone)
+def update_project_progress_on_sub_milestone_save(sender, instance, **kwargs):
+    """Recalcule la progression du projet quand une sous-étape est modifiée"""
+    instance.milestone.update_completion()
+    instance.milestone.project.recalculate_progress(save=True)
+
+
+@receiver(post_delete, sender=SubMilestone)
+def update_project_progress_on_sub_milestone_delete(sender, instance, **kwargs):
+    """Recalcule la progression du projet quand une sous-étape est supprimée"""
+    instance.milestone.update_completion()
+    instance.milestone.project.recalculate_progress(save=True)
 
 
 class ProjectFolder(models.Model):
@@ -616,6 +698,7 @@ class Budget(models.Model):
     direction = models.OneToOneField(Direction, on_delete=models.CASCADE, related_name='budget', verbose_name="Direction")
     allocated = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name="Budget alloué")
     consumed = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name="Budget consommé")
+    currency = models.CharField(max_length=3, default='GNF', verbose_name="Devise")
     
     class Meta:
         verbose_name = "Budget"

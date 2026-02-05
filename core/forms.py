@@ -4,6 +4,23 @@ from django.contrib.auth.forms import UserCreationForm
 from .models import UserProfile, Direction, Employee, Event
 
 
+class DirectionForm(forms.ModelForm):
+    """Formulaire pour les directions"""
+    class Meta:
+        model = Direction
+        fields = ['name', 'code', 'color']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nom de la direction'}),
+            'code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Code (ex: DG, DSI, DRH)'}),
+            'color': forms.TextInput(attrs={'type': 'color', 'class': 'form-control', 'style': 'height: 40px; padding: 5px;'}),
+        }
+        labels = {
+            'name': 'Nom de la direction',
+            'code': 'Code',
+            'color': 'Couleur',
+        }
+
+
 class UserCreateForm(UserCreationForm):
     """Formulaire de création d'utilisateur avec profil"""
     email = forms.EmailField(required=True, label="Email")

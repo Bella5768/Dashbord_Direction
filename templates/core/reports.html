@@ -125,8 +125,8 @@
                                 <span class="text-sm font-medium" style="width: 40px; text-align: right;">{{ project.progress }}%</span>
                             </div>
                         </td>
-                        <td style="text-align: right; font-weight: 500;">{{ project.budget|floatformat:0 }} GNF</td>
-                        <td style="text-align: right; color: #16a34a;">{{ project.budget_consumed|floatformat:0 }} GNF</td>
+                        <td style="text-align: right; font-weight: 500;">{{ project.budget|floatformat:0 }} {{ project.currency }}</td>
+                        <td style="text-align: right; color: #16a34a;">{{ project.budget_consumed|floatformat:0 }} {{ project.currency }}</td>
                         <td style="text-align: center;">
                             <span class="text-sm font-medium {% if project.budget_percentage > 80 %}text-red-600{% elif project.budget_percentage > 60 %}text-amber-600{% else %}text-green-600{% endif %}" style="{% if project.budget_percentage > 80 %}color: #dc2626;{% elif project.budget_percentage > 60 %}color: #d97706;{% else %}color: #16a34a;{% endif %}">
                                 {{ project.budget_percentage }}%

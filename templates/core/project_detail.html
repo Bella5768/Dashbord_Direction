@@ -60,11 +60,11 @@
             </div>
             <div class="flex justify-between" style="margin-bottom: 10px;">
                 <span class="text-sm text-gray-500">Budget alloué</span>
-                <span class="text-sm font-medium">{{ project.budget|floatformat:0 }} GNF</span>
+                <span class="text-sm font-medium">{{ project.budget|floatformat:0 }} {{ project.currency }}</span>
             </div>
             <div class="flex justify-between" style="margin-bottom: 10px;">
                 <span class="text-sm text-gray-500">Consommé</span>
-                <span class="text-sm font-medium">{{ project.budget_consumed|floatformat:0 }} GNF</span>
+                <span class="text-sm font-medium">{{ project.budget_consumed|floatformat:0 }} {{ project.currency }}</span>
             </div>
             <div style="margin-top: 12px;">
                 <div class="flex items-center justify-between" style="margin-bottom: 8px;">
@@ -473,6 +473,44 @@
                     </div>
                 {% endif %}
             {% endwith %}
+        </div>
+    </div>
+
+    <!-- Journal d'activité -->
+    <div class="card" style="grid-column: span 3;">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 class="card-title" style="display: flex; align-items: center; gap: 8px;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Journal d'activité
+            </h3>
+            <a href="{% url 'core:export_project_activities' project.id %}" class="btn btn-outline btn-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Exporter PDF
+            </a>
+        </div>
+        <div class="card-content">
+            {% if activities %}
+            <div style="max-height: 400px; overflow-y: auto;">
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    {% for activity in activities %}
+                    <div style="display: flex; align-items: flex-start; gap: 12px; padding: 10px 12px; background: #f8fafc; border-radius: 8px; border-left: 3px solid {% if 'ajout' in activity.action %}#22c55e{% elif 'suppr' in activity.action or 'retrait' in activity.action %}#ef4444{% elif 'modif' in activity.action or 'toggle' in activity.action %}#3b82f6{% else %}#6b7280{% endif %};">
+                        <div style="flex: 1;">
+                            <div class="text-sm" style="color: #374151;">{{ activity.description }}</div>
+                            <div class="text-xs text-gray-500" style="margin-top: 4px;">
+                                par <strong>{{ activity.user }}</strong> • {{ activity.created_at|date:"d/m/Y à H:i" }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <p class="text-gray-500">Aucune activité enregistrée pour ce projet.</p>
+            {% endif %}
         </div>
     </div>
 </div>

@@ -242,3 +242,119 @@ function exportToExcel() {
     showNotification('Export Excel en cours...', 'info');
     // Implement Excel export logic
 }
+
+// Initialize searchable select dropdowns
+document.addEventListener('DOMContentLoaded', function() {
+    initSearchableSelects();
+});
+
+function initSearchableSelects() {
+    const selects = document.querySelectorAll('select.select-searchable');
+    
+    selects.forEach(select => {
+        // Create container
+        const container = document.createElement('div');
+        container.className = 'select-search-container';
+        
+        // Create search input
+        const searchInput = document.createElement('input');
+        searchInput.type = 'text';
+        searchInput.className = 'search-input';
+        searchInput.placeholder = 'Rechercher une devise...';
+        
+        // Get selected option text
+        const selectedOption = select.options[select.selectedIndex];
+        if (selectedOption) {
+            searchInput.value = selectedOption.text;
+        }
+        
+        // Create dropdown
+        const dropdown = document.createElement('div');
+        dropdown.className = 'dropdown';
+        
+        // Populate dropdown with options
+        Array.from(select.options).forEach(option => {
+            const item = document.createElement('div');
+            item.className = 'dropdown-item';
+            item.textContent = option.text;
+            item.dataset.value = option.value;
+            
+            if (option.selected) {
+                item.classList.add('selected');
+            }
+            
+            item.addEventListener('click', function() {
+                select.value = this.dataset.value;
+                searchInput.value = this.textContent;
+                dropdown.classList.remove('show');
+                
+                // Update selected class
+                dropdown.querySelectorAll('.dropdown-item').forEach(i => i.classList.remove('selected'));
+                this.classList.add('selected');
+                
+                // Trigger change event
+                select.dispatchEvent(new Event('change'));
+            });
+            
+            dropdown.appendChild(item);
+        });
+        
+        // Hide original select
+        select.style.display = 'none';
+        
+        // Insert container
+        select.parentNode.insertBefore(container, select);
+        container.appendChild(searchInput);
+        container.appendChild(dropdown);
+        container.appendChild(select);
+        
+        // Toggle dropdown on input focus
+        searchInput.addEventListener('focus', function() {
+            dropdown.classList.add('show');
+            this.select();
+        });
+        
+        // Filter options on input
+        searchInput.addEventListener('input', function() {
+            const filter = this.value.toLowerCase();
+            const items = dropdown.querySelectorAll('.dropdown-item');
+            let hasResults = false;
+            
+            items.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                if (text.includes(filter)) {
+                    item.classList.remove('hidden');
+                    hasResults = true;
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+            
+            // Show/hide no results message
+            let noResults = dropdown.querySelector('.no-results');
+            if (!hasResults) {
+                if (!noResults) {
+                    noResults = document.createElement('div');
+                    noResults.className = 'no-results';
+                    noResults.textContent = 'Aucun résultat trouvé';
+                    dropdown.appendChild(noResults);
+                }
+                noResults.style.display = 'block';
+            } else if (noResults) {
+                noResults.style.display = 'none';
+            }
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!container.contains(e.target)) {
+                dropdown.classList.remove('show');
+                // Reset to selected value if input is empty or invalid
+                const selectedItem = dropdown.querySelector('.dropdown-item.selected');
+                if (selectedItem) {
+                    searchInput.value = selectedItem.textContent;
+                }
+            }
+        });
+    });
+}

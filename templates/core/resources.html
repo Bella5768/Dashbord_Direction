@@ -109,9 +109,9 @@
                                 </div>
                             </div>
                         </td>
-                        <td style="text-align: right; font-weight: 500;">{{ budget.allocated|floatformat:0 }} GNF</td>
-                        <td style="text-align: right; color: #16a34a;">{{ budget.consumed|floatformat:0 }} GNF</td>
-                        <td style="text-align: right; color: #2563eb;">{{ budget.available|floatformat:0 }} GNF</td>
+                        <td style="text-align: right; font-weight: 500;">{{ budget.allocated|floatformat:0 }} {{ budget.currency }}</td>
+                        <td style="text-align: right; color: #16a34a;">{{ budget.consumed|floatformat:0 }} {{ budget.currency }}</td>
+                        <td style="text-align: right; color: #2563eb;">{{ budget.available|floatformat:0 }} {{ budget.currency }}</td>
                         <td style="text-align: center;">
                             <div class="flex items-center gap-2">
                                 <div class="progress" style="flex: 1;">
