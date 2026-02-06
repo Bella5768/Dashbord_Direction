@@ -388,12 +388,21 @@ class ProjectMember(models.Model):
         ('observateur', 'Observateur'),
         ('ressource_externe_observateur', 'Ressource externe (observateur)'),
         ('ressource_externe_edit', 'Ressource externe (éditeur)'),
+        ('custom', 'Personnalisé'),
     ]
     
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='members', verbose_name="Projet")
     employee = models.ForeignKey('Employee', on_delete=models.CASCADE, related_name='project_memberships', verbose_name="Employé")
     role = models.CharField(max_length=30, choices=ROLE_CHOICES, default='membre', verbose_name="Rôle")
     joined_at = models.DateTimeField(auto_now_add=True, verbose_name="Date d'ajout")
+    
+    # Permissions individuelles
+    can_manage_members_perm = models.BooleanField(default=False, verbose_name="Gérer les membres")
+    can_edit_project_perm = models.BooleanField(default=False, verbose_name="Modifier le projet")
+    can_add_milestones_perm = models.BooleanField(default=False, verbose_name="Ajouter des jalons")
+    can_add_documents_perm = models.BooleanField(default=False, verbose_name="Ajouter des documents")
+    can_add_needs_perm = models.BooleanField(default=False, verbose_name="Ajouter des besoins")
+    can_add_comments_perm = models.BooleanField(default=False, verbose_name="Ajouter des commentaires")
     
     class Meta:
         verbose_name = "Membre de projet"
@@ -406,26 +415,53 @@ class ProjectMember(models.Model):
     
     def can_perform_actions(self):
         """Vérifie si le membre peut effectuer des actions sur le projet (autre que lecture)"""
+        if self.role == 'custom':
+            return any([self.can_add_milestones_perm, self.can_add_documents_perm, 
+                       self.can_add_needs_perm, self.can_add_comments_perm])
         return self.role in ['responsable', 'membre', 'ressource_externe_edit']
-    
+
     def can_manage_members(self):
-        """Seul le responsable peut gérer les autres membres"""
+        """Vérifie si le membre peut gérer les autres membres"""
+        if self.role == 'custom':
+            return self.can_manage_members_perm
         return self.role == 'responsable'
-    
+
     def can_edit_project(self):
         """Vérifie si le membre peut modifier le projet"""
+        if self.role == 'custom':
+            return self.can_edit_project_perm
         return self.role in ['responsable', 'ressource_externe_edit']
-    
+
     def can_add_milestones(self):
         """Vérifie si le membre peut ajouter/modifier des jalons"""
+        if self.role == 'custom':
+            return self.can_add_milestones_perm
         return self.role in ['responsable', 'membre', 'ressource_externe_edit']
-    
+
     def can_add_documents(self):
         """Vérifie si le membre peut ajouter des documents"""
+        if self.role == 'custom':
+            return self.can_add_documents_perm
         return self.role in ['responsable', 'membre', 'ressource_externe_edit']
     
+    def can_add_needs(self):
+        """Vérifie si le membre peut ajouter des besoins"""
+        if self.role == 'custom':
+            return self.can_add_needs_perm
+        return self.role in ['responsable', 'membre', 'ressource_externe_edit']
+    
+    def can_add_comments(self):
+        """Vérifie si le membre peut ajouter des commentaires"""
+        if self.role == 'custom':
+            return self.can_add_comments_perm
+        return self.role in ['responsable', 'membre', 'ressource_externe_edit']
+
     def is_readonly(self):
         """Vérifie si le membre est en lecture seule"""
+        if self.role == 'custom':
+            return not any([self.can_manage_members_perm, self.can_edit_project_perm, 
+                           self.can_add_milestones_perm, self.can_add_documents_perm,
+                           self.can_add_needs_perm, self.can_add_comments_perm])
         return self.role in ['observateur', 'ressource_externe_observateur']
 
 

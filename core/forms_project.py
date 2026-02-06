@@ -143,10 +143,17 @@ class ProjectMemberForm(forms.ModelForm):
     """Formulaire pour les membres de projet"""
     class Meta:
         model = ProjectMember
-        fields = ['employee', 'role']
+        fields = ['employee', 'role', 'can_manage_members_perm', 'can_edit_project_perm', 
+                  'can_add_milestones_perm', 'can_add_documents_perm', 'can_add_needs_perm', 'can_add_comments_perm']
         widgets = {
             'employee': forms.Select(attrs={'class': 'form-control select-searchable'}),
-            'role': forms.Select(attrs={'class': 'form-control'}),
+            'role': forms.Select(attrs={'class': 'form-control', 'onchange': 'togglePermissions()'}),
+            'can_manage_members_perm': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'can_edit_project_perm': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'can_add_milestones_perm': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'can_add_documents_perm': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'can_add_needs_perm': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'can_add_comments_perm': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
     
     def __init__(self, project, *args, **kwargs):
