@@ -1821,6 +1821,41 @@ def project_document_delete(request, doc_id):
     return render(request, 'core/confirm_delete.html', {'object': doc, 'type': 'document', 'back_url': 'core:project_detail', 'back_args': {'project_id': project.id}})
 
 
+@login_required
+def project_document_download(request, doc_id):
+    """Télécharger un document de projet"""
+    from django.http import FileResponse
+    import os
+    
+    doc = get_object_or_404(ProjectDocument.objects.select_related('project'), pk=doc_id)
+    project = doc.project
+    
+    # Permission check
+    if not (request.user.profile.is_directeur_general() or request.user.is_staff):
+        if request.user.profile.is_directeur():
+            if project.direction != request.user.profile.direction:
+                messages.error(request, "Vous n'avez pas accès à ce projet.")
+                return redirect('core:projects')
+        else:
+            user_name = request.user.get_full_name() or request.user.username
+            is_manager = project.manager and user_name in project.manager
+            is_member = project.members.filter(employee__name=user_name).exists()
+            
+            if not (is_manager or is_member):
+                messages.error(request, "Vous n'avez pas accès à ce projet.")
+                return redirect('core:projects')
+    
+    # Retourner le fichier
+    file_path = doc.file.path
+    if os.path.exists(file_path):
+        response = FileResponse(open(file_path, 'rb'), as_attachment=True)
+        response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
+        return response
+    else:
+        messages.error(request, "Fichier non trouvé.")
+        return redirect('core:project_detail', project_id=project.id)
+
+
 # ==================== PROJECT MEMBER CRUD ====================
 
 @login_required

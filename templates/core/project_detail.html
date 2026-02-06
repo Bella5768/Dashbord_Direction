@@ -438,7 +438,7 @@
                                     </div>
                                     <div class="flex gap-1">
                                         {% if doc.file %}
-                                        <a href="{{ doc.file.url }}" target="_blank" class="action-btn" title="Télécharger">
+                                        <a href="{% url 'core:project_document_download' doc.id %}" class="action-btn" title="Télécharger">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                             </svg>

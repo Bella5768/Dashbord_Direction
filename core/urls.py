@@ -63,6 +63,7 @@ urlpatterns = [
     path('projets/<int:project_id>/documents/nouveau/', views.project_document_create, name='project_document_create'),
     path('projets/documents/<int:doc_id>/modifier/', views.project_document_edit, name='project_document_edit'),
     path('projets/documents/<int:doc_id>/supprimer/', views.project_document_delete, name='project_document_delete'),
+    path('projets/documents/<int:doc_id>/telecharger/', views.project_document_download, name='project_document_download'),
     
     # Project Member CRUD
     path('projets/<int:project_id>/membres/ajouter/', views.project_member_add, name='project_member_add'),
