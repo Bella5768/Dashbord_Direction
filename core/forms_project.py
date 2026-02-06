@@ -35,10 +35,10 @@ class ProjectForm(forms.ModelForm):
             current_currency = self.instance.currency
             if current_currency != 'GNF':
                 # Afficher l'équivalent en GNF
-                gnf_equivalent = convert_currency(self.instance.budget, current_currency, 'GNF')
+                gnf_equivalent = convert_currency(float(self.instance.budget), current_currency, 'GNF')
                 self.fields['budget'].help_text = f"Équivalent: {format_currency(gnf_equivalent, 'GNF')}"
                 if self.instance.budget_consumed:
-                    consumed_gnf = convert_currency(self.instance.budget_consumed, current_currency, 'GNF')
+                    consumed_gnf = convert_currency(float(self.instance.budget_consumed), current_currency, 'GNF')
                     self.fields['budget_consumed'].help_text = f"Équivalent: {format_currency(consumed_gnf, 'GNF')}"
 
 

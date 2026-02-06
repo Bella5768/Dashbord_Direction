@@ -411,7 +411,8 @@ class ProjectMember(models.Model):
         ordering = ['role', 'joined_at']
     
     def __str__(self):
-        return f"{self.project.name} - {self.employee.name} ({self.get_role_display()})"
+        role_display = self.get_role_display() if self.role else 'Sans rôle'
+        return f"{self.project.name} - {self.employee.name} ({role_display})"
     
     def can_perform_actions(self):
         """Vérifie si le membre peut effectuer des actions sur le projet (autre que lecture)"""
