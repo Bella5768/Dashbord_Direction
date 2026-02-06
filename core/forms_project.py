@@ -181,6 +181,9 @@ class ProjectMemberForm(forms.ModelForm):
             'data-allow-clear': 'true'
         })
         
+        # Ensure role field has proper choices
+        self.fields['role'].choices = ProjectMember.ROLE_CHOICES
+        
         for field_name, field in self.fields.items():
             if field_name != 'employee':
                 field.widget.attrs['class'] = 'form-control'

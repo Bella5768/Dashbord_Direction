@@ -88,9 +88,23 @@
             </div>
             
             <div class="form-group" style="margin-bottom: 24px;">
-                <label for="id_role">Rôle dans le projet *</label>
+                <label for="id_role">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    Rôle dans le projet *
+                </label>
                 {{ form.role }}
                 {% if form.role.errors %}<p class="text-xs" style="color: var(--red-600);">{{ form.role.errors.0 }}</p>{% endif %}
+                <p class="text-xs" style="color: var(--gray-600); margin-top: 4px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12" style="display: inline-block; vertical-align: middle;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <strong>Responsable</strong> : Peut gérer les membres et modifier le projet<br>
+                    <strong>Membre</strong> : Peut ajouter des jalons, documents et commentaires<br>
+                    <strong>Observateur</strong> : Accès en lecture seule<br>
+                    <strong>Ressource externe</strong> : Collaborateur externe avec droits limités
+                </p>
             </div>
             
             <div class="flex gap-3">
