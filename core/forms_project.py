@@ -167,12 +167,10 @@ class ProjectMemberForm(forms.ModelForm):
         employee_choices = [('', '--- Sélectionner un employé ---')]
         for emp in available_employees:
             display_text = f"{emp.name}"
-            if emp.position:
-                display_text += f" - {emp.position}"
-            if emp.department:
-                display_text += f" ({emp.department})"
+            if emp.role:
+                display_text += f" - {emp.role}"
             if emp.email:
-                display_text += f" - {emp.email}"
+                display_text += f" ({emp.email})"
             employee_choices.append((emp.id, display_text))
         
         self.fields['employee'].choices = employee_choices
