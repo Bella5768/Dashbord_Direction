@@ -1878,7 +1878,8 @@ def project_member_add(request, project_id):
                 context['new_employee_role'] = new_role_employee
                 context['new_employee_phone'] = new_phone
                 context['new_employee_email'] = new_email
-                form = ProjectMemberForm(project)
+                # Créer un formulaire avec les données POST pour préserver les permissions
+                form = ProjectMemberForm(project, request.POST)
                 context['form'] = form
                 return render(request, 'core/project_member_form.html', context)
             
