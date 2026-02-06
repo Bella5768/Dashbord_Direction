@@ -1063,42 +1063,21 @@ def get_client_ip(request):
 def project_detail(request, project_id):
     """Détail d'un projet"""
     project = get_object_or_404(
-        Project.objects.select_related('direction').prefetch_related('milestones', 'needs', 'comments'),
+        Project.objects.select_related('direction').prefetch_related('milestones', 'needs', 'comments', 'members', 'project_documents'),
         pk=project_id,
     )
 
-    employee_id = getattr(request.user.profile, 'employee_id', None)
-    is_lead = bool(employee_id and project.members.filter(employee_id=employee_id, role='manager').exists())
-    can_manage_members = bool((request.user.profile.is_directeur_general() or request.user.is_staff) or is_lead)
+    # Nouveau système de permissions basé sur les rôles des membres
+    can_manage_members = request.user.profile.can_manage_project_members(project)
+    can_perform_actions = request.user.profile.can_perform_actions_as_member(project)
+    is_readonly = request.user.profile.is_project_readonly(project)
+    can_edit_project = request.user.profile.can_edit_project(project)
+    can_add_milestones = request.user.profile.can_add_project_milestones(project)
 
     # Permission check
-    if not (request.user.profile.is_directeur_general() or request.user.is_staff):
-        if request.user.profile.is_directeur():
-            # Directeur ne peut voir que les projets de sa direction
-            if project.direction != request.user.profile.direction:
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
-        else:
-            # Chef de projet et autres voient les projets où ils sont manager OU membres
-            from django.db.models import Q
-            
-            # Récupérer le nom de l'utilisateur
-            user_name = request.user.get_full_name() or request.user.username
-            employee_id = getattr(request.user.profile, 'employee_id', None)
-            
-            # Vérifier si l'utilisateur est manager OU membre du projet
-            is_manager = project.manager and user_name in project.manager
-            if employee_id:
-                is_member = project.members.filter(employee_id=employee_id).exists()
-            else:
-                is_member = (
-                    project.members.filter(employee__name__iexact=user_name).exists() or
-                    project.members.filter(employee__name__icontains=request.user.username).exists()
-                )
-            
-            if not (is_manager or is_member):
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
+    if not request.user.profile.can_view_project(project):
+        messages.error(request, "Vous n'avez pas accès à ce projet.")
+        return redirect('core:projects')
 
     context = {
         'project': project,
@@ -1106,7 +1085,13 @@ def project_detail(request, project_id):
         'needs': project.needs.all(),
         'comments': project.comments.all(),
         'activities': project.activities.all()[:20],
+        'members': project.members.all(),
+        'documents': project.project_documents.all(),
         'can_manage_members': can_manage_members,
+        'can_perform_actions': can_perform_actions,
+        'is_readonly': is_readonly,
+        'can_edit_project': can_edit_project,
+        'can_add_milestones': can_add_milestones,
     }
     return render(request, 'core/project_detail.html', context)
 
@@ -1192,19 +1177,10 @@ def project_need_create(request, project_id):
 
     project = get_object_or_404(Project, pk=project_id)
 
-    # Permission check (mêmes règles que jalons / dossiers)
-    if not (request.user.profile.is_directeur_general() or request.user.is_staff):
-        if request.user.profile.is_directeur():
-            if project.direction != request.user.profile.direction:
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
-        else:
-            user_name = request.user.get_full_name() or request.user.username
-            is_manager = project.manager and user_name in project.manager
-            is_member = project.members.filter(employee__name=user_name).exists()
-            if not (is_manager or is_member):
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
+    # Permission check - utiliser le nouveau système basé sur les rôles
+    if not request.user.profile.can_perform_actions_as_member(project):
+        messages.error(request, "Vous n'avez pas les permissions pour ajouter des besoins à ce projet.")
+        return redirect('core:project_detail', project_id=project.id)
 
     if request.method != 'POST':
         return redirect('core:project_detail', project_id=project.id)
@@ -1229,19 +1205,10 @@ def project_comment_create(request, project_id):
 
     project = get_object_or_404(Project, pk=project_id)
 
-    # Permission check (mêmes règles que jalons / besoins)
-    if not (request.user.profile.is_directeur_general() or request.user.is_staff):
-        if request.user.profile.is_directeur():
-            if project.direction != request.user.profile.direction:
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
-        else:
-            user_name = request.user.get_full_name() or request.user.username
-            is_manager = project.manager and user_name in project.manager
-            is_member = project.members.filter(employee__name=user_name).exists()
-            if not (is_manager or is_member):
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
+    # Permission check - utiliser le nouveau système basé sur les rôles
+    if not request.user.profile.can_perform_actions_as_member(project):
+        messages.error(request, "Vous n'avez pas les permissions pour ajouter des commentaires à ce projet.")
+        return redirect('core:project_detail', project_id=project.id)
 
     if request.method != 'POST':
         return redirect('core:project_detail', project_id=project.id)

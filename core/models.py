@@ -145,6 +145,67 @@ class UserProfile(models.Model):
                 return project.members.filter(employee_id=self.employee_id, role='responsable').exists()
         return False
     
+    def can_perform_actions_as_member(self, project):
+        """Vérifie si l'utilisateur peut effectuer des actions sur un projet en tant que membre"""
+        # Admin, DG, Directeur peuvent toujours agir
+        if self.role in ['admin', 'directeur_general']:
+            return True
+        if self.role == 'directeur' and self.direction == project.direction:
+            return True
+        if self.role == 'chef_projet':
+            user_name = self.user.get_full_name() or self.user.username
+            if project.manager and user_name in project.manager:
+                return True
+            # Vérifier si chef de projet est membre avec rôle responsable
+            membership = project.members.filter(employee__name=user_name).first()
+            if membership and membership.can_perform_actions():
+                return True
+        
+        # Vérifier les permissions de membre pour les employés
+        user_name = self.user.get_full_name() or self.user.username
+        membership = project.members.filter(employee__name=user_name).first()
+        if membership:
+            return membership.can_perform_actions()
+        
+        return False
+    
+    def can_manage_project_members(self, project):
+        """Vérifie si l'utilisateur peut gérer les membres d'un projet (ajouter/supprimer)"""
+        # Admin, DG peuvent toujours gérer
+        if self.role in ['admin', 'directeur_general']:
+            return True
+        if self.role == 'directeur' and self.direction == project.direction:
+            return True
+        # Chef de projet responsable peut gérer
+        user_name = self.user.get_full_name() or self.user.username
+        membership = project.members.filter(employee__name=user_name).first()
+        if membership and membership.can_manage_members():
+            return True
+        # Chef de projet principal peut gérer
+        if self.role == 'chef_projet' and project.manager:
+            if user_name in project.manager:
+                return True
+        return False
+    
+    def is_project_readonly(self, project):
+        """Vérifie si l'utilisateur est en lecture seule sur ce projet"""
+        # Admin, DG, Directeur ne sont jamais en readonly
+        if self.role in ['admin', 'directeur_general']:
+            return False
+        if self.role == 'directeur' and self.direction == project.direction:
+            return False
+        # Vérifier si c'est un chef de projet
+        if self.role == 'chef_projet':
+            user_name = self.user.get_full_name() or self.user.username
+            if project.manager and user_name in project.manager:
+                return False
+        # Vérifier les droits de membre
+        user_name = self.user.get_full_name() or self.user.username
+        membership = project.members.filter(employee__name=user_name).first()
+        if membership:
+            return membership.is_readonly()
+        return True
+    
     def can_add_project_milestones(self, project):
         """Vérifie si l'utilisateur peut ajouter des jalons à un projet"""
         # Permission explicite
@@ -320,6 +381,30 @@ class ProjectMember(models.Model):
     
     def __str__(self):
         return f"{self.project.name} - {self.employee.name} ({self.get_role_display()})"
+    
+    def can_perform_actions(self):
+        """Vérifie si le membre peut effectuer des actions sur le projet (autre que lecture)"""
+        return self.role in ['responsable', 'membre', 'ressource_externe_edit']
+    
+    def can_manage_members(self):
+        """Seul le responsable peut gérer les autres membres"""
+        return self.role == 'responsable'
+    
+    def can_edit_project(self):
+        """Vérifie si le membre peut modifier le projet"""
+        return self.role in ['responsable', 'ressource_externe_edit']
+    
+    def can_add_milestones(self):
+        """Vérifie si le membre peut ajouter/modifier des jalons"""
+        return self.role in ['responsable', 'membre', 'ressource_externe_edit']
+    
+    def can_add_documents(self):
+        """Vérifie si le membre peut ajouter des documents"""
+        return self.role in ['responsable', 'membre', 'ressource_externe_edit']
+    
+    def is_readonly(self):
+        """Vérifie si le membre est en lecture seule"""
+        return self.role in ['observateur', 'ressource_externe_observateur']
 
 
 class Milestone(models.Model):
