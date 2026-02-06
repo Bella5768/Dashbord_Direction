@@ -214,6 +214,28 @@ class UserProfile(models.Model):
                 return True
         return self.can_edit_project(project)
     
+    def can_add_project_documents(self, project):
+        """Vérifie si l'utilisateur peut ajouter des documents à un projet"""
+        return self.can_perform_actions_as_member(project)
+    
+    def can_edit_project(self, project):
+        """Vérifie si l'utilisateur peut modifier le projet"""
+        # Admin, DG, Directeur peuvent toujours modifier
+        if self.role in ['admin', 'directeur_general']:
+            return True
+        if self.role == 'directeur' and self.direction == project.direction:
+            return True
+        # Chef de projet responsable peut modifier
+        user_name = self.user.get_full_name() or self.user.username
+        membership = project.members.filter(employee__name=user_name).first()
+        if membership and membership.can_edit_project():
+            return True
+        # Chef de projet principal peut modifier
+        if self.role == 'chef_projet' and project.manager:
+            if user_name in project.manager:
+                return True
+        return False
+    
     def can_view_project(self, project):
         """Vérifie si l'utilisateur peut voir un projet"""
         if self.role in ['admin', 'directeur_general']:

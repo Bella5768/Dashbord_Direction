@@ -119,6 +119,7 @@
                             </div>
                             <div class="flex items-center gap-2">
                                 <span class="text-xs text-gray-500">#{{ milestone.order }}</span>
+                                {% if can_add_milestones %}
                                 <a href="{% url 'core:sub_milestone_create' milestone.id %}" class="action-btn" title="Ajouter sous-étape" style="color: #2563eb;">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -134,6 +135,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                     </svg>
                                 </a>
+                                {% endif %}
                             </div>
                         </div>
                         {% if milestone.sub_milestones.count > 0 %}
@@ -153,6 +155,7 @@
                                         {% endif %}
                                     </div>
                                     <div class="flex items-center gap-1">
+                                        {% if can_add_milestones %}
                                         <a href="{% url 'core:sub_milestone_edit' sub.id %}" class="action-btn" title="Modifier" style="padding: 2px;">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -163,6 +166,7 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                             </svg>
                                         </a>
+                                        {% endif %}
                                     </div>
                                 </div>
                                 {% endfor %}
@@ -175,12 +179,14 @@
             {% else %}
                 <p class="text-gray-500">Aucun jalon défini pour ce projet.</p>
                 <div style="margin-top: 16px;">
+                    {% if can_add_milestones %}
                     <a href="{% url 'core:milestone_create' project.id %}" class="btn btn-primary btn-sm">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                         </svg>
                         Ajouter un jalon
                     </a>
+                    {% endif %}
                 </div>
             {% endif %}
         </div>
@@ -212,6 +218,7 @@
                 <p class="text-gray-500" style="margin-bottom: 16px;">Aucun besoin défini pour ce projet.</p>
             {% endif %}
 
+            {% if can_perform_actions %}
             <form method="post" action="{% url 'core:project_need_create' project.id %}">
                 {% csrf_token %}
                 <div class="grid grid-2" style="gap: 12px;">
@@ -236,6 +243,9 @@
                     <button type="submit" class="btn btn-primary btn-sm">Ajouter</button>
                 </div>
             </form>
+            {% else %}
+                <p class="text-gray-500 text-sm">Vous n'avez pas les permissions pour ajouter des besoins.</p>
+            {% endif %}
         </div>
     </div>
 
@@ -257,6 +267,7 @@
                 <p class="text-gray-500" style="margin-bottom: 16px;">Aucun commentaire pour ce projet.</p>
             {% endif %}
 
+            {% if can_perform_actions %}
             <form method="post" action="{% url 'core:project_comment_create' project.id %}">
                 {% csrf_token %}
                 <div>
@@ -267,6 +278,9 @@
                     <button type="submit" class="btn btn-primary btn-sm">Publier</button>
                 </div>
             </form>
+            {% else %}
+                <p class="text-gray-500 text-sm">Vous n'avez pas les permissions pour ajouter des commentaires.</p>
+            {% endif %}
         </div>
     </div>
 
@@ -355,6 +369,7 @@
         <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
             <h3 class="card-title">Documents</h3>
             <div class="flex gap-2">
+                {% if can_add_documents %}
                 <a href="{% url 'core:project_folder_create' project.id %}" class="btn btn-outline btn-sm">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
@@ -367,6 +382,7 @@
                     </svg>
                     Nouveau document
                 </a>
+                {% endif %}
             </div>
         </div>
         <div class="card-content">
@@ -392,6 +408,7 @@
                                         {% if folder.parent %}<span class="text-xs text-gray-500">dans {{ folder.parent.name }}</span>{% endif %}
                                     </div>
                                     <div class="flex gap-1">
+                                        {% if can_add_documents %}
                                         <a href="{% url 'core:project_folder_create' project.id %}?parent={{ folder.id }}" class="action-btn" title="Créer un sous-dossier">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m-6-6h12" />
@@ -412,6 +429,7 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                             </svg>
                                         </a>
+                                        {% endif %}
                                     </div>
                                 </div>
                                 {% endfor %}
@@ -448,6 +466,7 @@
                                             </svg>
                                         </a>
                                         {% endif %}
+                                        {% if can_add_documents %}
                                         <a href="{% url 'core:project_document_edit' doc.id %}" class="action-btn" title="Modifier">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -458,6 +477,7 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                             </svg>
                                         </a>
+                                        {% endif %}
                                     </div>
                                 </div>
                                 {% endfor %}
@@ -471,8 +491,10 @@
                         </svg>
                         <p class="text-gray-500">Aucun dossier ou document dans ce projet.</p>
                         <div style="margin-top: 16px;">
+                            {% if can_add_documents %}
                             <a href="{% url 'core:project_folder_create' project.id %}" class="btn btn-outline btn-sm">Créer un dossier</a>
                             <a href="{% url 'core:project_document_create' project.id %}" class="btn btn-primary btn-sm">Ajouter un document</a>
+                            {% endif %}
                         </div>
                     </div>
                 {% endif %}

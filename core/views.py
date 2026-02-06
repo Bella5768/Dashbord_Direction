@@ -1073,6 +1073,7 @@ def project_detail(request, project_id):
     is_readonly = request.user.profile.is_project_readonly(project)
     can_edit_project = request.user.profile.can_edit_project(project)
     can_add_milestones = request.user.profile.can_add_project_milestones(project)
+    can_add_documents = request.user.profile.can_add_project_documents(project)
 
     # Permission check
     if not request.user.profile.can_view_project(project):
@@ -1092,6 +1093,7 @@ def project_detail(request, project_id):
         'is_readonly': is_readonly,
         'can_edit_project': can_edit_project,
         'can_add_milestones': can_add_milestones,
+        'can_add_documents': can_add_documents,
     }
     return render(request, 'core/project_detail.html', context)
 
