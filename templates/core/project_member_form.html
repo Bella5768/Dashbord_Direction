@@ -24,9 +24,37 @@
             <!-- Section employé existant -->
             <div id="existing_employee_section" {% if create_new_employee %}style="display: none;"{% endif %}>
                 <div class="form-group" style="margin-bottom: 16px;">
-                    <label for="id_employee">Employé existant *</label>
+                    <label for="id_employee">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        Employé existant *
+                    </label>
                     {{ form.employee }}
                     {% if form.employee.errors %}<p class="text-xs" style="color: var(--red-600);">{{ form.employee.errors.0 }}</p>{% endif %}
+                    <p class="text-xs" style="color: var(--gray-600); margin-top: 4px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12" style="display: inline-block; vertical-align: middle;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        Utilisez la recherche pour trouver rapidement un employé par nom, poste, département ou email
+                    </p>
+                </div>
+                
+                <!-- Statistiques des employés disponibles -->
+                <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="color: var(--blue-600);">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span style="font-weight: 600; color: var(--blue-900);">Employés disponibles</span>
+                    </div>
+                    <div style="font-size: 14px; color: var(--gray-700);">
+                        {% if available_employees_count %}
+                            {{ available_employees_count }} employé(s) disponible(s) pour ce projet
+                        {% else %}
+                            Tous les employés sont déjà membres de ce projet
+                        {% endif %}
+                    </div>
                 </div>
             </div>
             
@@ -88,6 +116,54 @@ document.getElementById('toggle_new_employee').addEventListener('change', functi
     } else {
         existingSection.style.display = 'block';
         newSection.style.display = 'none';
+    }
+});
+
+// Initialiser Select2 pour la recherche d'employés si disponible
+if (typeof $ !== 'undefined' && $.fn.select2) {
+    $('#id_employee').select2({
+        placeholder: 'Rechercher un employé...',
+        allowClear: true,
+        width: '100%',
+        language: {
+            noResults: function() {
+                return 'Aucun employé trouvé';
+            },
+            searching: function() {
+                return 'Recherche en cours...';
+            }
+        }
+    });
+}
+
+// Alternative: Simple search functionality if Select2 is not available
+document.addEventListener('DOMContentLoaded', function() {
+    const employeeSelect = document.getElementById('id_employee');
+    if (employeeSelect && typeof $ === 'undefined') {
+        // Add simple search functionality
+        const searchInput = document.createElement('input');
+        searchInput.type = 'text';
+        searchInput.placeholder = 'Rechercher un employé...';
+        searchInput.className = 'form-control';
+        searchInput.style.marginBottom = '8px';
+        
+        employeeSelect.parentNode.insertBefore(searchInput, employeeSelect);
+        
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const options = employeeSelect.options;
+            
+            for (let i = 0; i < options.length; i++) {
+                const option = options[i];
+                const text = option.text.toLowerCase();
+                
+                if (text.includes(searchTerm) || i === 0) { // Keep the first option (placeholder)
+                    option.style.display = '';
+                } else {
+                    option.style.display = 'none';
+                }
+            }
+        });
     }
 });
 </script>

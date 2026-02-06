@@ -145,7 +145,7 @@ class ProjectMemberForm(forms.ModelForm):
         model = ProjectMember
         fields = ['employee', 'role']
         widgets = {
-            'employee': forms.Select(attrs={'class': 'form-control'}),
+            'employee': forms.Select(attrs={'class': 'form-control select-searchable'}),
             'role': forms.Select(attrs={'class': 'form-control'}),
         }
     
@@ -159,10 +159,33 @@ class ProjectMemberForm(forms.ModelForm):
             existing_members = project.members.all()
         
         employee_ids = existing_members.values_list('employee_id', flat=True)
-        self.fields['employee'].queryset = Employee.objects.exclude(id__in=employee_ids).order_by('name')
+        
+        # Get available employees with their details
+        available_employees = Employee.objects.exclude(id__in=employee_ids).order_by('name')
+        
+        # Create custom choices with employee details
+        employee_choices = [('', '--- Sélectionner un employé ---')]
+        for emp in available_employees:
+            display_text = f"{emp.name}"
+            if emp.position:
+                display_text += f" - {emp.position}"
+            if emp.department:
+                display_text += f" ({emp.department})"
+            if emp.email:
+                display_text += f" - {emp.email}"
+            employee_choices.append((emp.id, display_text))
+        
+        self.fields['employee'].choices = employee_choices
+        
+        # Add search capability
+        self.fields['employee'].widget.attrs.update({
+            'data-placeholder': 'Rechercher un employé...',
+            'data-allow-clear': 'true'
+        })
         
         for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form-control'
+            if field_name != 'employee':
+                field.widget.attrs['class'] = 'form-control'
 
 
 class ProjectNeedForm(forms.ModelForm):

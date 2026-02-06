@@ -1836,10 +1836,16 @@ def project_member_add(request, project_id):
         return redirect('core:project_detail', project_id=project.id)
     
     directions = Direction.objects.all()
+    
+    # Calculate available employees count
+    existing_member_ids = project.members.values_list('employee_id', flat=True)
+    available_employees_count = Employee.objects.exclude(id__in=existing_member_ids).count()
+    
     context = {
         'project': project,
         'title': 'Ajouter un membre',
         'directions': directions,
+        'available_employees_count': available_employees_count,
     }
     
     if request.method == 'POST':
@@ -1933,7 +1939,17 @@ def project_member_edit(request, member_id):
     else:
         form = ProjectMemberForm(project, instance=member)
     
-    return render(request, 'core/project_member_form.html', {'form': form, 'project': project, 'member': member, 'title': f'Modifier {member.employee.name}'})
+    # Calculate available employees count
+    existing_member_ids = project.members.values_list('employee_id', flat=True)
+    available_employees_count = Employee.objects.exclude(id__in=existing_member_ids).count()
+    
+    return render(request, 'core/project_member_form.html', {
+        'form': form, 
+        'project': project, 
+        'member': member, 
+        'title': f'Modifier {member.employee.name}',
+        'available_employees_count': available_employees_count,
+    })
 
 
 @login_required
