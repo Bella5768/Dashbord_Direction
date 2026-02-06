@@ -1891,12 +1891,22 @@ def project_member_add(request, project_id):
                 email=new_email
             )
             
-            # Créer le membre de projet
-            ProjectMember.objects.create(
+            # Créer le membre de projet avec permissions personnalisées si rôle = custom
+            member = ProjectMember.objects.create(
                 project=project,
                 employee=new_employee,
                 role=project_role
             )
+            
+            # Si le rôle est personnalisé, récupérer les permissions du formulaire
+            if project_role == 'custom':
+                member.can_manage_members_perm = request.POST.get('can_manage_members_perm') == 'on'
+                member.can_edit_project_perm = request.POST.get('can_edit_project_perm') == 'on'
+                member.can_add_milestones_perm = request.POST.get('can_add_milestones_perm') == 'on'
+                member.can_add_documents_perm = request.POST.get('can_add_documents_perm') == 'on'
+                member.can_add_needs_perm = request.POST.get('can_add_needs_perm') == 'on'
+                member.can_add_comments_perm = request.POST.get('can_add_comments_perm') == 'on'
+                member.save()
             
             log_project_activity(project, 'ajout_membre', f"Ajout du membre '{new_name}' ({project_role})", request.user)
             messages.success(request, f"Employé '{new_name}' créé et ajouté au projet avec succès.")
