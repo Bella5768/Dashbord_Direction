@@ -158,7 +158,7 @@ class ProjectMemberForm(forms.ModelForm):
         else:
             existing_members = project.members.all()
         
-        employee_ids = existing_members.values_list('employee__id', flat=True)
+        employee_ids = existing_members.values_list('employee_id', flat=True)
         
         # Get available employees with their details
         available_employees = Employee.objects.exclude(id__in=employee_ids).order_by('name')
