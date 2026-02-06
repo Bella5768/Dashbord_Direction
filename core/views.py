@@ -1853,6 +1853,8 @@ def project_member_add(request, project_id):
     }
     
     if request.method == 'POST':
+        # Debug: afficher les données POST
+        print(f"POST data: {request.POST}")
         create_new_employee = request.POST.get('create_new_employee') == 'on'
         
         if create_new_employee:
@@ -1901,12 +1903,15 @@ def project_member_add(request, project_id):
             
             # Si le rôle est personnalisé, récupérer les permissions du formulaire
             if project_role == 'custom':
+                print(f"Custom role detected, getting permissions...")
+                print(f"can_manage_members_perm: {request.POST.get('can_manage_members_perm')}")
                 member.can_manage_members_perm = request.POST.get('can_manage_members_perm') == 'on'
                 member.can_edit_project_perm = request.POST.get('can_edit_project_perm') == 'on'
                 member.can_add_milestones_perm = request.POST.get('can_add_milestones_perm') == 'on'
                 member.can_add_documents_perm = request.POST.get('can_add_documents_perm') == 'on'
                 member.can_add_needs_perm = request.POST.get('can_add_needs_perm') == 'on'
                 member.can_add_comments_perm = request.POST.get('can_add_comments_perm') == 'on'
+                print(f"Permissions saved, member saved: {member}")
                 member.save()
             
             log_project_activity(project, 'ajout_membre', f"Ajout du membre '{new_name}' ({project_role})", request.user)

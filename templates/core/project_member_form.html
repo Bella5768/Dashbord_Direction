@@ -271,10 +271,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const permissionsSection = document.getElementById('permissions_section');
     
     function togglePermissions() {
+        console.log('Role changed to:', roleSelect.value); // Debug
         if (roleSelect.value === 'custom') {
             permissionsSection.style.display = 'block';
+            console.log('Showing permissions section'); // Debug
         } else {
             permissionsSection.style.display = 'none';
+            console.log('Hiding permissions section'); // Debug
         }
     }
     
