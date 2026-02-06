@@ -1838,7 +1838,7 @@ def project_member_add(request, project_id):
     directions = Direction.objects.all()
     
     # Calculate available employees count
-    existing_member_ids = project.members.values_list('employee_id', flat=True)
+    existing_member_ids = project.members.values_list('employee__id', flat=True)
     available_employees_count = Employee.objects.exclude(id__in=existing_member_ids).count()
     
     context = {
@@ -1940,7 +1940,7 @@ def project_member_edit(request, member_id):
         form = ProjectMemberForm(project, instance=member)
     
     # Calculate available employees count
-    existing_member_ids = project.members.values_list('employee_id', flat=True)
+    existing_member_ids = project.members.values_list('employee__id', flat=True)
     available_employees_count = Employee.objects.exclude(id__in=existing_member_ids).count()
     
     return render(request, 'core/project_member_form.html', {
