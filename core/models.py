@@ -319,7 +319,7 @@ class ProjectMember(models.Model):
         ordering = ['role', 'joined_at']
     
     def __str__(self):
-        return f"{self.project.name} - {self.employee.name} ({self.get_role_display})"
+        return f"{self.project.name} - {self.employee.name} ({self.get_role_display()})"
 
 
 class Milestone(models.Model):
