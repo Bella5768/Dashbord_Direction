@@ -59,6 +59,17 @@ class UserProfile(models.Model):
             return f"{self.user.first_name[0]}{self.user.last_name[0]}".upper()
         return self.user.username[:2].upper()
     
+    def get_project_membership(self, project):
+        """Trouve le ProjectMember lié à cet utilisateur pour un projet donné"""
+        # 1. Chercher par le lien direct employee du profil
+        if self.employee_id:
+            membership = project.members.filter(employee_id=self.employee_id).first()
+            if membership:
+                return membership
+        # 2. Fallback par nom
+        user_name = self.user.get_full_name() or self.user.username
+        return project.members.filter(employee__name=user_name).first()
+
     # Permission methods
     def is_admin(self):
         return self.role == 'admin'
@@ -107,25 +118,6 @@ class UserProfile(models.Model):
         """Admin, DG, Directeur et Chef de projet peuvent gérer les projets"""
         return self.role in ['admin', 'directeur_general', 'directeur', 'chef_projet']
     
-    def can_edit_project(self, project):
-        """Vérifie si l'utilisateur peut modifier un projet spécifique"""
-        # Permission explicite
-        if self.can_edit_projects:
-            if self.direction and self.direction == project.direction:
-                return True
-        # Rôles par défaut
-        if self.role in ['admin', 'directeur_general']:
-            return True
-        if self.role == 'directeur' and self.direction == project.direction:
-            return True
-        if self.role == 'chef_projet':
-            user_name = self.user.get_full_name() or self.user.username
-            if project.manager and user_name in project.manager:
-                return True
-            if self.employee_identifier:
-                return project.members.filter(employee_id=self.employee_id, role='responsable').exists()
-        return False
-    
     def can_add_project_members(self, project):
         """Vérifie si l'utilisateur peut ajouter des membres à un projet"""
         # Permission explicite
@@ -137,12 +129,14 @@ class UserProfile(models.Model):
             return True
         if self.role == 'directeur' and self.direction == project.direction:
             return True
-        if self.role == 'chef_projet':
+        if self.role == 'chef_projet' and project.manager:
             user_name = self.user.get_full_name() or self.user.username
-            if project.manager and user_name in project.manager:
+            if user_name in project.manager:
                 return True
-            if self.employee_identifier:
-                return project.members.filter(employee_id=self.employee_id, role='responsable').exists()
+        # Vérifier les permissions de membre
+        membership = self.get_project_membership(project)
+        if membership and membership.can_manage_members():
+            return True
         return False
     
     def can_perform_actions_as_member(self, project):
@@ -156,14 +150,9 @@ class UserProfile(models.Model):
             user_name = self.user.get_full_name() or self.user.username
             if project.manager and user_name in project.manager:
                 return True
-            # Vérifier si chef de projet est membre avec rôle responsable
-            membership = project.members.filter(employee__name=user_name).first()
-            if membership and membership.can_perform_actions():
-                return True
         
-        # Vérifier les permissions de membre pour les employés
-        user_name = self.user.get_full_name() or self.user.username
-        membership = project.members.filter(employee__name=user_name).first()
+        # Vérifier les permissions de membre
+        membership = self.get_project_membership(project)
         if membership:
             return membership.can_perform_actions()
         
@@ -176,15 +165,15 @@ class UserProfile(models.Model):
             return True
         if self.role == 'directeur' and self.direction == project.direction:
             return True
-        # Chef de projet responsable peut gérer
-        user_name = self.user.get_full_name() or self.user.username
-        membership = project.members.filter(employee__name=user_name).first()
-        if membership and membership.can_manage_members():
-            return True
         # Chef de projet principal peut gérer
         if self.role == 'chef_projet' and project.manager:
+            user_name = self.user.get_full_name() or self.user.username
             if user_name in project.manager:
                 return True
+        # Vérifier les permissions de membre
+        membership = self.get_project_membership(project)
+        if membership and membership.can_manage_members():
+            return True
         return False
     
     def is_project_readonly(self, project):
@@ -200,8 +189,7 @@ class UserProfile(models.Model):
             if project.manager and user_name in project.manager:
                 return False
         # Vérifier les droits de membre
-        user_name = self.user.get_full_name() or self.user.username
-        membership = project.members.filter(employee__name=user_name).first()
+        membership = self.get_project_membership(project)
         if membership:
             return membership.is_readonly()
         return True
@@ -223,8 +211,7 @@ class UserProfile(models.Model):
             if user_name in project.manager:
                 return True
         # Vérifier les permissions de membre (y compris custom)
-        user_name = self.user.get_full_name() or self.user.username
-        membership = project.members.filter(employee__name=user_name).first()
+        membership = self.get_project_membership(project)
         if membership and membership.can_add_milestones():
             return True
         return False
@@ -242,8 +229,7 @@ class UserProfile(models.Model):
             if user_name in project.manager:
                 return True
         # Vérifier les permissions de membre (y compris custom)
-        user_name = self.user.get_full_name() or self.user.username
-        membership = project.members.filter(employee__name=user_name).first()
+        membership = self.get_project_membership(project)
         if membership and membership.can_add_documents():
             return True
         return False
@@ -255,15 +241,15 @@ class UserProfile(models.Model):
             return True
         if self.role == 'directeur' and self.direction == project.direction:
             return True
-        # Chef de projet responsable peut modifier
-        user_name = self.user.get_full_name() or self.user.username
-        membership = project.members.filter(employee__name=user_name).first()
-        if membership and membership.can_edit_project():
-            return True
         # Chef de projet principal peut modifier
         if self.role == 'chef_projet' and project.manager:
+            user_name = self.user.get_full_name() or self.user.username
             if user_name in project.manager:
                 return True
+        # Vérifier les permissions de membre
+        membership = self.get_project_membership(project)
+        if membership and membership.can_edit_project():
+            return True
         return False
     
     def can_view_project(self, project):
@@ -276,8 +262,10 @@ class UserProfile(models.Model):
             user_name = self.user.get_full_name() or self.user.username
             if project.manager and user_name in project.manager:
                 return True
-            if self.employee_identifier:
-                return project.members.filter(employee_id=self.employee_id).exists()
+        # Vérifier si l'utilisateur est membre du projet
+        membership = self.get_project_membership(project)
+        if membership:
+            return True
         return False
     
     def can_view_reports(self):
