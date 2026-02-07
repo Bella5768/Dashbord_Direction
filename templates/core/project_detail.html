@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 
 {% block title %}Projet - {{ project.name }}{% endblock %}
 {% block page_title %}{{ project.name }}{% endblock %}
@@ -62,11 +63,11 @@
             </div>
             <div class="flex justify-between" style="margin-bottom: 10px;">
                 <span class="text-sm text-gray-500">Budget alloué</span>
-                <span class="text-sm font-medium">{{ project.budget|floatformat:0 }} {{ project.currency }}</span>
+                <span class="text-sm font-medium">{{ project.budget|number_format }} {{ project.currency }}</span>
             </div>
             <div class="flex justify-between" style="margin-bottom: 10px;">
                 <span class="text-sm text-gray-500">Consommé</span>
-                <span class="text-sm font-medium">{{ project.budget_consumed|floatformat:0 }} {{ project.currency }}</span>
+                <span class="text-sm font-medium">{{ project.budget_consumed|number_format }} {{ project.currency }}</span>
             </div>
             <div style="margin-top: 12px;">
                 <div class="flex items-center justify-between" style="margin-bottom: 8px;">

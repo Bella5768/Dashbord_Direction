@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 
 {% block title %}Ressources{% endblock %}
 {% block page_title %}Suivi des Ressources{% endblock %}
@@ -26,15 +27,15 @@
 <div class="stats-row">
     <a class="stat-box stat-box-link" href="{% url 'core:resources' %}?tab=budget">
         <p class="stat-box-label">Budget total</p>
-        <p class="stat-box-value">{{ total_allocated|floatformat:0 }} GNF</p>
+        <p class="stat-box-value">{{ total_allocated|number_format }} GNF</p>
     </a>
     <a class="stat-box green stat-box-link" href="{% url 'core:resources' %}?tab=budget">
         <p class="stat-box-label">Consommé</p>
-        <p class="stat-box-value">{{ total_consumed|floatformat:0 }} GNF</p>
+        <p class="stat-box-value">{{ total_consumed|number_format }} GNF</p>
     </a>
     <a class="stat-box blue stat-box-link" href="{% url 'core:resources' %}?tab=budget">
         <p class="stat-box-label">Disponible</p>
-        <p class="stat-box-value">{{ total_available|floatformat:0 }} GNF</p>
+        <p class="stat-box-value">{{ total_available|number_format }} GNF</p>
     </a>
     <a class="stat-box amber stat-box-link" href="{% url 'core:resources' %}?tab=budget">
         <p class="stat-box-label">Taux de consommation</p>
@@ -110,16 +111,16 @@
                             </div>
                         </td>
                         <td style="text-align: right; font-weight: 500;">
-                            {{ budget.allocated|floatformat:0 }} {{ budget.currency }}
-                            {% if budget.currency != 'GNF' %}<br><span class="text-xs text-gray-400">≈ {{ budget.allocated_gnf|floatformat:0 }} GNF</span>{% endif %}
+                            {{ budget.allocated|number_format }} {{ budget.currency }}
+                            {% if budget.currency != 'GNF' %}<br><span class="text-xs text-gray-400">≈ {{ budget.allocated_gnf|number_format }} GNF</span>{% endif %}
                         </td>
                         <td style="text-align: right; color: #16a34a;">
-                            {{ budget.consumed|floatformat:0 }} {{ budget.currency }}
-                            {% if budget.currency != 'GNF' %}<br><span class="text-xs text-gray-400">≈ {{ budget.consumed_gnf|floatformat:0 }} GNF</span>{% endif %}
+                            {{ budget.consumed|number_format }} {{ budget.currency }}
+                            {% if budget.currency != 'GNF' %}<br><span class="text-xs text-gray-400">≈ {{ budget.consumed_gnf|number_format }} GNF</span>{% endif %}
                         </td>
                         <td style="text-align: right; color: #2563eb;">
-                            {{ budget.available|floatformat:0 }} {{ budget.currency }}
-                            {% if budget.currency != 'GNF' %}<br><span class="text-xs text-gray-400">≈ {{ budget.available_gnf|floatformat:0 }} GNF</span>{% endif %}
+                            {{ budget.available|number_format }} {{ budget.currency }}
+                            {% if budget.currency != 'GNF' %}<br><span class="text-xs text-gray-400">≈ {{ budget.available_gnf|number_format }} GNF</span>{% endif %}
                         </td>
                         <td style="text-align: center;">
                             <div class="flex items-center gap-2">
