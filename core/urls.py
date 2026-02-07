@@ -100,6 +100,6 @@ urlpatterns = [
     # API endpoints
     path('api/budget/', views.api_budget_data, name='api_budget'),
     path('api/projects/', views.api_projects_data, name='api_projects'),
-    path('jalons/<int:milestone_id>/deplacer/<str:direction>/', views.milestone_move, name='milestone_move'),
-    path('sous-etapes/<int:sub_milestone_id>/deplacer/<str:direction>/', views.sub_milestone_move, name='sub_milestone_move'),
+    path('api/projets/<int:project_id>/jalons/reorder/', views.milestone_reorder, name='milestone_reorder'),
+    path('api/jalons/<int:milestone_id>/sous-etapes/reorder/', views.sub_milestone_reorder, name='sub_milestone_reorder'),
 ]
