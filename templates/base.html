@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Dashboard DG{% endblock %} - CSIG</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/jpeg" href="{% static 'logocsig.jpg' %}">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     {% block extra_css %}{% endblock %}
@@ -16,9 +17,7 @@
         <aside class="sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-logo">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
+                    <img src="{% static 'logocsig.jpg' %}" alt="CSIG" style="width: 36px; height: 36px; border-radius: 8px; object-fit: cover;">
                 </div>
                 <div class="sidebar-title">
                     <h1>CSIG</h1>
@@ -147,6 +146,9 @@
                 </ul>
             </nav>
 
+            <div class="sidebar-copyright" style="padding: 8px 16px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1);">
+                <p style="font-size: 11px; color: rgba(255,255,255,0.5); margin: 0;">&copy; {% now "Y" %} CSIG - Tous droits réservés</p>
+            </div>
             <div class="sidebar-footer">
                 <div class="sidebar-user">
                     <div class="sidebar-avatar">
