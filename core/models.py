@@ -501,6 +501,7 @@ class Milestone(models.Model):
     name = models.CharField(max_length=200, verbose_name="Nom du jalon")
     assigned_to = models.ForeignKey('Employee', on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_milestones', verbose_name="Responsable")
     completed = models.BooleanField(default=False, verbose_name="Complété")
+    need = models.TextField(blank=True, default='', verbose_name="Besoin")
     manual_progress = models.IntegerField(default=0, verbose_name="Progression manuelle (%)")
     order = models.IntegerField(default=0, verbose_name="Ordre")
     
@@ -543,6 +544,7 @@ class SubMilestone(models.Model):
     name = models.CharField(max_length=200, verbose_name="Nom de la sous-étape")
     assigned_to = models.ForeignKey('Employee', on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_sub_milestones', verbose_name="Responsable")
     completed = models.BooleanField(default=False, verbose_name="Complétée")
+    need = models.TextField(blank=True, default='', verbose_name="Besoin")
     order = models.IntegerField(default=0, verbose_name="Ordre")
     created_at = models.DateTimeField(auto_now_add=True)
     

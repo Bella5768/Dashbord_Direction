@@ -62,11 +62,12 @@ class MilestoneForm(forms.ModelForm):
     """Formulaire pour les jalons"""
     class Meta:
         model = Milestone
-        fields = ['name', 'assigned_to', 'manual_progress', 'completed', 'order']
+        fields = ['name', 'assigned_to', 'need', 'manual_progress', 'completed', 'order']
         widgets = {
-            'order': forms.NumberInput(attrs={'min': 0, 'style': 'width: 100px;'}),
+            'order': forms.HiddenInput(),
             'manual_progress': forms.NumberInput(attrs={'min': 0, 'max': 100, 'style': 'width: 100px;'}),
             'assigned_to': forms.Select(attrs={'class': 'form-control'}),
+            'need': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Décrivez le besoin lié à cette étape...'}),
         }
     
     def __init__(self, project=None, *args, **kwargs):
@@ -90,10 +91,11 @@ class SubMilestoneForm(forms.ModelForm):
     """Formulaire pour les sous-étapes"""
     class Meta:
         model = SubMilestone
-        fields = ['name', 'assigned_to', 'completed', 'order']
+        fields = ['name', 'assigned_to', 'need', 'completed', 'order']
         widgets = {
-            'order': forms.NumberInput(attrs={'min': 0, 'style': 'width: 100px;'}),
+            'order': forms.HiddenInput(),
             'assigned_to': forms.Select(attrs={'class': 'form-control'}),
+            'need': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Décrivez le besoin lié à cette sous-étape...'}),
         }
     
     def __init__(self, milestone=None, *args, **kwargs):
