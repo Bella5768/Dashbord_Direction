@@ -1886,37 +1886,47 @@ def project_member_add(request, project_id):
                 return render(request, 'core/project_member_form.html', context)
             
             # Créer l'employé (utiliser la direction du projet)
-            new_employee = Employee.objects.create(
-                name=new_name,
-                direction=project.direction,
-                role=new_role_employee,
-                phone=new_phone,
-                email=new_email
-            )
-            
-            # Créer le membre de projet avec permissions personnalisées si rôle = custom
-            member = ProjectMember.objects.create(
-                project=project,
-                employee=new_employee,
-                role=project_role
-            )
-            
-            # Si le rôle est personnalisé, récupérer les permissions du formulaire
-            if project_role == 'custom':
-                print(f"Custom role detected, getting permissions...")
-                print(f"can_manage_members_perm: {request.POST.get('can_manage_members_perm')}")
-                member.can_manage_members_perm = request.POST.get('can_manage_members_perm') == 'on'
-                member.can_edit_project_perm = request.POST.get('can_edit_project_perm') == 'on'
-                member.can_add_milestones_perm = request.POST.get('can_add_milestones_perm') == 'on'
-                member.can_add_documents_perm = request.POST.get('can_add_documents_perm') == 'on'
-                member.can_add_needs_perm = request.POST.get('can_add_needs_perm') == 'on'
-                member.can_add_comments_perm = request.POST.get('can_add_comments_perm') == 'on'
-                print(f"Permissions saved, member saved: {member}")
-                member.save()
-            
-            log_project_activity(project, 'ajout_membre', f"Ajout du membre '{new_name}' ({project_role})", request.user)
-            messages.success(request, f"Employé '{new_name}' créé et ajouté au projet avec succès.")
-            return redirect('core:project_detail', project_id=project.id)
+            try:
+                new_employee = Employee.objects.create(
+                    name=new_name,
+                    direction=project.direction,
+                    role=new_role_employee,
+                    phone=new_phone,
+                    email=new_email
+                )
+                
+                # Créer le membre de projet
+                member = ProjectMember.objects.create(
+                    project=project,
+                    employee=new_employee,
+                    role=project_role
+                )
+                
+                # Si le rôle est personnalisé, récupérer les permissions du formulaire
+                if project_role == 'custom':
+                    member.can_manage_members_perm = request.POST.get('can_manage_members_perm') == 'on'
+                    member.can_edit_project_perm = request.POST.get('can_edit_project_perm') == 'on'
+                    member.can_add_milestones_perm = request.POST.get('can_add_milestones_perm') == 'on'
+                    member.can_add_documents_perm = request.POST.get('can_add_documents_perm') == 'on'
+                    member.can_add_needs_perm = request.POST.get('can_add_needs_perm') == 'on'
+                    member.can_add_comments_perm = request.POST.get('can_add_comments_perm') == 'on'
+                    member.save()
+                
+                log_project_activity(project, 'ajout_membre', f"Ajout du membre '{new_name}' ({project_role})", request.user)
+                messages.success(request, f"Employé '{new_name}' créé et ajouté au projet avec succès.")
+                return redirect('core:project_detail', project_id=project.id)
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                messages.error(request, f"Erreur lors de la création: {str(e)}")
+                context['create_new_employee'] = True
+                context['new_employee_name'] = new_name
+                context['new_employee_role'] = new_role_employee
+                context['new_employee_phone'] = new_phone
+                context['new_employee_email'] = new_email
+                form = ProjectMemberForm(project, request.POST)
+                context['form'] = form
+                return render(request, 'core/project_member_form.html', context)
         else:
             # Employé existant
             form = ProjectMemberForm(project, request.POST)
