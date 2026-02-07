@@ -26,10 +26,12 @@ class ProjectForm(forms.ModelForm):
         
         # Si c'est une édition (projet existant), protéger les dates originales
         if self.instance and self.instance.pk:
-            self.fields['start_date'].widget.attrs['readonly'] = True
-            self.fields['end_date'].widget.attrs['readonly'] = True
             self.fields['start_date'].help_text = "Date de début originale (non modifiable)"
             self.fields['end_date'].help_text = "Date de fin originale (non modifiable)"
+            self.fields['start_date'].widget.attrs['style'] = 'background-color: #f3f4f6; pointer-events: none;'
+            self.fields['end_date'].widget.attrs['style'] = 'background-color: #f3f4f6; pointer-events: none;'
+            self.fields['start_date'].widget.attrs['tabindex'] = '-1'
+            self.fields['end_date'].widget.attrs['tabindex'] = '-1'
         
         # Ajouter des informations sur la conversion de devise
         if self.instance and self.instance.pk and self.instance.currency:
