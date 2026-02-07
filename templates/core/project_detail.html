@@ -300,8 +300,10 @@
         <div class="card-content">
             <p class="text-sm text-gray-500" style="margin-bottom: 12px;">Options rapides pour suivre et mettre à jour le projet.</p>
             <div class="grid" style="gap: 8px;">
-                {% if user.profile.is_directeur_general %}
+                {% if can_edit_project %}
                 <a href="{% url 'core:project_edit' project.id %}" class="btn btn-primary btn-sm">Mettre à jour le projet</a>
+                {% endif %}
+                {% if user.profile.is_directeur_general %}
                 <a href="{% url 'core:project_delete' project.id %}" class="btn btn-sm" style="background: var(--red-50); color: var(--red-600);">Supprimer</a>
                 {% endif %}
                 <a href="{% url 'core:projects' %}" class="btn btn-outline btn-sm">Retour</a>
