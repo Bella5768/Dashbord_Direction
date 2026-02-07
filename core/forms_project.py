@@ -159,6 +159,8 @@ class ProjectMemberForm(forms.ModelForm):
     def __init__(self, project, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.project = project
+        # Rendre employee non requis pour permettre la création d'un nouvel employé
+        self.fields['employee'].required = False
         # Filter employees to exclude those already in the project
         if self.instance and self.instance.pk:
             existing_members = project.members.exclude(pk=self.instance.pk)
