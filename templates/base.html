@@ -83,8 +83,8 @@
                         </a>
                     </li>
                     
-                    <!-- Rapports - Chef de projet et plus -->
-                    {% if user.profile.can_view_reports %}
+                    <!-- Rapports - Directeur Général uniquement -->
+                    {% if user.profile.is_directeur_general or user.is_staff %}
                     <li>
                         <a href="{% url 'core:reports' %}" {% if request.resolver_match.url_name == 'reports' %}class="active"{% endif %}>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">

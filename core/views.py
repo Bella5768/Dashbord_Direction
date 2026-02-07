@@ -452,7 +452,11 @@ def event_delete(request, event_id):
 
 @login_required
 def reports(request):
-    """Vue des rapports"""
+    """Vue des rapports - Réservée au Directeur Général"""
+    if not (request.user.profile.is_directeur_general() or request.user.is_staff):
+        messages.error(request, "Cette section est réservée au Directeur Général.")
+        return redirect('core:dashboard')
+    
     # Projets par direction
     directions = Direction.objects.all()
     projects_by_direction = []
@@ -482,6 +486,35 @@ def reports(request):
     # Tous les projets pour le tableau
     all_projects = Project.objects.select_related('direction').all()
     
+    # Budget par direction
+    budget_by_direction = []
+    for direction in directions:
+        try:
+            budget = direction.budget
+            budget_by_direction.append({
+                'direction': direction.code,
+                'name': direction.name,
+                'allocated': float(budget.allocated),
+                'consumed': float(budget.consumed),
+                'rate': round((float(budget.consumed) / float(budget.allocated) * 100)) if budget.allocated > 0 else 0,
+            })
+        except Budget.DoesNotExist:
+            budget_by_direction.append({
+                'direction': direction.code,
+                'name': direction.name,
+                'allocated': 0,
+                'consumed': 0,
+                'rate': 0,
+            })
+    
+    # Performance par projet
+    projects_en_retard = Project.objects.filter(status='en_retard').count()
+    projects_en_cours = Project.objects.filter(status='en_cours').count()
+    avg_progress = all_projects.aggregate(avg=Avg('progress'))['avg'] or 0
+    
+    # Demandes en attente
+    pending_requests = Request.objects.filter(status='en_attente').count()
+    
     context = {
         'projects_by_direction': projects_by_direction,
         'projects_by_status': projects_by_status,
@@ -490,7 +523,14 @@ def reports(request):
         'budget_rate': budget_rate,
         'active_partners': active_partners,
         'pending_docs': pending_docs,
+        'pending_requests': pending_requests,
         'all_projects': all_projects,
+        'total_budget': total_budget,
+        'total_consumed': total_consumed,
+        'budget_by_direction': budget_by_direction,
+        'projects_en_retard': projects_en_retard,
+        'projects_en_cours': projects_en_cours,
+        'avg_progress': round(avg_progress),
     }
     return render(request, 'core/reports.html', context)
 
@@ -636,7 +676,11 @@ def export_employees_pdf(request):
 
 @login_required
 def export_reports_pdf(request):
-    """Exporter les rapports en PDF"""
+    """Exporter les rapports en PDF - Réservé au DG"""
+    if not (request.user.profile.is_directeur_general() or request.user.is_staff):
+        messages.error(request, "Cette section est réservée au Directeur Général.")
+        return redirect('core:dashboard')
+    
     # Récupérer les mêmes données que la vue reports
     directions = Direction.objects.all()
     projects_by_direction = []
