@@ -723,6 +723,7 @@ a {
     padding: 16px;
     border-radius: 8px;
     border: none;
+    text-align: center;
     background-color: var(--gray-500);
     color: white;
 }
