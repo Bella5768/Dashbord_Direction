@@ -512,6 +512,145 @@ def reports(request):
 
 
 @login_required
+def export_employees_pdf(request):
+    """Exporter la liste des employés en PDF"""
+    employees = Employee.objects.select_related('direction').all()
+    
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="employes_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf"'
+    
+    doc = SimpleDocTemplate(response, pagesize=A4, rightMargin=40, leftMargin=40, topMargin=50, bottomMargin=30)
+    styles = getSampleStyleSheet()
+    story = []
+    
+    title_style = ParagraphStyle(
+        'EmpTitle',
+        parent=styles['Heading1'],
+        fontSize=22,
+        spaceAfter=20,
+        alignment=TA_CENTER,
+        textColor=colors.darkblue
+    )
+    
+    subtitle_style = ParagraphStyle(
+        'EmpSubtitle',
+        parent=styles['Normal'],
+        fontSize=10,
+        alignment=TA_CENTER,
+        textColor=colors.grey
+    )
+    
+    heading_style = ParagraphStyle(
+        'EmpHeading',
+        parent=styles['Heading2'],
+        fontSize=14,
+        spaceAfter=10,
+        spaceBefore=15,
+        textColor=colors.darkblue
+    )
+    
+    # En-tête
+    story.append(Paragraph("LISTE DES EMPLOYÉS", title_style))
+    story.append(Paragraph(f"Exporté le {datetime.now().strftime('%d/%m/%Y à %H:%M')}", subtitle_style))
+    story.append(Paragraph(f"Effectif total : {employees.count()} employés", subtitle_style))
+    story.append(Spacer(1, 20))
+    
+    # Tableau des employés
+    story.append(Paragraph("RÉPERTOIRE DU PERSONNEL", heading_style))
+    
+    table_data = [['Nom', 'Direction', 'Rôle', 'Téléphone', 'Email', 'Charge']]
+    
+    cell_style = ParagraphStyle('CellStyle', parent=styles['Normal'], fontSize=8, leading=10)
+    header_cell_style = ParagraphStyle('HeaderCell', parent=styles['Normal'], fontSize=9, leading=11, textColor=colors.whitesmoke)
+    
+    table_data = [[
+        Paragraph('<b>Nom</b>', header_cell_style),
+        Paragraph('<b>Direction</b>', header_cell_style),
+        Paragraph('<b>Rôle</b>', header_cell_style),
+        Paragraph('<b>Téléphone</b>', header_cell_style),
+        Paragraph('<b>Email</b>', header_cell_style),
+        Paragraph('<b>Charge</b>', header_cell_style),
+    ]]
+    
+    for emp in employees:
+        table_data.append([
+            Paragraph(emp.name, cell_style),
+            Paragraph(emp.direction.code, cell_style),
+            Paragraph(emp.role, cell_style),
+            Paragraph(emp.phone or '-', cell_style),
+            Paragraph(emp.email or '-', cell_style),
+            Paragraph(f'{emp.workload}%', cell_style),
+        ])
+    
+    col_widths = [1.4*inch, 0.8*inch, 1.3*inch, 1.0*inch, 1.6*inch, 0.6*inch]
+    emp_table = Table(table_data, colWidths=col_widths, repeatRows=1)
+    
+    table_style = [
+        ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+        ('TOPPADDING', (0, 0), (-1, 0), 10),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('ALIGN', (-1, 1), (-1, -1), 'CENTER'),
+    ]
+    
+    # Alterner les couleurs de fond
+    for i in range(1, len(table_data)):
+        if i % 2 == 0:
+            table_style.append(('BACKGROUND', (0, i), (-1, i), colors.Color(0.95, 0.95, 0.97)))
+    
+    emp_table.setStyle(TableStyle(table_style))
+    story.append(emp_table)
+    story.append(Spacer(1, 20))
+    
+    # Résumé par direction
+    story.append(Paragraph("RÉPARTITION PAR DIRECTION", heading_style))
+    
+    dir_data = [[
+        Paragraph('<b>Direction</b>', header_cell_style),
+        Paragraph('<b>Effectif</b>', header_cell_style),
+        Paragraph('<b>Charge moyenne</b>', header_cell_style),
+    ]]
+    
+    directions = Direction.objects.all()
+    for d in directions:
+        dir_employees = employees.filter(direction=d)
+        count = dir_employees.count()
+        if count > 0:
+            avg_wl = round(sum(e.workload for e in dir_employees) / count)
+            dir_data.append([
+                Paragraph(f'{d.code} - {d.name}', cell_style),
+                Paragraph(str(count), cell_style),
+                Paragraph(f'{avg_wl}%', cell_style),
+            ])
+    
+    dir_table = Table(dir_data, colWidths=[3*inch, 1.2*inch, 1.5*inch], repeatRows=1)
+    dir_table_style = [
+        ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+        ('TOPPADDING', (0, 0), (-1, 0), 10),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ]
+    for i in range(1, len(dir_data)):
+        if i % 2 == 0:
+            dir_table_style.append(('BACKGROUND', (0, i), (-1, i), colors.Color(0.95, 0.95, 0.97)))
+    
+    dir_table.setStyle(TableStyle(dir_table_style))
+    story.append(dir_table)
+    
+    doc.build(story)
+    return response
+
+
+@login_required
 def export_reports_pdf(request):
     """Exporter les rapports en PDF"""
     # Récupérer les mêmes données que la vue reports

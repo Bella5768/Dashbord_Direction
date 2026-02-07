@@ -24,6 +24,7 @@ urlpatterns = [
     # Reports
     path('rapports/', views.reports, name='reports'),
     path('rapports/export/pdf/', views.export_reports_pdf, name='export_reports_pdf'),
+    path('ressources/employes/export/pdf/', views.export_employees_pdf, name='export_employees_pdf'),
     path('partenaires/', views.partners, name='partners'),
     
     # User Management
