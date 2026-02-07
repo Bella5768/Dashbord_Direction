@@ -11,6 +11,7 @@ urlpatterns = [
     
     # Main pages
     path('', views.dashboard, name='dashboard'),
+    path('recherche/', views.global_search, name='global_search'),
     path('projets/', views.projects, name='projects'),
     path('ressources/', views.resources, name='resources'),
     path('demandes/', views.requests_view, name='requests'),

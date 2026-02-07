@@ -65,6 +65,67 @@ def password_reset_info(request):
 
 
 @login_required
+def global_search(request):
+    """Recherche globale depuis la barre du header"""
+    query = request.GET.get('q', '').strip()
+    results = {
+        'projects': [],
+        'partners': [],
+        'employees': [],
+        'requests': [],
+        'documents': [],
+    }
+    
+    if query:
+        from django.db.models import Q
+        
+        # Projets
+        projects_qs = Project.objects.select_related('direction').filter(
+            Q(name__icontains=query) | Q(manager__icontains=query) | Q(description__icontains=query)
+        )
+        # Filtrer par permissions
+        if not (request.user.profile.is_directeur_general() or request.user.is_staff):
+            user_name = request.user.get_full_name() or request.user.username
+            employee_id = getattr(request.user.profile, 'employee_id', None)
+            member_q = (
+                Q(members__employee_id=employee_id)
+                if employee_id
+                else Q(members__employee__name__iexact=user_name) | Q(members__employee__name__icontains=request.user.username)
+            )
+            projects_qs = projects_qs.filter(Q(manager__icontains=user_name) | member_q).distinct()
+        results['projects'] = projects_qs[:10]
+        
+        # Partenaires
+        results['partners'] = Partner.objects.filter(
+            Q(name__icontains=query) | Q(contact_name__icontains=query)
+        )[:10]
+        
+        # Employés
+        results['employees'] = Employee.objects.select_related('direction').filter(
+            Q(name__icontains=query) | Q(position__icontains=query) | Q(email__icontains=query)
+        )[:10]
+        
+        # Demandes
+        results['requests'] = Request.objects.select_related('direction').filter(
+            Q(title__icontains=query) | Q(description__icontains=query)
+        )[:10]
+        
+        # Documents
+        results['documents'] = Document.objects.select_related('direction').filter(
+            Q(title__icontains=query)
+        )[:10]
+    
+    total = sum(len(v) for v in results.values())
+    
+    context = {
+        'query': query,
+        'results': results,
+        'total': total,
+    }
+    return render(request, 'core/global_search.html', context)
+
+
+@login_required
 def dashboard(request):
     """Vue principale du tableau de bord"""
     today = timezone.now().date()
