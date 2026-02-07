@@ -94,18 +94,11 @@
         </div>
         <div class="card-content">
             {% if milestones %}
-                <div id="milestones-list" style="display: flex; flex-direction: column; gap: 12px;">
+                <div style="display: flex; flex-direction: column; gap: 12px;">
                     {% for milestone in milestones %}
-                    <div class="milestone-item" data-id="{{ milestone.id }}" style="border: 1px solid #e5e7eb; border-radius: 10px; {% if milestone.completed %}background-color: #dcfce7; border-left: 4px solid #16a34a;{% else %}background-color: #fef3c7; border-left: 4px solid #f59e0b;{% endif %} transition: transform 0.2s, box-shadow 0.2s;">
+                    <div style="border: 1px solid #e5e7eb; border-radius: 10px; {% if milestone.completed %}background-color: #dcfce7; border-left: 4px solid #16a34a;{% else %}background-color: #fef3c7; border-left: 4px solid #f59e0b;{% endif %}">
                         <div class="flex items-center justify-between" style="padding: 12px;">
                             <div class="flex items-center gap-2" style="flex: 1;">
-                                {% if can_add_milestones %}
-                                <span class="drag-handle" style="cursor: grab; color: #9ca3af; padding: 2px; display: flex; align-items: center;" title="Glisser pour réordonner">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
-                                    </svg>
-                                </span>
-                                {% endif %}
                                 <span class="milestone-indicator" style="width: 14px; height: 14px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; border: 2px solid #64748b; background-color: rgba(100, 116, 139, 0.12); font-weight: 800; font-size: 12px; line-height: 12px; color: #16a34a;">
                                     {% if milestone.completed %}✓{% endif %}
                                 </span>
@@ -125,7 +118,7 @@
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="milestone-order-badge text-xs text-gray-500">#{{ milestone.order }}</span>
+                                <span class="text-xs text-gray-500">#{{ milestone.order }}</span>
                                 {% if can_add_milestones %}
                                 <a href="{% url 'core:sub_milestone_create' milestone.id %}" class="action-btn" title="Ajouter sous-étape" style="color: #2563eb;">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
@@ -147,17 +140,10 @@
                         </div>
                         {% if milestone.sub_milestones.count > 0 %}
                         <div style="padding: 0 12px 12px 32px; border-top: 1px dashed #d1d5db;">
-                            <div class="sub-milestones-list" data-milestone-id="{{ milestone.id }}" style="padding-top: 8px;">
+                            <div style="padding-top: 8px;">
                                 {% for sub in milestone.sub_milestones.all %}
-                                <div class="sub-milestone-item flex items-center justify-between" data-id="{{ sub.id }}" style="padding: 6px 8px; margin-bottom: 4px; background: rgba(255,255,255,0.6); border-radius: 6px; {% if sub.completed %}opacity: 0.7;{% endif %} transition: transform 0.2s, box-shadow 0.2s;">
+                                <div class="flex items-center justify-between" style="padding: 6px 8px; margin-bottom: 4px; background: rgba(255,255,255,0.6); border-radius: 6px; {% if sub.completed %}opacity: 0.7;{% endif %}">
                                     <div class="flex items-center gap-2">
-                                        {% if can_add_milestones %}
-                                        <span class="drag-handle-sub" style="cursor: grab; color: #9ca3af; display: flex; align-items: center;" title="Glisser pour réordonner">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
-                                            </svg>
-                                        </span>
-                                        {% endif %}
                                         <a href="{% url 'core:sub_milestone_toggle' sub.id %}" style="text-decoration: none;">
                                             <span style="width: 16px; height: 16px; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; border: 2px solid {% if sub.completed %}#16a34a{% else %}#9ca3af{% endif %}; background: {% if sub.completed %}#16a34a{% else %}transparent{% endif %}; color: white; font-size: 10px;">
                                                 {% if sub.completed %}✓{% endif %}
@@ -554,187 +540,4 @@
         </div>
     </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    var milestonesList = document.getElementById('milestones-list');
-    if (!milestonesList) return;
-
-    var draggedItem = null;
-    var draggedType = null;
-
-    // --- Milestones drag & drop ---
-    var milestoneItems = milestonesList.querySelectorAll('.milestone-item');
-    milestoneItems.forEach(function(item) {
-        var handle = item.querySelector('.drag-handle');
-        if (!handle) return;
-
-        handle.addEventListener('mousedown', function() {
-            item.setAttribute('draggable', 'true');
-        });
-        handle.addEventListener('mouseup', function() {
-            item.setAttribute('draggable', 'false');
-        });
-
-        item.addEventListener('dragstart', function(e) {
-            draggedItem = item;
-            draggedType = 'milestone';
-            item.style.opacity = '0.5';
-            e.dataTransfer.effectAllowed = 'move';
-        });
-
-        item.addEventListener('dragend', function() {
-            item.style.opacity = '1';
-            item.setAttribute('draggable', 'false');
-            draggedItem = null;
-            draggedType = null;
-            milestonesList.querySelectorAll('.milestone-item').forEach(function(el) {
-                el.style.borderTop = '';
-                el.style.borderBottom = '';
-            });
-        });
-
-        item.addEventListener('dragover', function(e) {
-            if (draggedType !== 'milestone') return;
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-            var rect = item.getBoundingClientRect();
-            var midY = rect.top + rect.height / 2;
-            milestonesList.querySelectorAll('.milestone-item').forEach(function(el) {
-                el.style.borderTop = '';
-                el.style.borderBottom = '';
-            });
-            if (e.clientY < midY) {
-                item.style.borderTop = '3px solid #3b82f6';
-            } else {
-                item.style.borderBottom = '3px solid #3b82f6';
-            }
-        });
-
-        item.addEventListener('drop', function(e) {
-            if (draggedType !== 'milestone' || !draggedItem || draggedItem === item) return;
-            e.preventDefault();
-            var rect = item.getBoundingClientRect();
-            var midY = rect.top + rect.height / 2;
-            if (e.clientY < midY) {
-                milestonesList.insertBefore(draggedItem, item);
-            } else {
-                milestonesList.insertBefore(draggedItem, item.nextSibling);
-            }
-            item.style.borderTop = '';
-            item.style.borderBottom = '';
-            saveMilestoneOrder();
-        });
-    });
-
-    function saveMilestoneOrder() {
-        var items = milestonesList.querySelectorAll('.milestone-item');
-        var order = [];
-        items.forEach(function(item, index) {
-            order.push(parseInt(item.dataset.id));
-            var badge = item.querySelector('.milestone-order-badge');
-            if (badge) badge.textContent = '#' + (index + 1);
-        });
-
-        fetch('{% url "core:milestone_reorder" project.id %}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
-            },
-            body: JSON.stringify({order: order})
-        });
-    }
-
-    // --- Sub-milestones drag & drop ---
-    var subLists = document.querySelectorAll('.sub-milestones-list');
-    subLists.forEach(function(subList) {
-        var milestoneId = subList.dataset.milestoneId;
-        var subItems = subList.querySelectorAll('.sub-milestone-item');
-
-        subItems.forEach(function(subItem) {
-            var handle = subItem.querySelector('.drag-handle-sub');
-            if (!handle) return;
-
-            handle.addEventListener('mousedown', function() {
-                subItem.setAttribute('draggable', 'true');
-            });
-            handle.addEventListener('mouseup', function() {
-                subItem.setAttribute('draggable', 'false');
-            });
-
-            subItem.addEventListener('dragstart', function(e) {
-                draggedItem = subItem;
-                draggedType = 'sub-' + milestoneId;
-                subItem.style.opacity = '0.5';
-                e.dataTransfer.effectAllowed = 'move';
-            });
-
-            subItem.addEventListener('dragend', function() {
-                subItem.style.opacity = '1';
-                subItem.setAttribute('draggable', 'false');
-                draggedItem = null;
-                draggedType = null;
-                subList.querySelectorAll('.sub-milestone-item').forEach(function(el) {
-                    el.style.borderTop = '';
-                    el.style.borderBottom = '';
-                });
-            });
-
-            subItem.addEventListener('dragover', function(e) {
-                if (draggedType !== 'sub-' + milestoneId) return;
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'move';
-                var rect = subItem.getBoundingClientRect();
-                var midY = rect.top + rect.height / 2;
-                subList.querySelectorAll('.sub-milestone-item').forEach(function(el) {
-                    el.style.borderTop = '';
-                    el.style.borderBottom = '';
-                });
-                if (e.clientY < midY) {
-                    subItem.style.borderTop = '2px solid #3b82f6';
-                } else {
-                    subItem.style.borderBottom = '2px solid #3b82f6';
-                }
-            });
-
-            subItem.addEventListener('drop', function(e) {
-                if (draggedType !== 'sub-' + milestoneId || !draggedItem || draggedItem === subItem) return;
-                e.preventDefault();
-                var rect = subItem.getBoundingClientRect();
-                var midY = rect.top + rect.height / 2;
-                if (e.clientY < midY) {
-                    subList.insertBefore(draggedItem, subItem);
-                } else {
-                    subList.insertBefore(draggedItem, subItem.nextSibling);
-                }
-                subItem.style.borderTop = '';
-                subItem.style.borderBottom = '';
-                saveSubMilestoneOrder(milestoneId, subList);
-            });
-        });
-    });
-
-    function saveSubMilestoneOrder(milestoneId, subList) {
-        var items = subList.querySelectorAll('.sub-milestone-item');
-        var order = [];
-        items.forEach(function(item) {
-            order.push(parseInt(item.dataset.id));
-        });
-
-        fetch('/api/jalons/' + milestoneId + '/sous-etapes/reorder/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
-            },
-            body: JSON.stringify({order: order})
-        });
-    }
-});
-</script>
-<style>
-.drag-handle:hover, .drag-handle-sub:hover { color: #3b82f6 !important; }
-.milestone-item[draggable="true"], .sub-milestone-item[draggable="true"] { box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 10; }
-</style>
 {% endblock %}
