@@ -109,9 +109,18 @@
                                 </div>
                             </div>
                         </td>
-                        <td style="text-align: right; font-weight: 500;">{{ budget.allocated|floatformat:0 }} {{ budget.currency }}</td>
-                        <td style="text-align: right; color: #16a34a;">{{ budget.consumed|floatformat:0 }} {{ budget.currency }}</td>
-                        <td style="text-align: right; color: #2563eb;">{{ budget.available|floatformat:0 }} {{ budget.currency }}</td>
+                        <td style="text-align: right; font-weight: 500;">
+                            {{ budget.allocated|floatformat:0 }} {{ budget.currency }}
+                            {% if budget.currency != 'GNF' %}<br><span class="text-xs text-gray-400">≈ {{ budget.allocated_gnf|floatformat:0 }} GNF</span>{% endif %}
+                        </td>
+                        <td style="text-align: right; color: #16a34a;">
+                            {{ budget.consumed|floatformat:0 }} {{ budget.currency }}
+                            {% if budget.currency != 'GNF' %}<br><span class="text-xs text-gray-400">≈ {{ budget.consumed_gnf|floatformat:0 }} GNF</span>{% endif %}
+                        </td>
+                        <td style="text-align: right; color: #2563eb;">
+                            {{ budget.available|floatformat:0 }} {{ budget.currency }}
+                            {% if budget.currency != 'GNF' %}<br><span class="text-xs text-gray-400">≈ {{ budget.available_gnf|floatformat:0 }} GNF</span>{% endif %}
+                        </td>
                         <td style="text-align: center;">
                             <div class="flex items-center gap-2">
                                 <div class="progress" style="flex: 1;">
@@ -248,7 +257,7 @@ new Chart(pieCtx, {
     data: {
         labels: [{% for b in budgets %}'{{ b.direction.code }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
         datasets: [{
-            data: [{% for b in budgets %}{{ b.allocated }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+            data: [{% for b in budgets %}{{ b.allocated_gnf }}{% if not forloop.last %}, {% endif %}{% endfor %}],
             backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'],
             borderWidth: 0,
         }]

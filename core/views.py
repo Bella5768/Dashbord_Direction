@@ -247,8 +247,19 @@ def resources(request):
         budgets = budgets.filter(direction=request.user.profile.direction)
 
     budgets = budgets.all()
-    total_allocated = budgets.aggregate(total=Sum('allocated'))['total'] or 0
-    total_consumed = budgets.aggregate(total=Sum('consumed'))['total'] or 0
+    
+    # Convertir tous les budgets en GNF pour les totaux
+    from .currencies import convert_currency, format_currency
+    total_allocated = 0
+    total_consumed = 0
+    for b in budgets:
+        b.allocated_gnf = round(convert_currency(float(b.allocated), b.currency, 'GNF'))
+        b.consumed_gnf = round(convert_currency(float(b.consumed), b.currency, 'GNF'))
+        b.available_gnf = b.allocated_gnf - b.consumed_gnf
+        total_allocated += b.allocated_gnf
+        total_consumed += b.consumed_gnf
+    total_allocated = round(total_allocated)
+    total_consumed = round(total_consumed)
     
     # Employees data
     employees = Employee.objects.select_related('direction').all()
