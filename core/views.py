@@ -102,7 +102,7 @@ def global_search(request):
         
         # Employés
         results['employees'] = Employee.objects.select_related('direction').filter(
-            Q(name__icontains=query) | Q(position__icontains=query) | Q(email__icontains=query)
+            Q(name__icontains=query) | Q(role__icontains=query) | Q(email__icontains=query)
         )[:10]
         
         # Demandes

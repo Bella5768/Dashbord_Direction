@@ -139,7 +139,7 @@
                 <thead>
                     <tr>
                         <th>Nom</th>
-                        <th>Poste</th>
+                        <th>Rôle</th>
                         <th>Direction</th>
                         <th>Email</th>
                     </tr>
@@ -148,7 +148,7 @@
                     {% for employee in results.employees %}
                     <tr style="cursor: pointer;" onclick="window.location='{% url 'core:employee_edit' employee.id %}'">
                         <td><p class="font-medium">{{ employee.name }}</p></td>
-                        <td>{{ employee.position }}</td>
+                        <td>{{ employee.role }}</td>
                         <td>{{ employee.direction.code }}</td>
                         <td>{{ employee.email }}</td>
                     </tr>
