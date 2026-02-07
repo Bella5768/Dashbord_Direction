@@ -36,16 +36,18 @@
                 {% if form.assigned_to.errors %}<p class="text-xs" style="color: var(--red-600);">{{ form.assigned_to.errors.0 }}</p>{% endif %}
             </div>
             
-            <div class="grid grid-2" style="gap: 16px; margin-bottom: 24px;">
-                <div class="form-group">
-                    <label for="id_order">Ordre</label>
-                    {{ form.order }}
-                </div>
-                <div class="form-group">
-                    <label for="id_manual_progress">Progression (%)</label>
-                    {{ form.manual_progress }}
-                    <p class="text-xs text-gray-500">Utilisé si le jalon n'a pas de sous-étapes</p>
-                </div>
+            {{ form.order }}
+
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label for="id_need">Besoin</label>
+                {{ form.need }}
+                <p class="text-xs text-gray-500">Optionnel : décrivez le besoin lié à cette étape</p>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label for="id_manual_progress">Progression (%)</label>
+                {{ form.manual_progress }}
+                <p class="text-xs text-gray-500">Utilisé si le jalon n'a pas de sous-étapes</p>
             </div>
             
             <div class="form-group" style="margin-bottom: 24px;">
