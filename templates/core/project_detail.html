@@ -120,6 +120,12 @@
                             <div class="flex items-center gap-2">
                                 <span class="text-xs text-gray-500">#{{ milestone.order }}</span>
                                 {% if can_add_milestones %}
+                                <a href="{% url 'core:milestone_move' milestone.id 'up' %}" class="action-btn" title="Monter" style="padding: 2px;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" /></svg>
+                                </a>
+                                <a href="{% url 'core:milestone_move' milestone.id 'down' %}" class="action-btn" title="Descendre" style="padding: 2px;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                                </a>
                                 <a href="{% url 'core:sub_milestone_create' milestone.id %}" class="action-btn" title="Ajouter sous-étape" style="color: #2563eb;">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -156,6 +162,12 @@
                                     </div>
                                     <div class="flex items-center gap-1">
                                         {% if can_add_milestones %}
+                                        <a href="{% url 'core:sub_milestone_move' sub.id 'up' %}" class="action-btn" title="Monter" style="padding: 2px;">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" /></svg>
+                                        </a>
+                                        <a href="{% url 'core:sub_milestone_move' sub.id 'down' %}" class="action-btn" title="Descendre" style="padding: 2px;">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                                        </a>
                                         <a href="{% url 'core:sub_milestone_edit' sub.id %}" class="action-btn" title="Modifier" style="padding: 2px;">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />

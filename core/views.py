@@ -2367,44 +2367,66 @@ def api_projects_data(request):
 
 
 @login_required
-def milestone_reorder(request, project_id):
-    """API pour réordonner les jalons par drag & drop"""
-    import json
-    if request.method != 'POST':
-        return JsonResponse({'error': 'POST required'}, status=405)
+def milestone_move(request, milestone_id, direction):
+    """Déplacer un jalon vers le haut ou le bas"""
+    milestone = get_object_or_404(Milestone.objects.select_related('project'), pk=milestone_id)
+    project = milestone.project
     
-    project = get_object_or_404(Project, pk=project_id)
+    if not request.user.profile.can_add_project_milestones(project):
+        messages.error(request, "Vous n'avez pas les permissions.")
+        return redirect('core:project_detail', project_id=project.id)
     
-    try:
-        data = json.loads(request.body)
-        order_list = data.get('order', [])
-        
-        for index, milestone_id in enumerate(order_list):
-            Milestone.objects.filter(pk=milestone_id, project=project).update(order=index + 1)
-        
-        return JsonResponse({'success': True})
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=400)
+    siblings = list(project.milestones.order_by('order'))
+    current_index = None
+    for i, m in enumerate(siblings):
+        if m.pk == milestone.pk:
+            current_index = i
+            break
+    
+    if current_index is not None:
+        if direction == 'up' and current_index > 0:
+            swap = siblings[current_index - 1]
+            milestone.order, swap.order = swap.order, milestone.order
+            milestone.save()
+            swap.save()
+        elif direction == 'down' and current_index < len(siblings) - 1:
+            swap = siblings[current_index + 1]
+            milestone.order, swap.order = swap.order, milestone.order
+            milestone.save()
+            swap.save()
+    
+    return redirect('core:project_detail', project_id=project.id)
 
 
 @login_required
-def sub_milestone_reorder(request, milestone_id):
-    """API pour réordonner les sous-étapes par drag & drop"""
-    import json
+def sub_milestone_move(request, sub_milestone_id, direction):
+    """Déplacer une sous-étape vers le haut ou le bas"""
     from .models import SubMilestone
     
-    if request.method != 'POST':
-        return JsonResponse({'error': 'POST required'}, status=405)
+    sub = get_object_or_404(SubMilestone.objects.select_related('milestone__project'), pk=sub_milestone_id)
+    project = sub.milestone.project
     
-    milestone = get_object_or_404(Milestone, pk=milestone_id)
+    if not request.user.profile.can_add_project_milestones(project):
+        messages.error(request, "Vous n'avez pas les permissions.")
+        return redirect('core:project_detail', project_id=project.id)
     
-    try:
-        data = json.loads(request.body)
-        order_list = data.get('order', [])
-        
-        for index, sub_id in enumerate(order_list):
-            SubMilestone.objects.filter(pk=sub_id, milestone=milestone).update(order=index + 1)
-        
-        return JsonResponse({'success': True})
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=400)
+    siblings = list(sub.milestone.sub_milestones.order_by('order'))
+    current_index = None
+    for i, s in enumerate(siblings):
+        if s.pk == sub.pk:
+            current_index = i
+            break
+    
+    if current_index is not None:
+        if direction == 'up' and current_index > 0:
+            swap = siblings[current_index - 1]
+            sub.order, swap.order = swap.order, sub.order
+            sub.save()
+            swap.save()
+        elif direction == 'down' and current_index < len(siblings) - 1:
+            swap = siblings[current_index + 1]
+            sub.order, swap.order = swap.order, sub.order
+            sub.save()
+            swap.save()
+    
+    return redirect('core:project_detail', project_id=project.id)
