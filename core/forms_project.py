@@ -1,4 +1,5 @@
 from django import forms
+from django.db.models import Max
 from .models import Project, Document, Request, Partner, Event, Direction, Budget, Employee, Milestone, SubMilestone, ProjectFolder, ProjectDocument, ProjectMember, ProjectNeed, ProjectComment
 from .currencies import CURRENCY_CHOICES, convert_currency, format_currency
 
@@ -81,7 +82,7 @@ class MilestoneForm(forms.ModelForm):
             self.fields['assigned_to'].queryset = Employee.objects.all().order_by('name')
             # Auto-incrémenter l'ordre si nouveau jalon
             if not self.instance.pk:
-                max_order = project.milestones.aggregate(models.Max('order'))['order__max']
+                max_order = project.milestones.aggregate(Max('order'))['order__max']
                 self.fields['order'].initial = (max_order or 0) + 1
 
 
@@ -106,7 +107,7 @@ class SubMilestoneForm(forms.ModelForm):
             self.fields['assigned_to'].queryset = Employee.objects.all().order_by('name')
             # Auto-incrémenter l'ordre si nouvelle sous-étape
             if not self.instance.pk:
-                max_order = milestone.sub_milestones.aggregate(models.Max('order'))['order__max']
+                max_order = milestone.sub_milestones.aggregate(Max('order'))['order__max']
                 self.fields['order'].initial = (max_order or 0) + 1
 
 
