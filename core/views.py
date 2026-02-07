@@ -87,8 +87,21 @@ def dashboard(request):
     # Partenaires
     active_partners = Partner.objects.filter(status='actif').count()
     
-    # Projets en cours
-    active_projects = Project.objects.filter(status='en_cours').select_related('direction')[:4]
+    # Projets en cours (filtrés par permissions)
+    if request.user.profile.is_directeur_general() or request.user.is_staff:
+        active_projects = Project.objects.filter(status='en_cours').select_related('direction')[:4]
+    else:
+        from django.db.models import Q
+        user_name = request.user.get_full_name() or request.user.username
+        employee_id = getattr(request.user.profile, 'employee_id', None)
+        member_q = (
+            Q(members__employee_id=employee_id)
+            if employee_id
+            else Q(members__employee__name__iexact=user_name) | Q(members__employee__name__icontains=request.user.username)
+        )
+        active_projects = Project.objects.filter(
+            Q(manager__icontains=user_name) | member_q, status='en_cours'
+        ).select_related('direction').distinct()[:4]
     
     # Documents en attente
     pending_docs = Document.objects.exclude(status='signe').select_related('direction')[:4]
@@ -146,32 +159,20 @@ def projects(request):
     if request.user.profile.is_directeur_general() or request.user.is_staff:
         # DG et admin voient tous les projets
         pass
-    elif request.user.profile.is_directeur():
-        # Directeur ne voit que les projets de sa direction
-        projects_qs = projects_qs.filter(direction=request.user.profile.direction)
     else:
-        # Chef de projet et autres voient les projets où ils sont manager OU membres
+        # Directeur, Chef de projet et autres : seulement les projets où ils sont manager OU membres
         from django.db.models import Q
         
-        # Récupérer le nom de l'utilisateur
         user_name = request.user.get_full_name() or request.user.username
         employee_id = getattr(request.user.profile, 'employee_id', None)
-        user_direction = request.user.profile.direction
         
-        # Projets où l'utilisateur est manager (champ texte) OU membre (table ProjectMember)
         member_q = (
             Q(members__employee_id=employee_id)
             if employee_id
             else Q(members__employee__name__iexact=user_name) | Q(members__employee__name__icontains=request.user.username)
         )
         
-        # Ajouter les projets de sa direction où il est membre
-        if user_direction:
-            projects_qs = projects_qs.filter(
-                Q(manager__icontains=user_name) | member_q | Q(direction=user_direction, members__employee_id=employee_id)
-            ).distinct()
-        else:
-            projects_qs = projects_qs.filter(Q(manager__icontains=user_name) | member_q).distinct()
+        projects_qs = projects_qs.filter(Q(manager__icontains=user_name) | member_q).distinct()
     
     if status_filter != 'all':
         projects_qs = projects_qs.filter(status=status_filter)
@@ -182,36 +183,19 @@ def projects(request):
     
     directions = Direction.objects.all()
     
-    # Stats filtered by permissions
+    # Stats filtered by permissions (même logique que le filtrage principal)
     if request.user.profile.is_directeur_general() or request.user.is_staff:
-        # DG et admin voient tous les projets
         base_qs = Project.objects.all()
-    elif request.user.profile.is_directeur():
-        # Directeur ne voit que les projets de sa direction
-        base_qs = Project.objects.filter(direction=request.user.profile.direction)
     else:
-        # Chef de projet et autres voient les projets où ils sont manager OU membres
         from django.db.models import Q
-        
-        # Récupérer le nom de l'utilisateur
         user_name = request.user.get_full_name() or request.user.username
         employee_id = getattr(request.user.profile, 'employee_id', None)
-        user_direction = request.user.profile.direction
-        
-        # Projets où l'utilisateur est manager (champ texte) OU membre (table ProjectMember)
         member_q = (
             Q(members__employee_id=employee_id)
             if employee_id
             else Q(members__employee__name__iexact=user_name) | Q(members__employee__name__icontains=request.user.username)
         )
-        
-        # Ajouter les projets de sa direction où il est membre
-        if user_direction:
-            base_qs = Project.objects.filter(
-                Q(manager__icontains=user_name) | member_q | Q(direction=user_direction, members__employee_id=employee_id)
-            ).distinct()
-        else:
-            base_qs = Project.objects.filter(Q(manager__icontains=user_name) | member_q).distinct()
+        base_qs = Project.objects.filter(Q(manager__icontains=user_name) | member_q).distinct()
     stats = {
         'total': base_qs.count(),
         'en_cours': base_qs.filter(status='en_cours').count(),

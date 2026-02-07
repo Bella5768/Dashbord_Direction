@@ -256,12 +256,10 @@ class UserProfile(models.Model):
         """Vérifie si l'utilisateur peut voir un projet"""
         if self.role in ['admin', 'directeur_general']:
             return True
-        if self.role == 'directeur' and self.direction == project.direction:
+        # Vérifier si l'utilisateur est manager du projet
+        user_name = self.user.get_full_name() or self.user.username
+        if project.manager and user_name in project.manager:
             return True
-        if self.role in ['chef_projet', 'employe']:
-            user_name = self.user.get_full_name() or self.user.username
-            if project.manager and user_name in project.manager:
-                return True
         # Vérifier si l'utilisateur est membre du projet
         membership = self.get_project_membership(project)
         if membership:
