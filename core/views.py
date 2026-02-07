@@ -97,7 +97,7 @@ def global_search(request):
         
         # Partenaires
         results['partners'] = Partner.objects.filter(
-            Q(name__icontains=query) | Q(contact_name__icontains=query)
+            Q(name__icontains=query) | Q(contact_person__icontains=query)
         )[:10]
         
         # Employés

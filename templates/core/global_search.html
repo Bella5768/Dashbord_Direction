@@ -106,7 +106,7 @@
                     <tr style="cursor: pointer;" onclick="window.location='{% url 'core:partner_edit' partner.id %}'">
                         <td><p class="font-medium">{{ partner.name }}</p></td>
                         <td>{{ partner.get_partner_type_display }}</td>
-                        <td>{{ partner.contact_name }}</td>
+                        <td>{{ partner.contact_person }}</td>
                         <td style="text-align: center;">
                             <span class="badge {% if partner.status == 'actif' %}badge-success{% else %}badge-secondary{% endif %}">
                                 {{ partner.get_status_display }}
