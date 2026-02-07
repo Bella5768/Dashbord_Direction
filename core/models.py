@@ -208,15 +208,45 @@ class UserProfile(models.Model):
     
     def can_add_project_milestones(self, project):
         """Vérifie si l'utilisateur peut ajouter des jalons à un projet"""
-        # Permission explicite
+        # Permission explicite du profil
         if self.can_add_milestones:
             if self.direction and self.direction == project.direction:
                 return True
-        return self.can_edit_project(project)
+        # Admin, DG, Directeur
+        if self.role in ['admin', 'directeur_general']:
+            return True
+        if self.role == 'directeur' and self.direction == project.direction:
+            return True
+        # Chef de projet principal
+        if self.role == 'chef_projet' and project.manager:
+            user_name = self.user.get_full_name() or self.user.username
+            if user_name in project.manager:
+                return True
+        # Vérifier les permissions de membre (y compris custom)
+        user_name = self.user.get_full_name() or self.user.username
+        membership = project.members.filter(employee__name=user_name).first()
+        if membership and membership.can_add_milestones():
+            return True
+        return False
     
     def can_add_project_documents(self, project):
         """Vérifie si l'utilisateur peut ajouter des documents à un projet"""
-        return self.can_perform_actions_as_member(project)
+        # Admin, DG, Directeur
+        if self.role in ['admin', 'directeur_general']:
+            return True
+        if self.role == 'directeur' and self.direction == project.direction:
+            return True
+        # Chef de projet principal
+        if self.role == 'chef_projet' and project.manager:
+            user_name = self.user.get_full_name() or self.user.username
+            if user_name in project.manager:
+                return True
+        # Vérifier les permissions de membre (y compris custom)
+        user_name = self.user.get_full_name() or self.user.username
+        membership = project.members.filter(employee__name=user_name).first()
+        if membership and membership.can_add_documents():
+            return True
+        return False
     
     def can_edit_project(self, project):
         """Vérifie si l'utilisateur peut modifier le projet"""

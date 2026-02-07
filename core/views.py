@@ -2364,3 +2364,47 @@ def api_projects_data(request):
             'termine': Project.objects.filter(direction=direction, status='termine').count(),
         })
     return JsonResponse(data, safe=False)
+
+
+@login_required
+def milestone_reorder(request, project_id):
+    """API pour réordonner les jalons par drag & drop"""
+    import json
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    
+    project = get_object_or_404(Project, pk=project_id)
+    
+    try:
+        data = json.loads(request.body)
+        order_list = data.get('order', [])
+        
+        for index, milestone_id in enumerate(order_list):
+            Milestone.objects.filter(pk=milestone_id, project=project).update(order=index + 1)
+        
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+
+@login_required
+def sub_milestone_reorder(request, milestone_id):
+    """API pour réordonner les sous-étapes par drag & drop"""
+    import json
+    from .models import SubMilestone
+    
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    
+    milestone = get_object_or_404(Milestone, pk=milestone_id)
+    
+    try:
+        data = json.loads(request.body)
+        order_list = data.get('order', [])
+        
+        for index, sub_id in enumerate(order_list):
+            SubMilestone.objects.filter(pk=sub_id, milestone=milestone).update(order=index + 1)
+        
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)

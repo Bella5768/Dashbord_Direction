@@ -70,14 +70,19 @@ class MilestoneForm(forms.ModelForm):
     
     def __init__(self, project=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.project = project
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
         self.fields['manual_progress'].label = 'Progression (%)'
         self.fields['manual_progress'].help_text = 'Utilisé uniquement si le jalon n\'a pas de sous-étapes'
         if project:
             from .models import Employee
-            project_member_ids = project.members.values_list('employee_id', flat=True)
-            self.fields['assigned_to'].queryset = Employee.objects.filter(id__in=project_member_ids)
+            # Montrer tous les employés du système pour l'affectation
+            self.fields['assigned_to'].queryset = Employee.objects.all().order_by('name')
+            # Auto-incrémenter l'ordre si nouveau jalon
+            if not self.instance.pk:
+                max_order = project.milestones.aggregate(models.Max('order'))['order__max']
+                self.fields['order'].initial = (max_order or 0) + 1
 
 
 class SubMilestoneForm(forms.ModelForm):
@@ -92,12 +97,17 @@ class SubMilestoneForm(forms.ModelForm):
     
     def __init__(self, milestone=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.milestone = milestone
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
         if milestone:
             from .models import Employee
-            project_member_ids = milestone.project.members.values_list('employee_id', flat=True)
-            self.fields['assigned_to'].queryset = Employee.objects.filter(id__in=project_member_ids)
+            # Montrer tous les employés du système pour l'affectation
+            self.fields['assigned_to'].queryset = Employee.objects.all().order_by('name')
+            # Auto-incrémenter l'ordre si nouvelle sous-étape
+            if not self.instance.pk:
+                max_order = milestone.sub_milestones.aggregate(models.Max('order'))['order__max']
+                self.fields['order'].initial = (max_order or 0) + 1
 
 
 class ProjectFolderForm(forms.ModelForm):
