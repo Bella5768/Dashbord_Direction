@@ -24,25 +24,34 @@ class ProjectForm(forms.ModelForm):
             field.widget.attrs['class'] = 'form-control'
         self.fields['currency'].widget.attrs['class'] = 'form-control select-searchable'
         
-        # Si c'est une édition (projet existant), protéger les dates originales
+        # Si c'est une édition (projet existant), les dates ne sont pas obligatoires
         if self.instance and self.instance.pk:
-            self.fields['start_date'].help_text = "Date de début originale (non modifiable)"
-            self.fields['end_date'].help_text = "Date de fin originale (non modifiable)"
-            self.fields['start_date'].widget.attrs['style'] = 'background-color: #f3f4f6; pointer-events: none;'
-            self.fields['end_date'].widget.attrs['style'] = 'background-color: #f3f4f6; pointer-events: none;'
-            self.fields['start_date'].widget.attrs['tabindex'] = '-1'
-            self.fields['end_date'].widget.attrs['tabindex'] = '-1'
+            self.fields['start_date'].required = False
+            self.fields['end_date'].required = False
         
         # Ajouter des informations sur la conversion de devise
         if self.instance and self.instance.pk and self.instance.currency:
             current_currency = self.instance.currency
             if current_currency != 'GNF':
-                # Afficher l'équivalent en GNF
                 gnf_equivalent = convert_currency(float(self.instance.budget), current_currency, 'GNF')
                 self.fields['budget'].help_text = f"Équivalent: {format_currency(gnf_equivalent, 'GNF')}"
                 if self.instance.budget_consumed:
                     consumed_gnf = convert_currency(float(self.instance.budget_consumed), current_currency, 'GNF')
                     self.fields['budget_consumed'].help_text = f"Équivalent: {format_currency(consumed_gnf, 'GNF')}"
+    
+    def clean_start_date(self):
+        """Si pas de date fournie en édition, garder l'existante"""
+        date = self.cleaned_data.get('start_date')
+        if not date and self.instance and self.instance.pk:
+            return self.instance.start_date
+        return date
+    
+    def clean_end_date(self):
+        """Si pas de date fournie en édition, garder l'existante"""
+        date = self.cleaned_data.get('end_date')
+        if not date and self.instance and self.instance.pk:
+            return self.instance.end_date
+        return date
 
 
 class DocumentForm(forms.ModelForm):
