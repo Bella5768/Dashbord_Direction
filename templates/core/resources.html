@@ -1,9 +1,10 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
+{% load i18n %}
 
-{% block title %}Ressources{% endblock %}
-{% block page_title %}Suivi des Ressources{% endblock %}
-{% block page_subtitle %}Gestion des budgets et des ressources humaines{% endblock %}
+{% block title %}{% trans 'Ressources' %}{% endblock %}
+{% block page_title %}{% trans 'Suivi des Ressources' %}{% endblock %}
+{% block page_subtitle %}{% trans 'Gestion des budgets et des ressources humaines' %}{% endblock %}
 
 {% block content %}
 <!-- Tabs -->
@@ -12,13 +13,13 @@
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
         </svg>
-        Budget
+        {% trans 'Budget' %}
     </a>
     <a href="?tab=rh" class="tab-btn {% if tab == 'rh' %}active{% endif %}">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
         </svg>
-        Ressources Humaines
+        {% trans 'Ressources Humaines' %}
     </a>
 </div>
 
@@ -26,19 +27,19 @@
 <!-- Budget Stats -->
 <div class="stats-row">
     <a class="stat-box stat-box-link" href="{% url 'core:resources' %}?tab=budget">
-        <p class="stat-box-label">Budget total</p>
+        <p class="stat-box-label">{% trans 'Budget total' %}</p>
         <p class="stat-box-value">{{ total_allocated|number_format }} GNF</p>
     </a>
     <a class="stat-box green stat-box-link" href="{% url 'core:resources' %}?tab=budget">
-        <p class="stat-box-label">Consommé</p>
+        <p class="stat-box-label">{% trans 'Consommé' %}</p>
         <p class="stat-box-value">{{ total_consumed|number_format }} GNF</p>
     </a>
     <a class="stat-box blue stat-box-link" href="{% url 'core:resources' %}?tab=budget">
-        <p class="stat-box-label">Disponible</p>
+        <p class="stat-box-label">{% trans 'Disponible' %}</p>
         <p class="stat-box-value">{{ total_available|number_format }} GNF</p>
     </a>
     <a class="stat-box amber stat-box-link" href="{% url 'core:resources' %}?tab=budget">
-        <p class="stat-box-label">Taux de consommation</p>
+        <p class="stat-box-label">{% trans 'Taux de consommation' %}</p>
         <p class="stat-box-value">{{ consumption_rate }}%</p>
     </a>
 </div>
@@ -47,7 +48,7 @@
 <div class="grid grid-2 mb-6">
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">Répartition du budget par direction</h3>
+            <h3 class="card-title">{% trans 'Répartition du budget par direction' %}</h3>
         </div>
         <div class="card-content">
             <div class="chart-container">
@@ -58,7 +59,7 @@
     
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">Consommation par direction</h3>
+            <h3 class="card-title">{% trans 'Consommation par direction' %}</h3>
         </div>
         <div class="card-content">
             <div class="chart-container">
@@ -71,31 +72,31 @@
 <!-- Budget Table -->
 <div class="card">
     <div class="card-header">
-        <h3 class="card-title">Détail des budgets par direction</h3>
+        <h3 class="card-title">{% trans 'Détail des budgets par direction' %}</h3>
         {% if can_manage_budgets %}
         <a href="{% url 'core:budget_create' %}" class="btn btn-primary btn-sm">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
-            Affecter un budget
+            {% trans 'Affecter un budget' %}
         </a>
         {% endif %}
     </div>
     <div class="card-content">
         {% if not can_view_budgets %}
-            <p class="text-gray-500">Vous n'avez pas les permissions pour voir les budgets.</p>
+            <p class="text-gray-500">{% trans "Vous n'avez pas les permissions pour voir les budgets." %}</p>
         {% else %}
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
-                        <th>Direction</th>
-                        <th style="text-align: right;">Budget alloué</th>
-                        <th style="text-align: right;">Consommé</th>
-                        <th style="text-align: right;">Disponible</th>
-                        <th style="text-align: center;">Progression</th>
-                        <th style="text-align: center;">Statut</th>
-                        <th style="text-align: center;">Actions</th>
+                        <th>{% trans 'Direction' %}</th>
+                        <th style="text-align: right;">{% trans 'Budget alloué' %}</th>
+                        <th style="text-align: right;">{% trans 'Consommé' %}</th>
+                        <th style="text-align: right;">{% trans 'Disponible' %}</th>
+                        <th style="text-align: center;">{% trans 'Progression' %}</th>
+                        <th style="text-align: center;">{% trans 'Statut' %}</th>
+                        <th style="text-align: center;">{% trans 'Actions' %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -132,7 +133,7 @@
                         </td>
                         <td style="text-align: center;">
                             <span class="badge {% if budget.consumption_rate > 80 %}badge-danger{% elif budget.consumption_rate > 60 %}badge-warning{% else %}badge-success{% endif %}">
-                                {% if budget.consumption_rate > 80 %}Critique{% elif budget.consumption_rate > 60 %}Attention{% else %}Normal{% endif %}
+                                {% if budget.consumption_rate > 80 %}{% trans 'Critique' %}{% elif budget.consumption_rate > 60 %}{% trans 'Attention' %}{% else %}{% trans 'Normal' %}{% endif %}
                             </span>
                         </td>
                         <td style="text-align: center;">
@@ -164,38 +165,38 @@
 <!-- HR Stats -->
 <div class="stats-row">
     <a class="stat-box stat-box-link" href="{% url 'core:resources' %}?tab=rh">
-        <p class="stat-box-label">Effectif total</p>
+        <p class="stat-box-label">{% trans 'Effectif total' %}</p>
         <p class="stat-box-value">{{ employees.count }}</p>
     </a>
     <a class="stat-box blue stat-box-link" href="{% url 'core:resources' %}?tab=rh">
-        <p class="stat-box-label">Charge moyenne</p>
+        <p class="stat-box-label">{% trans 'Charge moyenne' %}</p>
         <p class="stat-box-value">{{ avg_workload }}%</p>
     </a>
     <a class="stat-box amber stat-box-link" href="{% url 'core:resources' %}?tab=rh">
-        <p class="stat-box-label">En surcharge</p>
+        <p class="stat-box-label">{% trans 'En surcharge' %}</p>
         <p class="stat-box-value">{{ overloaded }}</p>
     </a>
     <a class="stat-box green stat-box-link" href="{% url 'core:resources' %}?tab=rh">
-        <p class="stat-box-label">Directions</p>
+        <p class="stat-box-label">{% trans 'Directions' %}</p>
         <p class="stat-box-value">{{ directions.count }}</p>
     </a>
 </div>
 
 <!-- Employees Header -->
 <div class="flex justify-between items-center mb-4">
-    <h3 class="text-lg font-semibold">Liste des employés</h3>
+    <h3 class="text-lg font-semibold">{% trans 'Liste des employés' %}</h3>
     <div class="flex gap-2">
         <a href="{% url 'core:export_employees_pdf' %}" class="btn btn-outline btn-sm">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            Exporter PDF
+            {% trans 'Exporter PDF' %}
         </a>
         <a href="{% url 'core:employee_create' %}" class="btn btn-primary">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
-            Nouvel employé
+            {% trans 'Nouvel employé' %}
         </a>
     </div>
 </div>
@@ -231,7 +232,7 @@
         
         <div class="employee-workload">
             <div class="employee-workload-header">
-                <span class="employee-workload-label">Charge de travail</span>
+                <span class="employee-workload-label">{% trans 'Charge de travail' %}</span>
                 <span class="employee-workload-value {% if employee.workload >= 85 %}high{% elif employee.workload >= 70 %}medium{% else %}low{% endif %}">{{ employee.workload }}%</span>
             </div>
             <div class="progress">
@@ -248,7 +249,7 @@
     {% empty %}
     <div class="card" style="grid-column: span 3;">
         <div class="card-content" style="text-align: center; padding: 48px;">
-            <p class="text-gray-500">Aucun employé trouvé</p>
+            <p class="text-gray-500">{% trans 'Aucun employé trouvé' %}</p>
         </div>
     </div>
     {% endfor %}
@@ -289,7 +290,7 @@ new Chart(consumptionCtx, {
     data: {
         labels: [{% for b in budgets %}'{{ b.direction.code }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
         datasets: [{
-            label: 'Taux de consommation (%)',
+            label: '{% trans "Taux de consommation" %} (%)',
             data: [{% for b in budgets %}{{ b.consumption_rate }}{% if not forloop.last %}, {% endif %}{% endfor %}],
             backgroundColor: '#3b82f6',
             borderRadius: 4,

@@ -470,3 +470,245 @@ msgstr "No partners found"
 
 msgid "Types de partenaires"
 msgstr "Partner types"
+
+# Resources page
+msgid "Suivi des Ressources"
+msgstr "Resource Tracking"
+
+msgid "Gestion des budgets et des ressources humaines"
+msgstr "Budget and human resources management"
+
+msgid "Ressources Humaines"
+msgstr "Human Resources"
+
+msgid "Budget total"
+msgstr "Total budget"
+
+msgid "Disponible"
+msgstr "Available"
+
+msgid "Taux de consommation"
+msgstr "Consumption rate"
+
+msgid "Répartition du budget par direction"
+msgstr "Budget distribution by department"
+
+msgid "Consommation par direction"
+msgstr "Consumption by department"
+
+msgid "Détail des budgets par direction"
+msgstr "Budget details by department"
+
+msgid "Affecter un budget"
+msgstr "Assign a budget"
+
+msgid "Vous n'avez pas les permissions pour voir les budgets."
+msgstr "You do not have permissions to view budgets."
+
+msgid "Budget alloué"
+msgstr "Allocated budget"
+
+msgid "Statut"
+msgstr "Status"
+
+msgid "Actions"
+msgstr "Actions"
+
+msgid "Critique"
+msgstr "Critical"
+
+msgid "Attention"
+msgstr "Warning"
+
+msgid "Normal"
+msgstr "Normal"
+
+msgid "Effectif total"
+msgstr "Total headcount"
+
+msgid "Charge moyenne"
+msgstr "Average workload"
+
+msgid "En surcharge"
+msgstr "Overloaded"
+
+msgid "Liste des employés"
+msgstr "Employee list"
+
+msgid "Exporter PDF"
+msgstr "Export PDF"
+
+msgid "Nouvel employé"
+msgstr "New employee"
+
+msgid "Charge de travail"
+msgstr "Workload"
+
+msgid "Aucun employé trouvé"
+msgstr "No employees found"
+
+# Requests page
+msgid "Demandes des Directions"
+msgstr "Department Requests"
+
+msgid "Gestion des demandes et besoins exprimés par les directions"
+msgstr "Management of requests and needs expressed by departments"
+
+msgid "Total demandes"
+msgstr "Total requests"
+
+msgid "En attente"
+msgstr "Pending"
+
+msgid "Approuvées"
+msgstr "Approved"
+
+msgid "Rejetées"
+msgstr "Rejected"
+
+msgid "Rechercher une demande..."
+msgstr "Search for a request..."
+
+msgid "Approuvé"
+msgstr "Approved"
+
+msgid "Rejeté"
+msgstr "Rejected"
+
+msgid "Nouvelle demande"
+msgstr "New request"
+
+msgid "Approuvé le"
+msgstr "Approved on"
+
+msgid "Rejeter"
+msgstr "Reject"
+
+msgid "Approuver"
+msgstr "Approve"
+
+msgid "Aucune demande trouvée"
+msgstr "No requests found"
+
+# Calendar page
+msgid "Agenda partagé et événements à venir"
+msgstr "Shared calendar and upcoming events"
+
+msgid "Réunions ce mois"
+msgstr "Meetings this month"
+
+msgid "Événements"
+msgstr "Events"
+
+msgid "Deadlines"
+msgstr "Deadlines"
+
+msgid "Total ce mois"
+msgstr "Total this month"
+
+msgid "Nouvel événement"
+msgstr "New event"
+
+msgid "Lun"
+msgstr "Mon"
+
+msgid "Mar"
+msgstr "Tue"
+
+msgid "Mer"
+msgstr "Wed"
+
+msgid "Jeu"
+msgstr "Thu"
+
+msgid "Ven"
+msgstr "Fri"
+
+msgid "Sam"
+msgstr "Sat"
+
+msgid "Dim"
+msgstr "Sun"
+
+msgid "Prochains événements"
+msgstr "Upcoming events"
+
+msgid "Légende"
+msgstr "Legend"
+
+msgid "Réunion"
+msgstr "Meeting"
+
+msgid "Événement"
+msgstr "Event"
+
+msgid "Deadline"
+msgstr "Deadline"
+
+# Confirm delete
+msgid "Cette action est irréversible"
+msgstr "This action is irreversible"
+
+msgid "Confirmer la suppression"
+msgstr "Confirm deletion"
+
+msgid "Êtes-vous sûr de vouloir supprimer"
+msgstr "Are you sure you want to delete"
+
+msgid "Annuler"
+msgstr "Cancel"
+
+# Login page
+msgid "Connexion"
+msgstr "Login"
+
+msgid "Cité des Sciences et de l'Innovation de Guinée"
+msgstr "City of Sciences and Innovation of Guinea"
+
+msgid "Plateforme de pilotage stratégique pour la Direction Générale."
+msgstr "Strategic management platform for the General Management."
+
+msgid "Gérez vos projets, ressources et partenariats en toute simplicité."
+msgstr "Manage your projects, resources and partnerships with ease."
+
+msgid "Tableaux de bord"
+msgstr "Dashboards"
+
+msgid "Gestion de projets"
+msgstr "Project management"
+
+msgid "Suivi documentaire"
+msgstr "Document tracking"
+
+msgid "Bienvenue"
+msgstr "Welcome"
+
+msgid "Connectez-vous pour accéder à votre espace"
+msgstr "Sign in to access your workspace"
+
+msgid "Identifiants incorrects. Veuillez réessayer."
+msgstr "Incorrect credentials. Please try again."
+
+msgid "Nom d'utilisateur"
+msgstr "Username"
+
+msgid "Entrez votre nom d'utilisateur"
+msgstr "Enter your username"
+
+msgid "Mot de passe"
+msgstr "Password"
+
+msgid "Entrez votre mot de passe"
+msgstr "Enter your password"
+
+msgid "Se souvenir de moi"
+msgstr "Remember me"
+
+msgid "Mot de passe oublié ?"
+msgstr "Forgot password?"
+
+msgid "Se connecter"
+msgstr "Sign in"
+
+msgid "Direction Générale"
+msgstr "General Management"

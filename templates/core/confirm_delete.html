@@ -1,8 +1,9 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
-{% block title %}Supprimer {{ type }}{% endblock %}
-{% block page_title %}Supprimer {{ type }}{% endblock %}
-{% block page_subtitle %}Cette action est irréversible{% endblock %}
+{% block title %}{% trans 'Supprimer' %} {{ type }}{% endblock %}
+{% block page_title %}{% trans 'Supprimer' %} {{ type }}{% endblock %}
+{% block page_subtitle %}{% trans 'Cette action est irréversible' %}{% endblock %}
 
 {% block content %}
 <div class="card" style="max-width: 500px;">
@@ -13,20 +14,20 @@
             </svg>
         </div>
         
-        <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 8px;">Confirmer la suppression</h2>
+        <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 8px;">{% trans 'Confirmer la suppression' %}</h2>
         <p class="text-gray-500" style="margin-bottom: 24px;">
-            Êtes-vous sûr de vouloir supprimer ce {{ type }} ?<br>
+            {% trans 'Êtes-vous sûr de vouloir supprimer' %} {{ type }} ?<br>
             <strong>{{ object }}</strong>
         </p>
         
         <form method="post" style="display: flex; gap: 12px; justify-content: center;">
             {% csrf_token %}
             {% if back_args %}
-            <a href="{% url back_url project_id=back_args.project_id %}" class="btn btn-outline">Annuler</a>
+            <a href="{% url back_url project_id=back_args.project_id %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
             {% else %}
-            <a href="{% url back_url %}" class="btn btn-outline">Annuler</a>
+            <a href="{% url back_url %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
             {% endif %}
-            <button type="submit" class="btn" style="background: #dc2626; color: white;">Supprimer</button>
+            <button type="submit" class="btn" style="background: #dc2626; color: white;">{% trans 'Supprimer' %}</button>
         </form>
     </div>
 </div>

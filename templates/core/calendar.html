@@ -1,27 +1,28 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
+{% load i18n %}
 
-{% block title %}Calendrier{% endblock %}
-{% block page_title %}Calendrier{% endblock %}
-{% block page_subtitle %}Agenda partagé et événements à venir{% endblock %}
+{% block title %}{% trans 'Calendrier' %}{% endblock %}
+{% block page_title %}{% trans 'Calendrier' %}{% endblock %}
+{% block page_subtitle %}{% trans 'Agenda partagé et événements à venir' %}{% endblock %}
 
 {% block content %}
 <!-- Stats Row -->
 <div class="stats-row">
     <a class="stat-box blue stat-box-link" href="{% url 'core:calendar' %}">
-        <p class="stat-box-label">Réunions ce mois</p>
+        <p class="stat-box-label">{% trans 'Réunions ce mois' %}</p>
         <p class="stat-box-value">{{ stats.reunions }}</p>
     </a>
     <a class="stat-box green stat-box-link" href="{% url 'core:calendar' %}#upcoming">
-        <p class="stat-box-label">Événements</p>
+        <p class="stat-box-label">{% trans 'Événements' %}</p>
         <p class="stat-box-value">{{ stats.evenements }}</p>
     </a>
     <a class="stat-box red stat-box-link" href="{% url 'core:calendar' %}#upcoming">
-        <p class="stat-box-label">Deadlines</p>
+        <p class="stat-box-label">{% trans 'Deadlines' %}</p>
         <p class="stat-box-value">{{ stats.deadlines }}</p>
     </a>
     <a class="stat-box amber stat-box-link" href="{% url 'core:calendar' %}">
-        <p class="stat-box-label">Total ce mois</p>
+        <p class="stat-box-label">{% trans 'Total ce mois' %}</p>
         <p class="stat-box-value">{{ stats.total }}</p>
     </a>
 </div>
@@ -50,19 +51,19 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
-                    Nouvel événement
+                    {% trans 'Nouvel événement' %}
                 </a>
             </div>
             <div class="card-content">
                 <!-- Days header -->
                 <div class="calendar-grid" style="margin-bottom: 8px;">
-                    <div class="calendar-day-header">Lun</div>
-                    <div class="calendar-day-header">Mar</div>
-                    <div class="calendar-day-header">Mer</div>
-                    <div class="calendar-day-header">Jeu</div>
-                    <div class="calendar-day-header">Ven</div>
-                    <div class="calendar-day-header">Sam</div>
-                    <div class="calendar-day-header">Dim</div>
+                    <div class="calendar-day-header">{% trans 'Lun' %}</div>
+                    <div class="calendar-day-header">{% trans 'Mar' %}</div>
+                    <div class="calendar-day-header">{% trans 'Mer' %}</div>
+                    <div class="calendar-day-header">{% trans 'Jeu' %}</div>
+                    <div class="calendar-day-header">{% trans 'Ven' %}</div>
+                    <div class="calendar-day-header">{% trans 'Sam' %}</div>
+                    <div class="calendar-day-header">{% trans 'Dim' %}</div>
                 </div>
                 
                 <!-- Calendar grid -->
@@ -99,7 +100,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    Prochains événements
+                    {% trans 'Prochains événements' %}
                 </h3>
             </div>
             <div class="card-content">
@@ -141,7 +142,7 @@
                         </div>
                     </div>
                     {% empty %}
-                    <p class="text-gray-500">Aucun événement à venir</p>
+                    <p class="text-gray-500">{% trans 'Aucun événement à venir' %}</p>
                     {% endfor %}
                 </div>
             </div>
@@ -150,21 +151,21 @@
         <!-- Legend -->
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">Légende</h3>
+                <h3 class="card-title">{% trans 'Légende' %}</h3>
             </div>
             <div class="card-content">
                 <div class="item-list" style="gap: 8px;">
                     <div class="flex items-center gap-2">
                         <span class="event-type-dot reunion"></span>
-                        <span class="text-sm text-gray-600">Réunion</span>
+                        <span class="text-sm text-gray-600">{% trans 'Réunion' %}</span>
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="event-type-dot evenement"></span>
-                        <span class="text-sm text-gray-600">Événement</span>
+                        <span class="text-sm text-gray-600">{% trans 'Événement' %}</span>
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="event-type-dot deadline"></span>
-                        <span class="text-sm text-gray-600">Deadline</span>
+                        <span class="text-sm text-gray-600">{% trans 'Deadline' %}</span>
                     </div>
                 </div>
             </div>
