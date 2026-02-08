@@ -138,6 +138,6 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 EMAIL_HOST_USER = 'support@csig.edu.gn'
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+EMAIL_HOST_PASSWORD = 'gnnthnprwdlklnfd'
 DEFAULT_FROM_EMAIL = 'support@csig.edu.gn'
 SERVER_EMAIL = 'support@csig.edu.gn'
