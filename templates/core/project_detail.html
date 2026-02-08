@@ -1,23 +1,24 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
+{% load i18n %}
 
-{% block title %}Projet - {{ project.name }}{% endblock %}
+{% block title %}{% trans 'Projet' %} - {{ project.name }}{% endblock %}
 {% block page_title %}{{ project.name }}{% endblock %}
-{% block page_subtitle %}Aperçu et suivi du projet{% endblock %}
+{% block page_subtitle %}{% trans 'Aperçu et suivi du projet' %}{% endblock %}
 
 {% block content %}
 <div class="grid grid-3" style="gap: 16px;">
     <div class="card" style="grid-column: span 2;">
         <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
             <div>
-                <h3 class="card-title">Overview</h3>
-                <p class="text-sm text-gray-500">Résumé général du projet</p>
+                <h3 class="card-title">{% trans 'Overview' %}</h3>
+                <p class="text-sm text-gray-500">{% trans 'Résumé général du projet' %}</p>
             </div>
             <div class="flex gap-2">
                 {% if can_edit_project %}
-                <a href="{% url 'core:project_edit' project.id %}" class="btn btn-outline btn-sm">Modifier</a>
+                <a href="{% url 'core:project_edit' project.id %}" class="btn btn-outline btn-sm">{% trans 'Modifier' %}</a>
                 {% endif %}
-                <a href="{% url 'core:projects' %}" class="btn btn-outline btn-sm">Retour</a>
+                <a href="{% url 'core:projects' %}" class="btn btn-outline btn-sm">{% trans 'Retour' %}</a>
             </div>
         </div>
         <div class="card-content">
@@ -27,14 +28,14 @@
                     <span class="badge {% if project.priority == 'haute' %}badge-danger{% elif project.priority == 'moyenne' %}badge-warning{% else %}badge-secondary{% endif %}">{{ project.get_priority_display }}</span>
                     <span class="badge badge-secondary">{{ project.direction.code }}</span>
                 </div>
-                <div class="text-sm text-gray-500">Mis à jour le {{ project.updated_at|date:"d/m/Y" }}</div>
+                <div class="text-sm text-gray-500">{% trans 'Mis à jour le' %} {{ project.updated_at|date:"d/m/Y" }}</div>
             </div>
 
-            <p class="text-gray-700" style="margin-bottom: 16px;">{% if project.description %}{{ project.description }}{% else %}<span class="text-gray-500">Aucune description</span>{% endif %}</p>
+            <p class="text-gray-700" style="margin-bottom: 16px;">{% if project.description %}{{ project.description }}{% else %}<span class="text-gray-500">{% trans 'Aucune description' %}</span>{% endif %}</p>
 
             <div>
                 <div class="flex items-center justify-between" style="margin-bottom: 8px;">
-                    <span class="text-sm font-medium text-gray-600">Avancement du projet</span>
+                    <span class="text-sm font-medium text-gray-600">{% trans 'Avancement du projet' %}</span>
                     <span class="text-sm font-semibold">{{ project.progress }}%</span>
                 </div>
                 <div class="progress">
@@ -46,32 +47,32 @@
 
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">Détails</h3>
+            <h3 class="card-title">{% trans 'Détails' %}</h3>
         </div>
         <div class="card-content">
             <div class="flex justify-between" style="margin-bottom: 10px;">
-                <span class="text-sm text-gray-500">Responsable</span>
+                <span class="text-sm text-gray-500">{% trans 'Responsable' %}</span>
                 <span class="text-sm font-medium">{{ project.manager }}</span>
             </div>
             <div class="flex justify-between" style="margin-bottom: 10px;">
-                <span class="text-sm text-gray-500">Début</span>
+                <span class="text-sm text-gray-500">{% trans 'Début' %}</span>
                 <span class="text-sm font-medium">{{ project.start_date|date:"d/m/Y" }}</span>
             </div>
             <div class="flex justify-between" style="margin-bottom: 10px;">
-                <span class="text-sm text-gray-500">Fin</span>
+                <span class="text-sm text-gray-500">{% trans 'Fin' %}</span>
                 <span class="text-sm font-medium">{{ project.end_date|date:"d/m/Y" }}</span>
             </div>
             <div class="flex justify-between" style="margin-bottom: 10px;">
-                <span class="text-sm text-gray-500">Budget alloué</span>
+                <span class="text-sm text-gray-500">{% trans 'Budget alloué' %}</span>
                 <span class="text-sm font-medium">{{ project.budget|number_format }} {{ project.currency }}</span>
             </div>
             <div class="flex justify-between" style="margin-bottom: 10px;">
-                <span class="text-sm text-gray-500">Consommé</span>
+                <span class="text-sm text-gray-500">{% trans 'Consommé' %}</span>
                 <span class="text-sm font-medium">{{ project.budget_consumed|number_format }} {{ project.currency }}</span>
             </div>
             <div style="margin-top: 12px;">
                 <div class="flex items-center justify-between" style="margin-bottom: 8px;">
-                    <span class="text-sm font-medium text-gray-600">Consommation budget</span>
+                    <span class="text-sm font-medium text-gray-600">{% trans 'Consommation budget' %}</span>
                     <span class="text-sm font-semibold">{{ project.budget_percentage }}%</span>
                 </div>
                 <div class="progress">
@@ -83,13 +84,13 @@
 
     <div class="card" style="grid-column: span 2;">
         <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-            <h3 class="card-title">Étapes / Jalons</h3>
+            <h3 class="card-title">{% trans 'Étapes / Jalons' %}</h3>
             {% if can_add_milestones %}
             <a href="{% url 'core:milestone_create' project.id %}" class="btn btn-primary btn-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                Ajouter
+                {% trans 'Ajouter' %}
             </a>
             {% endif %}
         </div>
@@ -118,7 +119,7 @@
                                     {% endif %}
                                     {% if milestone.need %}
                                     <div class="text-xs" style="margin-top: 4px; color: #b45309; background: #fef9c3; padding: 2px 8px; border-radius: 4px; display: inline-block;">
-                                        <strong>Besoin :</strong> {{ milestone.need }}
+                                        <strong>{% trans 'Besoin' %} :</strong> {{ milestone.need }}
                                     </div>
                                     {% endif %}
                                 </div>
@@ -160,7 +161,7 @@
                                         <span class="text-xs text-gray-400">- {{ sub.assigned_to.name }}</span>
                                         {% endif %}
                                         {% if sub.need %}
-                                        <span class="text-xs" style="color: #b45309; background: #fef9c3; padding: 1px 6px; border-radius: 3px; margin-left: 4px;"><strong>Besoin :</strong> {{ sub.need }}</span>
+                                        <span class="text-xs" style="color: #b45309; background: #fef9c3; padding: 1px 6px; border-radius: 3px; margin-left: 4px;"><strong>{% trans 'Besoin' %} :</strong> {{ sub.need }}</span>
                                         {% endif %}
                                     </div>
                                     <div class="flex items-center gap-1">
@@ -186,14 +187,14 @@
                     {% endfor %}
                 </div>
             {% else %}
-                <p class="text-gray-500">Aucun jalon défini pour ce projet.</p>
+                <p class="text-gray-500">{% trans 'Aucun jalon défini pour ce projet.' %}</p>
                 <div style="margin-top: 16px;">
                     {% if can_add_milestones %}
                     <a href="{% url 'core:milestone_create' project.id %}" class="btn btn-primary btn-sm">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                         </svg>
-                        Ajouter un jalon
+                        {% trans 'Ajouter un jalon' %}
                     </a>
                     {% endif %}
                 </div>
@@ -203,7 +204,7 @@
 
     <div class="card" style="grid-column: span 2;">
         <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-            <h3 class="card-title">Besoins</h3>
+            <h3 class="card-title">{% trans 'Besoins' %}</h3>
         </div>
         <div class="card-content">
             {% if needs %}
@@ -224,7 +225,7 @@
                     {% endfor %}
                 </div>
             {% else %}
-                <p class="text-gray-500" style="margin-bottom: 16px;">Aucun besoin défini pour ce projet.</p>
+                <p class="text-gray-500" style="margin-bottom: 16px;">{% trans 'Aucun besoin défini pour ce projet.' %}</p>
             {% endif %}
 
             {% if can_perform_actions %}
@@ -232,35 +233,35 @@
                 {% csrf_token %}
                 <div class="grid grid-2" style="gap: 12px;">
                     <div>
-                        <label class="text-sm text-gray-500">Titre</label>
+                        <label class="text-sm text-gray-500">{% trans 'Titre' %}</label>
                         <input class="form-control" type="text" name="title" required />
                     </div>
                     <div>
-                        <label class="text-sm text-gray-500">Priorité</label>
+                        <label class="text-sm text-gray-500">{% trans 'Priorité' %}</label>
                         <select class="form-control" name="priority">
-                            <option value="basse">Basse</option>
-                            <option value="moyenne" selected>Moyenne</option>
-                            <option value="haute">Haute</option>
+                            <option value="basse">{% trans 'Basse' %}</option>
+                            <option value="moyenne" selected>{% trans 'Moyenne' %}</option>
+                            <option value="haute">{% trans 'Haute' %}</option>
                         </select>
                     </div>
                     <div style="grid-column: span 2;">
-                        <label class="text-sm text-gray-500">Description</label>
+                        <label class="text-sm text-gray-500">{% trans 'Description' %}</label>
                         <textarea class="form-control" name="description" rows="3"></textarea>
                     </div>
                 </div>
                 <div style="margin-top: 12px; display: flex; justify-content: flex-end;">
-                    <button type="submit" class="btn btn-primary btn-sm">Ajouter</button>
+                    <button type="submit" class="btn btn-primary btn-sm">{% trans 'Ajouter' %}</button>
                 </div>
             </form>
             {% else %}
-                <p class="text-gray-500 text-sm">Vous n'avez pas les permissions pour ajouter des besoins.</p>
+                <p class="text-gray-500 text-sm">{% trans "Vous n'avez pas les permissions pour ajouter des besoins." %}</p>
             {% endif %}
         </div>
     </div>
 
     <div class="card" style="grid-column: span 2;">
         <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-            <h3 class="card-title">Commentaires</h3>
+            <h3 class="card-title">{% trans 'Commentaires' %}</h3>
         </div>
         <div class="card-content">
             {% if comments %}
@@ -273,35 +274,35 @@
                     {% endfor %}
                 </div>
             {% else %}
-                <p class="text-gray-500" style="margin-bottom: 16px;">Aucun commentaire pour ce projet.</p>
+                <p class="text-gray-500" style="margin-bottom: 16px;">{% trans 'Aucun commentaire pour ce projet.' %}</p>
             {% endif %}
 
             {% if can_perform_actions %}
             <form method="post" action="{% url 'core:project_comment_create' project.id %}">
                 {% csrf_token %}
                 <div>
-                    <label class="text-sm text-gray-500">Nouveau commentaire</label>
+                    <label class="text-sm text-gray-500">{% trans 'Nouveau commentaire' %}</label>
                     <textarea class="form-control" name="message" rows="3" required></textarea>
                 </div>
                 <div style="margin-top: 12px; display: flex; justify-content: flex-end;">
-                    <button type="submit" class="btn btn-primary btn-sm">Publier</button>
+                    <button type="submit" class="btn btn-primary btn-sm">{% trans 'Publier' %}</button>
                 </div>
             </form>
             {% else %}
-                <p class="text-gray-500 text-sm">Vous n'avez pas les permissions pour ajouter des commentaires.</p>
+                <p class="text-gray-500 text-sm">{% trans "Vous n'avez pas les permissions pour ajouter des commentaires." %}</p>
             {% endif %}
         </div>
     </div>
 
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">Suivi & mise à jour</h3>
+            <h3 class="card-title">{% trans 'Suivi & mise à jour' %}</h3>
         </div>
         <div class="card-content">
-            <p class="text-sm text-gray-500" style="margin-bottom: 12px;">Options rapides pour suivre et mettre à jour le projet.</p>
+            <p class="text-sm text-gray-500" style="margin-bottom: 12px;">{% trans 'Options rapides pour suivre et mettre à jour le projet.' %}</p>
             <div class="grid" style="gap: 8px;">
                 {% if can_edit_project %}
-                <a href="{% url 'core:project_edit' project.id %}" class="btn btn-primary btn-sm">Mettre à jour le projet</a>
+                <a href="{% url 'core:project_edit' project.id %}" class="btn btn-primary btn-sm">{% trans 'Mettre à jour le projet' %}</a>
                 {% endif %}
                 {% if user.profile.is_directeur_general %}
                 <a href="{% url 'core:project_delete' project.id %}" class="btn btn-sm" style="background: var(--red-50); color: var(--red-600);">Supprimer</a>
@@ -314,13 +315,13 @@
 
     <div class="card" style="grid-column: span 3;">
         <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-            <h3 class="card-title">Membres</h3>
+            <h3 class="card-title">{% trans 'Membres' %}</h3>
             {% if can_manage_members %}
             <a href="{% url 'core:project_member_add' project.id %}" class="btn btn-primary btn-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                Ajouter un membre
+                {% trans 'Ajouter un membre' %}
             </a>
             {% endif %}
         </div>
@@ -364,10 +365,10 @@
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="48" height="48" style="color: #d1d5db; margin: 0 auto 16px;">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                         </svg>
-                        <p class="text-gray-500">Aucun membre dans ce projet.</p>
+                        <p class="text-gray-500">{% trans 'Aucun membre dans ce projet.' %}</p>
                         <div style="margin-top: 16px;">
                             {% if can_manage_members %}
-                            <a href="{% url 'core:project_member_add' project.id %}" class="btn btn-primary btn-sm">Ajouter un membre</a>
+                            <a href="{% url 'core:project_member_add' project.id %}" class="btn btn-primary btn-sm">{% trans 'Ajouter un membre' %}</a>
                             {% endif %}
                         </div>
                     </div>

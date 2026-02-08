@@ -712,3 +712,859 @@ msgstr "Sign in"
 
 msgid "Direction Générale"
 msgstr "General Management"
+
+# Reports page
+msgid "Rapports"
+msgstr "Reports"
+
+msgid "Rapports et Analyses"
+msgstr "Reports and Analytics"
+
+msgid "Génération de rapports et tableaux de bord analytiques"
+msgstr "Report generation and analytical dashboards"
+
+msgid "Vue globale"
+msgstr "Global view"
+
+msgid "Performance"
+msgstr "Performance"
+
+msgid "Projets totaux"
+msgstr "Total projects"
+
+msgid "Projets terminés"
+msgstr "Completed projects"
+
+msgid "Demandes en attente"
+msgstr "Pending requests"
+
+msgid "Projets par direction"
+msgstr "Projects by department"
+
+msgid "Répartition des projets par statut"
+msgstr "Project distribution by status"
+
+msgid "Détail des projets"
+msgstr "Project details"
+
+msgid "Projet"
+msgstr "Project"
+
+msgid "Taux"
+msgstr "Rate"
+
+msgid "Budget total alloué"
+msgstr "Total allocated budget"
+
+msgid "Budget total consommé"
+msgstr "Total consumed budget"
+
+msgid "Budget par direction"
+msgstr "Budget by department"
+
+msgid "Consommation budgétaire"
+msgstr "Budget consumption"
+
+msgid "Détail budgétaire par direction"
+msgstr "Budget details by department"
+
+msgid "Aucune donnée budgétaire"
+msgstr "No budget data"
+
+msgid "Progression moyenne"
+msgstr "Average progress"
+
+msgid "Projets en cours"
+msgstr "Projects in progress"
+
+msgid "Projets en retard"
+msgstr "Delayed projects"
+
+msgid "Performance par projet"
+msgstr "Performance by project"
+
+msgid "Budget utilisé"
+msgstr "Budget used"
+
+# Project detail page
+msgid "Aperçu et suivi du projet"
+msgstr "Project overview and tracking"
+
+msgid "Overview"
+msgstr "Overview"
+
+msgid "Résumé général du projet"
+msgstr "General project summary"
+
+msgid "Retour"
+msgstr "Back"
+
+msgid "Mis à jour le"
+msgstr "Updated on"
+
+msgid "Aucune description"
+msgstr "No description"
+
+msgid "Avancement du projet"
+msgstr "Project progress"
+
+msgid "Détails"
+msgstr "Details"
+
+msgid "Début"
+msgstr "Start"
+
+msgid "Fin"
+msgstr "End"
+
+msgid "Consommation budget"
+msgstr "Budget consumption"
+
+msgid "Étapes / Jalons"
+msgstr "Steps / Milestones"
+
+msgid "Besoin"
+msgstr "Need"
+
+msgid "Aucun jalon défini pour ce projet."
+msgstr "No milestones defined for this project."
+
+msgid "Ajouter un jalon"
+msgstr "Add a milestone"
+
+msgid "Besoins"
+msgstr "Needs"
+
+msgid "Aucun besoin défini pour ce projet."
+msgstr "No needs defined for this project."
+
+msgid "Titre"
+msgstr "Title"
+
+msgid "Priorité"
+msgstr "Priority"
+
+msgid "Basse"
+msgstr "Low"
+
+msgid "Moyenne"
+msgstr "Medium"
+
+msgid "Haute"
+msgstr "High"
+
+msgid "Commentaires"
+msgstr "Comments"
+
+msgid "Aucun commentaire pour ce projet."
+msgstr "No comments for this project."
+
+msgid "Nouveau commentaire"
+msgstr "New comment"
+
+msgid "Publier"
+msgstr "Publish"
+
+msgid "Vous n'avez pas les permissions pour ajouter des besoins."
+msgstr "You do not have permissions to add needs."
+
+msgid "Vous n'avez pas les permissions pour ajouter des commentaires."
+msgstr "You do not have permissions to add comments."
+
+msgid "Suivi & mise à jour"
+msgstr "Tracking & update"
+
+msgid "Options rapides pour suivre et mettre à jour le projet."
+msgstr "Quick options to track and update the project."
+
+msgid "Mettre à jour le projet"
+msgstr "Update the project"
+
+msgid "Membres"
+msgstr "Members"
+
+msgid "Ajouter un membre"
+msgstr "Add a member"
+
+msgid "Aucun membre dans ce projet."
+msgstr "No members in this project."
+
+msgid "Nouveau dossier"
+msgstr "New folder"
+
+msgid "Nouveau document"
+msgstr "New document"
+
+# Forms - common labels
+msgid "Modifier les informations du projet"
+msgstr "Edit project information"
+
+msgid "Créer un nouveau projet"
+msgstr "Create a new project"
+
+msgid "Informations du projet"
+msgstr "Project information"
+
+msgid "Nom du projet"
+msgstr "Project name"
+
+msgid "Devise"
+msgstr "Currency"
+
+msgid "Le montant sera automatiquement converti selon le taux de change"
+msgstr "The amount will be automatically converted according to the exchange rate"
+
+msgid "Date de début"
+msgstr "Start date"
+
+msgid "Date de fin"
+msgstr "End date"
+
+msgid "Enregistrer"
+msgstr "Save"
+
+msgid "Créer le projet"
+msgstr "Create project"
+
+msgid "Annuler"
+msgstr "Cancel"
+
+msgid "Créer"
+msgstr "Create"
+
+msgid "Gérer l'allocation budgétaire"
+msgstr "Manage budget allocation"
+
+msgid "Modifier le partenaire"
+msgstr "Edit partner"
+
+msgid "Ajouter un nouveau partenaire"
+msgstr "Add a new partner"
+
+msgid "Informations du partenaire"
+msgstr "Partner information"
+
+msgid "Nom"
+msgstr "Name"
+
+msgid "Personne de contact"
+msgstr "Contact person"
+
+msgid "Téléphone"
+msgstr "Phone"
+
+msgid "Logo"
+msgstr "Logo"
+
+msgid "Créer une nouvelle demande"
+msgstr "Create a new request"
+
+msgid "Informations de la demande"
+msgstr "Request information"
+
+msgid "Demandeur"
+msgstr "Requester"
+
+msgid "Soumettre la demande"
+msgstr "Submit request"
+
+msgid "Informations de l'événement"
+msgstr "Event information"
+
+msgid "Date"
+msgstr "Date"
+
+msgid "Heure"
+msgstr "Time"
+
+msgid "Durée (minutes)"
+msgstr "Duration (minutes)"
+
+msgid "Lieu"
+msgstr "Location"
+
+msgid "Directions participantes"
+msgstr "Participating departments"
+
+msgid "Cliquez pour sélectionner ou désélectionner des directions"
+msgstr "Click to select or deselect departments"
+
+msgid "Créer l'événement"
+msgstr "Create event"
+
+msgid "Gérer les ressources humaines"
+msgstr "Manage human resources"
+
+# Milestone forms
+msgid "Informations du jalon"
+msgstr "Milestone information"
+
+msgid "Erreurs dans le formulaire"
+msgstr "Form errors"
+
+msgid "Nom du jalon"
+msgstr "Milestone name"
+
+msgid "Optionnel : décrivez le besoin lié à cette étape"
+msgstr "Optional: describe the need related to this step"
+
+msgid "Utilisé si le jalon n'a pas de sous-étapes"
+msgstr "Used if milestone has no sub-steps"
+
+msgid "Complété"
+msgstr "Completed"
+
+msgid "Créer le jalon"
+msgstr "Create milestone"
+
+msgid "Jalon"
+msgstr "Milestone"
+
+msgid "Nom de la sous-étape"
+msgstr "Sub-step name"
+
+msgid "Aucun responsable"
+msgstr "No assignee"
+
+msgid "Décrivez le besoin lié à cette sous-étape..."
+msgstr "Describe the need related to this sub-step..."
+
+msgid "Optionnel : décrivez le besoin lié à cette sous-étape"
+msgstr "Optional: describe the need related to this sub-step"
+
+msgid "Complétée"
+msgstr "Completed"
+
+msgid "Créer la sous-étape"
+msgstr "Create sub-step"
+
+# Directions
+msgid "Gestion des Directions"
+msgstr "Department Management"
+
+msgid "Liste et gestion des directions de l'organisation"
+msgstr "List and manage organization departments"
+
+msgid "Nouvelle direction"
+msgstr "New department"
+
+msgid "Liste des directions"
+msgstr "Department list"
+
+msgid "Couleur"
+msgstr "Color"
+
+msgid "Code"
+msgstr "Code"
+
+msgid "Utilisateurs"
+msgstr "Users"
+
+msgid "Aucune direction trouvée"
+msgstr "No department found"
+
+msgid "Créer une direction"
+msgstr "Create a department"
+
+msgid "Modifier les informations de la direction"
+msgstr "Edit department information"
+
+msgid "Créer une nouvelle direction"
+msgstr "Create a new department"
+
+msgid "Nom de la direction"
+msgstr "Department name"
+
+msgid "Code court unique (ex: DG, DSI, DRH, DAF)"
+msgstr "Short unique code (e.g.: DG, DSI, DRH, DAF)"
+
+msgid "Couleur utilisée pour identifier la direction"
+msgstr "Color used to identify the department"
+
+# Documents page
+msgid "Suivi Documentaire"
+msgstr "Document Tracking"
+
+msgid "Gestion des documents à signer et valider"
+msgstr "Manage documents to sign and validate"
+
+msgid "Total documents"
+msgstr "Total documents"
+
+msgid "À signer"
+msgstr "To sign"
+
+msgid "À valider"
+msgstr "To validate"
+
+msgid "Signés"
+msgstr "Signed"
+
+msgid "Rechercher un document..."
+msgstr "Search for a document..."
+
+msgid "Tous les statuts"
+msgstr "All statuses"
+
+msgid "Signé"
+msgstr "Signed"
+
+msgid "Tous les types"
+msgstr "All types"
+
+msgid "Contrat"
+msgstr "Contract"
+
+msgid "Rapport"
+msgstr "Report"
+
+msgid "Note"
+msgstr "Note"
+
+msgid "Document"
+msgstr "Document"
+
+msgid "Échéance"
+msgstr "Deadline"
+
+msgid "Aucun document trouvé"
+msgstr "No document found"
+
+msgid "Modifier le document"
+msgstr "Edit document"
+
+msgid "Créer un nouveau document"
+msgstr "Create a new document"
+
+msgid "Informations du document"
+msgstr "Document information"
+
+msgid "Date limite"
+msgstr "Deadline"
+
+msgid "Créé par"
+msgstr "Created by"
+
+msgid "Fichier"
+msgstr "File"
+
+# Search page
+msgid "Recherche"
+msgstr "Search"
+
+msgid "Résultats de recherche"
+msgstr "Search results"
+
+msgid "résultat(s) pour"
+msgstr "result(s) for"
+
+msgid "Entrez un terme de recherche"
+msgstr "Enter a search term"
+
+msgid "Recherche globale"
+msgstr "Global search"
+
+msgid "Tapez un mot-clé dans la barre de recherche pour trouver des projets, partenaires, employés, demandes ou documents."
+msgstr "Type a keyword in the search bar to find projects, partners, employees, requests, or documents."
+
+msgid "Aucun résultat"
+msgstr "No results"
+
+msgid "Aucun résultat trouvé pour"
+msgstr "No results found for"
+
+msgid "Essayez avec d'autres mots-clés."
+msgstr "Try with other keywords."
+
+msgid "Voir tout"
+msgstr "View all"
+
+msgid "Contact"
+msgstr "Contact"
+
+msgid "Employés"
+msgstr "Employees"
+
+msgid "Rôle"
+msgstr "Role"
+
+msgid "Demandes"
+msgstr "Requests"
+
+# Event confirm delete
+msgid "Supprimer l'événement"
+msgstr "Delete event"
+
+msgid "Confirmer la suppression"
+msgstr "Confirm deletion"
+
+msgid "Êtes-vous sûr de vouloir supprimer l'événement"
+msgstr "Are you sure you want to delete the event"
+
+# Project documents/folders
+msgid "Titre du document"
+msgstr "Document title"
+
+msgid "Dossier"
+msgstr "Folder"
+
+msgid "Choisissez un dossier pour organiser ce document."
+msgstr "Choose a folder to organize this document."
+
+msgid "Ajouter le document"
+msgstr "Add document"
+
+msgid "Informations du dossier"
+msgstr "Folder information"
+
+msgid "Nom du dossier"
+msgstr "Folder name"
+
+msgid "Dossier parent"
+msgstr "Parent folder"
+
+msgid "Laissez vide pour un dossier à la racine."
+msgstr "Leave empty for a root folder."
+
+msgid "Créer le dossier"
+msgstr "Create folder"
+
+msgid "Navigation dans les dossiers"
+msgstr "Folder navigation"
+
+msgid "Nouveau sous-dossier"
+msgstr "New subfolder"
+
+msgid "Ajouter un document"
+msgstr "Add a document"
+
+msgid "Sous-dossiers"
+msgstr "Subfolders"
+
+msgid "Aucun sous-dossier."
+msgstr "No subfolders."
+
+msgid "Aucun document dans ce dossier."
+msgstr "No documents in this folder."
+
+# Project member form
+msgid "Informations du membre"
+msgstr "Member information"
+
+msgid "Créer un nouvel employé (personne non enregistrée dans le système)"
+msgstr "Create a new employee (person not registered in the system)"
+
+msgid "Employé existant"
+msgstr "Existing employee"
+
+msgid "Utilisez la recherche pour trouver rapidement un employé par nom, poste, département ou email"
+msgstr "Use search to quickly find an employee by name, position, department or email"
+
+msgid "Employés disponibles"
+msgstr "Available employees"
+
+msgid "employé(s) disponible(s) pour ce projet"
+msgstr "employee(s) available for this project"
+
+msgid "Tous les employés sont déjà membres de ce projet"
+msgstr "All employees are already members of this project"
+
+msgid "Informations du nouvel employé"
+msgstr "New employee information"
+
+msgid "Nom complet"
+msgstr "Full name"
+
+msgid "Poste/Fonction"
+msgstr "Position/Function"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Rôle dans le projet"
+msgstr "Role in project"
+
+msgid "Ajouter des documents"
+msgstr "Add documents"
+
+msgid "Ajouter des besoins"
+msgstr "Add needs"
+
+msgid "Ajouter des commentaires"
+msgstr "Add comments"
+
+msgid "Ajouter le membre"
+msgstr "Add member"
+
+# Users list page
+msgid "Gestion des utilisateurs"
+msgstr "User Management"
+
+msgid "Gestion des Utilisateurs"
+msgstr "User Management"
+
+msgid "Gérer les comptes, rôles et permissions"
+msgstr "Manage accounts, roles and permissions"
+
+msgid "Total utilisateurs"
+msgstr "Total users"
+
+msgid "Comptes actifs"
+msgstr "Active accounts"
+
+msgid "Comptes inactifs"
+msgstr "Inactive accounts"
+
+msgid "Connexions récentes"
+msgstr "Recent logins"
+
+msgid "Rechercher un utilisateur..."
+msgstr "Search for a user..."
+
+msgid "Tous les rôles"
+msgstr "All roles"
+
+msgid "Actifs"
+msgstr "Active"
+
+msgid "Inactifs"
+msgstr "Inactive"
+
+msgid "Nouvel utilisateur"
+msgstr "New user"
+
+msgid "Journal"
+msgstr "Activity log"
+
+msgid "Utilisateur"
+msgstr "User"
+
+msgid "Dernière connexion"
+msgstr "Last login"
+
+msgid "Non défini"
+msgstr "Not defined"
+
+msgid "Actif"
+msgstr "Active"
+
+msgid "Inactif"
+msgstr "Inactive"
+
+msgid "Jamais"
+msgstr "Never"
+
+msgid "Aucun utilisateur trouvé"
+msgstr "No user found"
+
+msgid "Activités récentes"
+msgstr "Recent activities"
+
+# Users form page
+msgid "Modifier les informations de"
+msgstr "Edit information of"
+
+msgid "Créer un nouveau compte utilisateur"
+msgstr "Create a new user account"
+
+msgid "Informations de l'utilisateur"
+msgstr "User information"
+
+msgid "Nom d'utilisateur"
+msgstr "Username"
+
+msgid "Prénom"
+msgstr "First name"
+
+msgid "Mot de passe"
+msgstr "Password"
+
+msgid "Confirmer le mot de passe"
+msgstr "Confirm password"
+
+msgid "Rôle et permissions"
+msgstr "Role and permissions"
+
+msgid "Aucune direction"
+msgstr "No department"
+
+msgid "Employé"
+msgstr "Employee"
+
+msgid "Aucun employé"
+msgstr "No employee"
+
+msgid "Statut du compte"
+msgstr "Account status"
+
+msgid "Compte actif"
+msgstr "Active account"
+
+msgid "Permissions détaillées"
+msgstr "Detailed permissions"
+
+msgid "Peut créer des projets"
+msgstr "Can create projects"
+
+msgid "Peut modifier les projets"
+msgstr "Can edit projects"
+
+msgid "Peut ajouter des jalons"
+msgstr "Can add milestones"
+
+msgid "Peut ajouter des membres"
+msgstr "Can add members"
+
+msgid "Budgets"
+msgstr "Budgets"
+
+msgid "Peut voir les budgets"
+msgstr "Can view budgets"
+
+msgid "Peut gérer les budgets"
+msgstr "Can manage budgets"
+
+msgid "Peut voir toutes les directions"
+msgstr "Can view all departments"
+
+msgid "Administration"
+msgstr "Administration"
+
+msgid "Peut gérer les utilisateurs"
+msgstr "Can manage users"
+
+msgid "Peut approuver les demandes"
+msgstr "Can approve requests"
+
+msgid "Événements"
+msgstr "Events"
+
+msgid "Peut créer des événements"
+msgstr "Can create events"
+
+msgid "Enregistrer les modifications"
+msgstr "Save changes"
+
+msgid "Créer l'utilisateur"
+msgstr "Create user"
+
+msgid "Niveaux de permissions"
+msgstr "Permission levels"
+
+msgid "Administrateur"
+msgstr "Administrator"
+
+msgid "Accès total à toutes les fonctionnalités"
+msgstr "Full access to all features"
+
+msgid "Directeur Général"
+msgstr "General Director"
+
+msgid "Gestion complète, approbation demandes"
+msgstr "Full management, request approval"
+
+msgid "Directeur"
+msgstr "Director"
+
+msgid "Projets, budgets, documents, partenaires"
+msgstr "Projects, budgets, documents, partners"
+
+msgid "Chef de Projet"
+msgstr "Project Manager"
+
+msgid "Projets, rapports"
+msgstr "Projects, reports"
+
+msgid "Tableau de bord, calendrier"
+msgstr "Dashboard, calendar"
+
+msgid "Visiteur"
+msgstr "Visitor"
+
+msgid "Tableau de bord uniquement"
+msgstr "Dashboard only"
+
+msgid "Informations"
+msgstr "Information"
+
+msgid "Créé le"
+msgstr "Created on"
+
+# Users delete page
+msgid "Supprimer l'utilisateur"
+msgstr "Delete user"
+
+msgid "Cette action est irréversible"
+msgstr "This action is irreversible"
+
+msgid "Êtes-vous sûr de vouloir supprimer l'utilisateur"
+msgstr "Are you sure you want to delete the user"
+
+msgid "Attention"
+msgstr "Warning"
+
+msgid "Cette action supprimera définitivement"
+msgstr "This action will permanently delete"
+
+msgid "Le compte utilisateur"
+msgstr "The user account"
+
+msgid "Le profil et les permissions"
+msgstr "The profile and permissions"
+
+msgid "L'historique des activités"
+msgstr "The activity history"
+
+msgid "Supprimer définitivement"
+msgstr "Delete permanently"
+
+# Change password page
+msgid "Changer le mot de passe"
+msgstr "Change password"
+
+msgid "Modifier le mot de passe de"
+msgstr "Change password for"
+
+msgid "Nouveau mot de passe"
+msgstr "New password"
+
+# Activities page
+msgid "Journal des activités"
+msgstr "Activity log"
+
+msgid "Journal des Activités"
+msgstr "Activity Log"
+
+msgid "Historique des connexions et actions des utilisateurs"
+msgstr "User login and action history"
+
+msgid "Retour aux utilisateurs"
+msgstr "Back to users"
+
+msgid "Action"
+msgstr "Action"
+
+msgid "Adresse IP"
+msgstr "IP Address"
+
+msgid "Aucune activité enregistrée"
+msgstr "No activity recorded"
+
+# Password reset page
+msgid "Mot de passe oublié"
+msgstr "Forgot password"
+
+msgid "Mot de passe oublié ?"
+msgstr "Forgot your password?"
+
+msgid "Pour réinitialiser votre mot de passe, veuillez contacter l'administrateur système."
+msgstr "To reset your password, please contact the system administrator."
+
+msgid "Il pourra vous aider à récupérer l'accès à votre compte."
+msgstr "They can help you recover access to your account."
+
+msgid "Contactez l'administrateur"
+msgstr "Contact the administrator"
+
+msgid "Retour à la connexion"
+msgstr "Back to login"

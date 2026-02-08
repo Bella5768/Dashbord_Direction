@@ -1,13 +1,14 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
 {% block title %}{{ title }}{% endblock %}
 {% block page_title %}{{ title }}{% endblock %}
-{% block page_subtitle %}Projet : {{ project.name }}{% endblock %}
+{% block page_subtitle %}{% trans 'Projet' %} : {{ project.name }}{% endblock %}
 
 {% block content %}
 <div class="card" style="max-width: 700px;">
     <div class="card-header">
-        <h3 class="card-title">Informations du membre</h3>
+        <h3 class="card-title">{% trans 'Informations du membre' %}</h3>
     </div>
     <div class="card-content">
         <form method="post">
@@ -17,7 +18,7 @@
             <div class="form-group" style="margin-bottom: 16px;">
                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                     <input type="checkbox" id="toggle_new_employee" name="create_new_employee" style="width: 18px; height: 18px;" {% if create_new_employee %}checked{% endif %}>
-                    <span>Créer un nouvel employé (personne non enregistrée dans le système)</span>
+                    <span>{% trans 'Créer un nouvel employé (personne non enregistrée dans le système)' %}</span>
                 </label>
             </div>
             
@@ -28,7 +29,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
-                        Employé existant *
+                        {% trans 'Employé existant' %} *
                     </label>
                     
                     {{ form.employee }}
@@ -37,7 +38,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12" style="display: inline-block; vertical-align: middle;">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
-                        Utilisez la recherche pour trouver rapidement un employé par nom, poste, département ou email
+                        {% trans 'Utilisez la recherche pour trouver rapidement un employé par nom, poste, département ou email' %}
                     </p>
                 </div>
                 
@@ -47,13 +48,13 @@
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="color: var(--blue-600);">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <span style="font-weight: 600; color: var(--blue-900);">Employés disponibles</span>
+                        <span style="font-weight: 600; color: var(--blue-900);">{% trans 'Employés disponibles' %}</span>
                     </div>
                     <div style="font-size: 14px; color: var(--gray-700);">
                         {% if available_employees_count %}
-                            {{ available_employees_count }} employé(s) disponible(s) pour ce projet
+                            {{ available_employees_count }} {% trans 'employé(s) disponible(s) pour ce projet' %}
                         {% else %}
-                            Tous les employés sont déjà membres de ce projet
+                            {% trans 'Tous les employés sont déjà membres de ce projet' %}
                         {% endif %}
                     </div>
                 </div>
@@ -62,25 +63,25 @@
             <!-- Section nouvel employé -->
             <div id="new_employee_section" {% if not create_new_employee %}style="display: none;"{% endif %}>
                 <div style="background-color: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
-                    <h4 style="margin-bottom: 12px; color: #0369a1;">Informations du nouvel employé</h4>
+                    <h4 style="margin-bottom: 12px; color: #0369a1;">{% trans 'Informations du nouvel employé' %}</h4>
                     
                     <div class="form-group" style="margin-bottom: 12px;">
-                        <label for="new_employee_name">Nom complet *</label>
+                        <label for="new_employee_name">{% trans 'Nom complet' %} *</label>
                         <input type="text" id="new_employee_name" name="new_employee_name" class="form-control" value="{{ new_employee_name|default:'' }}" placeholder="Ex: Jean Dupont">
                     </div>
                     
                     <div class="form-group" style="margin-bottom: 12px;">
-                        <label for="new_employee_role">Poste/Fonction *</label>
+                        <label for="new_employee_role">{% trans 'Poste/Fonction' %} *</label>
                         <input type="text" id="new_employee_role" name="new_employee_role" class="form-control" value="{{ new_employee_role|default:'' }}" placeholder="Ex: Analyste, Consultant, etc.">
                     </div>
                     
                     <div class="grid grid-2" style="gap: 12px;">
                         <div class="form-group">
-                            <label for="new_employee_phone">Téléphone</label>
+                            <label for="new_employee_phone">{% trans 'Téléphone' %}</label>
                             <input type="text" id="new_employee_phone" name="new_employee_phone" class="form-control" value="{{ new_employee_phone|default:'' }}" placeholder="Ex: 621234567">
                         </div>
                         <div class="form-group">
-                            <label for="new_employee_email">Email</label>
+                            <label for="new_employee_email">{% trans 'Email' %}</label>
                             <input type="email" id="new_employee_email" name="new_employee_email" class="form-control" value="{{ new_employee_email|default:'' }}" placeholder="Ex: jean@exemple.com">
                         </div>
                     </div>
@@ -92,7 +93,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
-                    Rôle dans le projet *
+                    {% trans 'Rôle dans le projet' %} *
                 </label>
                 {{ form.role }}
                 {% if form.role.errors %}<p class="text-xs" style="color: var(--red-600);">{{ form.role.errors.0 }}</p>{% endif %}
@@ -154,7 +155,7 @@
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
-                            Ajouter des documents
+                            {% trans 'Ajouter des documents' %}
                         </label>
                     </div>
                     
@@ -164,7 +165,7 @@
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                             </svg>
-                            Ajouter des besoins
+                            {% trans 'Ajouter des besoins' %}
                         </label>
                     </div>
                     
@@ -174,7 +175,7 @@
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                             </svg>
-                            Ajouter des commentaires
+                            {% trans 'Ajouter des commentaires' %}
                         </label>
                     </div>
                 </div>
@@ -185,9 +186,9 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
-                    {% if member %}Enregistrer{% else %}Ajouter le membre{% endif %}
+                    {% if member %}{% trans 'Enregistrer' %}{% else %}{% trans 'Ajouter le membre' %}{% endif %}
                 </button>
-                <a href="{% url 'core:project_detail' project.id %}" class="btn btn-outline">Annuler</a>
+                <a href="{% url 'core:project_detail' project.id %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
             </div>
         </form>
     </div>

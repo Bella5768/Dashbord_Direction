@@ -1,18 +1,19 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
-{% block title %}Journal des activités{% endblock %}
-{% block page_title %}Journal des Activités{% endblock %}
-{% block page_subtitle %}Historique des connexions et actions des utilisateurs{% endblock %}
+{% block title %}{% trans 'Journal des activités' %}{% endblock %}
+{% block page_title %}{% trans 'Journal des Activités' %}{% endblock %}
+{% block page_subtitle %}{% trans 'Historique des connexions et actions des utilisateurs' %}{% endblock %}
 
 {% block content %}
 <div class="card">
     <div class="card-header">
-        <h3 class="card-title">Activités récentes</h3>
+        <h3 class="card-title">{% trans 'Activités récentes' %}</h3>
         <a href="{% url 'core:users_list' %}" class="btn btn-outline btn-sm">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            Retour aux utilisateurs
+            {% trans 'Retour aux utilisateurs' %}
         </a>
     </div>
     <div class="card-content" style="padding: 0;">
@@ -20,11 +21,11 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Utilisateur</th>
-                        <th>Action</th>
-                        <th>Description</th>
-                        <th>Adresse IP</th>
-                        <th>Date</th>
+                        <th>{% trans 'Utilisateur' %}</th>
+                        <th>{% trans 'Action' %}</th>
+                        <th>{% trans 'Description' %}</th>
+                        <th>{% trans 'Adresse IP' %}</th>
+                        <th>{% trans 'Date' %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -50,7 +51,7 @@
                     {% empty %}
                     <tr>
                         <td colspan="5" style="text-align: center; padding: 48px;">
-                            <p class="text-gray-500">Aucune activité enregistrée</p>
+                            <p class="text-gray-500">{% trans 'Aucune activité enregistrée' %}</p>
                         </td>
                     </tr>
                     {% endfor %}

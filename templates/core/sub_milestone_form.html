@@ -1,8 +1,9 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
 {% block title %}{{ title }}{% endblock %}
 {% block page_title %}{{ title }}{% endblock %}
-{% block page_subtitle %}Projet : {{ project.name }} | Jalon : {{ milestone.name }}{% endblock %}
+{% block page_subtitle %}{% trans 'Projet' %} : {{ project.name }} | {% trans 'Jalon' %} : {{ milestone.name }}{% endblock %}
 
 {% block content %}
 <div class="card" style="max-width: 600px;">
@@ -14,16 +15,16 @@
             {% csrf_token %}
             
             <div class="form-group" style="margin-bottom: 20px;">
-                <label for="id_name">Nom de la sous-étape *</label>
+                <label for="id_name">{% trans 'Nom de la sous-étape' %} *</label>
                 <input type="text" name="name" id="id_name" class="form-control" 
                        value="{{ form.name.value|default:'' }}" required
                        placeholder="Ex: Rédiger le cahier des charges">
             </div>
             
             <div class="form-group" style="margin-bottom: 20px;">
-                <label for="id_assigned_to">Responsable</label>
+                <label for="id_assigned_to">{% trans 'Responsable' %}</label>
                 <select name="assigned_to" id="id_assigned_to" class="form-control">
-                    <option value="">-- Aucun responsable --</option>
+                    <option value="">-- {% trans 'Aucun responsable' %} --</option>
                     {% for employee in form.assigned_to.field.queryset %}
                     <option value="{{ employee.id }}" {% if form.assigned_to.value|stringformat:"s" == employee.id|stringformat:"s" %}selected{% endif %}>
                         {{ employee.name }}
@@ -35,16 +36,16 @@
             <input type="hidden" name="order" id="id_order" value="{{ form.order.value|default:0 }}">
 
             <div class="form-group" style="margin-bottom: 20px;">
-                <label for="id_need">Besoin</label>
-                <textarea name="need" id="id_need" class="form-control" rows="3" placeholder="Décrivez le besoin lié à cette sous-étape...">{{ form.need.value|default:'' }}</textarea>
-                <p class="text-xs text-gray-500">Optionnel : décrivez le besoin lié à cette sous-étape</p>
+                <label for="id_need">{% trans 'Besoin' %}</label>
+                <textarea name="need" id="id_need" class="form-control" rows="3" placeholder="{% trans 'Décrivez le besoin lié à cette sous-étape...' %}">{{ form.need.value|default:'' }}</textarea>
+                <p class="text-xs text-gray-500">{% trans 'Optionnel : décrivez le besoin lié à cette sous-étape' %}</p>
             </div>
 
             <div class="form-group" style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 8px;">Statut</label>
+                <label style="display: block; margin-bottom: 8px;">{% trans 'Statut' %}</label>
                 <label class="remember-me" style="cursor: pointer; display: flex; gap: 8px; align-items: center;">
                     <input type="checkbox" name="completed" {% if form.completed.value %}checked{% endif %}>
-                    <span>Complétée</span>
+                    <span>{% trans 'Complétée' %}</span>
                 </label>
             </div>
             
@@ -53,9 +54,9 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
-                    {% if sub_milestone %}Enregistrer{% else %}Créer la sous-étape{% endif %}
+                    {% if sub_milestone %}{% trans 'Enregistrer' %}{% else %}{% trans 'Créer la sous-étape' %}{% endif %}
                 </button>
-                <a href="{% url 'core:project_detail' project.id %}" class="btn btn-outline">Annuler</a>
+                <a href="{% url 'core:project_detail' project.id %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
             </div>
         </form>
     </div>

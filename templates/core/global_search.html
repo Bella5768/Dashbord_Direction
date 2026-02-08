@@ -1,9 +1,10 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
+{% load i18n %}
 
-{% block title %}Recherche{% endblock %}
-{% block page_title %}Résultats de recherche{% endblock %}
-{% block page_subtitle %}{% if query %}{{ total }} résultat{{ total|pluralize }} pour "{{ query }}"{% else %}Entrez un terme de recherche{% endif %}{% endblock %}
+{% block title %}{% trans 'Recherche' %}{% endblock %}
+{% block page_title %}{% trans 'Résultats de recherche' %}{% endblock %}
+{% block page_subtitle %}{% if query %}{{ total }} {% trans 'résultat(s) pour' %} "{{ query }}"{% else %}{% trans 'Entrez un terme de recherche' %}{% endif %}{% endblock %}
 
 {% block content %}
 {% if not query %}
@@ -11,8 +12,8 @@
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 64px; height: 64px; color: #9ca3af; margin: 0 auto 16px;">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
     </svg>
-    <h3 style="color: #6b7280; margin-bottom: 8px;">Recherche globale</h3>
-    <p style="color: #9ca3af;">Tapez un mot-clé dans la barre de recherche pour trouver des projets, partenaires, employés, demandes ou documents.</p>
+    <h3 style="color: #6b7280; margin-bottom: 8px;">{% trans 'Recherche globale' %}</h3>
+    <p style="color: #9ca3af;">{% trans 'Tapez un mot-clé dans la barre de recherche pour trouver des projets, partenaires, employés, demandes ou documents.' %}</p>
 </div>
 
 {% elif total == 0 %}
@@ -20,8 +21,8 @@
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 64px; height: 64px; color: #9ca3af; margin: 0 auto 16px;">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
-    <h3 style="color: #6b7280; margin-bottom: 8px;">Aucun résultat</h3>
-    <p style="color: #9ca3af;">Aucun résultat trouvé pour "<strong>{{ query }}</strong>". Essayez avec d'autres mots-clés.</p>
+    <h3 style="color: #6b7280; margin-bottom: 8px;">{% trans 'Aucun résultat' %}</h3>
+    <p style="color: #9ca3af;">{% trans 'Aucun résultat trouvé pour' %} "<strong>{{ query }}</strong>". {% trans "Essayez avec d'autres mots-clés." %}</p>
 </div>
 
 {% else %}
@@ -34,20 +35,20 @@
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 20px; height: 20px; display: inline; vertical-align: middle; margin-right: 8px;">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
-            Projets ({{ results.projects|length }})
+            {% trans 'Projets' %} ({{ results.projects|length }})
         </h3>
-        <a href="{% url 'core:projects' %}?search={{ query }}" class="btn btn-outline btn-sm">Voir tout</a>
+        <a href="{% url 'core:projects' %}?search={{ query }}" class="btn btn-outline btn-sm">{% trans 'Voir tout' %}</a>
     </div>
     <div class="card-content" style="padding: 0;">
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
-                        <th>Nom du projet</th>
-                        <th>Direction</th>
-                        <th>Responsable</th>
-                        <th style="text-align: center;">Statut</th>
-                        <th style="text-align: center;">Progression</th>
+                        <th>{% trans 'Nom du projet' %}</th>
+                        <th>{% trans 'Direction' %}</th>
+                        <th>{% trans 'Responsable' %}</th>
+                        <th style="text-align: center;">{% trans 'Statut' %}</th>
+                        <th style="text-align: center;">{% trans 'Progression' %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -86,19 +87,19 @@
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 20px; height: 20px; display: inline; vertical-align: middle; margin-right: 8px;">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            Partenaires ({{ results.partners|length }})
+            {% trans 'Partenaires' %} ({{ results.partners|length }})
         </h3>
-        <a href="{% url 'core:partners' %}?search={{ query }}" class="btn btn-outline btn-sm">Voir tout</a>
+        <a href="{% url 'core:partners' %}?search={{ query }}" class="btn btn-outline btn-sm">{% trans 'Voir tout' %}</a>
     </div>
     <div class="card-content" style="padding: 0;">
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
-                        <th>Nom</th>
-                        <th>Type</th>
-                        <th>Contact</th>
-                        <th style="text-align: center;">Statut</th>
+                        <th>{% trans 'Nom' %}</th>
+                        <th>{% trans 'Type' %}</th>
+                        <th>{% trans 'Contact' %}</th>
+                        <th style="text-align: center;">{% trans 'Statut' %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -129,18 +130,18 @@
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 20px; height: 20px; display: inline; vertical-align: middle; margin-right: 8px;">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
-            Employés ({{ results.employees|length }})
+            {% trans 'Employés' %} ({{ results.employees|length }})
         </h3>
-        <a href="{% url 'core:resources' %}?tab=employees" class="btn btn-outline btn-sm">Voir tout</a>
+        <a href="{% url 'core:resources' %}?tab=employees" class="btn btn-outline btn-sm">{% trans 'Voir tout' %}</a>
     </div>
     <div class="card-content" style="padding: 0;">
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
-                        <th>Nom</th>
-                        <th>Rôle</th>
-                        <th>Direction</th>
+                        <th>{% trans 'Nom' %}</th>
+                        <th>{% trans 'Rôle' %}</th>
+                        <th>{% trans 'Direction' %}</th>
                         <th>Email</th>
                     </tr>
                 </thead>
@@ -168,18 +169,18 @@
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 20px; height: 20px; display: inline; vertical-align: middle; margin-right: 8px;">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            Demandes ({{ results.requests|length }})
+            {% trans 'Demandes' %} ({{ results.requests|length }})
         </h3>
-        <a href="{% url 'core:requests' %}?search={{ query }}" class="btn btn-outline btn-sm">Voir tout</a>
+        <a href="{% url 'core:requests' %}?search={{ query }}" class="btn btn-outline btn-sm">{% trans 'Voir tout' %}</a>
     </div>
     <div class="card-content" style="padding: 0;">
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
-                        <th>Titre</th>
-                        <th>Direction</th>
-                        <th style="text-align: center;">Statut</th>
+                        <th>{% trans 'Titre' %}</th>
+                        <th>{% trans 'Direction' %}</th>
+                        <th style="text-align: center;">{% trans 'Statut' %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -209,7 +210,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 20px; height: 20px; display: inline; vertical-align: middle; margin-right: 8px;">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
             </svg>
-            Documents ({{ results.documents|length }})
+            {% trans 'Documents' %} ({{ results.documents|length }})
         </h3>
     </div>
     <div class="card-content" style="padding: 0;">
@@ -217,10 +218,10 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Titre</th>
-                        <th>Direction</th>
-                        <th>Type</th>
-                        <th style="text-align: center;">Statut</th>
+                        <th>{% trans 'Titre' %}</th>
+                        <th>{% trans 'Direction' %}</th>
+                        <th>{% trans 'Type' %}</th>
+                        <th style="text-align: center;">{% trans 'Statut' %}</th>
                     </tr>
                 </thead>
                 <tbody>

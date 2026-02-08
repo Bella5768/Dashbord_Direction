@@ -1,26 +1,27 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
-{% block title %}Gestion des utilisateurs{% endblock %}
-{% block page_title %}Gestion des Utilisateurs{% endblock %}
-{% block page_subtitle %}Gérer les comptes, rôles et permissions{% endblock %}
+{% block title %}{% trans 'Gestion des utilisateurs' %}{% endblock %}
+{% block page_title %}{% trans 'Gestion des Utilisateurs' %}{% endblock %}
+{% block page_subtitle %}{% trans 'Gérer les comptes, rôles et permissions' %}{% endblock %}
 
 {% block content %}
 <!-- Stats -->
 <div class="stats-row">
     <a class="stat-box stat-box-link" href="{% url 'core:users_list' %}?status=all">
-        <p class="stat-box-label">Total utilisateurs</p>
+        <p class="stat-box-label">{% trans 'Total utilisateurs' %}</p>
         <p class="stat-box-value">{{ stats.total }}</p>
     </a>
     <a class="stat-box green stat-box-link" href="{% url 'core:users_list' %}?status=active">
-        <p class="stat-box-label">Comptes actifs</p>
+        <p class="stat-box-label">{% trans 'Comptes actifs' %}</p>
         <p class="stat-box-value">{{ stats.active }}</p>
     </a>
     <a class="stat-box red stat-box-link" href="{% url 'core:users_list' %}?status=inactive">
-        <p class="stat-box-label">Comptes inactifs</p>
+        <p class="stat-box-label">{% trans 'Comptes inactifs' %}</p>
         <p class="stat-box-value">{{ stats.inactive }}</p>
     </a>
     <a class="stat-box blue stat-box-link" href="{% url 'core:user_activities' %}">
-        <p class="stat-box-label">Connexions récentes</p>
+        <p class="stat-box-label">{% trans 'Connexions récentes' %}</p>
         <p class="stat-box-value">{{ recent_activities|length }}</p>
     </a>
 </div>
@@ -31,30 +32,30 @@
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
-        <input type="text" name="search" placeholder="Rechercher un utilisateur..." value="{{ search }}" class="form-control">
+        <input type="text" name="search" placeholder="{% trans 'Rechercher un utilisateur...' %}" value="{{ search }}" class="form-control">
     </div>
     <select name="role" class="form-control" onchange="this.form.submit()">
-        <option value="all" {% if current_role == 'all' %}selected{% endif %}>Tous les rôles</option>
+        <option value="all" {% if current_role == 'all' %}selected{% endif %}>{% trans 'Tous les rôles' %}</option>
         {% for value, label in role_choices %}
         <option value="{{ value }}" {% if current_role == value %}selected{% endif %}>{{ label }}</option>
         {% endfor %}
     </select>
     <select name="status" class="form-control" onchange="this.form.submit()">
-        <option value="all" {% if current_status == 'all' %}selected{% endif %}>Tous les statuts</option>
-        <option value="active" {% if current_status == 'active' %}selected{% endif %}>Actifs</option>
-        <option value="inactive" {% if current_status == 'inactive' %}selected{% endif %}>Inactifs</option>
+        <option value="all" {% if current_status == 'all' %}selected{% endif %}>{% trans 'Tous les statuts' %}</option>
+        <option value="active" {% if current_status == 'active' %}selected{% endif %}>{% trans 'Actifs' %}</option>
+        <option value="inactive" {% if current_status == 'inactive' %}selected{% endif %}>{% trans 'Inactifs' %}</option>
     </select>
     <a href="{% url 'core:user_create' %}" class="btn btn-primary">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
-        Nouvel utilisateur
+        {% trans 'Nouvel utilisateur' %}
     </a>
     <a href="{% url 'core:user_activities' %}" class="btn btn-outline">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        Journal
+        {% trans 'Journal' %}
     </a>
 </form>
 
@@ -65,13 +66,13 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Utilisateur</th>
+                        <th>{% trans 'Utilisateur' %}</th>
                         <th>Email</th>
-                        <th>Rôle</th>
-                        <th>Direction</th>
-                        <th style="text-align: center;">Statut</th>
-                        <th>Dernière connexion</th>
-                        <th style="text-align: center;">Actions</th>
+                        <th>{% trans 'Rôle' %}</th>
+                        <th>{% trans 'Direction' %}</th>
+                        <th style="text-align: center;">{% trans 'Statut' %}</th>
+                        <th>{% trans 'Dernière connexion' %}</th>
+                        <th style="text-align: center;">{% trans 'Actions' %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -95,7 +96,7 @@
                                 {{ u.profile.get_role_display }}
                             </span>
                             {% else %}
-                            <span class="badge badge-secondary">Non défini</span>
+                            <span class="badge badge-secondary">{% trans 'Non défini' %}</span>
                             {% endif %}
                         </td>
                         <td>
@@ -107,16 +108,16 @@
                         </td>
                         <td style="text-align: center;">
                             {% if u.is_active %}
-                            <span class="badge badge-success">Actif</span>
+                            <span class="badge badge-success">{% trans 'Actif' %}</span>
                             {% else %}
-                            <span class="badge badge-danger">Inactif</span>
+                            <span class="badge badge-danger">{% trans 'Inactif' %}</span>
                             {% endif %}
                         </td>
                         <td>
                             {% if u.last_login %}
                                 {{ u.last_login|date:"d/m/Y H:i" }}
                             {% else %}
-                                <span class="text-gray-400">Jamais</span>
+                                <span class="text-gray-400">{% trans 'Jamais' %}</span>
                             {% endif %}
                         </td>
                         <td>
@@ -155,7 +156,7 @@
                     {% empty %}
                     <tr>
                         <td colspan="7" style="text-align: center; padding: 48px;">
-                            <p class="text-gray-500">Aucun utilisateur trouvé</p>
+                            <p class="text-gray-500">{% trans 'Aucun utilisateur trouvé' %}</p>
                         </td>
                     </tr>
                     {% endfor %}
@@ -169,8 +170,8 @@
 {% if recent_activities %}
 <div class="card mt-6">
     <div class="card-header">
-        <h3 class="card-title">Activités récentes</h3>
-        <a href="{% url 'core:user_activities' %}" class="card-link">Voir tout →</a>
+        <h3 class="card-title">{% trans 'Activités récentes' %}</h3>
+        <a href="{% url 'core:user_activities' %}" class="card-link">{% trans 'Voir tout' %} →</a>
     </div>
     <div class="card-content">
         <div class="item-list">

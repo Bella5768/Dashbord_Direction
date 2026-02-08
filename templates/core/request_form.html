@@ -1,46 +1,47 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
 {% block title %}{{ title }}{% endblock %}
 {% block page_title %}{{ title }}{% endblock %}
-{% block page_subtitle %}Créer une nouvelle demande{% endblock %}
+{% block page_subtitle %}{% trans 'Créer une nouvelle demande' %}{% endblock %}
 
 {% block content %}
 <div class="card" style="max-width: 700px;">
     <div class="card-header">
-        <h3 class="card-title">Informations de la demande</h3>
+        <h3 class="card-title">{% trans 'Informations de la demande' %}</h3>
     </div>
     <div class="card-content">
         <form method="post">
             {% csrf_token %}
             
             <div class="form-group" style="margin-bottom: 16px;">
-                <label for="id_title">Titre *</label>
+                <label for="id_title">{% trans 'Titre' %} *</label>
                 {{ form.title }}
             </div>
             
             <div class="form-group" style="margin-bottom: 16px;">
-                <label for="id_description">Description *</label>
+                <label for="id_description">{% trans 'Description' %} *</label>
                 {{ form.description }}
             </div>
             
             <div class="grid grid-2" style="gap: 16px; margin-bottom: 16px;">
                 <div class="form-group">
-                    <label for="id_direction">Direction *</label>
+                    <label for="id_direction">{% trans 'Direction' %} *</label>
                     {{ form.direction }}
                 </div>
                 <div class="form-group">
-                    <label for="id_priority">Priorité</label>
+                    <label for="id_priority">{% trans 'Priorité' %}</label>
                     {{ form.priority }}
                 </div>
             </div>
             
             <div class="grid grid-2" style="gap: 16px; margin-bottom: 24px;">
                 <div class="form-group">
-                    <label for="id_created_by">Demandeur *</label>
+                    <label for="id_created_by">{% trans 'Demandeur' %} *</label>
                     {{ form.created_by }}
                 </div>
                 <div class="form-group">
-                    <label for="id_status">Statut</label>
+                    <label for="id_status">{% trans 'Statut' %}</label>
                     {{ form.status }}
                 </div>
             </div>
@@ -50,9 +51,9 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
-                    Soumettre la demande
+                    {% trans 'Soumettre la demande' %}
                 </button>
-                <a href="{% url 'core:requests' %}" class="btn btn-outline">Annuler</a>
+                <a href="{% url 'core:requests' %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
             </div>
         </form>
     </div>

@@ -1,25 +1,26 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
+{% load i18n %}
 
-{% block title %}Rapports{% endblock %}
-{% block page_title %}Rapports et Analyses{% endblock %}
-{% block page_subtitle %}Génération de rapports et tableaux de bord analytiques{% endblock %}
+{% block title %}{% trans 'Rapports' %}{% endblock %}
+{% block page_title %}{% trans 'Rapports et Analyses' %}{% endblock %}
+{% block page_subtitle %}{% trans 'Génération de rapports et tableaux de bord analytiques' %}{% endblock %}
 
 {% block content %}
 <!-- Controls -->
 <div class="flex justify-between items-center mb-6">
     <div class="tabs" style="margin-bottom: 0;">
-        <button class="tab-btn active" onclick="switchTab('global', this)">Vue globale</button>
-        <button class="tab-btn" onclick="switchTab('projets', this)">Projets</button>
-        <button class="tab-btn" onclick="switchTab('budget', this)">Budget</button>
-        <button class="tab-btn" onclick="switchTab('performance', this)">Performance</button>
+        <button class="tab-btn active" onclick="switchTab('global', this)">{% trans 'Vue globale' %}</button>
+        <button class="tab-btn" onclick="switchTab('projets', this)">{% trans 'Projets' %}</button>
+        <button class="tab-btn" onclick="switchTab('budget', this)">{% trans 'Budget' %}</button>
+        <button class="tab-btn" onclick="switchTab('performance', this)">{% trans 'Performance' %}</button>
     </div>
     <div class="flex items-center gap-4">
         <a href="{% url 'core:export_reports_pdf' %}" class="btn btn-primary">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
-            Exporter PDF
+            {% trans 'Exporter PDF' %}
         </a>
     </div>
 </div>
@@ -30,23 +31,23 @@
     <div class="grid grid-5 mb-6">
         <a class="stat-box stat-box-link" href="{% url 'core:projects' %}?status=all" style="text-align: center;">
             <p class="stat-box-value" style="color: #2563eb;">{{ total_projects }}</p>
-            <p class="stat-box-label">Projets totaux</p>
+            <p class="stat-box-label">{% trans 'Projets totaux' %}</p>
         </a>
         <a class="stat-box stat-box-link" href="{% url 'core:projects' %}?status=termine" style="text-align: center;">
             <p class="stat-box-value" style="color: #16a34a;">{{ projects_completed }}</p>
-            <p class="stat-box-label">Projets terminés</p>
+            <p class="stat-box-label">{% trans 'Projets terminés' %}</p>
         </a>
         <a class="stat-box stat-box-link" href="{% url 'core:resources' %}?tab=budget" style="text-align: center;">
             <p class="stat-box-value" style="color: #2563eb;">{{ budget_rate }}%</p>
-            <p class="stat-box-label">Budget consommé</p>
+            <p class="stat-box-label">{% trans 'Budget consommé' %}</p>
         </a>
         <a class="stat-box stat-box-link" href="{% url 'core:partners' %}?status=actif&type=all" style="text-align: center;">
             <p class="stat-box-value" style="color: #7c3aed;">{{ active_partners }}</p>
-            <p class="stat-box-label">Partenaires actifs</p>
+            <p class="stat-box-label">{% trans 'Partenaires actifs' %}</p>
         </a>
         <a class="stat-box stat-box-link" href="{% url 'core:requests' %}" style="text-align: center;">
             <p class="stat-box-value" style="color: #d97706;">{{ pending_requests }}</p>
-            <p class="stat-box-label">Demandes en attente</p>
+            <p class="stat-box-label">{% trans 'Demandes en attente' %}</p>
         </a>
     </div>
 
@@ -54,7 +55,7 @@
     <div class="grid grid-2 mb-6">
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">Projets par direction</h3>
+                <h3 class="card-title">{% trans 'Projets par direction' %}</h3>
             </div>
             <div class="card-content">
                 <div class="chart-container">
@@ -64,7 +65,7 @@
         </div>
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">Répartition des projets par statut</h3>
+                <h3 class="card-title">{% trans 'Répartition des projets par statut' %}</h3>
             </div>
             <div class="card-content">
                 <div class="chart-container">
@@ -79,20 +80,20 @@
 <div id="tab-projets" class="tab-content" style="display: none;">
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">Détail des projets</h3>
+            <h3 class="card-title">{% trans 'Détail des projets' %}</h3>
         </div>
         <div class="card-content" style="padding: 0;">
             <div class="table-container">
                 <table>
                     <thead>
                         <tr>
-                            <th>Projet</th>
-                            <th>Direction</th>
-                            <th>Statut</th>
-                            <th style="text-align: center;">Progression</th>
-                            <th style="text-align: right;">Budget alloué</th>
-                            <th style="text-align: right;">Consommé</th>
-                            <th style="text-align: center;">Taux</th>
+                            <th>{% trans 'Projet' %}</th>
+                            <th>{% trans 'Direction' %}</th>
+                            <th>{% trans 'Statut' %}</th>
+                            <th style="text-align: center;">{% trans 'Progression' %}</th>
+                            <th style="text-align: right;">{% trans 'Budget alloué' %}</th>
+                            <th style="text-align: right;">{% trans 'Consommé' %}</th>
+                            <th style="text-align: center;">{% trans 'Taux' %}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -143,11 +144,11 @@
     <div class="grid grid-3 mb-6">
         <div class="stat-box" style="text-align: center;">
             <p class="stat-box-value" style="color: #2563eb;">{{ total_budget|number_format }} GNF</p>
-            <p class="stat-box-label">Budget total alloué</p>
+            <p class="stat-box-label">{% trans 'Budget total alloué' %}</p>
         </div>
         <div class="stat-box" style="text-align: center;">
             <p class="stat-box-value" style="color: #16a34a;">{{ total_consumed|number_format }} GNF</p>
-            <p class="stat-box-label">Budget total consommé</p>
+            <p class="stat-box-label">{% trans 'Budget total consommé' %}</p>
         </div>
         <div class="stat-box" style="text-align: center;">
             <p class="stat-box-value" style="{% if budget_rate > 80 %}color: #dc2626;{% elif budget_rate > 60 %}color: #d97706;{% else %}color: #16a34a;{% endif %}">{{ budget_rate }}%</p>
@@ -158,7 +159,7 @@
     <div class="grid grid-2 mb-6">
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">Budget par direction</h3>
+                <h3 class="card-title">{% trans 'Budget par direction' %}</h3>
             </div>
             <div class="card-content">
                 <div class="chart-container">
@@ -168,7 +169,7 @@
         </div>
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">Consommation budgétaire</h3>
+                <h3 class="card-title">{% trans 'Consommation budgétaire' %}</h3>
             </div>
             <div class="card-content">
                 <div class="chart-container">
@@ -180,7 +181,7 @@
 
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">Détail budgétaire par direction</h3>
+            <h3 class="card-title">{% trans 'Détail budgétaire par direction' %}</h3>
         </div>
         <div class="card-content" style="padding: 0;">
             <div class="table-container">
@@ -217,7 +218,7 @@
                         {% empty %}
                         <tr>
                             <td colspan="5" style="text-align: center; padding: 48px;">
-                                <p class="text-gray-500">Aucune donnée budgétaire</p>
+                                <p class="text-gray-500">{% trans 'Aucune donnée budgétaire' %}</p>
                             </td>
                         </tr>
                         {% endfor %}
@@ -233,37 +234,37 @@
     <div class="grid grid-4 mb-6">
         <div class="stat-box" style="text-align: center;">
             <p class="stat-box-value" style="color: #2563eb;">{{ avg_progress }}%</p>
-            <p class="stat-box-label">Progression moyenne</p>
+            <p class="stat-box-label">{% trans 'Progression moyenne' %}</p>
         </div>
         <div class="stat-box" style="text-align: center;">
             <p class="stat-box-value" style="color: #16a34a;">{{ projects_completed }}</p>
-            <p class="stat-box-label">Projets terminés</p>
+            <p class="stat-box-label">{% trans 'Projets terminés' %}</p>
         </div>
         <div class="stat-box" style="text-align: center;">
             <p class="stat-box-value" style="color: #3b82f6;">{{ projects_en_cours }}</p>
-            <p class="stat-box-label">Projets en cours</p>
+            <p class="stat-box-label">{% trans 'Projets en cours' %}</p>
         </div>
         <div class="stat-box" style="text-align: center;">
             <p class="stat-box-value" style="color: #dc2626;">{{ projects_en_retard }}</p>
-            <p class="stat-box-label">Projets en retard</p>
+            <p class="stat-box-label">{% trans 'Projets en retard' %}</p>
         </div>
     </div>
 
     <div class="card mb-6">
         <div class="card-header">
-            <h3 class="card-title">Performance par projet</h3>
+            <h3 class="card-title">{% trans 'Performance par projet' %}</h3>
         </div>
         <div class="card-content" style="padding: 0;">
             <div class="table-container">
                 <table>
                     <thead>
                         <tr>
-                            <th>Projet</th>
-                            <th>Direction</th>
-                            <th>Responsable</th>
-                            <th style="text-align: center;">Statut</th>
-                            <th style="text-align: center;">Progression</th>
-                            <th style="text-align: center;">Budget utilisé</th>
+                            <th>{% trans 'Projet' %}</th>
+                            <th>{% trans 'Direction' %}</th>
+                            <th>{% trans 'Responsable' %}</th>
+                            <th style="text-align: center;">{% trans 'Statut' %}</th>
+                            <th style="text-align: center;">{% trans 'Progression' %}</th>
+                            <th style="text-align: center;">{% trans 'Budget utilisé' %}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -329,13 +330,13 @@ new Chart(directionCtx, {
         labels: [{% for item in projects_by_direction %}'{{ item.direction }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
         datasets: [
             {
-                label: 'En cours',
+                label: '{% trans "En cours" %}',
                 data: [{% for item in projects_by_direction %}{{ item.en_cours }}{% if not forloop.last %}, {% endif %}{% endfor %}],
                 backgroundColor: '#3b82f6',
                 borderRadius: 4,
             },
             {
-                label: 'Terminés',
+                label: '{% trans "Terminés" %}',
                 data: [{% for item in projects_by_direction %}{{ item.termine }}{% if not forloop.last %}, {% endif %}{% endfor %}],
                 backgroundColor: '#10b981',
                 borderRadius: 4,
@@ -381,13 +382,13 @@ function initBudgetCharts() {
             labels: [{% for item in budget_by_direction %}'{{ item.direction }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
             datasets: [
                 {
-                    label: 'Alloué (GNF)',
+                    label: '{% trans "Alloué" %} (GNF)',
                     data: [{% for item in budget_by_direction %}{{ item.allocated }}{% if not forloop.last %}, {% endif %}{% endfor %}],
                     backgroundColor: '#3b82f6',
                     borderRadius: 4,
                 },
                 {
-                    label: 'Consommé (GNF)',
+                    label: '{% trans "Consommé" %} (GNF)',
                     data: [{% for item in budget_by_direction %}{{ item.consumed }}{% if not forloop.last %}, {% endif %}{% endfor %}],
                     backgroundColor: '#10b981',
                     borderRadius: 4,

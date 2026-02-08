@@ -1,13 +1,14 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
 {% block title %}{{ title }}{% endblock %}
 {% block page_title %}{{ title }}{% endblock %}
-{% block page_subtitle %}Projet : {{ project.name }}{% endblock %}
+{% block page_subtitle %}{% trans 'Projet' %} : {{ project.name }}{% endblock %}
 
 {% block content %}
 <div class="card" style="max-width: 600px;">
     <div class="card-header">
-        <h3 class="card-title">Informations du jalon</h3>
+        <h3 class="card-title">{% trans 'Informations du jalon' %}</h3>
     </div>
     <div class="card-content">
         <form method="post">
@@ -15,7 +16,7 @@
             
             {% if form.errors %}
             <div class="alert alert-danger" style="background: #fee2e2; border: 1px solid #dc2626; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
-                <p style="color: #dc2626; font-weight: 500;">Erreurs dans le formulaire :</p>
+                <p style="color: #dc2626; font-weight: 500;">{% trans 'Erreurs dans le formulaire' %} :</p>
                 <ul style="color: #dc2626; margin: 8px 0 0 16px;">
                     {% for field, errors in form.errors.items %}
                         <li>{{ field }}: {{ errors.0 }}</li>
@@ -25,13 +26,13 @@
             {% endif %}
             
             <div class="form-group" style="margin-bottom: 16px;">
-                <label for="id_name">Nom du jalon *</label>
+                <label for="id_name">{% trans 'Nom du jalon' %} *</label>
                 {{ form.name }}
                 {% if form.name.errors %}<p class="text-xs" style="color: var(--red-600);">{{ form.name.errors.0 }}</p>{% endif %}
             </div>
             
             <div class="form-group" style="margin-bottom: 16px;">
-                <label for="id_assigned_to">Responsable</label>
+                <label for="id_assigned_to">{% trans 'Responsable' %}</label>
                 {{ form.assigned_to }}
                 {% if form.assigned_to.errors %}<p class="text-xs" style="color: var(--red-600);">{{ form.assigned_to.errors.0 }}</p>{% endif %}
             </div>
@@ -39,21 +40,21 @@
             {{ form.order }}
 
             <div class="form-group" style="margin-bottom: 16px;">
-                <label for="id_need">Besoin</label>
+                <label for="id_need">{% trans 'Besoin' %}</label>
                 {{ form.need }}
-                <p class="text-xs text-gray-500">Optionnel : décrivez le besoin lié à cette étape</p>
+                <p class="text-xs text-gray-500">{% trans 'Optionnel : décrivez le besoin lié à cette étape' %}</p>
             </div>
 
             <div class="form-group" style="margin-bottom: 24px;">
-                <label for="id_manual_progress">Progression (%)</label>
+                <label for="id_manual_progress">{% trans 'Progression' %} (%)</label>
                 {{ form.manual_progress }}
-                <p class="text-xs text-gray-500">Utilisé si le jalon n'a pas de sous-étapes</p>
+                <p class="text-xs text-gray-500">{% trans "Utilisé si le jalon n'a pas de sous-étapes" %}</p>
             </div>
             
             <div class="form-group" style="margin-bottom: 24px;">
                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                     {{ form.completed }}
-                    <span>Complété</span>
+                    <span>{% trans 'Complété' %}</span>
                 </label>
             </div>
             
@@ -62,9 +63,9 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
-                    {% if milestone %}Enregistrer{% else %}Créer le jalon{% endif %}
+                    {% if milestone %}{% trans 'Enregistrer' %}{% else %}{% trans 'Créer le jalon' %}{% endif %}
                 </button>
-                <a href="{% url 'core:project_detail' project.id %}" class="btn btn-outline">Annuler</a>
+                <a href="{% url 'core:project_detail' project.id %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
             </div>
         </form>
     </div>

@@ -1,23 +1,24 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
-{% block title %}Dossier - {{ folder.name }}{% endblock %}
+{% block title %}{% trans 'Dossier' %} - {{ folder.name }}{% endblock %}
 {% block page_title %}{{ folder.name }}{% endblock %}
-{% block page_subtitle %}Projet : {{ project.name }}{% endblock %}
+{% block page_subtitle %}{% trans 'Projet' %} : {{ project.name }}{% endblock %}
 
 {% block content %}
 <div class="card" style="grid-column: span 3;">
     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
         <div>
             <h3 class="card-title">{{ folder.full_path }}</h3>
-            <p class="text-sm text-gray-500">Navigation dans les dossiers</p>
+            <p class="text-sm text-gray-500">{% trans 'Navigation dans les dossiers' %}</p>
         </div>
         <div class="flex gap-2">
             {% if folder.parent %}
-            <a href="{% url 'core:project_folder_detail' folder.parent.id %}" class="btn btn-outline btn-sm">Retour</a>
+            <a href="{% url 'core:project_folder_detail' folder.parent.id %}" class="btn btn-outline btn-sm">{% trans 'Retour' %}</a>
             {% else %}
-            <a href="{% url 'core:project_detail' project.id %}" class="btn btn-outline btn-sm">Retour</a>
+            <a href="{% url 'core:project_detail' project.id %}" class="btn btn-outline btn-sm">{% trans 'Retour' %}</a>
             {% endif %}
-            <a href="{% url 'core:project_folder_edit' folder.id %}" class="btn btn-outline btn-sm">Modifier</a>
+            <a href="{% url 'core:project_folder_edit' folder.id %}" class="btn btn-outline btn-sm">{% trans 'Modifier' %}</a>
         </div>
     </div>
     <div class="card-content">
@@ -26,13 +27,13 @@
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                 </svg>
-                Nouveau sous-dossier
+                {% trans 'Nouveau sous-dossier' %}
             </a>
             <a href="{% url 'core:project_document_create' project.id %}?folder={{ folder.id }}" class="btn btn-primary btn-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                Ajouter un document
+                {% trans 'Ajouter un document' %}
             </a>
         </div>
 
@@ -42,7 +43,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                     </svg>
-                    Sous-dossiers ({{ subfolders|length }})
+                    {% trans 'Sous-dossiers' %} ({{ subfolders|length }})
                 </h4>
 
                 {% if subfolders %}
@@ -71,7 +72,7 @@
                     {% endfor %}
                 </div>
                 {% else %}
-                <p class="text-gray-500">Aucun sous-dossier.</p>
+                <p class="text-gray-500">{% trans 'Aucun sous-dossier.' %}</p>
                 {% endif %}
             </div>
 
@@ -119,7 +120,7 @@
                     {% endfor %}
                 </div>
                 {% else %}
-                <p class="text-gray-500">Aucun document dans ce dossier.</p>
+                <p class="text-gray-500">{% trans 'Aucun document dans ce dossier.' %}</p>
                 {% endif %}
             </div>
         </div>

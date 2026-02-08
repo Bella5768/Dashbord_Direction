@@ -1,26 +1,27 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
-{% block title %}Documents{% endblock %}
-{% block page_title %}Suivi Documentaire{% endblock %}
-{% block page_subtitle %}Gestion des documents à signer et valider{% endblock %}
+{% block title %}{% trans 'Documents' %}{% endblock %}
+{% block page_title %}{% trans 'Suivi Documentaire' %}{% endblock %}
+{% block page_subtitle %}{% trans 'Gestion des documents à signer et valider' %}{% endblock %}
 
 {% block content %}
 <!-- Stats -->
 <div class="stats-row">
     <a class="stat-box stat-box-link" href="{% url 'core:documents' %}?status=all">
-        <p class="stat-box-label">Total documents</p>
+        <p class="stat-box-label">{% trans 'Total documents' %}</p>
         <p class="stat-box-value">{{ stats.total }}</p>
     </a>
     <a class="stat-box red stat-box-link" href="{% url 'core:documents' %}?status=a_signer">
-        <p class="stat-box-label">À signer</p>
+        <p class="stat-box-label">{% trans 'À signer' %}</p>
         <p class="stat-box-value">{{ stats.a_signer }}</p>
     </a>
     <a class="stat-box amber stat-box-link" href="{% url 'core:documents' %}?status=a_valider">
-        <p class="stat-box-label">À valider</p>
+        <p class="stat-box-label">{% trans 'À valider' %}</p>
         <p class="stat-box-value">{{ stats.a_valider }}</p>
     </a>
     <a class="stat-box green stat-box-link" href="{% url 'core:documents' %}?status=signe">
-        <p class="stat-box-label">Signés</p>
+        <p class="stat-box-label">{% trans 'Signés' %}</p>
         <p class="stat-box-value">{{ stats.signe }}</p>
     </a>
 </div>
@@ -31,26 +32,26 @@
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
-        <input type="text" name="search" placeholder="Rechercher un document..." value="{{ search }}" class="form-control">
+        <input type="text" name="search" placeholder="{% trans 'Rechercher un document...' %}" value="{{ search }}" class="form-control">
     </div>
     <select name="status" class="form-control" onchange="this.form.submit()">
-        <option value="all" {% if current_status == 'all' %}selected{% endif %}>Tous les statuts</option>
-        <option value="a_signer" {% if current_status == 'a_signer' %}selected{% endif %}>À signer</option>
-        <option value="a_valider" {% if current_status == 'a_valider' %}selected{% endif %}>À valider</option>
-        <option value="signe" {% if current_status == 'signe' %}selected{% endif %}>Signé</option>
+        <option value="all" {% if current_status == 'all' %}selected{% endif %}>{% trans 'Tous les statuts' %}</option>
+        <option value="a_signer" {% if current_status == 'a_signer' %}selected{% endif %}>{% trans 'À signer' %}</option>
+        <option value="a_valider" {% if current_status == 'a_valider' %}selected{% endif %}>{% trans 'À valider' %}</option>
+        <option value="signe" {% if current_status == 'signe' %}selected{% endif %}>{% trans 'Signé' %}</option>
     </select>
     <select name="type" class="form-control" onchange="this.form.submit()">
-        <option value="all" {% if current_type == 'all' %}selected{% endif %}>Tous les types</option>
-        <option value="contrat" {% if current_type == 'contrat' %}selected{% endif %}>Contrat</option>
-        <option value="budget" {% if current_type == 'budget' %}selected{% endif %}>Budget</option>
-        <option value="rapport" {% if current_type == 'rapport' %}selected{% endif %}>Rapport</option>
-        <option value="note" {% if current_type == 'note' %}selected{% endif %}>Note</option>
+        <option value="all" {% if current_type == 'all' %}selected{% endif %}>{% trans 'Tous les types' %}</option>
+        <option value="contrat" {% if current_type == 'contrat' %}selected{% endif %}>{% trans 'Contrat' %}</option>
+        <option value="budget" {% if current_type == 'budget' %}selected{% endif %}>{% trans 'Budget' %}</option>
+        <option value="rapport" {% if current_type == 'rapport' %}selected{% endif %}>{% trans 'Rapport' %}</option>
+        <option value="note" {% if current_type == 'note' %}selected{% endif %}>{% trans 'Note' %}</option>
     </select>
     <a href="{% url 'core:document_create' %}" class="btn btn-primary">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
-        Nouveau document
+        {% trans 'Nouveau document' %}
     </a>
 </form>
 
@@ -61,13 +62,13 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Document</th>
-                        <th>Type</th>
-                        <th>Direction</th>
-                        <th>Priorité</th>
-                        <th>Échéance</th>
-                        <th>Statut</th>
-                        <th style="text-align: center;">Actions</th>
+                        <th>{% trans 'Document' %}</th>
+                        <th>{% trans 'Type' %}</th>
+                        <th>{% trans 'Direction' %}</th>
+                        <th>{% trans 'Priorité' %}</th>
+                        <th>{% trans 'Échéance' %}</th>
+                        <th>{% trans 'Statut' %}</th>
+                        <th style="text-align: center;">{% trans 'Actions' %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -142,7 +143,7 @@
                     {% empty %}
                     <tr>
                         <td colspan="7" style="text-align: center; padding: 48px;">
-                            <p class="text-gray-500">Aucun document trouvé</p>
+                            <p class="text-gray-500">{% trans 'Aucun document trouvé' %}</p>
                         </td>
                     </tr>
                     {% endfor %}

@@ -1,8 +1,9 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
 {% block title %}{{ title }}{% endblock %}
 {% block page_title %}{{ title }}{% endblock %}
-{% block page_subtitle %}Gérer les ressources humaines{% endblock %}
+{% block page_subtitle %}{% trans 'Gérer les ressources humaines' %}{% endblock %}
 
 {% block content %}
 <div class="card" style="max-width: 600px;">
@@ -28,9 +29,9 @@
             
             <div class="flex gap-3 mt-6">
                 <button type="submit" class="btn btn-primary">
-                    {% if employee %}Modifier{% else %}Créer{% endif %}
+                    {% if employee %}{% trans 'Modifier' %}{% else %}{% trans 'Créer' %}{% endif %}
                 </button>
-                <a href="{% url 'core:resources' %}?tab=rh" class="btn btn-outline">Annuler</a>
+                <a href="{% url 'core:resources' %}?tab=rh" class="btn btn-outline">{% trans 'Annuler' %}</a>
             </div>
         </form>
     </div>

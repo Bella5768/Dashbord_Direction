@@ -1,8 +1,9 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
 {% block title %}{{ title }}{% endblock %}
 {% block page_title %}{{ title }}{% endblock %}
-{% block page_subtitle %}Gérer l'allocation budgétaire{% endblock %}
+{% block page_subtitle %}{% trans "Gérer l'allocation budgétaire" %}{% endblock %}
 
 {% block content %}
 <div class="card" style="max-width: 600px;">
@@ -28,9 +29,9 @@
             
             <div class="flex gap-3 mt-6">
                 <button type="submit" class="btn btn-primary">
-                    {% if budget %}Modifier{% else %}Créer{% endif %}
+                    {% if budget %}{% trans 'Modifier' %}{% else %}{% trans 'Créer' %}{% endif %}
                 </button>
-                <a href="{% url 'core:resources' %}" class="btn btn-outline">Annuler</a>
+                <a href="{% url 'core:resources' %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
             </div>
         </form>
     </div>

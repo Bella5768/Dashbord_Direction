@@ -1,21 +1,22 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
-{% block title %}Supprimer l'événement{% endblock %}
-{% block page_title %}Supprimer l'événement{% endblock %}
+{% block title %}{% trans "Supprimer l'événement" %}{% endblock %}
+{% block page_title %}{% trans "Supprimer l'événement" %}{% endblock %}
 {% block page_subtitle %}{{ event.title }}{% endblock %}
 
 {% block content %}
 <div class="card" style="max-width: 500px;">
     <div class="card-header">
-        <h3 class="card-title" style="color: var(--red-600);">Confirmer la suppression</h3>
+        <h3 class="card-title" style="color: var(--red-600);">{% trans 'Confirmer la suppression' %}</h3>
     </div>
     <div class="card-content">
-        <p style="margin-bottom: 16px;">Êtes-vous sûr de vouloir supprimer l'événement <strong>{{ event.title }}</strong> ?</p>
+        <p style="margin-bottom: 16px;">{% trans "Êtes-vous sûr de vouloir supprimer l'événement" %} <strong>{{ event.title }}</strong> ?</p>
         
         <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
-            <p><strong>Date :</strong> {{ event.date|date:"d/m/Y" }}</p>
-            <p><strong>Heure :</strong> {{ event.time|time:"H:i" }}</p>
-            <p><strong>Type :</strong> {{ event.get_event_type_display }}</p>
+            <p><strong>{% trans 'Date' %} :</strong> {{ event.date|date:"d/m/Y" }}</p>
+            <p><strong>{% trans 'Heure' %} :</strong> {{ event.time|time:"H:i" }}</p>
+            <p><strong>{% trans 'Type' %} :</strong> {{ event.get_event_type_display }}</p>
         </div>
         
         <form method="post">
@@ -25,9 +26,9 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
-                    Supprimer
+                    {% trans 'Supprimer' %}
                 </button>
-                <a href="{% url 'core:calendar' %}" class="btn btn-outline">Annuler</a>
+                <a href="{% url 'core:calendar' %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
             </div>
         </form>
     </div>

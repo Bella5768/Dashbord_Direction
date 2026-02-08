@@ -1,8 +1,9 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
-{% block title %}Directions{% endblock %}
-{% block page_title %}Gestion des Directions{% endblock %}
-{% block page_subtitle %}Liste et gestion des directions de l'organisation{% endblock %}
+{% block title %}{% trans 'Directions' %}{% endblock %}
+{% block page_title %}{% trans 'Gestion des Directions' %}{% endblock %}
+{% block page_subtitle %}{% trans "Liste et gestion des directions de l'organisation" %}{% endblock %}
 
 {% block content %}
 <!-- Header avec bouton d'ajout -->
@@ -17,26 +18,26 @@
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
         </svg>
-        Nouvelle direction
+        {% trans 'Nouvelle direction' %}
     </a>
 </div>
 
 <!-- Liste des directions -->
 <div class="card">
     <div class="card-header">
-        <h3 class="card-title">Liste des directions</h3>
+        <h3 class="card-title">{% trans 'Liste des directions' %}</h3>
     </div>
     <div class="card-content" style="padding: 0;">
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
-                        <th>Couleur</th>
-                        <th>Code</th>
-                        <th>Nom</th>
-                        <th style="text-align: center;">Projets</th>
-                        <th style="text-align: center;">Utilisateurs</th>
-                        <th style="text-align: right;">Actions</th>
+                        <th>{% trans 'Couleur' %}</th>
+                        <th>{% trans 'Code' %}</th>
+                        <th>{% trans 'Nom' %}</th>
+                        <th style="text-align: center;">{% trans 'Projets' %}</th>
+                        <th style="text-align: center;">{% trans 'Utilisateurs' %}</th>
+                        <th style="text-align: right;">{% trans 'Actions' %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -78,8 +79,8 @@
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="48" height="48" style="margin: 0 auto 16px; color: #9ca3af;">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                             </svg>
-                            <p class="text-gray-500">Aucune direction trouvée</p>
-                            <a href="{% url 'core:direction_create' %}" class="btn btn-primary mt-4">Créer une direction</a>
+                            <p class="text-gray-500">{% trans 'Aucune direction trouvée' %}</p>
+                            <a href="{% url 'core:direction_create' %}" class="btn btn-primary mt-4">{% trans 'Créer une direction' %}</a>
                         </td>
                     </tr>
                     {% endfor %}

@@ -1,37 +1,38 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
 {% block title %}{{ title }}{% endblock %}
 {% block page_title %}{{ title }}{% endblock %}
-{% block page_subtitle %}Projet : {{ project.name }}{% endblock %}
+{% block page_subtitle %}{% trans 'Projet' %} : {{ project.name }}{% endblock %}
 
 {% block content %}
 <div class="card" style="max-width: 600px;">
     <div class="card-header">
-        <h3 class="card-title">Informations du document</h3>
+        <h3 class="card-title">{% trans 'Informations du document' %}</h3>
     </div>
     <div class="card-content">
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             
             <div class="form-group" style="margin-bottom: 16px;">
-                <label for="id_title">Titre du document *</label>
+                <label for="id_title">{% trans 'Titre du document' %} *</label>
                 {{ form.title }}
                 {% if form.title.errors %}<p class="text-xs" style="color: var(--red-600);">{{ form.title.errors.0 }}</p>{% endif %}
             </div>
             
             <div class="form-group" style="margin-bottom: 16px;">
-                <label for="id_description">Description</label>
+                <label for="id_description">{% trans 'Description' %}</label>
                 {{ form.description }}
             </div>
             
             <div class="form-group" style="margin-bottom: 16px;">
-                <label for="id_folder">Dossier</label>
+                <label for="id_folder">{% trans 'Dossier' %}</label>
                 {{ form.folder }}
-                <small class="text-gray-500">Choisissez un dossier pour organiser ce document.</small>
+                <small class="text-gray-500">{% trans 'Choisissez un dossier pour organiser ce document.' %}</small>
             </div>
             
             <div class="form-group" style="margin-bottom: 24px;">
-                <label for="id_file">Fichier *</label>
+                <label for="id_file">{% trans 'Fichier' %} *</label>
                 {{ form.file }}
                 {% if form.file.errors %}<p class="text-xs" style="color: var(--red-600);">{{ form.file.errors.0 }}</p>{% endif %}
             </div>
@@ -41,9 +42,9 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
-                    {% if doc %}Enregistrer{% else %}Ajouter le document{% endif %}
+                    {% if doc %}{% trans 'Enregistrer' %}{% else %}{% trans 'Ajouter le document' %}{% endif %}
                 </button>
-                <a href="{% url 'core:project_detail' project.id %}" class="btn btn-outline">Annuler</a>
+                <a href="{% url 'core:project_detail' project.id %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
             </div>
         </form>
     </div>
