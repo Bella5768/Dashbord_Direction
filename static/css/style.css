@@ -301,10 +301,14 @@ a {
 }
 
 .header-date {
-    font-size: 14px;
-    color: var(--gray-500);
-    padding-left: 16px;
-    border-left: 1px solid var(--gray-200);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-600);
+    padding: 6px 14px;
+    background: var(--gray-50);
+    border-radius: 8px;
+    border: 1px solid var(--gray-200);
+    white-space: nowrap;
 }
 
 /* Page content */

@@ -193,9 +193,16 @@
                         </svg>
                         <input type="text" name="q" placeholder="Rechercher..." value="{{ request.GET.q }}">
                     </form>
-                    <div class="header-date">
-                        {% now "l d F Y" %}
-                    </div>
+                    <div class="header-date" id="header-date"></div>
+                    <script>
+                        (function(){
+                            var d = new Date();
+                            var opts = {weekday:'long', day:'numeric', month:'long', year:'numeric'};
+                            var txt = d.toLocaleDateString('fr-FR', opts);
+                            txt = txt.charAt(0).toUpperCase() + txt.slice(1);
+                            document.getElementById('header-date').textContent = txt;
+                        })();
+                    </script>
                 </div>
             </header>
 
