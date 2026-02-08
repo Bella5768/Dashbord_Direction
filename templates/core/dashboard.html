@@ -1,9 +1,10 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
+{% load i18n %}
 
-{% block title %}Tableau de bord{% endblock %}
-{% block page_title %}Tableau de bord{% endblock %}
-{% block page_subtitle %}Vue d'ensemble des activités de la CSIG{% endblock %}
+{% block title %}{% trans 'Tableau de bord' %}{% endblock %}
+{% block page_title %}{% trans 'Tableau de bord' %}{% endblock %}
+{% block page_subtitle %}{% trans "Vue d'ensemble des activités de la CSIG" %}{% endblock %}
 
 {% block content %}
 <!-- KPI Cards -->
@@ -11,9 +12,9 @@
     <a class="stat-card stat-card-blue stat-card-link" href="{% url 'core:projects' %}">
         <div class="stat-card-header">
             <div>
-                <p class="stat-card-label">Projets en cours</p>
+                <p class="stat-card-label">{% trans 'Projets en cours' %}</p>
                 <p class="stat-card-value">{{ projects_in_progress }}</p>
-                <p class="stat-card-subtitle">{{ total_projects }} projets au total</p>
+                <p class="stat-card-subtitle">{{ total_projects }} {% trans 'projets au total' %}</p>
             </div>
             <div class="stat-card-icon blue">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -26,7 +27,7 @@
     <a class="stat-card stat-card-amber stat-card-link" href="{% url 'core:resources' %}">
         <div class="stat-card-header">
             <div>
-                <p class="stat-card-label">Budget consommé</p>
+                <p class="stat-card-label">{% trans 'Budget consommé' %}</p>
                 <p class="stat-card-value">{{ budget_percentage }}%</p>
                 <p class="stat-card-subtitle">{{ total_consumed|number_format }} GNF</p>
             </div>
@@ -41,9 +42,9 @@
     <a class="stat-card stat-card-green stat-card-link" href="{% url 'core:partners' %}">
         <div class="stat-card-header">
             <div>
-                <p class="stat-card-label">Partenaires actifs</p>
+                <p class="stat-card-label">{% trans 'Partenaires actifs' %}</p>
                 <p class="stat-card-value">{{ active_partners }}</p>
-                <p class="stat-card-subtitle">Collaborations en cours</p>
+                <p class="stat-card-subtitle">{% trans 'Collaborations en cours' %}</p>
             </div>
             <div class="stat-card-icon green">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -59,7 +60,7 @@
 <div class="grid grid-2 mb-6">
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">Budget par direction (en millions GNF)</h3>
+            <h3 class="card-title">{% trans 'Budget par direction (en millions GNF)' %}</h3>
         </div>
         <div class="card-content">
             <div class="chart-container">
@@ -70,7 +71,7 @@
     
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">Évolution des projets</h3>
+            <h3 class="card-title">{% trans 'Évolution des projets' %}</h3>
         </div>
         <div class="card-content">
             <div class="chart-container">
@@ -85,8 +86,8 @@
     <!-- Active Projects -->
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">Projets en cours</h3>
-            <a href="{% url 'core:projects' %}" class="card-link">Voir tout →</a>
+            <h3 class="card-title">{% trans 'Projets en cours' %}</h3>
+            <a href="{% url 'core:projects' %}" class="card-link">{% trans 'Voir tout' %} →</a>
         </div>
         <div class="card-content">
             <div class="item-list">
@@ -94,7 +95,7 @@
                 <div class="project-card">
                     <div class="project-card-header">
                         <div class="project-card-badges">
-                            <span class="badge badge-info">En cours</span>
+                            <span class="badge badge-info">{% trans 'En cours' %}</span>
                             <span class="badge {% if project.priority == 'haute' %}badge-danger{% elif project.priority == 'moyenne' %}badge-warning{% else %}badge-secondary{% endif %}">
                                 {{ project.get_priority_display }}
                             </span>
@@ -104,7 +105,7 @@
                     <h4 class="project-card-title">{{ project.name }}</h4>
                     <div class="project-card-progress">
                         <div class="project-card-progress-header">
-                            <span class="project-card-progress-label">Progression</span>
+                            <span class="project-card-progress-label">{% trans 'Progression' %}</span>
                             <span class="project-card-progress-value">{{ project.progress }}%</span>
                         </div>
                         <div class="progress">
@@ -119,12 +120,12 @@
                             {{ project.end_date|date:"d/m/Y" }}
                         </span>
                         <span class="project-card-meta-item">
-                            Budget: {{ project.budget_percentage }}% consommé
+                            {% trans 'Budget' %}: {{ project.budget_percentage }}% {% trans 'consommé' %}
                         </span>
                     </div>
                 </div>
                 {% empty %}
-                <p class="text-gray-500">Aucun projet en cours</p>
+                <p class="text-gray-500">{% trans 'Aucun projet en cours' %}</p>
                 {% endfor %}
             </div>
         </div>
@@ -137,8 +138,8 @@
     <!-- Pending Requests -->
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">Demandes des directions</h3>
-            <a href="{% url 'core:requests' %}" class="card-link">Voir tout →</a>
+            <h3 class="card-title">{% trans 'Demandes des directions' %}</h3>
+            <a href="{% url 'core:requests' %}" class="card-link">{% trans 'Voir tout' %} →</a>
         </div>
         <div class="card-content">
             <div class="item-list">
@@ -156,7 +157,7 @@
                     <h4 class="request-title">{{ req.title }}</h4>
                     <p class="request-description">{{ req.description }}</p>
                     <div class="request-footer">
-                        <span>Par {{ req.created_by }}</span>
+                        <span>{% trans 'Par' %} {{ req.created_by }}</span>
                         <span class="request-footer-item">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -166,7 +167,7 @@
                     </div>
                 </div>
                 {% empty %}
-                <p class="text-gray-500">Aucune demande en attente</p>
+                <p class="text-gray-500">{% trans 'Aucune demande en attente' %}</p>
                 {% endfor %}
             </div>
         </div>
@@ -175,8 +176,8 @@
     <!-- Upcoming Events -->
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">Événements à venir</h3>
-            <a href="{% url 'core:calendar' %}" class="card-link">Voir tout →</a>
+            <h3 class="card-title">{% trans 'Événements à venir' %}</h3>
+            <a href="{% url 'core:calendar' %}" class="card-link">{% trans 'Voir tout' %} →</a>
         </div>
         <div class="card-content">
             <div class="item-list">
@@ -214,13 +215,13 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                                 </svg>
-                                {{ event.participants.count }} participants
+                                {{ event.participants.count }} {% trans 'participants' %}
                             </span>
                         </div>
                     </div>
                 </div>
                 {% empty %}
-                <p class="text-gray-500">Aucun événement à venir</p>
+                <p class="text-gray-500">{% trans 'Aucun événement à venir' %}</p>
                 {% endfor %}
             </div>
         </div>
@@ -240,13 +241,13 @@ new Chart(budgetCtx, {
         labels: budgetData.map(d => d.direction),
         datasets: [
             {
-                label: 'Alloué',
+                label: '{% trans "Alloué" %}',
                 data: budgetData.map(d => d.allocated),
                 backgroundColor: '#3b82f6',
                 borderRadius: 4,
             },
             {
-                label: 'Consommé',
+                label: '{% trans "Consommé" %}',
                 data: budgetData.map(d => d.consumed),
                 backgroundColor: '#10b981',
                 borderRadius: 4,
@@ -266,7 +267,7 @@ new Chart(budgetCtx, {
                 beginAtZero: true,
                 title: {
                     display: true,
-                    text: 'Millions GNF'
+                    text: '{% trans "Millions GNF" %}'
                 }
             }
         }
@@ -278,7 +279,7 @@ const progressCtx = document.getElementById('progressChart').getContext('2d');
 new Chart(progressCtx, {
     type: 'doughnut',
     data: {
-        labels: ['En cours', 'Terminés', 'Planifiés'],
+        labels: ['{% trans "En cours" %}', '{% trans "Terminés" %}', '{% trans "Planifiés" %}'],
         datasets: [{
             data: [{{ projects_in_progress }}, {{ projects_completed }}, {{ projects_planned }}],
             backgroundColor: ['#3b82f6', '#10b981', '#6b7280'],

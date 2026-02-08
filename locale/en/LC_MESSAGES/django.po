@@ -311,3 +311,162 @@ msgstr "French"
 
 msgid "English"
 msgstr "English"
+
+# Dashboard extra
+msgid "Vue d'ensemble des activités de la CSIG"
+msgstr "Overview of CSIG activities"
+
+msgid "projets au total"
+msgstr "total projects"
+
+msgid "Budget consommé"
+msgstr "Budget consumed"
+
+msgid "Partenaires actifs"
+msgstr "Active partners"
+
+msgid "Collaborations en cours"
+msgstr "Ongoing collaborations"
+
+msgid "Budget par direction (en millions GNF)"
+msgstr "Budget by department (in millions GNF)"
+
+msgid "Évolution des projets"
+msgstr "Project evolution"
+
+msgid "Voir tout"
+msgstr "View all"
+
+msgid "consommé"
+msgstr "consumed"
+
+msgid "Aucun projet en cours"
+msgstr "No active projects"
+
+msgid "Demandes des directions"
+msgstr "Department requests"
+
+msgid "Par"
+msgstr "By"
+
+msgid "Aucune demande en attente"
+msgstr "No pending requests"
+
+msgid "Événements à venir"
+msgstr "Upcoming events"
+
+msgid "participants"
+msgstr "participants"
+
+msgid "Aucun événement à venir"
+msgstr "No upcoming events"
+
+msgid "Alloué"
+msgstr "Allocated"
+
+msgid "Consommé"
+msgstr "Consumed"
+
+msgid "Millions GNF"
+msgstr "Millions GNF"
+
+msgid "Terminés"
+msgstr "Completed"
+
+msgid "Planifiés"
+msgstr "Planned"
+
+# Projects page
+msgid "Suivi des Projets"
+msgstr "Project Tracking"
+
+msgid "Gestion et suivi de l'avancement des projets"
+msgstr "Management and tracking of project progress"
+
+msgid "Total projets"
+msgstr "Total projects"
+
+msgid "Rechercher un projet..."
+msgstr "Search for a project..."
+
+msgid "Tous les statuts"
+msgstr "All statuses"
+
+msgid "Terminé"
+msgstr "Completed"
+
+msgid "Planifié"
+msgstr "Planned"
+
+msgid "Toutes les directions"
+msgstr "All departments"
+
+msgid "Nouveau projet"
+msgstr "New project"
+
+msgid "Responsable"
+msgstr "Manager"
+
+msgid "Jalons du projet"
+msgstr "Project milestones"
+
+msgid "Ouvrir"
+msgstr "Open"
+
+msgid "Modifier"
+msgstr "Edit"
+
+msgid "Supprimer"
+msgstr "Delete"
+
+msgid "Aucun projet trouvé"
+msgstr "No projects found"
+
+# Partners page
+msgid "Partenaires et Événements"
+msgstr "Partners and Events"
+
+msgid "Gestion des partenariats et activités conjointes"
+msgstr "Partnership and joint activities management"
+
+msgid "Total partenaires"
+msgstr "Total partners"
+
+msgid "Partenariats actifs"
+msgstr "Active partnerships"
+
+msgid "En discussion"
+msgstr "In discussion"
+
+msgid "Rechercher un partenaire..."
+msgstr "Search for a partner..."
+
+msgid "Tous les types"
+msgstr "All types"
+
+msgid "Entreprise"
+msgstr "Company"
+
+msgid "Université"
+msgstr "University"
+
+msgid "Institution"
+msgstr "Institution"
+
+msgid "ONG"
+msgstr "NGO"
+
+msgid "Actif"
+msgstr "Active"
+
+msgid "Nouveau"
+msgstr "New"
+
+msgid "Depuis"
+msgstr "Since"
+
+msgid "Aucun partenaire trouvé"
+msgstr "No partners found"
+
+msgid "Types de partenaires"
+msgstr "Partner types"

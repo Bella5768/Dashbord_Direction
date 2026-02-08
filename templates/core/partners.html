@@ -1,26 +1,27 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
-{% block title %}Partenaires{% endblock %}
-{% block page_title %}Partenaires et Événements{% endblock %}
-{% block page_subtitle %}Gestion des partenariats et activités conjointes{% endblock %}
+{% block title %}{% trans 'Partenaires' %}{% endblock %}
+{% block page_title %}{% trans 'Partenaires et Événements' %}{% endblock %}
+{% block page_subtitle %}{% trans 'Gestion des partenariats et activités conjointes' %}{% endblock %}
 
 {% block content %}
 <!-- Stats -->
 <div class="stats-row">
     <a class="stat-box stat-box-link" href="{% url 'core:partners' %}?status=all&type=all">
-        <p class="stat-box-label">Total partenaires</p>
+        <p class="stat-box-label">{% trans 'Total partenaires' %}</p>
         <p class="stat-box-value">{{ stats.total }}</p>
     </a>
     <a class="stat-box green stat-box-link" href="{% url 'core:partners' %}?status=actif&type=all">
-        <p class="stat-box-label">Partenariats actifs</p>
+        <p class="stat-box-label">{% trans 'Partenariats actifs' %}</p>
         <p class="stat-box-value">{{ stats.actif }}</p>
     </a>
     <a class="stat-box amber stat-box-link" href="{% url 'core:partners' %}?status=en_discussion&type=all">
-        <p class="stat-box-label">En discussion</p>
+        <p class="stat-box-label">{% trans 'En discussion' %}</p>
         <p class="stat-box-value">{{ stats.en_discussion }}</p>
     </a>
     <a class="stat-box blue stat-box-link" href="{% url 'core:calendar' %}">
-        <p class="stat-box-label">Événements à venir</p>
+        <p class="stat-box-label">{% trans 'Événements à venir' %}</p>
         <p class="stat-box-value">{{ upcoming_events.count }}</p>
     </a>
 </div>
@@ -34,25 +35,25 @@
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-                <input type="text" name="search" placeholder="Rechercher un partenaire..." value="{{ search }}" class="form-control" style="width: 100%;">
+                <input type="text" name="search" placeholder="{% trans 'Rechercher un partenaire...' %}" value="{{ search }}" class="form-control" style="width: 100%;">
             </div>
             <select name="type" class="form-control" onchange="this.form.submit()">
-                <option value="all" {% if current_type == 'all' %}selected{% endif %}>Tous les types</option>
-                <option value="entreprise" {% if current_type == 'entreprise' %}selected{% endif %}>Entreprise</option>
-                <option value="universite" {% if current_type == 'universite' %}selected{% endif %}>Université</option>
-                <option value="institution" {% if current_type == 'institution' %}selected{% endif %}>Institution</option>
-                <option value="ong" {% if current_type == 'ong' %}selected{% endif %}>ONG</option>
+                <option value="all" {% if current_type == 'all' %}selected{% endif %}>{% trans 'Tous les types' %}</option>
+                <option value="entreprise" {% if current_type == 'entreprise' %}selected{% endif %}>{% trans 'Entreprise' %}</option>
+                <option value="universite" {% if current_type == 'universite' %}selected{% endif %}>{% trans 'Université' %}</option>
+                <option value="institution" {% if current_type == 'institution' %}selected{% endif %}>{% trans 'Institution' %}</option>
+                <option value="ong" {% if current_type == 'ong' %}selected{% endif %}>{% trans 'ONG' %}</option>
             </select>
             <select name="status" class="form-control" onchange="this.form.submit()">
-                <option value="all" {% if current_status == 'all' %}selected{% endif %}>Tous les statuts</option>
-                <option value="actif" {% if current_status == 'actif' %}selected{% endif %}>Actif</option>
-                <option value="en_discussion" {% if current_status == 'en_discussion' %}selected{% endif %}>En discussion</option>
+                <option value="all" {% if current_status == 'all' %}selected{% endif %}>{% trans 'Tous les statuts' %}</option>
+                <option value="actif" {% if current_status == 'actif' %}selected{% endif %}>{% trans 'Actif' %}</option>
+                <option value="en_discussion" {% if current_status == 'en_discussion' %}selected{% endif %}>{% trans 'En discussion' %}</option>
             </select>
             <a href="{% url 'core:partner_create' %}" class="btn btn-primary">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                Nouveau
+                {% trans 'Nouveau' %}
             </a>
         </form>
         
@@ -113,20 +114,20 @@
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        <span>Depuis {{ partner.start_date|date:"d/m/Y" }}</span>
+                        <span>{% trans 'Depuis' %} {{ partner.start_date|date:"d/m/Y" }}</span>
                     </div>
                     {% endif %}
                 </div>
                 
                 <div class="flex gap-2" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
-                    <a href="{% url 'core:partner_edit' partner.id %}" class="btn btn-outline btn-sm">Modifier</a>
-                    <a href="{% url 'core:partner_delete' partner.id %}" class="btn btn-sm" style="background: var(--red-50); color: var(--red-600);">Supprimer</a>
+                    <a href="{% url 'core:partner_edit' partner.id %}" class="btn btn-outline btn-sm">{% trans 'Modifier' %}</a>
+                    <a href="{% url 'core:partner_delete' partner.id %}" class="btn btn-sm" style="background: var(--red-50); color: var(--red-600);">{% trans 'Supprimer' %}</a>
                 </div>
             </div>
             {% empty %}
             <div class="card" style="grid-column: span 2;">
                 <div class="card-content" style="text-align: center; padding: 48px;">
-                    <p class="text-gray-500">Aucun partenaire trouvé</p>
+                    <p class="text-gray-500">{% trans 'Aucun partenaire trouvé' %}</p>
                 </div>
             </div>
             {% endfor %}
@@ -142,7 +143,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    Événements à venir
+                    {% trans 'Événements à venir' %}
                 </h3>
             </div>
             <div class="card-content">
@@ -161,13 +162,13 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                                     </svg>
-                                    {{ event.participants.count }} participants
+                                    {{ event.participants.count }} {% trans 'participants' %}
                                 </span>
                             </div>
                         </div>
                     </div>
                     {% empty %}
-                    <p class="text-gray-500">Aucun événement à venir</p>
+                    <p class="text-gray-500">{% trans 'Aucun événement à venir' %}</p>
                     {% endfor %}
                 </div>
             </div>
@@ -176,7 +177,7 @@
         <!-- Partner Types Legend -->
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">Types de partenaires</h3>
+                <h3 class="card-title">{% trans 'Types de partenaires' %}</h3>
             </div>
             <div class="card-content">
                 <div class="item-list" style="gap: 8px;">
@@ -187,7 +188,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                 </svg>
                             </div>
-                            <span class="text-sm text-gray-600">Entreprise</span>
+                            <span class="text-sm text-gray-600">{% trans 'Entreprise' %}</span>
                         </div>
                         <span class="text-sm font-medium">{{ type_counts.entreprise }}</span>
                     </div>
@@ -198,7 +199,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z" />
                                 </svg>
                             </div>
-                            <span class="text-sm text-gray-600">Université</span>
+                            <span class="text-sm text-gray-600">{% trans 'Université' %}</span>
                         </div>
                         <span class="text-sm font-medium">{{ type_counts.universite }}</span>
                     </div>
@@ -209,7 +210,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
                                 </svg>
                             </div>
-                            <span class="text-sm text-gray-600">Institution</span>
+                            <span class="text-sm text-gray-600">{% trans 'Institution' %}</span>
                         </div>
                         <span class="text-sm font-medium">{{ type_counts.institution }}</span>
                     </div>
@@ -220,7 +221,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                                 </svg>
                             </div>
-                            <span class="text-sm text-gray-600">ONG</span>
+                            <span class="text-sm text-gray-600">{% trans 'ONG' %}</span>
                         </div>
                         <span class="text-sm font-medium">{{ type_counts.ong }}</span>
                     </div>
