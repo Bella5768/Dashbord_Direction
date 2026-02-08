@@ -1552,6 +1552,11 @@ def milestone_create(request, project_id):
             milestone.project = project
             milestone.save()
             log_project_activity(project, 'ajout_jalon', f"Ajout du jalon '{milestone.name}'", request.user)
+            # Notification email au responsable
+            if milestone.assigned_to:
+                from .notifications import notify_assignment
+                assigned_by = request.user.get_full_name() or request.user.username
+                notify_assignment(milestone.assigned_to, 'jalon', milestone.name, project.name, assigned_by)
             messages.success(request, "Jalon créé avec succès.")
             return redirect('core:project_detail', project_id=project.id)
     else:
@@ -1573,11 +1578,17 @@ def milestone_edit(request, milestone_id):
         messages.error(request, "Vous n'avez pas les permissions pour modifier ce jalon.")
         return redirect('core:projects')
     
+    old_assigned = milestone.assigned_to_id
     if request.method == 'POST':
         form = MilestoneForm(project=project, data=request.POST, instance=milestone)
         if form.is_valid():
-            form.save()
+            milestone = form.save()
             log_project_activity(project, 'modif_jalon', f"Modification du jalon '{milestone.name}'", request.user)
+            # Notification email si le responsable a changé
+            if milestone.assigned_to and milestone.assigned_to_id != old_assigned:
+                from .notifications import notify_assignment
+                assigned_by = request.user.get_full_name() or request.user.username
+                notify_assignment(milestone.assigned_to, 'jalon', milestone.name, project.name, assigned_by)
             messages.success(request, "Jalon modifié avec succès.")
             return redirect('core:project_detail', project_id=project.id)
     else:
@@ -1630,6 +1641,11 @@ def sub_milestone_create(request, milestone_id):
             sub_milestone.milestone = milestone
             sub_milestone.save()
             log_project_activity(project, 'ajout_sous_etape', f"Ajout de la sous-étape '{sub_milestone.name}' au jalon '{milestone.name}'", request.user)
+            # Notification email au responsable
+            if sub_milestone.assigned_to:
+                from .notifications import notify_assignment
+                assigned_by = request.user.get_full_name() or request.user.username
+                notify_assignment(sub_milestone.assigned_to, 'sous-étape', sub_milestone.name, project.name, assigned_by)
             messages.success(request, "Sous-étape ajoutée avec succès.")
             return redirect('core:project_detail', project_id=project.id)
     else:
@@ -1658,11 +1674,17 @@ def sub_milestone_edit(request, sub_milestone_id):
         messages.error(request, "Vous n'avez pas les permissions pour modifier cette sous-étape.")
         return redirect('core:project_detail', project_id=project.id)
     
+    old_assigned = sub_milestone.assigned_to_id
     if request.method == 'POST':
         form = SubMilestoneForm(milestone=milestone, data=request.POST, instance=sub_milestone)
         if form.is_valid():
-            form.save()
+            sub_milestone = form.save()
             log_project_activity(project, 'modif_sous_etape', f"Modification de la sous-étape '{sub_milestone.name}'", request.user)
+            # Notification email si le responsable a changé
+            if sub_milestone.assigned_to and sub_milestone.assigned_to_id != old_assigned:
+                from .notifications import notify_assignment
+                assigned_by = request.user.get_full_name() or request.user.username
+                notify_assignment(sub_milestone.assigned_to, 'sous-étape', sub_milestone.name, project.name, assigned_by)
             messages.success(request, "Sous-étape modifiée avec succès.")
             return redirect('core:project_detail', project_id=project.id)
     else:
