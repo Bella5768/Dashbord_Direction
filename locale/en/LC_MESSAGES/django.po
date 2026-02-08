@@ -1,0 +1,313 @@
+# English translations for CSIG Dashboard
+# Copyright (C) 2026 CSIG
+# This file is distributed under the same license as the CSIG Dashboard package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: CSIG Dashboard 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-02-08 18:00+0000\n"
+"PO-Revision-Date: 2026-02-08 18:00+0000\n"
+"Last-Translator: CSIG <support@csig.edu.gn>\n"
+"Language-Team: English\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+# Base template - Sidebar
+msgid "Dashboard DG"
+msgstr "DG Dashboard"
+
+msgid "Tableau de bord"
+msgstr "Dashboard"
+
+msgid "Projets"
+msgstr "Projects"
+
+msgid "Ressources"
+msgstr "Resources"
+
+msgid "Demandes"
+msgstr "Requests"
+
+msgid "Calendrier"
+msgstr "Calendar"
+
+msgid "Rapports"
+msgstr "Reports"
+
+msgid "Partenaires"
+msgstr "Partners"
+
+msgid "Utilisateurs"
+msgstr "Users"
+
+msgid "Directions"
+msgstr "Departments"
+
+msgid "Administration"
+msgstr "Administration"
+
+msgid "Tous droits réservés"
+msgstr "All rights reserved"
+
+msgid "Non connecté"
+msgstr "Not logged in"
+
+msgid "Déconnexion"
+msgstr "Logout"
+
+msgid "Rechercher..."
+msgstr "Search..."
+
+msgid "FR"
+msgstr "FR"
+
+msgid "EN"
+msgstr "EN"
+
+msgid "CSIG"
+msgstr "CSIG"
+
+# Dashboard
+msgid "Vue d'ensemble de la direction générale"
+msgstr "General Management overview"
+
+msgid "Projets actifs"
+msgstr "Active projects"
+
+msgid "Budget total"
+msgstr "Total budget"
+
+msgid "Taux de réalisation"
+msgstr "Completion rate"
+
+msgid "Demandes en attente"
+msgstr "Pending requests"
+
+msgid "Projets récents"
+msgstr "Recent projects"
+
+msgid "Voir tous les projets"
+msgstr "View all projects"
+
+msgid "Activités récentes"
+msgstr "Recent activities"
+
+msgid "Répartition par direction"
+msgstr "Distribution by department"
+
+msgid "Répartition par statut"
+msgstr "Distribution by status"
+
+# Projects
+msgid "Nouveau projet"
+msgstr "New project"
+
+msgid "Modifier"
+msgstr "Edit"
+
+msgid "Supprimer"
+msgstr "Delete"
+
+msgid "Détails du projet"
+msgstr "Project details"
+
+msgid "Progression"
+msgstr "Progress"
+
+msgid "Responsable"
+msgstr "Manager"
+
+msgid "Direction"
+msgstr "Department"
+
+msgid "Statut"
+msgstr "Status"
+
+msgid "Date de début"
+msgstr "Start date"
+
+msgid "Date de fin"
+msgstr "End date"
+
+msgid "Budget"
+msgstr "Budget"
+
+msgid "Jalons"
+msgstr "Milestones"
+
+msgid "Sous-étapes"
+msgstr "Sub-steps"
+
+msgid "Membres"
+msgstr "Members"
+
+msgid "Nouveau jalon"
+msgstr "New milestone"
+
+msgid "Nouvelle sous-étape"
+msgstr "New sub-step"
+
+# Status
+msgid "En cours"
+msgstr "In progress"
+
+msgid "Terminé"
+msgstr "Completed"
+
+msgid "En retard"
+msgstr "Delayed"
+
+msgid "En attente"
+msgstr "Pending"
+
+msgid "Planifié"
+msgstr "Planned"
+
+msgid "Annulé"
+msgstr "Cancelled"
+
+# Partners
+msgid "Nouveau partenaire"
+msgstr "New partner"
+
+msgid "Nom"
+msgstr "Name"
+
+msgid "Type"
+msgstr "Type"
+
+msgid "Contact"
+msgstr "Contact"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Téléphone"
+msgstr "Phone"
+
+# Resources
+msgid "Budgets"
+msgstr "Budgets"
+
+msgid "Employés"
+msgstr "Employees"
+
+msgid "Documents"
+msgstr "Documents"
+
+# Requests
+msgid "Nouvelle demande"
+msgstr "New request"
+
+msgid "Approuver"
+msgstr "Approve"
+
+msgid "Rejeter"
+msgstr "Reject"
+
+msgid "Approuvé"
+msgstr "Approved"
+
+msgid "Rejeté"
+msgstr "Rejected"
+
+# Reports
+msgid "Rapports et analyses"
+msgstr "Reports and analytics"
+
+msgid "Vue globale"
+msgstr "Overview"
+
+msgid "Performance"
+msgstr "Performance"
+
+msgid "Exporter PDF"
+msgstr "Export PDF"
+
+msgid "Exporter Excel"
+msgstr "Export Excel"
+
+# Calendar
+msgid "Nouvel événement"
+msgstr "New event"
+
+msgid "Événements"
+msgstr "Events"
+
+# Common actions
+msgid "Enregistrer"
+msgstr "Save"
+
+msgid "Annuler"
+msgstr "Cancel"
+
+msgid "Retour"
+msgstr "Back"
+
+msgid "Ajouter"
+msgstr "Add"
+
+msgid "Confirmer"
+msgstr "Confirm"
+
+msgid "Actions"
+msgstr "Actions"
+
+msgid "Filtrer"
+msgstr "Filter"
+
+msgid "Tous"
+msgstr "All"
+
+msgid "Aucun résultat"
+msgstr "No results"
+
+# Search
+msgid "Résultats de recherche"
+msgstr "Search results"
+
+msgid "Recherche globale"
+msgstr "Global search"
+
+msgid "Voir tout"
+msgstr "View all"
+
+# Messages
+msgid "Créé avec succès"
+msgstr "Created successfully"
+
+msgid "Modifié avec succès"
+msgstr "Modified successfully"
+
+msgid "Supprimé avec succès"
+msgstr "Deleted successfully"
+
+# Forms
+msgid "Titre"
+msgstr "Title"
+
+msgid "Description"
+msgstr "Description"
+
+msgid "Priorité"
+msgstr "Priority"
+
+msgid "Haute"
+msgstr "High"
+
+msgid "Moyenne"
+msgstr "Medium"
+
+msgid "Basse"
+msgstr "Low"
+
+# Settings labels
+msgid "Français"
+msgstr "French"
+
+msgid "English"
+msgstr "English"
