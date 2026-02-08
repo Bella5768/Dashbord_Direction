@@ -78,81 +78,109 @@
 
 <!-- ==================== TAB: PROJETS ==================== -->
 <div id="tab-projets" class="tab-content" style="display: none;">
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">{% trans 'Détail des projets' %}</h3>
+    <!-- Project Stats -->
+    <div class="grid grid-4 mb-6">
+        <div style="background: linear-gradient(135deg, #2563eb, #1d4ed8); border-radius: 12px; padding: 20px; color: white; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: -10px; right: -10px; width: 70px; height: 70px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+            <p style="font-size: 28px; font-weight: 700; margin-bottom: 4px;">{{ total_projects }}</p>
+            <p style="font-size: 13px; opacity: 0.85;">{% trans 'Total projets' %}</p>
         </div>
-        <div class="card-content" style="padding: 0;">
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>{% trans 'Projet' %}</th>
-                            <th>{% trans 'Direction' %}</th>
-                            <th>{% trans 'Statut' %}</th>
-                            <th style="text-align: center;">{% trans 'Progression' %}</th>
-                            <th style="text-align: right;">{% trans 'Budget alloué' %}</th>
-                            <th style="text-align: right;">{% trans 'Consommé' %}</th>
-                            <th style="text-align: center;">{% trans 'Taux' %}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for project in all_projects %}
-                        <tr>
-                            <td>
-                                <p class="font-medium">{{ project.name }}</p>
-                                <p class="text-xs text-gray-500">{{ project.manager }}</p>
-                            </td>
-                            <td>{{ project.direction.code }}</td>
-                            <td>
-                                <span class="badge {% if project.status == 'en_cours' %}badge-info{% elif project.status == 'termine' %}badge-success{% else %}badge-secondary{% endif %}">
-                                    {{ project.get_status_display }}
-                                </span>
-                            </td>
-                            <td>
-                                <div class="flex items-center gap-2">
-                                    <div class="progress" style="flex: 1;">
-                                        <div class="progress-bar {% if project.progress >= 80 %}green{% elif project.progress >= 50 %}blue{% elif project.progress >= 25 %}amber{% else %}red{% endif %}" style="width: {{ project.progress }}%"></div>
-                                    </div>
-                                    <span class="text-sm font-medium" style="width: 40px; text-align: right;">{{ project.progress }}%</span>
-                                </div>
-                            </td>
-                            <td style="text-align: right; font-weight: 500;">{{ project.budget|number_format }} {{ project.currency }}</td>
-                            <td style="text-align: right; color: #16a34a;">{{ project.budget_consumed|number_format }} {{ project.currency }}</td>
-                            <td style="text-align: center;">
-                                <span class="text-sm font-medium" style="{% if project.budget_percentage > 80 %}color: #dc2626;{% elif project.budget_percentage > 60 %}color: #d97706;{% else %}color: #16a34a;{% endif %}">
-                                    {{ project.budget_percentage }}%
-                                </span>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="7" style="text-align: center; padding: 48px;">
-                                <p class="text-gray-500">Aucun projet trouvé</p>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        <div style="background: linear-gradient(135deg, #16a34a, #15803d); border-radius: 12px; padding: 20px; color: white; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: -10px; right: -10px; width: 70px; height: 70px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+            <p style="font-size: 28px; font-weight: 700; margin-bottom: 4px;">{{ projects_completed }}</p>
+            <p style="font-size: 13px; opacity: 0.85;">{% trans 'Terminés' %}</p>
+        </div>
+        <div style="background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 12px; padding: 20px; color: white; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: -10px; right: -10px; width: 70px; height: 70px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+            <p style="font-size: 28px; font-weight: 700; margin-bottom: 4px;">{{ projects_en_cours }}</p>
+            <p style="font-size: 13px; opacity: 0.85;">{% trans 'En cours' %}</p>
+        </div>
+        <div style="background: linear-gradient(135deg, #dc2626, #b91c1c); border-radius: 12px; padding: 20px; color: white; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: -10px; right: -10px; width: 70px; height: 70px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+            <p style="font-size: 28px; font-weight: 700; margin-bottom: 4px;">{{ projects_en_retard }}</p>
+            <p style="font-size: 13px; opacity: 0.85;">{% trans 'En retard' %}</p>
+        </div>
+    </div>
+
+    <!-- Project Cards -->
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+        {% for project in all_projects %}
+        <div style="background: white; border-radius: 12px; border: 1px solid #e2e8f0; border-left: 5px solid {% if project.status == 'termine' %}#16a34a{% elif project.status == 'en_cours' %}#3b82f6{% elif project.status == 'en_retard' %}#dc2626{% elif project.status == 'suspendu' %}#d97706{% else %}#94a3b8{% endif %}; padding: 20px; transition: all 0.2s; cursor: pointer;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)'; this.style.transform='translateY(-1px)';" onmouseout="this.style.boxShadow='none'; this.style.transform='none';" onclick="window.location.href='{% url 'core:project_detail' project.id %}'">
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1.2fr 1.5fr 1fr; align-items: center; gap: 16px;">
+                <!-- Project Name & Manager -->
+                <div>
+                    <p style="font-weight: 600; font-size: 15px; color: #1e293b; margin-bottom: 4px;">{{ project.name }}</p>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" width="14" height="14">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        <span style="font-size: 12px; color: #94a3b8;">{{ project.manager|default:"-" }}</span>
+                    </div>
+                </div>
+                <!-- Direction -->
+                <div style="text-align: center;">
+                    <span style="display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; background: #f0f4ff; color: #2563eb;">
+                        {{ project.direction.code }}
+                    </span>
+                </div>
+                <!-- Status + Progress -->
+                <div>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                        <span class="badge {% if project.status == 'en_cours' %}badge-info{% elif project.status == 'termine' %}badge-success{% elif project.status == 'en_retard' %}badge-danger{% elif project.status == 'suspendu' %}badge-warning{% else %}badge-secondary{% endif %}" style="font-size: 11px;">
+                            {{ project.get_status_display }}
+                        </span>
+                        <span style="font-size: 13px; font-weight: 600; color: {% if project.progress >= 80 %}#16a34a{% elif project.progress >= 50 %}#2563eb{% elif project.progress >= 25 %}#d97706{% else %}#dc2626{% endif %};">{{ project.progress }}%</span>
+                    </div>
+                    <div style="height: 6px; background: #f1f5f9; border-radius: 10px; overflow: hidden;">
+                        <div style="height: 100%; width: {{ project.progress }}%; border-radius: 10px; background: {% if project.progress >= 80 %}linear-gradient(90deg, #16a34a, #22c55e){% elif project.progress >= 50 %}linear-gradient(90deg, #2563eb, #3b82f6){% elif project.progress >= 25 %}linear-gradient(90deg, #d97706, #f59e0b){% else %}linear-gradient(90deg, #dc2626, #ef4444){% endif %}; transition: width 0.5s;"></div>
+                    </div>
+                </div>
+                <!-- Budget -->
+                <div style="text-align: right;">
+                    <p style="font-size: 14px; font-weight: 600; color: #1e293b;">{{ project.budget|number_format }} {{ project.currency }}</p>
+                    <p style="font-size: 12px; color: {% if project.budget_percentage > 80 %}#dc2626{% elif project.budget_percentage > 60 %}#d97706{% else %}#16a34a{% endif %};">
+                        {% trans 'Consommé' %}: {{ project.budget_consumed|number_format }} {{ project.currency }}
+                    </p>
+                </div>
+                <!-- Budget Rate -->
+                <div style="text-align: center;">
+                    <div style="display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 50%; border: 3px solid {% if project.budget_percentage > 80 %}#fecaca{% elif project.budget_percentage > 60 %}#fef3c7{% else %}#dcfce7{% endif %}; background: {% if project.budget_percentage > 80 %}#fef2f2{% elif project.budget_percentage > 60 %}#fffbeb{% else %}#f0fdf4{% endif %};">
+                        <span style="font-size: 13px; font-weight: 700; color: {% if project.budget_percentage > 80 %}#dc2626{% elif project.budget_percentage > 60 %}#d97706{% else %}#16a34a{% endif %};">{{ project.budget_percentage }}%</span>
+                    </div>
+                </div>
             </div>
         </div>
+        {% empty %}
+        <div style="text-align: center; padding: 60px 20px; background: white; border-radius: 12px; border: 1px solid #e2e8f0;">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#cbd5e1" width="48" height="48" style="margin: 0 auto 16px;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p style="color: #94a3b8; font-size: 15px;">{% trans 'Aucun projet trouvé' %}</p>
+        </div>
+        {% endfor %}
     </div>
 </div>
 
 <!-- ==================== TAB: BUDGET ==================== -->
 <div id="tab-budget" class="tab-content" style="display: none;">
     <div class="grid grid-3 mb-6">
-        <div class="stat-box" style="text-align: center;">
-            <p class="stat-box-value" style="color: #2563eb;">{{ total_budget|number_format }} GNF</p>
-            <p class="stat-box-label">{% trans 'Budget total alloué' %}</p>
+        <div style="background: linear-gradient(135deg, #2563eb, #1d4ed8); border-radius: 12px; padding: 24px; color: white; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: -15px; right: -15px; width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+            <div style="position: absolute; bottom: -20px; right: 20px; width: 50px; height: 50px; background: rgba(255,255,255,0.05); border-radius: 50%;"></div>
+            <p style="font-size: 13px; opacity: 0.85; margin-bottom: 8px;">{% trans 'Budget total alloué' %}</p>
+            <p style="font-size: 24px; font-weight: 700;">{{ total_budget|number_format }} GNF</p>
         </div>
-        <div class="stat-box" style="text-align: center;">
-            <p class="stat-box-value" style="color: #16a34a;">{{ total_consumed|number_format }} GNF</p>
-            <p class="stat-box-label">{% trans 'Budget total consommé' %}</p>
+        <div style="background: linear-gradient(135deg, #16a34a, #15803d); border-radius: 12px; padding: 24px; color: white; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: -15px; right: -15px; width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+            <div style="position: absolute; bottom: -20px; right: 20px; width: 50px; height: 50px; background: rgba(255,255,255,0.05); border-radius: 50%;"></div>
+            <p style="font-size: 13px; opacity: 0.85; margin-bottom: 8px;">{% trans 'Budget total consommé' %}</p>
+            <p style="font-size: 24px; font-weight: 700;">{{ total_consumed|number_format }} GNF</p>
         </div>
-        <div class="stat-box" style="text-align: center;">
-            <p class="stat-box-value" style="{% if budget_rate > 80 %}color: #dc2626;{% elif budget_rate > 60 %}color: #d97706;{% else %}color: #16a34a;{% endif %}">{{ budget_rate }}%</p>
-            <p class="stat-box-label">Taux de consommation</p>
+        <div style="background: linear-gradient(135deg, {% if budget_rate > 80 %}#dc2626, #b91c1c{% elif budget_rate > 60 %}#d97706, #b45309{% else %}#7c3aed, #6d28d9{% endif %}); border-radius: 12px; padding: 24px; color: white; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: -15px; right: -15px; width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+            <div style="position: absolute; bottom: -20px; right: 20px; width: 50px; height: 50px; background: rgba(255,255,255,0.05); border-radius: 50%;"></div>
+            <p style="font-size: 13px; opacity: 0.85; margin-bottom: 8px;">{% trans 'Taux de consommation' %}</p>
+            <p style="font-size: 24px; font-weight: 700;">{{ budget_rate }}%</p>
         </div>
     </div>
 
@@ -232,77 +260,73 @@
 <!-- ==================== TAB: PERFORMANCE ==================== -->
 <div id="tab-performance" class="tab-content" style="display: none;">
     <div class="grid grid-4 mb-6">
-        <div class="stat-box" style="text-align: center;">
-            <p class="stat-box-value" style="color: #2563eb;">{{ avg_progress }}%</p>
-            <p class="stat-box-label">{% trans 'Progression moyenne' %}</p>
+        <div style="background: linear-gradient(135deg, #7c3aed, #6d28d9); border-radius: 12px; padding: 20px; color: white; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: -10px; right: -10px; width: 70px; height: 70px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+            <p style="font-size: 28px; font-weight: 700; margin-bottom: 4px;">{{ avg_progress }}%</p>
+            <p style="font-size: 13px; opacity: 0.85;">{% trans 'Progression moyenne' %}</p>
         </div>
-        <div class="stat-box" style="text-align: center;">
-            <p class="stat-box-value" style="color: #16a34a;">{{ projects_completed }}</p>
-            <p class="stat-box-label">{% trans 'Projets terminés' %}</p>
+        <div style="background: linear-gradient(135deg, #16a34a, #15803d); border-radius: 12px; padding: 20px; color: white; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: -10px; right: -10px; width: 70px; height: 70px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+            <p style="font-size: 28px; font-weight: 700; margin-bottom: 4px;">{{ projects_completed }}</p>
+            <p style="font-size: 13px; opacity: 0.85;">{% trans 'Projets terminés' %}</p>
         </div>
-        <div class="stat-box" style="text-align: center;">
-            <p class="stat-box-value" style="color: #3b82f6;">{{ projects_en_cours }}</p>
-            <p class="stat-box-label">{% trans 'Projets en cours' %}</p>
+        <div style="background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 12px; padding: 20px; color: white; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: -10px; right: -10px; width: 70px; height: 70px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+            <p style="font-size: 28px; font-weight: 700; margin-bottom: 4px;">{{ projects_en_cours }}</p>
+            <p style="font-size: 13px; opacity: 0.85;">{% trans 'Projets en cours' %}</p>
         </div>
-        <div class="stat-box" style="text-align: center;">
-            <p class="stat-box-value" style="color: #dc2626;">{{ projects_en_retard }}</p>
-            <p class="stat-box-label">{% trans 'Projets en retard' %}</p>
+        <div style="background: linear-gradient(135deg, #dc2626, #b91c1c); border-radius: 12px; padding: 20px; color: white; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: -10px; right: -10px; width: 70px; height: 70px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+            <p style="font-size: 28px; font-weight: 700; margin-bottom: 4px;">{{ projects_en_retard }}</p>
+            <p style="font-size: 13px; opacity: 0.85;">{% trans 'Projets en retard' %}</p>
         </div>
     </div>
 
-    <div class="card mb-6">
-        <div class="card-header">
-            <h3 class="card-title">{% trans 'Performance par projet' %}</h3>
-        </div>
-        <div class="card-content" style="padding: 0;">
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>{% trans 'Projet' %}</th>
-                            <th>{% trans 'Direction' %}</th>
-                            <th>{% trans 'Responsable' %}</th>
-                            <th style="text-align: center;">{% trans 'Statut' %}</th>
-                            <th style="text-align: center;">{% trans 'Progression' %}</th>
-                            <th style="text-align: center;">{% trans 'Budget utilisé' %}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for project in all_projects %}
-                        <tr>
-                            <td><p class="font-medium">{{ project.name }}</p></td>
-                            <td>{{ project.direction.code }}</td>
-                            <td>{{ project.manager }}</td>
-                            <td style="text-align: center;">
-                                <span class="badge {% if project.status == 'en_cours' %}badge-info{% elif project.status == 'termine' %}badge-success{% elif project.status == 'en_retard' %}badge-danger{% else %}badge-secondary{% endif %}">
-                                    {{ project.get_status_display }}
-                                </span>
-                            </td>
-                            <td>
-                                <div class="flex items-center gap-2">
-                                    <div class="progress" style="flex: 1;">
-                                        <div class="progress-bar {% if project.progress >= 80 %}green{% elif project.progress >= 50 %}blue{% elif project.progress >= 25 %}amber{% else %}red{% endif %}" style="width: {{ project.progress }}%"></div>
-                                    </div>
-                                    <span class="text-sm font-medium" style="width: 40px; text-align: right;">{{ project.progress }}%</span>
-                                </div>
-                            </td>
-                            <td style="text-align: center;">
-                                <span class="text-sm font-medium" style="{% if project.budget_percentage > 80 %}color: #dc2626;{% elif project.budget_percentage > 60 %}color: #d97706;{% else %}color: #16a34a;{% endif %}">
-                                    {{ project.budget_percentage }}%
-                                </span>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="6" style="text-align: center; padding: 48px;">
-                                <p class="text-gray-500">Aucun projet trouvé</p>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+    <!-- Performance Cards -->
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+        {% for project in all_projects %}
+        <div style="background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 20px; transition: all 0.2s;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)';" onmouseout="this.style.boxShadow='none';">
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 2fr 1fr; align-items: center; gap: 16px;">
+                <!-- Project Name -->
+                <div>
+                    <p style="font-weight: 600; font-size: 15px; color: #1e293b; margin-bottom: 2px;">{{ project.name }}</p>
+                    <span style="font-size: 12px; color: #94a3b8;">{{ project.manager|default:"-" }}</span>
+                </div>
+                <!-- Direction -->
+                <div style="text-align: center;">
+                    <span style="display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; background: #f0f4ff; color: #2563eb;">
+                        {{ project.direction.code }}
+                    </span>
+                </div>
+                <!-- Status -->
+                <div style="text-align: center;">
+                    <span class="badge {% if project.status == 'en_cours' %}badge-info{% elif project.status == 'termine' %}badge-success{% elif project.status == 'en_retard' %}badge-danger{% elif project.status == 'suspendu' %}badge-warning{% else %}badge-secondary{% endif %}" style="font-size: 11px;">
+                        {{ project.get_status_display }}
+                    </span>
+                </div>
+                <!-- Progress Bar -->
+                <div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                        <span style="font-size: 12px; color: #64748b;">{% trans 'Progression' %}</span>
+                        <span style="font-size: 13px; font-weight: 700; color: {% if project.progress >= 80 %}#16a34a{% elif project.progress >= 50 %}#2563eb{% elif project.progress >= 25 %}#d97706{% else %}#dc2626{% endif %};">{{ project.progress }}%</span>
+                    </div>
+                    <div style="height: 8px; background: #f1f5f9; border-radius: 10px; overflow: hidden;">
+                        <div style="height: 100%; width: {{ project.progress }}%; border-radius: 10px; background: {% if project.progress >= 80 %}linear-gradient(90deg, #16a34a, #22c55e){% elif project.progress >= 50 %}linear-gradient(90deg, #2563eb, #3b82f6){% elif project.progress >= 25 %}linear-gradient(90deg, #d97706, #f59e0b){% else %}linear-gradient(90deg, #dc2626, #ef4444){% endif %}; transition: width 0.5s;"></div>
+                    </div>
+                </div>
+                <!-- Budget Rate -->
+                <div style="text-align: center;">
+                    <div style="display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 50%; border: 3px solid {% if project.budget_percentage > 80 %}#fecaca{% elif project.budget_percentage > 60 %}#fef3c7{% else %}#dcfce7{% endif %}; background: {% if project.budget_percentage > 80 %}#fef2f2{% elif project.budget_percentage > 60 %}#fffbeb{% else %}#f0fdf4{% endif %};">
+                        <span style="font-size: 13px; font-weight: 700; color: {% if project.budget_percentage > 80 %}#dc2626{% elif project.budget_percentage > 60 %}#d97706{% else %}#16a34a{% endif %};">{{ project.budget_percentage }}%</span>
+                    </div>
+                </div>
             </div>
         </div>
+        {% empty %}
+        <div style="text-align: center; padding: 60px 20px; background: white; border-radius: 12px; border: 1px solid #e2e8f0;">
+            <p style="color: #94a3b8; font-size: 15px;">{% trans 'Aucun projet trouvé' %}</p>
+        </div>
+        {% endfor %}
     </div>
 </div>
 {% endblock %}
