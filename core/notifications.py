@@ -46,7 +46,8 @@ def notify_assignment(employee, task_type, task_name, project_name, assigned_by)
             fail_silently=False,
         )
         logger.info(f"Email de notification envoyé à {employee.email} pour {task_type} '{task_name}'")
-        return True
+        return (True, f"Email envoyé à {employee.email}")
     except Exception as e:
-        logger.error(f"Erreur envoi email à {employee.email}: {e}")
-        return False
+        error_msg = f"Erreur envoi email à {employee.email}: {e}"
+        logger.error(error_msg)
+        return (False, error_msg)

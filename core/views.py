@@ -1556,7 +1556,11 @@ def milestone_create(request, project_id):
             if milestone.assigned_to:
                 from .notifications import notify_assignment
                 assigned_by = request.user.get_full_name() or request.user.username
-                notify_assignment(milestone.assigned_to, 'jalon', milestone.name, project.name, assigned_by)
+                success, msg = notify_assignment(milestone.assigned_to, 'jalon', milestone.name, project.name, assigned_by)
+                if success:
+                    messages.info(request, msg)
+                else:
+                    messages.warning(request, f"Jalon créé mais notification email échouée : {msg}")
             messages.success(request, "Jalon créé avec succès.")
             return redirect('core:project_detail', project_id=project.id)
     else:
@@ -1588,7 +1592,11 @@ def milestone_edit(request, milestone_id):
             if milestone.assigned_to and milestone.assigned_to_id != old_assigned:
                 from .notifications import notify_assignment
                 assigned_by = request.user.get_full_name() or request.user.username
-                notify_assignment(milestone.assigned_to, 'jalon', milestone.name, project.name, assigned_by)
+                success, msg = notify_assignment(milestone.assigned_to, 'jalon', milestone.name, project.name, assigned_by)
+                if success:
+                    messages.info(request, msg)
+                else:
+                    messages.warning(request, f"Jalon modifié mais notification email échouée : {msg}")
             messages.success(request, "Jalon modifié avec succès.")
             return redirect('core:project_detail', project_id=project.id)
     else:
@@ -1645,7 +1653,11 @@ def sub_milestone_create(request, milestone_id):
             if sub_milestone.assigned_to:
                 from .notifications import notify_assignment
                 assigned_by = request.user.get_full_name() or request.user.username
-                notify_assignment(sub_milestone.assigned_to, 'sous-étape', sub_milestone.name, project.name, assigned_by)
+                success, msg = notify_assignment(sub_milestone.assigned_to, 'sous-étape', sub_milestone.name, project.name, assigned_by)
+                if success:
+                    messages.info(request, msg)
+                else:
+                    messages.warning(request, f"Sous-étape créée mais notification email échouée : {msg}")
             messages.success(request, "Sous-étape ajoutée avec succès.")
             return redirect('core:project_detail', project_id=project.id)
     else:
@@ -1684,7 +1696,11 @@ def sub_milestone_edit(request, sub_milestone_id):
             if sub_milestone.assigned_to and sub_milestone.assigned_to_id != old_assigned:
                 from .notifications import notify_assignment
                 assigned_by = request.user.get_full_name() or request.user.username
-                notify_assignment(sub_milestone.assigned_to, 'sous-étape', sub_milestone.name, project.name, assigned_by)
+                success, msg = notify_assignment(sub_milestone.assigned_to, 'sous-étape', sub_milestone.name, project.name, assigned_by)
+                if success:
+                    messages.info(request, msg)
+                else:
+                    messages.warning(request, f"Sous-étape modifiée mais notification email échouée : {msg}")
             messages.success(request, "Sous-étape modifiée avec succès.")
             return redirect('core:project_detail', project_id=project.id)
     else:
