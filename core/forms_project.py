@@ -91,7 +91,8 @@ class MilestoneForm(forms.ModelForm):
         if project:
             from .models import Employee
             # Montrer tous les employés du système pour l'affectation
-            self.fields['assigned_to'].queryset = Employee.objects.all().order_by('name')
+            self.fields['assigned_to'].queryset = Employee.objects.select_related('direction').all().order_by('direction__name', 'name')
+            self.fields['assigned_to'].label_from_instance = lambda obj: f"{obj.name} — {obj.direction.code} ({obj.role})"
             # Auto-incrémenter l'ordre si nouveau jalon
             if not self.instance.pk:
                 max_order = project.milestones.aggregate(Max('order'))['order__max']
@@ -117,7 +118,8 @@ class SubMilestoneForm(forms.ModelForm):
         if milestone:
             from .models import Employee
             # Montrer tous les employés du système pour l'affectation
-            self.fields['assigned_to'].queryset = Employee.objects.all().order_by('name')
+            self.fields['assigned_to'].queryset = Employee.objects.select_related('direction').all().order_by('direction__name', 'name')
+            self.fields['assigned_to'].label_from_instance = lambda obj: f"{obj.name} — {obj.direction.code} ({obj.role})"
             # Auto-incrémenter l'ordre si nouvelle sous-étape
             if not self.instance.pk:
                 max_order = milestone.sub_milestones.aggregate(Max('order'))['order__max']
