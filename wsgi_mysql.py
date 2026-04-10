@@ -15,7 +15,7 @@ os.environ.setdefault('DJANGO_SECRET_KEY', 'CHANGE_ME_STRONG_SECRET')
 
 # MySQL PythonAnywhere (remplace par tes vraies valeurs)
 os.environ.setdefault('MYSQL_HOST', 'dgdashbord.mysql.pythonanywhere-services.com')
-os.environ.setdefault('MYSQL_PORT', '3306')
+os.environ.setdefault('MYSQL_PORT', '3306')    
 os.environ.setdefault('MYSQL_DATABASE', 'dgdashbord$default')
 os.environ.setdefault('MYSQL_USER', 'dgdashbord')
 os.environ.setdefault('MYSQL_PASSWORD', 'YOUR_MYSQL_PASSWORD')

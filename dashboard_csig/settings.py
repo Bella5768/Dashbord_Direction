@@ -17,13 +17,8 @@ ALLOWED_HOSTS = [h.strip() for h in os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost',
     'http://127.0.0.1',
-    'http://localhost:8000',
-    'http://127.0.0.1:8000',
-    'http://127.0.0.1:49870',
-    'http://127.0.0.1:56509',
-    'http://127.0.0.1:50239',
-    'http://127.0.0.1:9000',
-    'http://127.0.0.1:65073',
+    'http://localhost:*',
+    'http://127.0.0.1:*',
     'https://*.pythonanywhere.com',
 ]
 
@@ -47,6 +42,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'dashboard_csig.middleware.DevCsrfTrustedOriginsMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
