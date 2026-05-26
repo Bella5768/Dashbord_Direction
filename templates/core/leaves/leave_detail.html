@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans 'Demande de congé' %} #{{ leave.id }}{% endblock %}
+{% block page_title %}{% trans 'Demande de congé' %} #{{ leave.id }}{% endblock %}
+{% block page_subtitle %}{{ leave.employee.name }} - {{ leave.get_leave_type_display }}{% endblock %}
+
+{% block content %}
+
+<!-- Bandeau de statut -->
+<div class="card mb-4" style="border-left: 6px solid {{ leave.status_color }};">
+    <div class="card-content" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+        <div>
+            <p class="text-xs text-gray-500">{% trans 'Statut actuel' %}</p>
+            <h3 style="margin:4px 0 0 0;">
+                <span class="badge" style="background-color:{{ leave.status_color }}; color:white;">
+                    {{ leave.get_status_display }}
+                </span>
+            </h3>
+            <p class="text-sm text-gray-600" style="margin-top:6px;">{{ leave.current_step_label }}</p>
+        </div>
+        <div class="flex gap-2">
+            {% if can_cancel %}
+            <form method="post" action="{% url 'core:leave_cancel' leave.id %}" onsubmit="return confirm('Annuler cette demande ?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-secondary btn-sm">{% trans 'Annuler ma demande' %}</button>
+            </form>
+            {% endif %}
+            <a href="{% url 'core:leave_list' %}" class="btn btn-secondary btn-sm">← {% trans 'Retour' %}</a>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-2" style="gap:20px;">
+    <!-- Détails de la demande -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">{% trans 'Détails de la demande' %}</h3>
+        </div>
+        <div class="card-content">
+            <table style="width:100%;">
+                <tr><td class="text-gray-500" style="padding:6px 0;">{% trans 'Demandeur' %}</td><td><strong>{{ leave.employee.name }}</strong></td></tr>
+                <tr><td class="text-gray-500" style="padding:6px 0;">{% trans 'Fonction' %}</td><td>{{ leave.employee.role }}</td></tr>
+                <tr><td class="text-gray-500" style="padding:6px 0;">{% trans 'Direction / Service' %}</td><td>{{ leave.direction.name }}</td></tr>
+                <tr><td class="text-gray-500" style="padding:6px 0;">{% trans 'Type de congé' %}</td><td>{{ leave.get_leave_type_display }}</td></tr>
+                <tr><td class="text-gray-500" style="padding:6px 0;">{% trans 'Période' %}</td><td>{{ leave.start_date|date:"d/m/Y" }} → {{ leave.end_date|date:"d/m/Y" }}</td></tr>
+                <tr><td class="text-gray-500" style="padding:6px 0;">{% trans 'Nombre de jours' %}</td><td><strong>{{ leave.days_count }}</strong></td></tr>
+                <tr><td class="text-gray-500" style="padding:6px 0; vertical-align:top;">{% trans 'Motif' %}</td><td>{{ leave.reason|linebreaksbr }}</td></tr>
+                {% if leave.replacement %}
+                <tr><td class="text-gray-500" style="padding:6px 0;">{% trans 'Suppléant' %}</td><td>{{ leave.replacement }}</td></tr>
+                {% endif %}
+                {% if leave.handover_note %}
+                <tr><td class="text-gray-500" style="padding:6px 0; vertical-align:top;">{% trans 'Note de passation' %}</td><td>{{ leave.handover_note|linebreaksbr }}</td></tr>
+                {% endif %}
+                {% if leave.justification %}
+                <tr><td class="text-gray-500" style="padding:6px 0;">{% trans 'Justificatif' %}</td><td><a href="{{ leave.justification.url }}" target="_blank" class="btn btn-secondary btn-sm">📎 {% trans 'Télécharger' %}</a></td></tr>
+                {% endif %}
+                <tr><td class="text-gray-500" style="padding:6px 0;">{% trans 'Soumise le' %}</td><td>{{ leave.created_at|date:"d/m/Y à H:i" }}</td></tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Workflow timeline -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">{% trans 'Circuit de validation' %}</h3>
+        </div>
+        <div class="card-content">
+
+            {% if can_see_manager_step %}
+            <!-- Étape 1 : Hiérarchie -->
+            <div style="display:flex; gap:12px; padding:12px 0; border-bottom:1px solid #e5e7eb;">
+                <div style="flex-shrink:0; width:32px; height:32px; border-radius:50%; background:{% if leave.manager_decision == 'favorable' %}#16a34a{% elif leave.manager_decision == 'defavorable' %}#ef4444{% else %}#e5e7eb{% endif %}; color:white; display:flex; align-items:center; justify-content:center; font-weight:600;">1</div>
+                <div style="flex:1;">
+                    <p style="margin:0; font-weight:600;">{% trans 'Avis hiérarchique' %} <span class="text-xs text-gray-500">({% trans '48h max' %})</span></p>
+                    {% if leave.manager_decision %}
+                        <p class="text-sm" style="margin:4px 0;">
+                            <span class="badge {% if leave.manager_decision == 'favorable' %}badge-success{% else %}badge-danger{% endif %}">{{ leave.get_manager_decision_display }}</span>
+                            {% trans 'par' %} {{ leave.manager_user.get_full_name|default:leave.manager_user.username }}
+                        </p>
+                        <p class="text-xs text-gray-500">{{ leave.manager_decision_at|date:"d/m/Y H:i" }}</p>
+                        {% if leave.manager_comment %}<p class="text-sm text-gray-600">"{{ leave.manager_comment }}"</p>{% endif %}
+                    {% else %}
+                        <p class="text-xs text-gray-500">{% trans 'En attente' %}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if can_see_hr_step %}
+            <!-- Étape 2 : RH -->
+            <div style="display:flex; gap:12px; padding:12px 0; border-bottom:1px solid #e5e7eb;">
+                <div style="flex-shrink:0; width:32px; height:32px; border-radius:50%; background:{% if leave.hr_decision == 'conforme' %}#16a34a{% elif leave.hr_decision == 'non_conforme' %}#ef4444{% else %}#e5e7eb{% endif %}; color:white; display:flex; align-items:center; justify-content:center; font-weight:600;">2</div>
+                <div style="flex:1;">
+                    <p style="margin:0; font-weight:600;">{% trans 'Vérification RH' %} <span class="text-xs text-gray-500">({% trans '72h max' %})</span></p>
+                    {% if leave.hr_decision %}
+                        <p class="text-sm" style="margin:4px 0;">
+                            <span class="badge {% if leave.hr_decision == 'conforme' %}badge-success{% else %}badge-danger{% endif %}">{{ leave.get_hr_decision_display }}</span>
+                            {% trans 'par' %} {{ leave.hr_user.get_full_name|default:leave.hr_user.username }}
+                        </p>
+                        <p class="text-xs text-gray-500">{{ leave.hr_decision_at|date:"d/m/Y H:i" }}</p>
+                        {% if leave.hr_comment %}<p class="text-sm text-gray-600">"{{ leave.hr_comment }}"</p>{% endif %}
+                    {% else %}
+                        <p class="text-xs text-gray-500">{% trans 'En attente' %}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if can_see_final_step %}
+            <!-- Étape 3 : Direction / Coordination -->
+            <div style="display:flex; gap:12px; padding:12px 0;">
+                <div style="flex-shrink:0; width:32px; height:32px; border-radius:50%; background:{% if leave.final_decision == 'approuve' %}#16a34a{% elif leave.final_decision == 'rejete' %}#ef4444{% else %}#e5e7eb{% endif %}; color:white; display:flex; align-items:center; justify-content:center; font-weight:600;">3</div>
+                <div style="flex:1;">
+                    <p style="margin:0; font-weight:600;">{% trans 'Décision Direction / Coordination' %} <span class="text-xs text-gray-500">({% trans '3 jours max' %})</span></p>
+                    {% if leave.final_decision %}
+                        <p class="text-sm" style="margin:4px 0;">
+                            <span class="badge {% if leave.final_decision == 'approuve' %}badge-success{% else %}badge-danger{% endif %}">{{ leave.get_final_decision_display }}</span>
+                            {% trans 'par' %} {{ leave.final_user.get_full_name|default:leave.final_user.username }}
+                        </p>
+                        <p class="text-xs text-gray-500">{{ leave.final_decision_at|date:"d/m/Y H:i" }}</p>
+                        {% if leave.final_comment %}<p class="text-sm text-gray-600">"{{ leave.final_comment }}"</p>{% endif %}
+                    {% else %}
+                        <p class="text-xs text-gray-500">{% trans 'En attente' %}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if not can_see_manager_step and not can_see_hr_step and not can_see_final_step %}
+            <p class="text-sm text-gray-500" style="text-align:center; padding:24px 0;">{% trans 'Le détail des étapes de validation est confidentiel.' %}</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Actions de décision -->
+{% if can_act_manager or can_act_hr or can_act_final %}
+<div class="card mt-4">
+    <div class="card-header">
+        <h3 class="card-title">{% trans 'Action requise' %}</h3>
+    </div>
+    <div class="card-content">
+
+        {% if can_act_manager %}
+        <form method="post" action="{% url 'core:leave_decide_manager' leave.id %}">
+            {% csrf_token %}
+            <p class="text-sm" style="margin-bottom:12px;"><strong>{% trans 'Avis hiérarchique requis' %}</strong> - {% trans "Évaluez l'impact sur le fonctionnement du service." %}</p>
+            <div class="grid grid-2" style="gap:16px;">
+                <div class="form-group">
+                    <label class="form-label">{{ manager_form.manager_decision.label }}</label>
+                    {{ manager_form.manager_decision }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ manager_form.manager_comment.label }}</label>
+                    {{ manager_form.manager_comment }}
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">{% trans 'Enregistrer mon avis' %}</button>
+        </form>
+        {% endif %}
+
+        {% if can_act_hr %}
+        <form method="post" action="{% url 'core:leave_decide_hr' leave.id %}">
+            {% csrf_token %}
+            <p class="text-sm" style="margin-bottom:12px;"><strong>{% trans 'Vérification RH requise' %}</strong> - {% trans 'Contrôlez la conformité réglementaire et les droits disponibles.' %}</p>
+            <div class="grid grid-2" style="gap:16px;">
+                <div class="form-group">
+                    <label class="form-label">{{ hr_form.hr_decision.label }}</label>
+                    {{ hr_form.hr_decision }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ hr_form.hr_comment.label }}</label>
+                    {{ hr_form.hr_comment }}
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">{% trans 'Valider la vérification RH' %}</button>
+        </form>
+        {% endif %}
+
+        {% if can_act_final %}
+        <form method="post" action="{% url 'core:leave_decide_final' leave.id %}">
+            {% csrf_token %}
+            <p class="text-sm" style="margin-bottom:12px;"><strong>{% trans 'Décision finale Direction / Coordination' %}</strong> - {% trans "Notification officielle sera envoyée à l'agent." %}</p>
+            <div class="grid grid-2" style="gap:16px;">
+                <div class="form-group">
+                    <label class="form-label">{{ final_form.final_decision.label }}</label>
+                    {{ final_form.final_decision }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ final_form.final_comment.label }}</label>
+                    {{ final_form.final_comment }}
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">{% trans 'Enregistrer la décision finale' %}</button>
+        </form>
+        {% endif %}
+
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

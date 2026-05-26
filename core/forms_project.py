@@ -23,6 +23,9 @@ class ProjectForm(forms.ModelForm):
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
         self.fields['currency'].widget.attrs['class'] = 'form-control select-searchable'
+        # Direction optionnelle
+        self.fields['direction'].required = False
+        self.fields['direction'].empty_label = "-- Aucune direction --"
         
         # Si c'est une édition (projet existant), les dates ne sont pas obligatoires
         if self.instance and self.instance.pk:
@@ -73,11 +76,12 @@ class MilestoneForm(forms.ModelForm):
     """Formulaire pour les jalons"""
     class Meta:
         model = Milestone
-        fields = ['name', 'assigned_to', 'need', 'manual_progress', 'completed', 'order']
+        fields = ['name', 'assigned_to', 'due_date', 'need', 'manual_progress', 'completed', 'order']
         widgets = {
             'order': forms.HiddenInput(),
             'manual_progress': forms.NumberInput(attrs={'min': 0, 'max': 100, 'style': 'width: 100px;'}),
             'assigned_to': forms.Select(attrs={'class': 'form-control'}),
+            'due_date': forms.DateInput(attrs={'type': 'date'}),
             'need': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Décrivez le besoin lié à cette étape...'}),
         }
     
@@ -103,10 +107,11 @@ class SubMilestoneForm(forms.ModelForm):
     """Formulaire pour les sous-étapes"""
     class Meta:
         model = SubMilestone
-        fields = ['name', 'assigned_to', 'need', 'completed', 'order']
+        fields = ['name', 'assigned_to', 'due_date', 'need', 'completed', 'order']
         widgets = {
             'order': forms.HiddenInput(),
             'assigned_to': forms.Select(attrs={'class': 'form-control'}),
+            'due_date': forms.DateInput(attrs={'type': 'date'}),
             'need': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Décrivez le besoin lié à cette sous-étape...'}),
         }
     
@@ -309,7 +314,7 @@ class BudgetForm(forms.ModelForm):
     
     class Meta:
         model = Budget
-        fields = ['direction', 'allocated', 'consumed', 'currency']
+        fields = ['project', 'direction', 'allocated', 'consumed', 'currency']
         widgets = {
             'allocated': forms.NumberInput(attrs={'step': '0.01', 'min': '0'}),
             'consumed': forms.NumberInput(attrs={'step': '0.01', 'min': '0'}),
@@ -321,6 +326,10 @@ class BudgetForm(forms.ModelForm):
             field.widget.attrs['class'] = 'form-control'
         self.fields['allocated'].label = 'Budget alloué'
         self.fields['consumed'].label = 'Budget consommé'
+        self.fields['project'].required = False
+        self.fields['project'].empty_label = "-- Sélectionner un projet --"
+        self.fields['direction'].required = False
+        self.fields['direction'].empty_label = "-- Aucune direction --"
         self.fields['currency'].widget.attrs['class'] = 'form-control select-searchable'
 
 
@@ -329,11 +338,20 @@ class EmployeeForm(forms.ModelForm):
     class Meta:
         model = Employee
         fields = ['name', 'direction', 'role', 'phone', 'email']
-    
-    def __init__(self, *args, **kwargs):
+
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
         self.fields['name'].label = 'Nom complet'
         self.fields['phone'].label = 'Téléphone'
         self.fields['email'].label = 'Email'
+
+        # Restriction : un directeur ne peut creer/modifier que des employes de sa direction
+        profile = getattr(user, 'profile', None) if user else None
+        if profile and profile.role == 'directeur' and profile.direction_id:
+            from .models import Direction
+            self.fields['direction'].queryset = Direction.objects.filter(id=profile.direction_id)
+            self.fields['direction'].initial = profile.direction_id
+            self.fields['direction'].disabled = True
+            self.fields['direction'].help_text = "Verrouillé sur votre direction."

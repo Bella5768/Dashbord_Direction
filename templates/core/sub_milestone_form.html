@@ -5,24 +5,66 @@
 {% block page_title %}{{ title }}{% endblock %}
 {% block page_subtitle %}{% trans 'Projet' %} : {{ project.name }} | {% trans 'Jalon' %} : {{ milestone.name }}{% endblock %}
 
+{% block extra_css %}
+<style>
+.sub-milestone-form-card { max-width: 760px; }
+.sub-milestone-form-card .card-body { padding: 0; }
+.sub-milestone-form { display: flex; flex-direction: column; gap: 20px; padding: 24px 30px 30px; }
+.sub-milestone-form .form-group { display: flex; flex-direction: column; gap: 8px; margin: 0 !important; }
+.sub-milestone-form label { font-weight: 600; color: #0f172a; }
+.sub-milestone-form .form-control { width: 100%; max-width: 100%; box-sizing: border-box; }
+.employee-picker { display: flex; flex-direction: column; gap: 10px; align-items: stretch; }
+.employee-picker select { min-height: 170px; }
+.selected-employee-card { padding: 10px 12px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; }
+.sub-milestone-form textarea.form-control { min-height: 96px; resize: vertical; }
+.need-help { margin: 0; }
+.form-actions { display: flex; gap: 12px; flex-wrap: wrap; padding-top: 4px; }
+@media (max-width: 720px) { .sub-milestone-form { padding: 20px; } }
+</style>
+{% endblock %}
+
 {% block extra_js %}
 <script>
+document.addEventListener('DOMContentLoaded', function() {
 const searchInput = document.getElementById('employee-search');
 const selectEl = document.getElementById('id_assigned_to');
 const selectedDiv = document.getElementById('selected-employee');
 const empAvatar = document.getElementById('emp-avatar');
 const empName = document.getElementById('emp-name');
 const empInfo = document.getElementById('emp-info');
-const allOptions = Array.from(selectEl.options);
+if (!searchInput || !selectEl || !selectedDiv) return;
+const allOptions = Array.from(selectEl.options).map(function(opt) {
+    const clone = opt.cloneNode(true);
+    if (opt.value) {
+        clone.dataset.direction = opt.dataset.direction || '';
+        clone.dataset.role = opt.dataset.role || '';
+    }
+    return clone;
+});
 
 searchInput.addEventListener('input', function() {
     const query = this.value.toLowerCase();
+    const currentValue = selectEl.value;
     selectEl.innerHTML = '';
-    allOptions.forEach(opt => {
+    let hasSelected = false;
+    allOptions.forEach(function(opt) {
         if (opt.value === '' || opt.text.toLowerCase().includes(query)) {
-            selectEl.appendChild(opt.cloneNode(true));
+            const clone = opt.cloneNode(true);
+            if (clone.value === currentValue) {
+                clone.selected = true;
+                hasSelected = true;
+            }
+            selectEl.appendChild(clone);
         }
     });
+    if (!hasSelected && currentValue) {
+        const selectedOpt = allOptions.find(function(opt) { return opt.value === currentValue; });
+        if (selectedOpt) {
+            const clone = selectedOpt.cloneNode(true);
+            clone.selected = true;
+            selectEl.appendChild(clone);
+        }
+    }
 });
 
 selectEl.addEventListener('change', function() {
@@ -38,48 +80,52 @@ selectEl.addEventListener('change', function() {
     }
 });
 
-function clearEmployee() {
+window.clearEmployee = function() {
     selectEl.value = '';
     selectedDiv.style.display = 'none';
     searchInput.value = '';
     searchInput.dispatchEvent(new Event('input'));
-}
+};
 
-document.addEventListener('DOMContentLoaded', function() {
-    const opt = selectEl.options[selectEl.selectedIndex];
-    if (opt && opt.value) {
-        const name = opt.text.split(' \u2014 ')[0].trim();
-        empAvatar.textContent = name.charAt(0).toUpperCase();
-        empName.textContent = name;
-        empInfo.textContent = (opt.dataset.direction || '') + ' \u2022 ' + (opt.dataset.role || '');
-        selectedDiv.style.display = 'block';
-    }
+const opt = selectEl.options[selectEl.selectedIndex];
+if (opt && opt.value) {
+    const name = opt.text.split(' \u2014 ')[0].trim();
+    empAvatar.textContent = name.charAt(0).toUpperCase();
+    empName.textContent = name;
+    empInfo.textContent = (opt.dataset.direction || '') + ' \u2022 ' + (opt.dataset.role || '');
+    selectedDiv.style.display = 'block';
+}
 });
 </script>
 {% endblock %}
 {% block content %}
-<div class="card" style="max-width: 600px;">
+<div class="card sub-milestone-form-card">
     <div class="card-header">
         <h3 class="card-title">{{ title }}</h3>
     </div>
     <div class="card-body">
-        <form method="post">
+        <form method="post" class="sub-milestone-form">
             {% csrf_token %}
             
-            <div class="form-group" style="margin-bottom: 20px;">
+            <div class="form-group">
                 <label for="id_name">{% trans 'Nom de la sous-étape' %} *</label>
                 <input type="text" name="name" id="id_name" class="form-control" 
                        value="{{ form.name.value|default:'' }}" required
                        placeholder="Ex: Rédiger le cahier des charges">
             </div>
             
-            <div class="form-group" style="margin-bottom: 20px;">
-                <label for="id_assigned_to">{% trans 'Responsable' %}</label>
-                <div class="searchable-select-wrapper" style="position: relative;">
+            <div class="form-group">
+                <label for="id_due_date">{% trans 'Date de la sous-tâche' %}</label>
+                <input type="date" name="due_date" id="id_due_date" class="form-control" value="{{ form.due_date.value|date:'Y-m-d'|default:'' }}">
+            </div>
+            
+            <div class="form-group">
+                <label for="employee-search">{% trans 'Rechercher' %}</label>
+                <div class="employee-picker">
                     <input type="text" id="employee-search" class="form-control" placeholder="🔍 {% trans 'Rechercher un employé...' %}" autocomplete="off"
-                           style="margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: none;">
+                           style="margin-bottom: 0;">
                     <select name="assigned_to" id="id_assigned_to" class="form-control" size="6"
-                            style="border-top-left-radius: 0; border-top-right-radius: 0; cursor: pointer;">
+                            style="cursor: pointer;">
                         <option value="">-- {% trans 'Aucun responsable' %} --</option>
                         {% for employee in form.assigned_to.field.queryset %}
                         <option value="{{ employee.pk }}" {% if form.assigned_to.value|stringformat:"s" == employee.pk|stringformat:"s" %}selected{% endif %}
@@ -88,7 +134,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </option>
                         {% endfor %}
                     </select>
-                    <div id="selected-employee" style="margin-top: 8px; padding: 8px 12px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; display: none;">
+                    <div id="selected-employee" class="selected-employee-card" style="display: none;">
                         <div style="display: flex; align-items: center; justify-content: space-between;">
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <div style="width: 32px; height: 32px; border-radius: 50%; background: #2563eb; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px;" id="emp-avatar"></div>
@@ -105,13 +151,13 @@ document.addEventListener('DOMContentLoaded', function() {
             
             <input type="hidden" name="order" id="id_order" value="{{ form.order.value|default:0 }}">
 
-            <div class="form-group" style="margin-bottom: 20px;">
+            <div class="form-group">
                 <label for="id_need">{% trans 'Besoin' %}</label>
                 <textarea name="need" id="id_need" class="form-control" rows="3" placeholder="{% trans 'Décrivez le besoin lié à cette sous-étape...' %}">{{ form.need.value|default:'' }}</textarea>
-                <p class="text-xs text-gray-500">{% trans 'Optionnel : décrivez le besoin lié à cette sous-étape' %}</p>
+                <p class="text-xs text-gray-500 need-help">{% trans 'Optionnel : décrivez le besoin lié à cette sous-étape' %}</p>
             </div>
 
-            <div class="form-group" style="margin-bottom: 20px;">
+            <div class="form-group">
                 <label style="display: block; margin-bottom: 8px;">{% trans 'Statut' %}</label>
                 <label class="remember-me" style="cursor: pointer; display: flex; gap: 8px; align-items: center;">
                     <input type="checkbox" name="completed" {% if form.completed.value %}checked{% endif %}>
@@ -119,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </label>
             </div>
             
-            <div class="flex gap-3" style="margin-top: 24px;">
+            <div class="form-actions">
                 <button type="submit" class="btn btn-primary">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />

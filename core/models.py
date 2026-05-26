@@ -44,6 +44,10 @@ class UserProfile(models.Model):
     # Permissions événements
     can_create_events = models.BooleanField(default=False, verbose_name="Peut créer des événements")
 
+    # Permissions congés
+    is_hr_manager = models.BooleanField(default=False, verbose_name="Gestionnaire RH (vérifie les demandes de congé)")
+    can_approve_leaves = models.BooleanField(default=False, verbose_name="Peut donner l'avis hiérarchique sur les congés")
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -105,6 +109,28 @@ class UserProfile(models.Model):
     
     def can_approve_documents(self):
         return self.role in ['admin', 'directeur_general', 'directeur']
+
+    # --- Conges -----------------------------------------------------------
+    def is_hr(self):
+        """Membre du service RH (verifie les demandes de conge)."""
+        return self.is_hr_manager or self.role == 'admin'
+
+    def can_give_manager_approval(self, leave_request=None):
+        """Peut donner l'avis hierarchique sur une demande de conge."""
+        if self.role in ['admin', 'directeur_general']:
+            return True
+        if self.can_approve_leaves:
+            return True
+        # Un directeur valide les demandes de sa direction
+        if self.role == 'directeur' and leave_request is not None:
+            return self.direction_id is not None and self.direction_id == leave_request.direction_id
+        return self.role == 'directeur'
+
+    def can_give_hr_check(self):
+        return self.is_hr() or self.role in ['admin', 'directeur_general']
+
+    def can_give_final_approval(self):
+        return self.role in ['admin', 'directeur_general']
     
     def has_approve_requests_permission(self):
         """Admin et DG peuvent approuver les demandes, ou permission explicite"""
@@ -256,6 +282,9 @@ class UserProfile(models.Model):
         """Vérifie si l'utilisateur peut voir un projet"""
         if self.role in ['admin', 'directeur_general']:
             return True
+        # Directeur : uniquement les projets de sa direction
+        if self.role == 'directeur':
+            return self.direction_id is not None and project.direction_id == self.direction_id
         # Vérifier si l'utilisateur est manager du projet
         user_name = self.user.get_full_name() or self.user.username
         if project.manager and user_name in project.manager:
@@ -322,7 +351,7 @@ class Project(models.Model):
     
     name = models.CharField(max_length=200, verbose_name="Nom du projet")
     description = models.TextField(blank=True, verbose_name="Description")
-    direction = models.ForeignKey(Direction, on_delete=models.CASCADE, related_name='projects', verbose_name="Direction")
+    direction = models.ForeignKey(Direction, on_delete=models.SET_NULL, null=True, blank=True, related_name='projects', verbose_name="Direction")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='planifie', verbose_name="Statut")
     priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='moyenne', verbose_name="Priorité")
     progress = models.IntegerField(default=0, verbose_name="Progression (%)")
@@ -486,6 +515,8 @@ class Milestone(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='milestones', verbose_name="Projet")
     name = models.CharField(max_length=200, verbose_name="Nom du jalon")
     assigned_to = models.ForeignKey('Employee', on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_milestones', verbose_name="Responsable")
+    assigned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_milestones_created', verbose_name="Attribué par")
+    due_date = models.DateField(null=True, blank=True, verbose_name="Date de la tâche")
     completed = models.BooleanField(default=False, verbose_name="Complété")
     need = models.TextField(blank=True, default='', verbose_name="Besoin")
     manual_progress = models.IntegerField(default=0, verbose_name="Progression manuelle (%)")
@@ -529,6 +560,8 @@ class SubMilestone(models.Model):
     milestone = models.ForeignKey(Milestone, on_delete=models.CASCADE, related_name='sub_milestones', verbose_name="Jalon parent")
     name = models.CharField(max_length=200, verbose_name="Nom de la sous-étape")
     assigned_to = models.ForeignKey('Employee', on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_sub_milestones', verbose_name="Responsable")
+    assigned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_sub_milestones_created', verbose_name="Attribué par")
+    due_date = models.DateField(null=True, blank=True, verbose_name="Date de la sous-tâche")
     completed = models.BooleanField(default=False, verbose_name="Complétée")
     need = models.TextField(blank=True, default='', verbose_name="Besoin")
     order = models.IntegerField(default=0, verbose_name="Ordre")
@@ -867,7 +900,8 @@ class UserActivity(models.Model):
 
 
 class Budget(models.Model):
-    direction = models.OneToOneField(Direction, on_delete=models.CASCADE, related_name='budget', verbose_name="Direction")
+    direction = models.ForeignKey(Direction, on_delete=models.SET_NULL, null=True, blank=True, related_name='budgets', verbose_name="Direction")
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, null=True, blank=True, related_name='budget_lines', verbose_name="Projet")
     allocated = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name="Budget alloué")
     consumed = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name="Budget consommé")
     currency = models.CharField(max_length=3, default='GNF', verbose_name="Devise")
@@ -877,7 +911,11 @@ class Budget(models.Model):
         verbose_name_plural = "Budgets"
     
     def __str__(self):
-        return f"Budget {self.direction.code}"
+        if self.project:
+            return f"Budget {self.project.name}"
+        if self.direction:
+            return f"Budget {self.direction.code}"
+        return "Budget sans affectation"
     
     @property
     def available(self):
@@ -888,3 +926,162 @@ class Budget(models.Model):
         if self.allocated > 0:
             return round((float(self.consumed) / float(self.allocated)) * 100, 1)
         return 0
+
+
+# =====================================================================
+# Conges
+# =====================================================================
+
+class LeaveRequest(models.Model):
+    """Demande de conge - workflow CSIG (Employe -> Hierarchie -> RH -> Direction)."""
+
+    TYPE_CHOICES = [
+        ('annuel', 'Congé annuel'),
+        ('maladie', 'Congé maladie'),
+        ('maternite', 'Congé maternité / paternité'),
+        ('exceptionnelle', 'Permission exceptionnelle'),
+        ('sans_solde', 'Congé sans solde'),
+        ('formation', 'Formation / Mission'),
+    ]
+
+    STATUS_CHOICES = [
+        ('soumise', 'Soumise - en attente avis hiérarchique'),
+        ('avis_favorable', 'Avis hiérarchique favorable - en attente RH'),
+        ('avis_defavorable', 'Avis hiérarchique défavorable'),
+        ('rh_conforme', 'Vérifiée RH - en attente décision finale'),
+        ('rh_non_conforme', 'Non conforme RH'),
+        ('approuvee', 'Approuvée'),
+        ('rejetee', 'Rejetée'),
+        ('annulee', 'Annulée par le demandeur'),
+    ]
+
+    DECISION_CHOICES = [
+        ('', 'En attente'),
+        ('favorable', 'Favorable'),
+        ('defavorable', 'Défavorable'),
+    ]
+
+    HR_DECISION_CHOICES = [
+        ('', 'En attente'),
+        ('conforme', 'Conforme'),
+        ('non_conforme', 'Non conforme'),
+    ]
+
+    FINAL_DECISION_CHOICES = [
+        ('', 'En attente'),
+        ('approuve', 'Approuvée'),
+        ('rejete', 'Rejetée'),
+    ]
+
+    # Demandeur
+    employee = models.ForeignKey(Employee, on_delete=models.PROTECT, related_name='leave_requests', verbose_name="Employé")
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='leave_requests', verbose_name="Utilisateur")
+    direction = models.ForeignKey(Direction, on_delete=models.PROTECT, related_name='leave_requests', verbose_name="Direction / Service")
+
+    # Demande
+    leave_type = models.CharField(max_length=20, choices=TYPE_CHOICES, verbose_name="Type de congé")
+    start_date = models.DateField(verbose_name="Date de début")
+    end_date = models.DateField(verbose_name="Date de fin")
+    days_count = models.PositiveIntegerField(default=0, verbose_name="Nombre de jours")
+    reason = models.TextField(verbose_name="Motif")
+    replacement = models.CharField(max_length=200, blank=True, verbose_name="Suppléant / agent intérimaire")
+    handover_note = models.TextField(blank=True, verbose_name="Note de passation")
+
+    # Justificatif principal
+    justification = models.FileField(upload_to='leaves/', null=True, blank=True, verbose_name="Justificatif")
+
+    # Statut global
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='soumise', verbose_name="Statut")
+
+    # Etape 1 : superieur hierarchique (48h)
+    manager_decision = models.CharField(max_length=15, choices=DECISION_CHOICES, blank=True, default='', verbose_name="Avis hiérarchique")
+    manager_comment = models.TextField(blank=True, verbose_name="Observations hiérarchie")
+    manager_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='leaves_managed', verbose_name="Validé par (hiérarchie)")
+    manager_decision_at = models.DateTimeField(null=True, blank=True, verbose_name="Date avis hiérarchique")
+
+    # Etape 2 : RH (72h)
+    hr_decision = models.CharField(max_length=15, choices=HR_DECISION_CHOICES, blank=True, default='', verbose_name="Vérification RH")
+    hr_comment = models.TextField(blank=True, verbose_name="Observations RH")
+    hr_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='leaves_hr', verbose_name="Vérifié par (RH)")
+    hr_decision_at = models.DateTimeField(null=True, blank=True, verbose_name="Date vérification RH")
+
+    # Etape 3 : Direction Generale / Coordination (decision finale)
+    final_decision = models.CharField(max_length=15, choices=FINAL_DECISION_CHOICES, blank=True, default='', verbose_name="Décision finale")
+    final_comment = models.TextField(blank=True, verbose_name="Observations Direction")
+    final_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='leaves_final', verbose_name="Décidé par (Direction)")
+    final_decision_at = models.DateTimeField(null=True, blank=True, verbose_name="Date décision finale")
+
+    # Meta
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Soumise le")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Demande de congé"
+        verbose_name_plural = "Demandes de congé"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.employee.name} - {self.get_leave_type_display()} ({self.start_date} -> {self.end_date})"
+
+    # ---- helpers ----------------------------------------------------------
+    def compute_days(self):
+        """Nombre de jours calendaires inclusifs."""
+        if not (self.start_date and self.end_date):
+            return 0
+        delta = (self.end_date - self.start_date).days + 1
+        return max(delta, 0)
+
+    def save(self, *args, **kwargs):
+        if self.start_date and self.end_date and not self.days_count:
+            self.days_count = self.compute_days()
+        super().save(*args, **kwargs)
+
+    @property
+    def is_pending(self):
+        return self.status in ['soumise', 'avis_favorable', 'rh_conforme']
+
+    @property
+    def is_finalized(self):
+        return self.status in ['approuvee', 'rejetee', 'annulee', 'avis_defavorable', 'rh_non_conforme']
+
+    @property
+    def status_color(self):
+        return {
+            'soumise': '#f59e0b',
+            'avis_favorable': '#3b82f6',
+            'avis_defavorable': '#ef4444',
+            'rh_conforme': '#6366f1',
+            'rh_non_conforme': '#ef4444',
+            'approuvee': '#16a34a',
+            'rejetee': '#ef4444',
+            'annulee': '#6b7280',
+        }.get(self.status, '#6b7280')
+
+    @property
+    def current_step_label(self):
+        return {
+            'soumise': '1/3 - Avis hiérarchique',
+            'avis_favorable': '2/3 - Vérification RH',
+            'rh_conforme': '3/3 - Décision Direction',
+            'approuvee': 'Terminé - Approuvée',
+            'rejetee': 'Terminé - Rejetée',
+            'avis_defavorable': 'Terminé - Refus hiérarchique',
+            'rh_non_conforme': 'Terminé - Non conforme RH',
+            'annulee': 'Annulée',
+        }.get(self.status, self.get_status_display())
+
+
+class LeaveDocument(models.Model):
+    """Piece jointe supplementaire pour une demande de conge."""
+    leave_request = models.ForeignKey(LeaveRequest, on_delete=models.CASCADE, related_name='documents', verbose_name="Demande")
+    file = models.FileField(upload_to='leaves/docs/', verbose_name="Fichier")
+    label = models.CharField(max_length=200, blank=True, verbose_name="Libellé")
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Document de congé"
+        verbose_name_plural = "Documents de congé"
+        ordering = ['-uploaded_at']
+
+    def __str__(self):
+        return self.label or self.file.name

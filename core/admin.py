@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
-from .models import Direction, Project, Milestone, Document, Partner, Event, Request, Employee, Budget, UserProfile
+from .models import Direction, Project, Milestone, Document, Partner, Event, Request, Employee, Budget, UserProfile, LeaveRequest, LeaveDocument
 
 
 class UserProfileInline(admin.StackedInline):
@@ -99,3 +99,40 @@ class EmployeeAdmin(admin.ModelAdmin):
 @admin.register(Budget)
 class BudgetAdmin(admin.ModelAdmin):
     list_display = ['direction', 'allocated', 'consumed', 'consumption_rate']
+
+
+class LeaveDocumentInline(admin.TabularInline):
+    model = LeaveDocument
+    extra = 0
+
+
+@admin.register(LeaveRequest)
+class LeaveRequestAdmin(admin.ModelAdmin):
+    list_display = ['id', 'employee', 'direction', 'leave_type', 'start_date', 'end_date', 'days_count', 'status', 'created_at']
+    list_filter = ['status', 'leave_type', 'direction', 'created_at']
+    search_fields = ['employee__name', 'reason', 'replacement']
+    readonly_fields = ['created_at', 'updated_at', 'days_count']
+    inlines = [LeaveDocumentInline]
+    fieldsets = (
+        ('Demande', {
+            'fields': ('employee', 'user', 'direction', 'leave_type', 'start_date', 'end_date', 'days_count', 'reason', 'replacement', 'handover_note', 'justification', 'status')
+        }),
+        ('Avis hiérarchique', {
+            'fields': ('manager_decision', 'manager_comment', 'manager_user', 'manager_decision_at'),
+        }),
+        ('Vérification RH', {
+            'fields': ('hr_decision', 'hr_comment', 'hr_user', 'hr_decision_at'),
+        }),
+        ('Décision finale', {
+            'fields': ('final_decision', 'final_comment', 'final_user', 'final_decision_at'),
+        }),
+        ('Métadonnées', {
+            'fields': ('created_at', 'updated_at'),
+        }),
+    )
+
+
+@admin.register(LeaveDocument)
+class LeaveDocumentAdmin(admin.ModelAdmin):
+    list_display = ['leave_request', 'label', 'uploaded_at']
+    search_fields = ['label']

@@ -8,6 +8,15 @@ from django.utils.translation import gettext_lazy as _
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+env_path = BASE_DIR / '.env'
+if env_path.exists():
+    for line in env_path.read_text(encoding='utf-8').splitlines():
+        line = line.strip()
+        if not line or line.startswith('#') or '=' not in line:
+            continue
+        key, value = line.split('=', 1)
+        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-csig-dashboard-2025-change-this-in-production')
 
 DEBUG = os.getenv('DJANGO_DEBUG', 'True').lower() in ('1', 'true', 'yes', 'on')
@@ -138,6 +147,12 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Email Configuration via SendGrid API (compatible PythonAnywhere gratuit)
-SENDGRID_API_KEY = ''  # À remplir avec votre clé API SendGrid
-DEFAULT_FROM_EMAIL = 'support@csig.edu.gn'
+# Email Configuration via Outlook SMTP
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'core.email_backend.OutlookSMTPBackend')
+EMAIL_LOCAL_HOSTNAME = os.getenv('EMAIL_LOCAL_HOSTNAME', 'csig.edu.gn')
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.office365.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() in ('1', 'true', 'yes', 'on')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'support@csig.edu.gn')

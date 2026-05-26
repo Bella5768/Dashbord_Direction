@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block page_subtitle %}{% trans 'Formulaire de demande - CSIG' %}{% endblock %}
+
+{% block content %}
+<style>
+.form-container {
+    background: #1c3550;
+    padding: 32px;
+    border-radius: 16px;
+    margin: 0 auto;
+}
+.form-section {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+.form-section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #e2e8f0;
+}
+.form-section-number {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 16px;
+}
+.form-section-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+}
+.form-section-description {
+    font-size: 14px;
+    color: #64748b;
+    margin: 0 0 0 auto;
+}
+.form-group {
+    margin-bottom: 20px;
+}
+.form-group:last-child {
+    margin-bottom: 0;
+}
+.form-label {
+    display: block;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+.form-control {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s;
+    background: #ffffff;
+}
+.form-control:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+textarea.form-control {
+    min-height: 100px;
+    resize: vertical;
+}
+.help-text {
+    font-size: 13px;
+    color: #64748b;
+    margin-top: 6px;
+}
+.error-text {
+    font-size: 13px;
+    color: #ef4444;
+    margin-top: 6px;
+}
+</style>
+
+<div class="form-container" style="max-width: 900px;">
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger" style="margin-bottom: 24px; padding: 16px; border-radius: 8px; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b;">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- Section 1: Informations personnelles -->
+        <div class="form-section">
+            <div class="form-section-header">
+                <div class="form-section-number">1</div>
+                <h3 class="form-section-title">{% trans 'Informations personnelles' %}</h3>
+                <span class="form-section-description">{% trans 'Votre identité et direction' %}</span>
+            </div>
+            <div class="grid grid-2" style="gap: 20px;">
+                <div class="form-group">
+                    <label class="form-label">{{ form.employee.label }}</label>
+                    {{ form.employee }}
+                    {% if form.employee.errors %}<p class="error-text">{{ form.employee.errors|striptags }}</p>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ form.direction.label }}</label>
+                    {{ form.direction }}
+                    {% if form.direction.errors %}<p class="error-text">{{ form.direction.errors|striptags }}</p>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Détails du congé -->
+        <div class="form-section">
+            <div class="form-section-header">
+                <div class="form-section-number">2</div>
+                <h3 class="form-section-title">{% trans 'Détails du congé' %}</h3>
+                <span class="form-section-description">{% trans 'Type et durée' %}</span>
+            </div>
+            <div class="form-group">
+                <label class="form-label">{{ form.leave_type.label }}</label>
+                {{ form.leave_type }}
+                {% if form.leave_type.errors %}<p class="error-text">{{ form.leave_type.errors|striptags }}</p>{% endif %}
+            </div>
+            <div class="grid grid-2" style="gap: 20px;">
+                <div class="form-group">
+                    <label class="form-label">{{ form.start_date.label }}</label>
+                    {{ form.start_date }}
+                    {% if form.start_date.errors %}<p class="error-text">{{ form.start_date.errors|striptags }}</p>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ form.end_date.label }}</label>
+                    {{ form.end_date }}
+                    {% if form.end_date.errors %}<p class="error-text">{{ form.end_date.errors|striptags }}</p>{% endif %}
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">{{ form.reason.label }}</label>
+                {{ form.reason }}
+                {% if form.reason.errors %}<p class="error-text">{{ form.reason.errors|striptags }}</p>{% endif %}
+            </div>
+        </div>
+
+        <!-- Section 3: Continuité de service -->
+        <div class="form-section">
+            <div class="form-section-header">
+                <div class="form-section-number">3</div>
+                <h3 class="form-section-title">{% trans 'Continuité de service' %}</h3>
+                <span class="form-section-description">{% trans 'Remplacement et passation' %}</span>
+            </div>
+            <div class="form-group">
+                <label class="form-label">{{ form.replacement.label }}</label>
+                {{ form.replacement }}
+                <p class="help-text">{% trans 'Personne désignée pour assurer la continuité du service pendant votre absence.' %}</p>
+            </div>
+            <div class="form-group">
+                <label class="form-label">{{ form.handover_note.label }}</label>
+                {{ form.handover_note }}
+                <p class="help-text">{% trans 'Brève note de passation : dossiers en cours, points d\'attention, contacts utiles.' %}</p>
+            </div>
+        </div>
+
+        <!-- Section 4: Justificatifs -->
+        <div class="form-section">
+            <div class="form-section-header">
+                <div class="form-section-number">4</div>
+                <h3 class="form-section-title">{% trans 'Documents justificatifs' %}</h3>
+                <span class="form-section-description">{% trans 'Pièces à fournir' %}</span>
+            </div>
+            <div class="form-group">
+                <label class="form-label">{{ form.justification.label }}</label>
+                {{ form.justification }}
+                <p class="help-text">{% trans 'Certificat médical, acte de naissance, convocation, ordre de mission, lettre motivée…' %}</p>
+                {% if form.justification.errors %}<p class="error-text">{{ form.justification.errors|striptags }}</p>{% endif %}
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card" style="background: linear-gradient(135deg, #f8fafc, #f1f5f9); border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px;">
+            <div class="flex items-center justify-between" style="gap: 16px;">
+                <div>
+                    <p style="margin: 0; font-weight: 600; color: #334155; font-size: 16px;">{% trans 'Prêt à soumettre ?' %}</p>
+                    <p style="margin: 4px 0 0; color: #64748b; font-size: 14px;">{% trans 'Votre demande sera transmise à votre hiérarchie pour validation.' %}</p>
+                </div>
+                <div class="flex gap-2">
+                    <a href="{% url 'core:leave_list' %}" class="btn btn-secondary" style="padding: 12px 24px; border-radius: 8px;">{% trans 'Annuler' %}</a>
+                    <button type="submit" class="btn btn-primary" style="padding: 12px 32px; border-radius: 8px; font-weight: 600;">{% trans 'Soumettre la demande' %}</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

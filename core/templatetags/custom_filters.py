@@ -19,3 +19,9 @@ def number_format(value):
         return '{:,}'.format(value).replace(',', ' ')
     except (ValueError, TypeError):
         return value
+
+
+@register.filter
+def split(value, separator=','):
+    """Split a string by separator."""
+    return value.split(separator)

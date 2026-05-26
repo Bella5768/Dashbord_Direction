@@ -60,26 +60,39 @@
 <div class="grid grid-2 mb-6">
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">{% trans 'Budget par direction (en millions GNF)' %}</h3>
+            <h3 class="card-title">Budget par projet (en millions GNF)</h3>
+            <span class="card-subtitle" style="font-size: 12px; color: #6b7280;">Alloué vs Consommé — Top 10</span>
         </div>
         <div class="card-content">
-            <div class="chart-container">
+            <div class="chart-container" style="position: relative; height: 280px;">
                 <canvas id="budgetChart"></canvas>
+                <div id="budgetEmpty" style="display:none; position:absolute; inset:0; align-items:center; justify-content:center; color:#9ca3af; font-size:14px; text-align:center;">
+                    Aucun projet n'a encore de budget renseigné.<br>
+                    <a href="{% url 'core:projects' %}" style="color:#3b82f6;">Créer / éditer un projet →</a>
+                </div>
             </div>
         </div>
     </div>
     
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">{% trans 'Évolution des projets' %}</h3>
+            <h3 class="card-title">Répartition des projets</h3>
+            <span class="card-subtitle" style="font-size: 12px; color: #6b7280;">{{ total_projects }} projet{{ total_projects|pluralize }} au total</span>
         </div>
         <div class="card-content">
-            <div class="chart-container">
+            <div class="chart-container" style="position: relative; height: 280px;">
                 <canvas id="progressChart"></canvas>
+                <div id="progressEmpty" style="display:none; position:absolute; inset:0; align-items:center; justify-content:center; color:#9ca3af; font-size:14px; text-align:center;">
+                    Aucun projet enregistré.<br>
+                    <a href="{% url 'core:projects' %}" style="color:#3b82f6;">Créer un projet →</a>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+{{ budget_data|json_script:"budget-data-json" }}
+<script id="dashboard-counts" type="application/json">{"in_progress": {{ projects_in_progress }}, "completed": {{ projects_completed }}, "planned": {{ projects_planned }}}</script>
 
 <!-- Projects and Documents -->
 <div class="grid grid-2 mb-6">
@@ -231,70 +244,121 @@
 
 {% block extra_js %}
 <script>
-// Budget Chart
-const budgetCtx = document.getElementById('budgetChart').getContext('2d');
-const budgetData = {{ budget_data|safe }};
+(function () {
+    const budgetData = JSON.parse(document.getElementById('budget-data-json').textContent || '[]');
+    const counts = JSON.parse(document.getElementById('dashboard-counts').textContent || '{}');
 
-new Chart(budgetCtx, {
-    type: 'bar',
-    data: {
-        labels: budgetData.map(d => d.direction),
-        datasets: [
-            {
-                label: '{% trans "Alloué" %}',
-                data: budgetData.map(d => d.allocated),
-                backgroundColor: '#3b82f6',
-                borderRadius: 4,
+    // Budget Chart
+    const budgetCanvas = document.getElementById('budgetChart');
+    const budgetEmpty = document.getElementById('budgetEmpty');
+    const hasBudget = budgetData.some(d => (d.allocated || 0) > 0 || (d.consumed || 0) > 0);
+
+    if (!hasBudget) {
+        budgetCanvas.style.display = 'none';
+        budgetEmpty.style.display = 'flex';
+    } else {
+        new Chart(budgetCanvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: budgetData.map(d => d.direction),
+                datasets: [
+                    {
+                        label: 'Alloué',
+                        data: budgetData.map(d => d.allocated),
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 6,
+                        borderSkipped: false,
+                    },
+                    {
+                        label: 'Consommé',
+                        data: budgetData.map(d => d.consumed),
+                        backgroundColor: '#10b981',
+                        borderRadius: 6,
+                        borderSkipped: false,
+                    }
+                ]
             },
-            {
-                label: '{% trans "Consommé" %}',
-                data: budgetData.map(d => d.consumed),
-                backgroundColor: '#10b981',
-                borderRadius: 4,
-            }
-        ]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'top',
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                title: {
-                    display: true,
-                    text: '{% trans "Millions GNF" %}'
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top', labels: { boxWidth: 12, font: { size: 12 } } },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => {
+                                const v = (ctx.parsed.y || 0).toLocaleString('fr-FR', { maximumFractionDigits: 2 });
+                                return ctx.dataset.label + ' : ' + v + ' M GNF';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Millions GNF', font: { size: 11 } },
+                        ticks: { callback: v => v + ' M' }
+                    }
                 }
             }
-        }
+        });
     }
-});
 
-// Progress Chart
-const progressCtx = document.getElementById('progressChart').getContext('2d');
-new Chart(progressCtx, {
-    type: 'doughnut',
-    data: {
-        labels: ['{% trans "En cours" %}', '{% trans "Terminés" %}', '{% trans "Planifiés" %}'],
-        datasets: [{
-            data: [{{ projects_in_progress }}, {{ projects_completed }}, {{ projects_planned }}],
-            backgroundColor: ['#3b82f6', '#10b981', '#6b7280'],
-            borderWidth: 0,
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'right',
+    // Progress Chart
+    const progressCanvas = document.getElementById('progressChart');
+    const progressEmpty = document.getElementById('progressEmpty');
+    const totalProjects = (counts.in_progress || 0) + (counts.completed || 0) + (counts.planned || 0);
+
+    if (totalProjects === 0) {
+        progressCanvas.style.display = 'none';
+        progressEmpty.style.display = 'flex';
+    } else {
+        new Chart(progressCanvas.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['En cours', 'Terminés', 'Planifiés'],
+                datasets: [{
+                    data: [counts.in_progress, counts.completed, counts.planned],
+                    backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'],
+                    borderColor: '#ffffff',
+                    borderWidth: 3,
+                    hoverOffset: 8,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '62%',
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            boxWidth: 12,
+                            font: { size: 12 },
+                            generateLabels: (chart) => {
+                                const data = chart.data;
+                                return data.labels.map((label, i) => ({
+                                    text: label + ' (' + data.datasets[0].data[i] + ')',
+                                    fillStyle: data.datasets[0].backgroundColor[i],
+                                    strokeStyle: data.datasets[0].backgroundColor[i],
+                                    index: i,
+                                }));
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => {
+                                const v = ctx.parsed || 0;
+                                const pct = totalProjects ? Math.round(v / totalProjects * 100) : 0;
+                                return ctx.label + ' : ' + v + ' (' + pct + '%)';
+                            }
+                        }
+                    }
+                }
             }
-        }
+        });
     }
-});
+})();
 </script>
 {% endblock %}

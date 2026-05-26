@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import views_leave
 
 app_name = 'core'
 
@@ -104,4 +105,17 @@ urlpatterns = [
     path('api/projects/', views.api_projects_data, name='api_projects'),
     path('api/projets/<int:project_id>/jalons/reorder/', views.milestone_reorder, name='milestone_reorder'),
     path('api/jalons/<int:milestone_id>/sous-etapes/reorder/', views.sub_milestone_reorder, name='sub_milestone_reorder'),
+    path('api/projets/<int:project_id>/status/', views.api_project_update_status, name='api_project_update_status'),
+    path('api/projets/<int:project_id>/tasks/create/', views.api_project_task_create, name='api_project_task_create'),
+    path('api/tasks/<int:milestone_id>/update/', views.api_project_task_update, name='api_project_task_update'),
+
+    # Conges
+    path('conges/', views_leave.leave_list, name='leave_list'),
+    path('conges/nouveau/', views_leave.leave_create, name='leave_create'),
+    path('conges/<int:leave_id>/', views_leave.leave_detail, name='leave_detail'),
+    path('conges/<int:leave_id>/modifier/', views_leave.leave_edit, name='leave_edit'),
+    path('conges/<int:leave_id>/annuler/', views_leave.leave_cancel, name='leave_cancel'),
+    path('conges/<int:leave_id>/decision-hierarchique/', views_leave.leave_decide_manager, name='leave_decide_manager'),
+    path('conges/<int:leave_id>/verification-rh/', views_leave.leave_decide_hr, name='leave_decide_hr'),
+    path('conges/<int:leave_id>/decision-finale/', views_leave.leave_decide_final, name='leave_decide_final'),
 ]

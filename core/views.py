@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
 from django.http import JsonResponse, HttpResponse
-from django.db.models import Sum, Count, Avg
+from django.db.models import Sum, Count, Avg, Q
 from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -136,10 +137,21 @@ def dashboard(request):
     projects_completed = Project.objects.filter(status='termine').count()
     projects_planned = Project.objects.filter(status='planifie').count()
     
-    # Budget
-    total_budget = Budget.objects.aggregate(total=Sum('allocated'))['total'] or 0
-    total_consumed = Budget.objects.aggregate(total=Sum('consumed'))['total'] or 0
-    budget_percentage = round((float(total_consumed) / float(total_budget) * 100), 1) if total_budget > 0 else 0
+    # Budget : combiner table Budget (par direction ou projet) + Project.budget direct
+    budget_table_allocated = Budget.objects.aggregate(total=Sum('allocated'))['total'] or 0
+    budget_table_consumed = Budget.objects.aggregate(total=Sum('consumed'))['total'] or 0
+    # Projects.budget direct, en excluant ceux deja couverts par une ligne Budget(project=...)
+    project_ids_with_budget_row = set(
+        Budget.objects.filter(project__isnull=False).values_list('project_id', flat=True)
+    )
+    project_direct = Project.objects.exclude(id__in=project_ids_with_budget_row).aggregate(
+        total_allocated=Sum('budget'), total_consumed=Sum('budget_consumed'),
+    )
+    project_direct_allocated = project_direct['total_allocated'] or 0
+    project_direct_consumed = project_direct['total_consumed'] or 0
+    total_budget = float(budget_table_allocated) + float(project_direct_allocated)
+    total_consumed = float(budget_table_consumed) + float(project_direct_consumed)
+    budget_percentage = round((total_consumed / total_budget * 100), 1) if total_budget > 0 else 0
     
     # Documents et demandes
     pending_documents = Document.objects.exclude(status='signe').count()
@@ -152,7 +164,6 @@ def dashboard(request):
     if request.user.profile.is_directeur_general() or request.user.is_staff:
         active_projects = Project.objects.filter(status='en_cours').select_related('direction')[:4]
     else:
-        from django.db.models import Q
         user_name = request.user.get_full_name() or request.user.username
         employee_id = getattr(request.user.profile, 'employee_id', None)
         member_q = (
@@ -173,19 +184,49 @@ def dashboard(request):
     # Événements à venir
     upcoming_events = Event.objects.filter(date__gte=today).prefetch_related('participants')[:4]
     
-    # Données pour les graphiques
-    directions = Direction.objects.all()
+    # Donnees pour le graphique Budget : budget PAR PROJET (independant de toute direction).
+    # Deux sources combinees :
+    #   1) Project.budget / Project.budget_consumed (saisis dans le formulaire projet)
+    #   2) Budget(project=...) (lignes budgetaires creees via "Affecter un budget")
+    budget_by_project = {}  # project_id -> {'name', 'allocated', 'consumed'}
+
+    # Source 1 : champ budget directement sur le projet
+    for p in Project.objects.filter(Q(budget__gt=0) | Q(budget_consumed__gt=0)):
+        budget_by_project[p.id] = {
+            'name': p.name,
+            'allocated': float(p.budget or 0),
+            'consumed': float(p.budget_consumed or 0),
+        }
+
+    # Source 2 : lignes budgetaires rattachees a un projet (somme)
+    project_budget_rows = (
+        Budget.objects
+        .filter(project__isnull=False)
+        .values('project_id', 'project__name')
+        .annotate(total_allocated=Sum('allocated'), total_consumed=Sum('consumed'))
+    )
+    for row in project_budget_rows:
+        pid = row['project_id']
+        entry = budget_by_project.setdefault(pid, {
+            'name': row['project__name'] or 'Projet sans nom',
+            'allocated': 0.0,
+            'consumed': 0.0,
+        })
+        entry['allocated'] += float(row['total_allocated'] or 0)
+        entry['consumed'] += float(row['total_consumed'] or 0)
+
+    # Tri par alloue desc, top 10, conversion en millions
+    sorted_entries = sorted(budget_by_project.values(), key=lambda e: e['allocated'], reverse=True)[:10]
     budget_data = []
-    for direction in directions:
-        try:
-            budget = direction.budget
-            budget_data.append({
-                'direction': direction.code,
-                'allocated': float(budget.allocated) / 1000000,
-                'consumed': float(budget.consumed) / 1000000,
-            })
-        except Budget.DoesNotExist:
-            pass
+    for entry in sorted_entries:
+        name = entry['name']
+        budget_data.append({
+            'direction': name[:30] + ('…' if len(name) > 30 else ''),
+            'name': name,
+            'color': '#3b82f6',
+            'allocated': entry['allocated'] / 1000000,
+            'consumed': entry['consumed'] / 1000000,
+        })
     
     context = {
         'total_projects': total_projects,
@@ -209,48 +250,60 @@ def dashboard(request):
 
 @login_required
 def projects(request):
-    """Vue de la liste des projets"""
+    """Vue de la liste des projets avec restrictions par role."""
     status_filter = request.GET.get('status', 'all')
     direction_filter = request.GET.get('direction', 'all')
     search = request.GET.get('search', '')
-    
+
     projects_qs = Project.objects.select_related('direction').prefetch_related('milestones')
-    
+    profile = request.user.profile
+
     # Permission filtering
-    if request.user.profile.is_directeur_general() or request.user.is_staff:
+    if profile.is_directeur_general() or request.user.is_staff:
         # DG et admin voient tous les projets
         pass
+    elif profile.role == 'directeur':
+        # Directeur : uniquement les projets de sa direction
+        if profile.direction_id:
+            projects_qs = projects_qs.filter(direction_id=profile.direction_id)
+        else:
+            projects_qs = projects_qs.none()
     else:
-        # Directeur, Chef de projet et autres : seulement les projets où ils sont manager OU membres
+        # Chef de projet et autres : seulement les projets où ils sont manager OU membres
         from django.db.models import Q
-        
+
         user_name = request.user.get_full_name() or request.user.username
-        employee_id = getattr(request.user.profile, 'employee_id', None)
-        
+        employee_id = getattr(profile, 'employee_id', None)
+
         member_q = (
             Q(members__employee_id=employee_id)
             if employee_id
             else Q(members__employee__name__iexact=user_name) | Q(members__employee__name__icontains=request.user.username)
         )
-        
+
         projects_qs = projects_qs.filter(Q(manager__icontains=user_name) | member_q).distinct()
-    
+
     if status_filter != 'all':
         projects_qs = projects_qs.filter(status=status_filter)
     if direction_filter != 'all':
         projects_qs = projects_qs.filter(direction__code=direction_filter)
     if search:
         projects_qs = projects_qs.filter(name__icontains=search)
-    
+
     directions = Direction.objects.all()
-    
+
     # Stats filtered by permissions (même logique que le filtrage principal)
-    if request.user.profile.is_directeur_general() or request.user.is_staff:
+    if profile.is_directeur_general() or request.user.is_staff:
         base_qs = Project.objects.all()
+    elif profile.role == 'directeur':
+        if profile.direction_id:
+            base_qs = Project.objects.filter(direction_id=profile.direction_id)
+        else:
+            base_qs = Project.objects.none()
     else:
         from django.db.models import Q
         user_name = request.user.get_full_name() or request.user.username
-        employee_id = getattr(request.user.profile, 'employee_id', None)
+        employee_id = getattr(profile, 'employee_id', None)
         member_q = (
             Q(members__employee_id=employee_id)
             if employee_id
@@ -263,7 +316,7 @@ def projects(request):
         'termine': base_qs.filter(status='termine').count(),
         'planifie': base_qs.filter(status='planifie').count(),
     }
-    
+
     context = {
         'projects': projects_qs,
         'directions': directions,
@@ -285,16 +338,37 @@ def resources(request):
     can_manage_budgets = request.user.profile.can_manage_budgets()
     can_view_all_budget_directions = request.user.profile.can_view_all_budget_directions()
 
-    budgets = Budget.objects.select_related('direction')
+    budgets_qs = Budget.objects.select_related('direction', 'project')
     if not can_view_budgets:
-        budgets = budgets.none()
+        budgets_qs = budgets_qs.none()
     elif not can_view_all_budget_directions:
-        budgets = budgets.filter(direction=request.user.profile.direction)
+        budgets_qs = budgets_qs.filter(Q(project__isnull=False) | Q(direction=request.user.profile.direction))
 
-    budgets = budgets.all()
-    
-    # Convertir tous les budgets en GNF pour les totaux
     from .currencies import convert_currency, format_currency
+    from types import SimpleNamespace
+
+    # 1) Budgets reels (table Budget)
+    budgets = list(budgets_qs.all())
+
+    # Projects deja couverts par une ligne Budget(project=...)
+    projects_with_budget_row = {b.project_id for b in budgets if b.project_id}
+
+    # 2) Synthese : Project.budget saisi directement sur le projet (sans ligne Budget dediee)
+    if can_view_budgets:
+        for p in Project.objects.exclude(id__in=projects_with_budget_row).filter(Q(budget__gt=0) | Q(budget_consumed__gt=0)):
+            budgets.append(SimpleNamespace(
+                id=None,
+                is_inline=True,  # source = Project.budget
+                project=p,
+                direction=p.direction,
+                allocated=p.budget or 0,
+                consumed=p.budget_consumed or 0,
+                currency=p.currency or 'GNF',
+                available=(p.budget or 0) - (p.budget_consumed or 0),
+                consumption_rate=round((float(p.budget_consumed) / float(p.budget)) * 100, 1) if p.budget and p.budget > 0 else 0,
+            ))
+
+    # Conversion GNF + totaux
     total_allocated = 0
     total_consumed = 0
     for b in budgets:
@@ -306,8 +380,15 @@ def resources(request):
     total_allocated = round(total_allocated)
     total_consumed = round(total_consumed)
     
-    # Employees data
+    # Employees data : un directeur ne voit que sa direction
     employees = Employee.objects.select_related('direction').all()
+    profile = request.user.profile
+    if profile.role == 'directeur' and profile.direction_id:
+        employees = employees.filter(direction_id=profile.direction_id)
+    elif profile.role not in ['admin', 'directeur_general'] and not profile.can_view_all_budget_directions():
+        # Autres roles : limites a leur direction si definie
+        if profile.direction_id:
+            employees = employees.filter(direction_id=profile.direction_id)
     avg_workload = employees.aggregate(avg=Avg('workload'))['avg'] or 0
     overloaded = employees.filter(workload__gte=85).count()
     
@@ -1550,13 +1631,15 @@ def milestone_create(request, project_id):
         if form.is_valid():
             milestone = form.save(commit=False)
             milestone.project = project
+            if milestone.assigned_to:
+                milestone.assigned_by = request.user
             milestone.save()
             log_project_activity(project, 'ajout_jalon', f"Ajout du jalon '{milestone.name}'", request.user)
-            # Notification email au responsable
+            # Notification email au responsable + chef de projet en CC
             if milestone.assigned_to:
                 from .notifications import notify_assignment
                 assigned_by = request.user.get_full_name() or request.user.username
-                success, msg = notify_assignment(milestone.assigned_to, 'jalon', milestone.name, project.name, assigned_by)
+                success, msg = notify_assignment(milestone.assigned_to, 'jalon', milestone.name, project.name, assigned_by, project=project, due_date=milestone.due_date)
                 if success:
                     messages.info(request, msg)
                 else:
@@ -1583,20 +1666,31 @@ def milestone_edit(request, milestone_id):
         return redirect('core:projects')
     
     old_assigned = milestone.assigned_to_id
+    was_completed = milestone.completed
     if request.method == 'POST':
         form = MilestoneForm(project=project, data=request.POST, instance=milestone)
         if form.is_valid():
-            milestone = form.save()
+            milestone = form.save(commit=False)
+            if milestone.assigned_to and milestone.assigned_to_id != old_assigned:
+                milestone.assigned_by = request.user
+            milestone.save()
             log_project_activity(project, 'modif_jalon', f"Modification du jalon '{milestone.name}'", request.user)
-            # Notification email si le responsable a changé
+            # Notification email si le responsable a changé (chef de projet en CC)
             if milestone.assigned_to and milestone.assigned_to_id != old_assigned:
                 from .notifications import notify_assignment
                 assigned_by = request.user.get_full_name() or request.user.username
-                success, msg = notify_assignment(milestone.assigned_to, 'jalon', milestone.name, project.name, assigned_by)
+                success, msg = notify_assignment(milestone.assigned_to, 'jalon', milestone.name, project.name, assigned_by, project=project, due_date=milestone.due_date)
                 if success:
                     messages.info(request, msg)
                 else:
                     messages.warning(request, f"Jalon modifié mais notification email échouée : {msg}")
+            if milestone.completed and not was_completed:
+                from .notifications import notify_task_completed
+                success, msg = notify_task_completed('jalon', milestone.name, project, milestone.assigned_to, milestone.assigned_by, request.user)
+                if success:
+                    messages.info(request, msg)
+                else:
+                    messages.warning(request, f"Jalon terminé mais notification email échouée : {msg}")
             messages.success(request, "Jalon modifié avec succès.")
             return redirect('core:project_detail', project_id=project.id)
     else:
@@ -1647,13 +1741,15 @@ def sub_milestone_create(request, milestone_id):
         if form.is_valid():
             sub_milestone = form.save(commit=False)
             sub_milestone.milestone = milestone
+            if sub_milestone.assigned_to:
+                sub_milestone.assigned_by = request.user
             sub_milestone.save()
             log_project_activity(project, 'ajout_sous_etape', f"Ajout de la sous-étape '{sub_milestone.name}' au jalon '{milestone.name}'", request.user)
-            # Notification email au responsable
+            # Notification email au responsable + chef de projet en CC
             if sub_milestone.assigned_to:
                 from .notifications import notify_assignment
                 assigned_by = request.user.get_full_name() or request.user.username
-                success, msg = notify_assignment(sub_milestone.assigned_to, 'sous-étape', sub_milestone.name, project.name, assigned_by)
+                success, msg = notify_assignment(sub_milestone.assigned_to, 'sous-étape', sub_milestone.name, project.name, assigned_by, project=project, due_date=sub_milestone.due_date)
                 if success:
                     messages.info(request, msg)
                 else:
@@ -1687,20 +1783,31 @@ def sub_milestone_edit(request, sub_milestone_id):
         return redirect('core:project_detail', project_id=project.id)
     
     old_assigned = sub_milestone.assigned_to_id
+    was_completed = sub_milestone.completed
     if request.method == 'POST':
         form = SubMilestoneForm(milestone=milestone, data=request.POST, instance=sub_milestone)
         if form.is_valid():
-            sub_milestone = form.save()
+            sub_milestone = form.save(commit=False)
+            if sub_milestone.assigned_to and sub_milestone.assigned_to_id != old_assigned:
+                sub_milestone.assigned_by = request.user
+            sub_milestone.save()
             log_project_activity(project, 'modif_sous_etape', f"Modification de la sous-étape '{sub_milestone.name}'", request.user)
-            # Notification email si le responsable a changé
+            # Notification email si le responsable a changé (chef de projet en CC)
             if sub_milestone.assigned_to and sub_milestone.assigned_to_id != old_assigned:
                 from .notifications import notify_assignment
                 assigned_by = request.user.get_full_name() or request.user.username
-                success, msg = notify_assignment(sub_milestone.assigned_to, 'sous-étape', sub_milestone.name, project.name, assigned_by)
+                success, msg = notify_assignment(sub_milestone.assigned_to, 'sous-étape', sub_milestone.name, project.name, assigned_by, project=project, due_date=sub_milestone.due_date)
                 if success:
                     messages.info(request, msg)
                 else:
                     messages.warning(request, f"Sous-étape modifiée mais notification email échouée : {msg}")
+            if sub_milestone.completed and not was_completed:
+                from .notifications import notify_task_completed
+                success, msg = notify_task_completed('sous-étape', sub_milestone.name, project, sub_milestone.assigned_to, sub_milestone.assigned_by, request.user)
+                if success:
+                    messages.info(request, msg)
+                else:
+                    messages.warning(request, f"Sous-étape terminée mais notification email échouée : {msg}")
             messages.success(request, "Sous-étape modifiée avec succès.")
             return redirect('core:project_detail', project_id=project.id)
     else:
@@ -1760,13 +1867,118 @@ def sub_milestone_toggle(request, sub_milestone_id):
         messages.error(request, "Vous n'avez pas les permissions.")
         return redirect('core:project_detail', project_id=project.id)
     
+    was_completed = sub_milestone.completed
     sub_milestone.completed = not sub_milestone.completed
     sub_milestone.save()
     
     status = "complétée" if sub_milestone.completed else "non complétée"
     log_project_activity(project, 'toggle_sous_etape', f"Sous-étape '{sub_milestone.name}' marquée comme {status}", request.user)
+    if sub_milestone.completed and not was_completed:
+        from .notifications import notify_task_completed
+        success, msg = notify_task_completed('sous-étape', sub_milestone.name, project, sub_milestone.assigned_to, sub_milestone.assigned_by, request.user)
+        if success:
+            messages.info(request, msg)
+        else:
+            messages.warning(request, f"Sous-étape terminée mais notification email échouée : {msg}")
     messages.success(request, f"Sous-étape marquée comme {status}.")
     return redirect('core:project_detail', project_id=project.id)
+
+
+@login_required
+def api_project_task_create(request, project_id):
+    """Créer une tâche de projet depuis le board Planner."""
+    import json
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    project = get_object_or_404(Project, pk=project_id)
+    if not request.user.profile.can_add_project_milestones(project):
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+
+    try:
+        data = json.loads(request.body or '{}')
+        title = (data.get('title') or '').strip()
+        status = data.get('status') or 'a_faire'
+        if not title:
+            return JsonResponse({'error': 'Le titre est requis.'}, status=400)
+
+        max_order = project.milestones.aggregate(models.Max('order'))['order__max'] or 0
+        progress = 0
+        completed = False
+        if status == 'en_cours':
+            progress = 50
+        elif status == 'termine':
+            progress = 100
+            completed = True
+
+        milestone = Milestone.objects.create(
+            project=project,
+            name=title,
+            manual_progress=progress,
+            completed=completed,
+            order=max_order + 1,
+        )
+        project.recalculate_progress()
+        log_project_activity(project, 'ajout_jalon', f"Ajout de la tâche '{milestone.name}'", request.user)
+        return JsonResponse({
+            'success': True,
+            'task': {
+                'id': milestone.id,
+                'name': milestone.name,
+                'progress': milestone.progress,
+                'completed': milestone.completed,
+                'sub_count': 0,
+                'edit_url': reverse('core:milestone_edit', args=[milestone.id]),
+                'sub_url': reverse('core:sub_milestone_create', args=[milestone.id]),
+                'update_url': reverse('core:api_project_task_update', args=[milestone.id]),
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+
+@login_required
+def api_project_task_update(request, milestone_id):
+    """Mettre à jour une tâche depuis la fiche latérale Planner."""
+    import json
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    milestone = get_object_or_404(Milestone.objects.select_related('project'), pk=milestone_id)
+    project = milestone.project
+    if not request.user.profile.can_add_project_milestones(project):
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+
+    try:
+        data = json.loads(request.body or '{}')
+        if 'title' in data:
+            title = (data.get('title') or '').strip()
+            if title:
+                milestone.name = title
+        if 'description' in data:
+            milestone.need = data.get('description') or ''
+        if 'status' in data:
+            status = data.get('status')
+            if status == 'a_faire':
+                milestone.manual_progress = 0
+                milestone.completed = False
+            elif status == 'en_cours':
+                milestone.manual_progress = 50
+                milestone.completed = False
+            elif status == 'termine':
+                milestone.manual_progress = 100
+                milestone.completed = True
+        if 'progress' in data:
+            progress = max(0, min(100, int(data.get('progress') or 0)))
+            milestone.manual_progress = progress
+            milestone.completed = progress >= 100
+
+        milestone.save()
+        project.recalculate_progress()
+        log_project_activity(project, 'modif_jalon', f"Mise à jour de la tâche '{milestone.name}'", request.user)
+        return JsonResponse({'success': True, 'task': {'id': milestone.id, 'name': milestone.name, 'progress': milestone.progress, 'completed': milestone.completed, 'update_url': reverse('core:api_project_task_update', args=[milestone.id])}})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
 
 
 # ==================== PROJECT FOLDER & DOCUMENT CRUD ====================
@@ -2483,25 +2695,49 @@ def partner_delete(request, partner_id):
     return render(request, 'core/confirm_delete.html', {'object': partner, 'type': 'partenaire', 'back_url': 'core:partners'})
 
 
+def _user_can_manage_employee(user, employee=None):
+    """Verifie si l'utilisateur peut gerer (creer/modifier/supprimer) un employe.
+    - Admin / DG : tous
+    - Directeur : uniquement les employes de sa direction
+    """
+    profile = getattr(user, 'profile', None)
+    if not profile:
+        return False
+    if profile.role in ['admin', 'directeur_general']:
+        return True
+    if profile.role == 'directeur':
+        if employee is None:
+            return profile.direction_id is not None
+        return profile.direction_id is not None and employee.direction_id == profile.direction_id
+    # Permission heritee budget_manage etc.
+    return profile.can_manage_budgets() and (employee is None or profile.direction_id == employee.direction_id)
+
+
 # Employee management views
 @login_required
 def employee_create(request):
     """Créer un nouvel employé"""
     from .forms_project import EmployeeForm
-    
-    if not request.user.profile.can_manage_budgets():
+
+    if not _user_can_manage_employee(request.user):
         messages.error(request, "Vous n'avez pas les permissions pour gérer les employés.")
         return redirect('core:resources')
-    
+
+    profile = request.user.profile
+
     if request.method == 'POST':
-        form = EmployeeForm(request.POST)
+        form = EmployeeForm(request.POST, user=request.user)
         if form.is_valid():
-            form.save()
+            employee = form.save(commit=False)
+            # Forcer la direction si l'utilisateur est un directeur
+            if profile.role == 'directeur' and profile.direction_id:
+                employee.direction_id = profile.direction_id
+            employee.save()
             messages.success(request, "Employé créé avec succès.")
             return redirect('core:resources')
     else:
-        form = EmployeeForm()
-    
+        form = EmployeeForm(user=request.user)
+
     return render(request, 'core/employee_form.html', {'form': form, 'title': 'Nouvel employé'})
 
 
@@ -2509,39 +2745,44 @@ def employee_create(request):
 def employee_edit(request, employee_id):
     """Modifier un employé existant"""
     from .forms_project import EmployeeForm
-    
-    if not request.user.profile.can_manage_budgets():
-        messages.error(request, "Vous n'avez pas les permissions pour gérer les employés.")
-        return redirect('core:resources')
-    
+
     employee = get_object_or_404(Employee, pk=employee_id)
-    
+
+    if not _user_can_manage_employee(request.user, employee):
+        messages.error(request, "Vous ne pouvez gérer que les employés de votre direction.")
+        return redirect('core:resources')
+
+    profile = request.user.profile
+
     if request.method == 'POST':
-        form = EmployeeForm(request.POST, instance=employee)
+        form = EmployeeForm(request.POST, instance=employee, user=request.user)
         if form.is_valid():
-            form.save()
+            obj = form.save(commit=False)
+            if profile.role == 'directeur' and profile.direction_id:
+                obj.direction_id = profile.direction_id
+            obj.save()
             messages.success(request, "Employé modifié avec succès.")
             return redirect('core:resources')
     else:
-        form = EmployeeForm(instance=employee)
-    
+        form = EmployeeForm(instance=employee, user=request.user)
+
     return render(request, 'core/employee_form.html', {'form': form, 'employee': employee, 'title': f'Modifier {employee.name}'})
 
 
 @login_required
 def employee_delete(request, employee_id):
     """Supprimer un employé"""
-    if not request.user.profile.can_manage_budgets():
-        messages.error(request, "Vous n'avez pas les permissions.")
-        return redirect('core:resources')
-    
     employee = get_object_or_404(Employee, pk=employee_id)
-    
+
+    if not _user_can_manage_employee(request.user, employee):
+        messages.error(request, "Vous ne pouvez supprimer que les employés de votre direction.")
+        return redirect('core:resources')
+
     if request.method == 'POST':
         employee.delete()
         messages.success(request, "Employé supprimé.")
         return redirect('core:resources')
-    
+
     return render(request, 'core/confirm_delete.html', {'object': employee, 'type': 'employé', 'back_url': 'core:resources'})
 
 
@@ -2587,7 +2828,8 @@ def budget_edit(request, budget_id):
     else:
         form = BudgetForm(instance=budget)
     
-    return render(request, 'core/budget_form.html', {'form': form, 'budget': budget, 'title': f'Modifier budget {budget.direction.code}'})
+    budget_label = budget.project.name if budget.project else (budget.direction.code if budget.direction else 'sans affectation')
+    return render(request, 'core/budget_form.html', {'form': form, 'budget': budget, 'title': f'Modifier budget {budget_label}'})
 
 
 @login_required
@@ -2679,5 +2921,28 @@ def sub_milestone_reorder(request, milestone_id):
         for index, sub_id in enumerate(order_list):
             SubMilestone.objects.filter(pk=sub_id, milestone=milestone).update(order=index + 1)
         return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+
+@login_required
+def api_project_update_status(request, project_id):
+    """API pour mettre à jour le statut d'un projet (Kanban drag & drop)"""
+    import json
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    
+    project = get_object_or_404(Project, pk=project_id)
+    
+    try:
+        data = json.loads(request.body)
+        new_status = data.get('status')
+        valid_statuses = [s[0] for s in Project.STATUS_CHOICES]
+        if new_status not in valid_statuses:
+            return JsonResponse({'error': f'Invalid status: {new_status}'}, status=400)
+        
+        project.status = new_status
+        project.save(update_fields=['status', 'updated_at'])
+        return JsonResponse({'success': True, 'status': new_status})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
