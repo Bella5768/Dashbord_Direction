@@ -29,6 +29,7 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:*',
     'http://127.0.0.1:*',
     'https://*.pythonanywhere.com',
+    'https://dgdashbord.pythonanywhere.com',
 ]
 
 _extra_csrf = [o.strip() for o in os.getenv('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',') if o.strip()]
