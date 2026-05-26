@@ -631,16 +631,19 @@ def reports(request):
     # Budget par direction
     budget_by_direction = []
     for direction in directions:
-        try:
-            budget = direction.budget
+        budgets = direction.budgets.all()
+        if budgets.exists():
+            # Agréger tous les budgets de la direction
+            total_allocated = sum(b.allocated for b in budgets)
+            total_consumed = sum(b.consumed for b in budgets)
             budget_by_direction.append({
                 'direction': direction.code,
                 'name': direction.name,
-                'allocated': float(budget.allocated),
-                'consumed': float(budget.consumed),
-                'rate': round((float(budget.consumed) / float(budget.allocated) * 100)) if budget.allocated > 0 else 0,
+                'allocated': float(total_allocated),
+                'consumed': float(total_consumed),
+                'rate': round((float(total_consumed) / float(total_allocated) * 100)) if total_allocated > 0 else 0,
             })
-        except Budget.DoesNotExist:
+        else:
             budget_by_direction.append({
                 'direction': direction.code,
                 'name': direction.name,
