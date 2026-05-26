@@ -1,0 +1,17 @@
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+    <h2>{{ title }}</h2>
+    
+    <p>Bonjour {{ username }},</p>
+    
+    <p>{{ message }}</p>
+    
+    {% if action_link %}
+    <p style="text-align: center;">
+        <a href="{{ action_link }}" class="button">{{ action_text|default:"Voir les détails" }}</a>
+    </p>
+    {% endif %}
+    
+    <p>Cordialement,<br>L'équipe CSIG</p>
+{% endblock %}
