@@ -148,12 +148,22 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Email Configuration via Outlook SMTP
-EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'core.email_backend.OutlookSMTPBackend')
-EMAIL_LOCAL_HOSTNAME = os.getenv('EMAIL_LOCAL_HOSTNAME', 'csig.edu.gn')
-EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.office365.com')
-EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
-EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() in ('1', 'true', 'yes', 'on')
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'support@csig.edu.gn')
+# Email Configuration
+# Use SendGrid if API key is configured, otherwise fallback to Outlook SMTP
+if os.getenv('SENDGRID_API_KEY'):
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'smtp.sendgrid.net'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = 'apikey'
+    EMAIL_HOST_PASSWORD = os.getenv('SENDGRID_API_KEY')
+    DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@csig.edu.gn')
+else:
+    EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'core.email_backend.OutlookSMTPBackend')
+    EMAIL_LOCAL_HOSTNAME = os.getenv('EMAIL_LOCAL_HOSTNAME', 'csig.edu.gn')
+    EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.office365.com')
+    EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+    EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() in ('1', 'true', 'yes', 'on')
+    EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+    EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+    DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'support@csig.edu.gn')
