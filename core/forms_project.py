@@ -26,6 +26,12 @@ class ProjectForm(forms.ModelForm):
         # Direction optionnelle
         self.fields['direction'].required = False
         self.fields['direction'].empty_label = "-- Aucune direction --"
+
+        # Budget et budget consomme optionnels (valeur par defaut 0 si vide)
+        self.fields['budget'].required = False
+        self.fields['budget_consumed'].required = False
+        self.fields['budget'].widget.attrs['placeholder'] = '0'
+        self.fields['budget_consumed'].widget.attrs['placeholder'] = '0'
         
         # Si c'est une édition (projet existant), les dates ne sont pas obligatoires
         if self.instance and self.instance.pk:
@@ -42,6 +48,16 @@ class ProjectForm(forms.ModelForm):
                     consumed_gnf = convert_currency(float(self.instance.budget_consumed), current_currency, 'GNF')
                     self.fields['budget_consumed'].help_text = f"Équivalent: {format_currency(consumed_gnf, 'GNF')}"
     
+    def clean_budget(self):
+        """Budget optionnel : valeur par defaut 0 si vide"""
+        value = self.cleaned_data.get('budget')
+        return value if value is not None else 0
+
+    def clean_budget_consumed(self):
+        """Budget consomme optionnel : valeur par defaut 0 si vide"""
+        value = self.cleaned_data.get('budget_consumed')
+        return value if value is not None else 0
+
     def clean_start_date(self):
         """Si pas de date fournie en édition, garder l'existante"""
         date = self.cleaned_data.get('start_date')
