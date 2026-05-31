@@ -484,6 +484,9 @@ def requests_view(request):
 @login_required
 def calendar(request):
     """Vue du calendrier"""
+    import json
+    import calendar as cal
+
     today = timezone.now().date()
     year = int(request.GET.get('year', today.year))
     month = int(request.GET.get('month', today.month))
@@ -506,7 +509,6 @@ def calendar(request):
     upcoming = Event.objects.filter(date__gte=today).prefetch_related('participants')[:5]
     
     # Construire le calendrier
-    import calendar as cal
     cal_obj = cal.Calendar(firstweekday=0)
     month_days = cal_obj.monthdayscalendar(year, month)
     
@@ -517,9 +519,31 @@ def calendar(request):
         if day not in events_by_day:
             events_by_day[day] = []
         events_by_day[day].append(event)
-    
+
+    # Serialiser les events pour les vues Kanban et Gantt (JS)
+    events_json = []
+    edit_url_template = reverse('core:event_edit', args=[0]).replace('/0/', '/__ID__/')
+    for ev in events_qs:
+        events_json.append({
+            'id': ev.id,
+            'title': ev.title,
+            'type': ev.event_type,
+            'type_label': ev.get_event_type_display(),
+            'description': ev.description or '',
+            'date': ev.date.isoformat(),
+            'day': ev.date.day,
+            'time': ev.time.strftime('%H:%M'),
+            'duration': ev.duration,
+            'location': ev.location or '',
+            'participants': [p.code for p in ev.participants.all()],
+            'edit_url': edit_url_template.replace('__ID__', str(ev.id)),
+        })
+
     months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 
               'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
+
+    # Nombre de jours dans le mois (pour Gantt)
+    days_in_month = cal.monthrange(year, month)[1]
     
     context = {
         'year': year,
@@ -534,6 +558,9 @@ def calendar(request):
         'next_month': month + 1 if month < 12 else 1,
         'next_year': year if month < 12 else year + 1,
         'stats': stats,
+        'events_json': json.dumps(events_json),
+        'days_in_month': days_in_month,
+        'days_range': list(range(1, days_in_month + 1)),
     }
     return render(request, 'core/calendar.html', context)
 
