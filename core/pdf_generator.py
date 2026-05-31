@@ -290,19 +290,17 @@ def _draw_decision_stamp(c, leave, table_bottom_y):
             c.drawString(sig_x + 3 * mm, sig_top - 18 * mm,
                          f"Le {leave.final_decision_at.strftime('%d/%m/%Y a %H:%M')}")
 
-    # Cachet rond decoratif
+    # Zone reservee au cachet (a apposer manuellement apres impression)
+    c.setStrokeColor(GREY_BORDER)
+    c.setLineWidth(0.4)
+    c.setDash(2, 2)
     cx = sig_x + sig_w - 14 * mm
     cy = sig_top - sig_h + 9 * mm
-    c.setStrokeColor(color)
-    c.setLineWidth(1.2)
     c.circle(cx, cy, 8 * mm, stroke=1, fill=0)
-    c.setLineWidth(0.5)
-    c.circle(cx, cy, 7 * mm, stroke=1, fill=0)
-    c.setFillColor(color)
-    c.setFont('Helvetica-Bold', 6.5)
-    c.drawCentredString(cx, cy + 1.5 * mm, "CSIG")
-    c.drawCentredString(cx, cy - 0.5 * mm, "DIRECTION")
-    c.drawCentredString(cx, cy - 2.5 * mm, "GENERALE")
+    c.setDash()
+    c.setFillColor(GREY_LIGHT)
+    c.setFont('Helvetica-Oblique', 6)
+    c.drawCentredString(cx, cy - 0.5 * mm, "Cachet")
 
 
 def _draw_footer(c, leave):
