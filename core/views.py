@@ -771,7 +771,7 @@ def export_employees_pdf(request):
     for emp in employees:
         table_data.append([
             Paragraph(emp.name, cell_style),
-            Paragraph(emp.direction.code, cell_style),
+            Paragraph(emp.direction.code if emp.direction else '-', cell_style),
             Paragraph(emp.role, cell_style),
             Paragraph(emp.phone or '-', cell_style),
             Paragraph(emp.email or '-', cell_style),
@@ -987,7 +987,7 @@ def export_reports_pdf(request):
     for project in all_projects:
         projects_data.append([
             project.name,
-            project.direction.code,
+            project.direction.code if project.direction else '-',
             project.get_status_display(),
             f"{project.progress}%",
             f"{project.budget:,.0f} GNF",
@@ -2895,7 +2895,7 @@ def api_budget_data(request):
     data = []
     for budget in budgets:
         data.append({
-            'direction': budget.direction.code,
+            'direction': budget.direction.code if budget.direction else '-',
             'allocated': float(budget.allocated),
             'consumed': float(budget.consumed),
         })
