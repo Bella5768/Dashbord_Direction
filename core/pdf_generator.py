@@ -1,4 +1,5 @@
 """Generation du PDF officiel d'attestation de conge - une seule page A4 institutionnelle."""
+import hashlib
 import os
 from datetime import datetime
 from io import BytesIO
@@ -25,6 +26,25 @@ GREY_BG = colors.HexColor('#f3f4f6')
 GREY_BORDER = colors.HexColor('#d1d5db')
 
 LOGO_PATH = os.path.join(settings.BASE_DIR, 'static', 'logocsig.jpg')
+
+
+# --- Code unique ------------------------------------------------------------
+def generate_unique_code(leave):
+    """Genere un code unique deterministe pour chaque attestation.
+
+    Format: CSIG-CONG-{ANNEE}-{ID:05d}-{HASH8}
+    Exemple : CSIG-CONG-2026-00003-A7F2K9B1
+
+    Le hash est base sur l'id, l'employe, les dates et la decision finale,
+    garantissant l'unicite et permettant la verification d'authenticite.
+    """
+    final_dt = leave.final_decision_at.isoformat() if leave.final_decision_at else ''
+    raw = f"{leave.id}|{leave.employee_id}|{leave.start_date}|{leave.end_date}|{final_dt}|{leave.status}"
+    digest = hashlib.sha256(raw.encode('utf-8')).hexdigest().upper()
+    # 8 caracteres alphanumeriques (sans 0/O/I/1 pour eviter confusion)
+    safe = ''.join(ch for ch in digest if ch not in '01OIL')[:8].ljust(8, 'X')
+    year = leave.final_decision_at.year if leave.final_decision_at else datetime.now().year
+    return f"CSIG-CONG-{year}-{leave.id:05d}-{safe}"
 
 
 # --- Helpers ----------------------------------------------------------------
@@ -86,11 +106,17 @@ def _draw_title_band(c, leave):
     c.setStrokeColor(GOLD)
     c.line(PAGE_W / 2 - 25 * mm, y - 7 * mm, PAGE_W / 2 + 25 * mm, y - 7 * mm)
 
-    # Reference + date emission
-    ref = f"N° CSIG/CONG/{leave.id:05d}/{datetime.now().year}"
+    # Reference unique + date emission
+    ref = generate_unique_code(leave)
+    c.setFillColor(GREY_TEXT)
+    c.setFont('Helvetica-Bold', 9)
+    c.drawString(MARGIN_X, y - 14 * mm, "Code unique : ")
+    label_w = c.stringWidth("Code unique : ", 'Helvetica-Bold', 9)
+    c.setFillColor(NAVY)
+    c.setFont('Courier-Bold', 9)
+    c.drawString(MARGIN_X + label_w, y - 14 * mm, ref)
     c.setFillColor(GREY_TEXT)
     c.setFont('Helvetica', 9)
-    c.drawString(MARGIN_X, y - 14 * mm, f"Reference : {ref}")
     c.drawRightString(PAGE_W - MARGIN_X, y - 14 * mm,
                       f"Conakry, le {datetime.now().strftime('%d/%m/%Y')}")
 
@@ -411,7 +437,7 @@ def _draw_footer(c, leave):
     c.setFillColor(colors.white)
     c.setFont('Helvetica-Oblique', 7.5)
     c.drawRightString(PAGE_W - MARGIN_X, 5 * mm,
-                      f"Page 1/1  -  Ref. CSIG/CONG/{leave.id:05d}/{datetime.now().year}")
+                      f"Page 1/1  -  {generate_unique_code(leave)}")
 
 
 def _draw_watermark(c, leave):
