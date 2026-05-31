@@ -12,8 +12,34 @@ _SELECT = forms.Select(attrs={'class': 'form-control'})
 _FILE = forms.ClearableFileInput(attrs={'class': 'form-control'})
 
 
+class _MultipleFileInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
+
+
+class MultipleFileField(forms.FileField):
+    """Champ permettant l'upload de plusieurs fichiers en une seule fois."""
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault('widget', _MultipleFileInput(attrs={'class': 'form-control', 'multiple': True}))
+        super().__init__(*args, **kwargs)
+
+    def clean(self, data, initial=None):
+        single_clean = super().clean
+        if isinstance(data, (list, tuple)):
+            return [single_clean(d, initial) for d in data if d]
+        if data:
+            return [single_clean(data, initial)]
+        return []
+
+
 class LeaveRequestForm(forms.ModelForm):
     """Formulaire de creation/modification d'une demande de conge."""
+
+    extra_documents = MultipleFileField(
+        required=False,
+        label="Pièces justificatives supplémentaires",
+        help_text="Vous pouvez sélectionner plusieurs fichiers à la fois (Ctrl/Cmd + clic).",
+    )
 
     class Meta:
         model = LeaveRequest
@@ -51,6 +77,12 @@ class LeaveRequestForm(forms.ModelForm):
                     self.initial['employee'] = profile.employee_id
                 if profile.direction_id and not self.initial.get('direction'):
                     self.initial['direction'] = profile.direction_id
+
+    def save_extra_documents(self, leave):
+        """Cree des LeaveDocument pour chaque fichier supplementaire uploade."""
+        files = self.cleaned_data.get('extra_documents') or []
+        for f in files:
+            LeaveDocument.objects.create(leave_request=leave, file=f, label=f.name)
 
     def clean(self):
         cleaned = super().clean()

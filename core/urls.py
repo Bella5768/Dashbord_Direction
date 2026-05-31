@@ -115,6 +115,7 @@ urlpatterns = [
     path('conges/<int:leave_id>/', views_leave.leave_detail, name='leave_detail'),
     path('conges/<int:leave_id>/modifier/', views_leave.leave_edit, name='leave_edit'),
     path('conges/<int:leave_id>/annuler/', views_leave.leave_cancel, name='leave_cancel'),
+    path('conges/<int:leave_id>/document/<int:doc_id>/supprimer/', views_leave.leave_document_delete, name='leave_document_delete'),
     path('conges/<int:leave_id>/decision-hierarchique/', views_leave.leave_decide_manager, name='leave_decide_manager'),
     path('conges/<int:leave_id>/verification-rh/', views_leave.leave_decide_hr, name='leave_decide_hr'),
     path('conges/<int:leave_id>/decision-finale/', views_leave.leave_decide_final, name='leave_decide_final'),

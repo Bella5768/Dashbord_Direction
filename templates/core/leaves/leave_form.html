@@ -195,6 +195,56 @@ textarea.form-control, .lf-section textarea { min-height: 100px; resize: vertica
     color: #991b1b;
     font-size: 14px;
 }
+
+/* Dropzone multi-fichiers */
+.lf-dropzone {
+    display: block;
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 24px 18px;
+    text-align: center;
+    background: linear-gradient(180deg, #f8fafc, #ffffff);
+    cursor: pointer;
+    transition: all .15s ease;
+}
+.lf-dropzone:hover { border-color: #1c3550; background: #f1f5f9; }
+.lf-dropzone.is-drag { border-color: #3b82f6; background: #eff6ff; }
+.lf-dz-icon { font-size: 32px; margin-bottom: 6px; }
+.lf-dz-title { font-weight: 600; color: #0f172a; font-size: 14px; }
+.lf-dz-sub { font-size: 12px; color: #64748b; margin-top: 4px; }
+.lf-dz-files {
+    display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
+    margin-top: 12px;
+}
+.lf-dz-files .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 10px; border-radius: 999px;
+    background: #e8eef5; color: #1c3550;
+    font-size: 12px; font-weight: 500;
+    border: 1px solid #d1dde9;
+}
+
+/* Liste documents existants */
+.lf-doc-list { list-style: none; padding: 0; margin: 0; }
+.lf-doc-list li {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    background: white;
+    font-size: 13px;
+}
+.lf-doc-list li a { color: #1c3550; font-weight: 500; flex: 1; }
+.lf-doc-list li a:hover { text-decoration: underline; }
+.lf-doc-date { color: #94a3b8; font-size: 12px; }
+.lf-doc-del {
+    border: none; background: #fef2f2; color: #b91c1c;
+    width: 26px; height: 26px; border-radius: 50%;
+    cursor: pointer; font-weight: 700;
+    transition: all .15s ease;
+}
+.lf-doc-del:hover { background: #fee2e2; transform: scale(1.1); }
 </style>
 
 <div class="lf-wrap">
@@ -313,11 +363,44 @@ textarea.form-control, .lf-section textarea { min-height: 100px; resize: vertica
                     </div>
                     <div class="lf-section-body">
                         <div class="lf-group">
-                            <label class="lf-label">{{ form.justification.label }}</label>
+                            <label class="lf-label">{{ form.justification.label }} <span style="color:#94a3b8; font-weight:500; text-transform:none; letter-spacing:0;">({% trans 'principal' %})</span></label>
                             {{ form.justification }}
                             <p class="lf-help">{% trans 'Certificat médical, acte de naissance, convocation, ordre de mission, lettre motivée…' %}</p>
                             {% if form.justification.errors %}<p class="lf-error">{{ form.justification.errors|striptags }}</p>{% endif %}
                         </div>
+
+                        <div class="lf-group">
+                            <label class="lf-label">{{ form.extra_documents.label }} <span style="color:#94a3b8; font-weight:500; text-transform:none; letter-spacing:0;">({% trans 'multiples' %})</span></label>
+                            <label class="lf-dropzone" for="id_extra_documents">
+                                <div class="lf-dz-icon">📎</div>
+                                <div class="lf-dz-title">{% trans 'Cliquez pour ajouter ou glissez plusieurs fichiers' %}</div>
+                                <div class="lf-dz-sub">{% trans 'PDF, image, Word… maintenez Ctrl/Cmd pour en sélectionner plusieurs.' %}</div>
+                                <div class="lf-dz-files" id="lf-dz-files"></div>
+                            </label>
+                            <div style="display:none;">{{ form.extra_documents }}</div>
+                            <p class="lf-help">{{ form.extra_documents.help_text }}</p>
+                            {% if form.extra_documents.errors %}<p class="lf-error">{{ form.extra_documents.errors|striptags }}</p>{% endif %}
+                        </div>
+
+                        {% if leave and leave.documents.all %}
+                        <div class="lf-group">
+                            <label class="lf-label">{% trans 'Pièces déjà jointes' %}</label>
+                            <ul class="lf-doc-list">
+                                {% for doc in leave.documents.all %}
+                                <li>
+                                    <a href="{{ doc.file.url }}" target="_blank">📎 {{ doc.label|default:doc.file.name }}</a>
+                                    <span class="lf-doc-date">{{ doc.uploaded_at|date:"d/m/Y" }}</span>
+                                    {% if leave.status == 'soumise' %}
+                                    <form method="post" action="{% url 'core:leave_document_delete' leave.id doc.id %}" style="display:inline;" onsubmit="return confirm('Supprimer ce document ?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="lf-doc-del" title="{% trans 'Supprimer' %}">✕</button>
+                                    </form>
+                                    {% endif %}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -353,4 +436,45 @@ textarea.form-control, .lf-section textarea { min-height: 100px; resize: vertica
         </div>
     </form>
 </div>
+
+<script>
+(function() {
+    var input = document.getElementById('id_extra_documents');
+    var dz = document.querySelector('.lf-dropzone');
+    var preview = document.getElementById('lf-dz-files');
+    if (!input || !dz || !preview) return;
+
+    function render() {
+        preview.innerHTML = '';
+        var files = input.files;
+        if (!files || files.length === 0) return;
+        for (var i = 0; i < files.length; i++) {
+            var chip = document.createElement('span');
+            chip.className = 'chip';
+            chip.textContent = '📄 ' + files[i].name + ' (' + Math.round(files[i].size / 1024) + ' Ko)';
+            preview.appendChild(chip);
+        }
+    }
+    input.addEventListener('change', render);
+
+    ['dragenter', 'dragover'].forEach(function(ev) {
+        dz.addEventListener(ev, function(e) {
+            e.preventDefault(); e.stopPropagation();
+            dz.classList.add('is-drag');
+        });
+    });
+    ['dragleave', 'drop'].forEach(function(ev) {
+        dz.addEventListener(ev, function(e) {
+            e.preventDefault(); e.stopPropagation();
+            dz.classList.remove('is-drag');
+        });
+    });
+    dz.addEventListener('drop', function(e) {
+        if (e.dataTransfer && e.dataTransfer.files) {
+            input.files = e.dataTransfer.files;
+            render();
+        }
+    });
+})();
+</script>
 {% endblock %}

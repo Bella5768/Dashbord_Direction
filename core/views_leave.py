@@ -12,7 +12,7 @@ from .forms_leave import (
     LeaveHRDecisionForm,
     LeaveFinalDecisionForm,
 )
-from .models import LeaveRequest
+from .models import LeaveRequest, LeaveDocument
 from . import notifications
 
 
@@ -240,6 +240,7 @@ def leave_create(request):
             leave.user = request.user
             leave.status = 'soumise'
             leave.save()
+            form.save_extra_documents(leave)
             try:
                 notifications.notify_leave_submitted(leave)
             except Exception:
@@ -269,6 +270,7 @@ def leave_edit(request, leave_id):
         form = LeaveRequestForm(request.POST, request.FILES, instance=leave, user=request.user)
         if form.is_valid():
             form.save()
+            form.save_extra_documents(leave)
             messages.success(request, "Demande mise à jour.")
             return redirect('core:leave_detail', leave_id=leave.id)
     else:
@@ -291,6 +293,24 @@ def leave_cancel(request, leave_id):
         leave.save(update_fields=['status', 'updated_at'])
         messages.info(request, "Demande annulée.")
     return redirect('core:leave_list')
+
+
+@login_required
+def leave_document_delete(request, leave_id, doc_id):
+    """Supprime une piece jointe. Reserve a l'auteur tant que la demande
+    est encore au stade 'soumise'."""
+    leave = get_object_or_404(LeaveRequest, pk=leave_id)
+    doc = get_object_or_404(LeaveDocument, pk=doc_id, leave_request=leave)
+    if not _user_is_owner(request.user, leave) or leave.status != 'soumise':
+        return HttpResponseForbidden()
+    if request.method == 'POST':
+        try:
+            doc.file.delete(save=False)
+        except Exception:
+            pass
+        doc.delete()
+        messages.success(request, "Pièce jointe supprimée.")
+    return redirect('core:leave_detail', leave_id=leave.id)
 
 
 # ---------------------------------------------------------------------------
