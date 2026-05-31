@@ -363,18 +363,11 @@ textarea.form-control, .lf-section textarea { min-height: 100px; resize: vertica
                     </div>
                     <div class="lf-section-body">
                         <div class="lf-group">
-                            <label class="lf-label">{{ form.justification.label }} <span style="color:#94a3b8; font-weight:500; text-transform:none; letter-spacing:0;">({% trans 'principal' %})</span></label>
-                            {{ form.justification }}
-                            <p class="lf-help">{% trans 'Certificat médical, acte de naissance, convocation, ordre de mission, lettre motivée…' %}</p>
-                            {% if form.justification.errors %}<p class="lf-error">{{ form.justification.errors|striptags }}</p>{% endif %}
-                        </div>
-
-                        <div class="lf-group">
-                            <label class="lf-label">{{ form.extra_documents.label }} <span style="color:#94a3b8; font-weight:500; text-transform:none; letter-spacing:0;">({% trans 'multiples' %})</span></label>
+                            <label class="lf-label">{{ form.extra_documents.label }}</label>
                             <label class="lf-dropzone" for="id_extra_documents">
                                 <div class="lf-dz-icon">📎</div>
-                                <div class="lf-dz-title">{% trans 'Cliquez pour ajouter ou glissez plusieurs fichiers' %}</div>
-                                <div class="lf-dz-sub">{% trans 'PDF, image, Word… maintenez Ctrl/Cmd pour en sélectionner plusieurs.' %}</div>
+                                <div class="lf-dz-title">{% trans 'Cliquez pour ajouter ou glissez vos fichiers' %}</div>
+                                <div class="lf-dz-sub">{% trans 'Certificat médical, acte de naissance, convocation, ordre de mission… (PDF, image, Word)' %}</div>
                                 <div class="lf-dz-files" id="lf-dz-files"></div>
                             </label>
                             <div style="display:none;">{{ form.extra_documents }}</div>

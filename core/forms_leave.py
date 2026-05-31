@@ -37,8 +37,8 @@ class LeaveRequestForm(forms.ModelForm):
 
     extra_documents = MultipleFileField(
         required=False,
-        label="Pièces justificatives supplémentaires",
-        help_text="Vous pouvez sélectionner plusieurs fichiers à la fois (Ctrl/Cmd + clic).",
+        label="Pièces justificatives",
+        help_text="Vous pouvez sélectionner plusieurs fichiers à la fois (Ctrl/Cmd + clic) ou les glisser-déposer.",
     )
 
     class Meta:
@@ -46,7 +46,7 @@ class LeaveRequestForm(forms.ModelForm):
         fields = [
             'employee', 'direction', 'leave_type',
             'start_date', 'end_date', 'reason',
-            'replacement', 'handover_note', 'justification',
+            'replacement', 'handover_note',
         ]
         widgets = {
             'employee': _SELECT,
@@ -57,7 +57,6 @@ class LeaveRequestForm(forms.ModelForm):
             'reason': _TEXTAREA,
             'replacement': _INPUT,
             'handover_note': _TEXTAREA,
-            'justification': _FILE,
         }
 
     def __init__(self, *args, user=None, **kwargs):
@@ -65,7 +64,6 @@ class LeaveRequestForm(forms.ModelForm):
         self.user = user
         self.fields['employee'].queryset = Employee.objects.select_related('direction').order_by('name')
         self.fields['direction'].queryset = Direction.objects.order_by('name')
-        self.fields['justification'].required = False
         self.fields['replacement'].required = False
         self.fields['handover_note'].required = False
 
@@ -89,7 +87,9 @@ class LeaveRequestForm(forms.ModelForm):
         start = cleaned.get('start_date')
         end = cleaned.get('end_date')
         leave_type = cleaned.get('leave_type')
-        justification = cleaned.get('justification') or (self.instance.justification if self.instance.pk else None)
+        new_files = cleaned.get('extra_documents') or []
+        has_existing_docs = bool(self.instance.pk and self.instance.documents.exists())
+        has_any_doc = bool(new_files) or has_existing_docs
 
         if start and end and end < start:
             self.add_error('end_date', "La date de fin doit être postérieure ou égale à la date de début.")
@@ -99,10 +99,10 @@ class LeaveRequestForm(forms.ModelForm):
             if min_delay < 15:
                 self.add_error('start_date', "Un congé annuel doit être demandé au moins 15 jours avant le départ.")
 
-        # Certains types exigent un justificatif
+        # Certains types exigent au moins une piece justificative
         types_requiring_doc = {'maladie', 'maternite', 'formation'}
-        if leave_type in types_requiring_doc and not justification:
-            self.add_error('justification', "Un justificatif est requis pour ce type de congé.")
+        if leave_type in types_requiring_doc and not has_any_doc:
+            self.add_error('extra_documents', "Une pièce justificative est requise pour ce type de congé.")
 
         return cleaned
 
