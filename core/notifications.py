@@ -464,33 +464,51 @@ def _leave_recipients_step(leave, step):
     employee_email = leave.employee.email if leave.employee else None
     employee_name = leave.employee.name if leave.employee else 'Demandeur'
 
-    if step == 'submitted':
-        # Hierarchie : utilisateurs avec role directeur de la meme direction
+    def _hr_users():
         try:
-            managers = User_.objects.filter(
-                profile__role__in=['directeur'],
+            return User_.objects.filter(
+                Q(profile__is_hr_manager=True) | Q(profile__role='admin'),
+                is_active=True,
+            ).exclude(email='')
+        except Exception:
+            return []
+
+    def _add_hr(role_label):
+        for u in _hr_users():
+            add(u.get_full_name() or u.username, u.email, role_label)
+
+    def _direction_managers():
+        """Directeurs (responsables hierarchiques) de la direction du demandeur."""
+        try:
+            return User_.objects.filter(
+                profile__role='directeur',
                 profile__direction_id=leave.direction_id,
                 is_active=True,
             ).exclude(email='')
-            for u in managers:
-                add(u.get_full_name() or u.username, u.email, "Demande de congé soumise (avis hiérarchique requis) :")
         except Exception:
-            pass
+            return []
+
+    def _add_managers(role_label):
+        for u in _direction_managers():
+            add(u.get_full_name() or u.username, u.email, role_label)
+
+    if step == 'submitted':
+        # Hierarchie : action requise (avis hierarchique)
+        _add_managers("Demande de congé soumise par un membre de votre équipe (avis hiérarchique requis) :")
+        # Demandeur (confirmation) + RH (information / suivi)
         add(employee_name, employee_email, "Confirmation de soumission de votre demande de congé :")
+        _add_hr("Nouvelle demande de congé soumise (information RH) :")
 
     elif step == 'manager':
         if leave.manager_decision == 'favorable':
-            # RH
-            try:
-                hr_users = User_.objects.filter(
-                    Q(profile__is_hr_manager=True) | Q(profile__role='admin'),
-                    is_active=True,
-                ).exclude(email='')
-                for u in hr_users:
-                    add(u.get_full_name() or u.username, u.email, "Demande de congé à vérifier (RH) :")
-            except Exception:
-                pass
+            # RH : action requise (verification)
+            _add_hr("Demande de congé à vérifier (RH) :")
+        else:
+            # RH informee meme en cas d'avis defavorable
+            _add_hr("Avis hiérarchique défavorable enregistré (information RH) :")
         add(employee_name, employee_email, "Avis hiérarchique enregistré sur votre demande :")
+        # Hierarchie : copie pour suivi (autres directeurs de la direction)
+        _add_managers("Avis hiérarchique enregistré (copie hiérarchie) :")
 
     elif step == 'hr':
         if leave.hr_decision == 'conforme':
@@ -504,13 +522,19 @@ def _leave_recipients_step(leave, step):
             except Exception:
                 pass
         add(employee_name, employee_email, "Vérification RH enregistrée sur votre demande :")
+        # RH informee (copie de la decision RH a toute l'equipe RH)
+        _add_hr("Vérification RH enregistrée (copie équipe RH) :")
+        # Hierarchie : copie pour suivi
+        _add_managers("Vérification RH enregistrée (copie hiérarchie) :")
 
     elif step == 'final':
         add(employee_name, employee_email, "Décision finale sur votre demande de congé :")
+        # Hierarchie : tous les directeurs de la direction (validateur + collegues)
+        _add_managers("Décision finale enregistrée (copie hiérarchie) :")
         if leave.manager_user and leave.manager_user.email:
             add(leave.manager_user.get_full_name() or leave.manager_user.username, leave.manager_user.email, "Décision finale (en copie - hiérarchie) :")
-        if leave.hr_user and leave.hr_user.email:
-            add(leave.hr_user.get_full_name() or leave.hr_user.username, leave.hr_user.email, "Décision finale (en copie - RH) :")
+        # RH : tous les RH en copie pour archivage
+        _add_hr("Décision finale enregistrée (copie équipe RH) :")
 
     return recipients
 

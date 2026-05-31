@@ -3,131 +3,371 @@
 
 {% block title %}{% trans 'Congés' %}{% endblock %}
 {% block page_title %}{% trans 'Gestion des congés' %}{% endblock %}
-{% block page_subtitle %}{% trans 'Procédure CSIG - workflow Employé → Hiérarchie → RH → Direction' %}{% endblock %}
+{% block page_subtitle %}{% trans 'Workflow CSIG : Employé → Hiérarchie → RH → Direction' %}{% endblock %}
 
 {% block content %}
+<style>
+/* ============ Leave module - design system ============ */
+.leave-hero {
+    background: linear-gradient(135deg, #1c3550 0%, #2a4a6f 60%, #3b82f6 100%);
+    color: white;
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 25px -10px rgba(28, 53, 80, 0.45);
+}
+.leave-hero::after {
+    content: '';
+    position: absolute;
+    right: -40px; top: -40px;
+    width: 220px; height: 220px;
+    background: radial-gradient(circle, rgba(255,255,255,0.18), transparent 70%);
+    border-radius: 50%;
+}
+.leave-hero h2 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.2px; }
+.leave-hero p  { margin: 6px 0 0; opacity: 0.85; font-size: 14px; }
+.leave-hero .hero-cta {
+    position: relative; z-index: 2;
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #ffffff; color: #1c3550;
+    padding: 12px 22px; border-radius: 10px; font-weight: 600; font-size: 14px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+.leave-hero .hero-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
 
-{# Stats personnelles - visibles uniquement sur l'onglet Mes demandes #}
+/* Stats cards */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+.stat-card {
+    background: white;
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    border: 1px solid #eef2f7;
+    position: relative;
+    overflow: hidden;
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+.stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+.stat-card .stat-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; margin-bottom: 12px;
+}
+.stat-card .stat-value { font-size: 30px; font-weight: 700; color: #0f172a; line-height: 1; }
+.stat-card .stat-label { font-size: 13px; color: #64748b; margin-top: 4px; }
+.stat-card .stat-sub   { font-size: 12px; color: #94a3b8; margin-top: 8px; }
+.stat-card.total .stat-icon  { background: #e8eef5; color: #1c3550; }
+.stat-card.pend .stat-icon   { background: #fef3c7; color: #b45309; }
+.stat-card.appr .stat-icon   { background: #dcfce7; color: #15803d; }
+.stat-card.rej .stat-icon    { background: #fee2e2; color: #b91c1c; }
+.stat-card .stat-bar {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+}
+.stat-card.total .stat-bar { background: #1c3550; }
+.stat-card.pend  .stat-bar { background: #f59e0b; }
+.stat-card.appr  .stat-bar { background: #16a34a; }
+.stat-card.rej   .stat-bar { background: #ef4444; }
+
+/* Toolbar */
+.leave-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+.leave-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    background: white;
+    padding: 6px;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    border: 1px solid #eef2f7;
+}
+.leave-tabs .tab-link {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 14px;
+    border-radius: 8px;
+    font-size: 13px; font-weight: 500;
+    color: #475569;
+    transition: all .15s ease;
+    white-space: nowrap;
+}
+.leave-tabs .tab-link:hover { background: #f1f5f9; color: #0f172a; }
+.leave-tabs .tab-link.active {
+    background: linear-gradient(135deg, #1c3550, #2a4a6f);
+    color: white;
+    box-shadow: 0 4px 10px -2px rgba(28,53,80,0.4);
+}
+.leave-tabs .tab-link .count {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 22px; height: 22px; padding: 0 7px;
+    border-radius: 11px; font-size: 11px; font-weight: 700;
+    background: #e2e8f0; color: #334155;
+}
+.leave-tabs .tab-link.active .count { background: rgba(255,255,255,0.25); color: white; }
+.leave-tabs .tab-link .count.warn { background: #fef3c7; color: #b45309; }
+.leave-tabs .tab-link.active .count.warn { background: rgba(255,255,255,0.25); color: white; }
+
+.btn-create {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 20px;
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    color: white; border-radius: 10px;
+    font-weight: 600; font-size: 14px;
+    box-shadow: 0 4px 12px -2px rgba(22,163,74,0.4);
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+.btn-create:hover { transform: translateY(-2px); box-shadow: 0 8px 18px -2px rgba(22,163,74,0.5); }
+
+/* Table */
+.leave-table-wrap {
+    background: white;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    border: 1px solid #eef2f7;
+}
+.leave-table { width: 100%; border-collapse: collapse; }
+.leave-table thead th {
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    text-align: left;
+    padding: 14px 16px;
+    border-bottom: 1px solid #e2e8f0;
+}
+.leave-table tbody td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 14px;
+    color: #334155;
+    vertical-align: middle;
+}
+.leave-table tbody tr { cursor: pointer; transition: background .12s ease; }
+.leave-table tbody tr:hover { background: #f8fafc; }
+.leave-table tbody tr:last-child td { border-bottom: none; }
+.leave-table .who { display: flex; align-items: center; gap: 10px; }
+.leave-table .avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, #1c3550, #3b82f6);
+    color: white; font-weight: 600; font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.leave-table .who-name { font-weight: 600; color: #0f172a; }
+.leave-table .who-sub  { font-size: 12px; color: #94a3b8; }
+
+.type-pill {
+    display: inline-block;
+    padding: 4px 10px; border-radius: 6px;
+    font-size: 12px; font-weight: 500;
+    background: #e8eef5; color: #1c3550;
+}
+.status-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 11px; border-radius: 999px;
+    font-size: 12px; font-weight: 600;
+    color: white;
+}
+.status-pill::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%;
+    background: rgba(255,255,255,0.85);
+}
+
+.step-bar { display: flex; gap: 3px; margin-top: 4px; }
+.step-bar .seg { height: 4px; flex: 1; border-radius: 2px; background: #e2e8f0; }
+.step-bar .seg.done { background: #16a34a; }
+.step-bar .seg.curr { background: #f59e0b; }
+.step-bar .seg.fail { background: #ef4444; }
+
+.empty-state {
+    text-align: center;
+    padding: 64px 24px;
+    color: #64748b;
+}
+.empty-state .empty-icon {
+    width: 80px; height: 80px; margin: 0 auto 16px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e8eef5, #f1f5f9);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px;
+}
+
+@media (max-width: 900px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+
+{# ============ Hero / intro ============ #}
 {% if tab == 'mine' %}
-<div class="grid grid-4 mb-4" style="gap:16px;">
-    <div class="card" style="background:#1e3a8a; color:white;">
-        <div class="card-content">
-            <p style="margin:0; opacity:0.85; font-size:13px;">{% trans 'Mes demandes' %}</p>
-            <p style="font-size:32px; font-weight:700; margin:6px 0 0;">{{ my_stats.total }}</p>
-            <p style="margin:0; font-size:12px; opacity:0.85;">{% trans 'au total' %}</p>
+<div class="leave-hero">
+    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:18px; position:relative; z-index:2;">
+        <div>
+            <h2>{% trans 'Mes demandes de congé' %}</h2>
+            <p>{% trans 'Suivez vos demandes en temps réel et soumettez-en de nouvelles en quelques clics.' %}</p>
         </div>
-    </div>
-    <div class="card" style="background:#f59e0b; color:white;">
-        <div class="card-content">
-            <p style="margin:0; opacity:0.9; font-size:13px;">{% trans 'En cours' %}</p>
-            <p style="font-size:32px; font-weight:700; margin:6px 0 0;">{{ my_stats.pending }}</p>
-            <p style="margin:0; font-size:12px; opacity:0.9;">{% trans 'en attente de validation' %}</p>
-        </div>
-    </div>
-    <div class="card" style="background:#16a34a; color:white;">
-        <div class="card-content">
-            <p style="margin:0; opacity:0.9; font-size:13px;">{% trans 'Approuvées' %}</p>
-            <p style="font-size:32px; font-weight:700; margin:6px 0 0;">{{ my_stats.approved }}</p>
-            <p style="margin:0; font-size:12px; opacity:0.9;">{{ my_stats.days_approved }} {% trans 'jour(s) accordé(s)' %}</p>
-        </div>
-    </div>
-    <div class="card" style="background:#ef4444; color:white;">
-        <div class="card-content">
-            <p style="margin:0; opacity:0.9; font-size:13px;">{% trans 'Refusées' %}</p>
-            <p style="font-size:32px; font-weight:700; margin:6px 0 0;">{{ my_stats.rejected }}</p>
-            <p style="margin:0; font-size:12px; opacity:0.9;">{% trans 'rejetées ou non conformes' %}</p>
-        </div>
+        <a href="{% url 'core:leave_create' %}" class="hero-cta">
+            <span style="font-size:18px; line-height:1;">+</span> {% trans 'Nouvelle demande' %}
+        </a>
     </div>
 </div>
 {% endif %}
 
-<div class="flex items-center justify-between mb-4">
-    <div class="tabs">
-        <a href="?tab=mine" class="tab {% if tab == 'mine' %}active{% endif %}">
-            {% trans 'Mes demandes' %} <span class="badge badge-secondary">{{ counts.mine }}</span>
+{# ============ Stats personnelles (onglet "mine") ============ #}
+{% if tab == 'mine' %}
+<div class="stats-grid">
+    <div class="stat-card total">
+        <div class="stat-bar"></div>
+        <div class="stat-icon">📋</div>
+        <div class="stat-value">{{ my_stats.total }}</div>
+        <div class="stat-label">{% trans 'Demandes au total' %}</div>
+        <div class="stat-sub">{% trans 'historique complet' %}</div>
+    </div>
+    <div class="stat-card pend">
+        <div class="stat-bar"></div>
+        <div class="stat-icon">⏳</div>
+        <div class="stat-value">{{ my_stats.pending }}</div>
+        <div class="stat-label">{% trans 'En cours de validation' %}</div>
+        <div class="stat-sub">{% trans 'en attente de réponse' %}</div>
+    </div>
+    <div class="stat-card appr">
+        <div class="stat-bar"></div>
+        <div class="stat-icon">✅</div>
+        <div class="stat-value">{{ my_stats.approved }}</div>
+        <div class="stat-label">{% trans 'Approuvées' %}</div>
+        <div class="stat-sub">{{ my_stats.days_approved }} {% trans 'jour(s) accordé(s)' %}</div>
+    </div>
+    <div class="stat-card rej">
+        <div class="stat-bar"></div>
+        <div class="stat-icon">⛔</div>
+        <div class="stat-value">{{ my_stats.rejected }}</div>
+        <div class="stat-label">{% trans 'Refusées / non conformes' %}</div>
+        <div class="stat-sub">{% trans 'décisions négatives' %}</div>
+    </div>
+</div>
+{% endif %}
+
+{# ============ Onglets + bouton ============ #}
+<div class="leave-toolbar">
+    <div class="leave-tabs">
+        <a href="?tab=mine" class="tab-link {% if tab == 'mine' %}active{% endif %}">
+            👤 {% trans 'Mes demandes' %} <span class="count">{{ counts.mine }}</span>
         </a>
         {% if can_manager %}
-        <a href="?tab=to_approve_manager" class="tab {% if tab == 'to_approve_manager' %}active{% endif %}">
-            {% trans 'À valider' %} <span class="badge badge-warning">{{ counts.to_approve_manager }}</span>
+        <a href="?tab=to_approve_manager" class="tab-link {% if tab == 'to_approve_manager' %}active{% endif %}">
+            📝 {% trans 'À valider' %} <span class="count {% if counts.to_approve_manager %}warn{% endif %}">{{ counts.to_approve_manager }}</span>
         </a>
-        <a href="?tab=history_mine_decisions" class="tab {% if tab == 'history_mine_decisions' %}active{% endif %}">
-            {% trans 'Mes validations' %} <span class="badge badge-secondary">{{ counts.history_mine_decisions }}</span>
+        <a href="?tab=history_mine_decisions" class="tab-link {% if tab == 'history_mine_decisions' %}active{% endif %}">
+            🗂 {% trans 'Mes validations' %} <span class="count">{{ counts.history_mine_decisions }}</span>
         </a>
         {% endif %}
         {% if can_hr %}
-        <a href="?tab=to_check_hr" class="tab {% if tab == 'to_check_hr' %}active{% endif %}">
-            {% trans 'Vérification RH' %} <span class="badge badge-warning">{{ counts.to_check_hr }}</span>
+        <a href="?tab=to_check_hr" class="tab-link {% if tab == 'to_check_hr' %}active{% endif %}">
+            🔎 {% trans 'Vérification RH' %} <span class="count {% if counts.to_check_hr %}warn{% endif %}">{{ counts.to_check_hr }}</span>
         </a>
-        <a href="?tab=history_hr" class="tab {% if tab == 'history_hr' %}active{% endif %}">
-            {% trans 'Mes vérifications RH' %} <span class="badge badge-secondary">{{ counts.history_hr }}</span>
+        <a href="?tab=history_hr" class="tab-link {% if tab == 'history_hr' %}active{% endif %}">
+            📁 {% trans 'Mes vérifications' %} <span class="count">{{ counts.history_hr }}</span>
         </a>
         {% endif %}
         {% if can_final %}
-        <a href="?tab=to_decide" class="tab {% if tab == 'to_decide' %}active{% endif %}">
-            {% trans 'Décision finale' %} <span class="badge badge-warning">{{ counts.to_decide }}</span>
+        <a href="?tab=to_decide" class="tab-link {% if tab == 'to_decide' %}active{% endif %}">
+            ⚖️ {% trans 'Décision finale' %} <span class="count {% if counts.to_decide %}warn{% endif %}">{{ counts.to_decide }}</span>
         </a>
-        <a href="?tab=all" class="tab {% if tab == 'all' %}active{% endif %}">
-            {% trans 'Toutes' %} <span class="badge badge-secondary">{{ counts.all }}</span>
+        <a href="?tab=all" class="tab-link {% if tab == 'all' %}active{% endif %}">
+            🌐 {% trans 'Toutes' %} <span class="count">{{ counts.all }}</span>
         </a>
         {% endif %}
     </div>
 
-    <a href="{% url 'core:leave_create' %}" class="btn btn-primary">
-        + {% trans 'Nouvelle demande' %}
+    {% if tab != 'mine' %}
+    <a href="{% url 'core:leave_create' %}" class="btn-create">
+        <span style="font-size:18px; line-height:1;">+</span> {% trans 'Nouvelle demande' %}
     </a>
+    {% endif %}
 </div>
 
-<div class="card">
-    <div class="card-content">
-        {% if leaves %}
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>{% trans 'Demandeur' %}</th>
-                        <th>{% trans 'Direction' %}</th>
-                        <th>{% trans 'Type' %}</th>
-                        <th>{% trans 'Période' %}</th>
-                        <th style="text-align:center;">{% trans 'Jours' %}</th>
-                        <th>{% trans 'Étape' %}</th>
-                        <th>{% trans 'Statut' %}</th>
-                        <th style="text-align:center;">{% trans 'Soumise le' %}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for leave in leaves %}
-                    <tr data-href="{% url 'core:leave_detail' leave.id %}" style="cursor:pointer;">
-                        <td><strong>{{ leave.employee.name }}</strong></td>
-                        <td>{{ leave.direction.code }}</td>
-                        <td>{{ leave.get_leave_type_display }}</td>
-                        <td>
-                            <span class="text-sm">{{ leave.start_date|date:"d/m/Y" }} → {{ leave.end_date|date:"d/m/Y" }}</span>
-                        </td>
-                        <td style="text-align:center;">{{ leave.days_count }}</td>
-                        <td><span class="text-xs">{{ leave.current_step_label }}</span></td>
-                        <td>
-                            <span class="badge" style="background-color:{{ leave.status_color }}; color:white;">
-                                {{ leave.get_status_display }}
-                            </span>
-                        </td>
-                        <td style="text-align:center;" class="text-xs text-gray-500">{{ leave.created_at|date:"d/m/Y H:i" }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <div style="text-align:center; padding:48px 16px; color:#6b7280;">
-            <p style="font-size:16px; margin-bottom:8px;">{% trans 'Aucune demande de congé.' %}</p>
-            <a href="{% url 'core:leave_create' %}" class="btn btn-primary btn-sm">+ {% trans 'Créer une demande' %}</a>
-        </div>
+{# ============ Tableau ============ #}
+<div class="leave-table-wrap">
+    {% if leaves %}
+    <table class="leave-table">
+        <thead>
+            <tr>
+                <th>{% trans 'Demandeur' %}</th>
+                <th>{% trans 'Type' %}</th>
+                <th>{% trans 'Période' %}</th>
+                <th style="text-align:center;">{% trans 'Jours' %}</th>
+                <th>{% trans 'Étape' %}</th>
+                <th>{% trans 'Statut' %}</th>
+                <th style="text-align:right;">{% trans 'Soumise' %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for leave in leaves %}
+            <tr onclick="window.location='{% url 'core:leave_detail' leave.id %}'">
+                <td>
+                    <div class="who">
+                        <div class="avatar">{{ leave.employee.name|slice:":1"|upper }}</div>
+                        <div>
+                            <div class="who-name">{{ leave.employee.name }}</div>
+                            <div class="who-sub">{{ leave.direction.code }}{% if leave.direction.code and leave.direction.name %} · {% endif %}{{ leave.direction.name|truncatechars:28 }}</div>
+                        </div>
+                    </div>
+                </td>
+                <td><span class="type-pill">{{ leave.get_leave_type_display }}</span></td>
+                <td>
+                    <div style="font-weight:500; color:#0f172a;">{{ leave.start_date|date:"d/m/Y" }}</div>
+                    <div class="who-sub">→ {{ leave.end_date|date:"d/m/Y" }}</div>
+                </td>
+                <td style="text-align:center;">
+                    <span style="font-weight:700; color:#1c3550; font-size:16px;">{{ leave.days_count }}</span>
+                </td>
+                <td>
+                    <div style="font-size:12px; color:#64748b;">{{ leave.current_step_label }}</div>
+                    <div class="step-bar">
+                        <div class="seg {% if leave.status == 'avis_defavorable' %}fail{% elif leave.status == 'soumise' %}curr{% elif leave.manager_decision == 'favorable' %}done{% endif %}"></div>
+                        <div class="seg {% if leave.status == 'rh_non_conforme' %}fail{% elif leave.status == 'avis_favorable' %}curr{% elif leave.hr_decision == 'conforme' %}done{% endif %}"></div>
+                        <div class="seg {% if leave.status == 'rejetee' %}fail{% elif leave.status == 'rh_conforme' %}curr{% elif leave.status == 'approuvee' %}done{% endif %}"></div>
+                    </div>
+                </td>
+                <td>
+                    <span class="status-pill" style="background-color:{{ leave.status_color }};">
+                        {{ leave.get_status_display|truncatechars:32 }}
+                    </span>
+                </td>
+                <td style="text-align:right;">
+                    <div style="color:#475569;">{{ leave.created_at|date:"d/m/Y" }}</div>
+                    <div class="who-sub">{{ leave.created_at|date:"H:i" }}</div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">🗓</div>
+        <p style="font-size:17px; font-weight:600; color:#334155; margin-bottom:6px;">{% trans 'Aucune demande à afficher' %}</p>
+        <p style="margin-bottom:18px;">{% trans 'Aucun élément ne correspond à cette vue pour le moment.' %}</p>
+        {% if tab == 'mine' %}
+        <a href="{% url 'core:leave_create' %}" class="btn-create" style="display:inline-flex;">
+            <span style="font-size:18px; line-height:1;">+</span> {% trans 'Créer ma première demande' %}
+        </a>
         {% endif %}
     </div>
+    {% endif %}
 </div>
-
-<script>
-document.querySelectorAll('tr[data-href]').forEach(function(row){
-    row.addEventListener('click', function(){ window.location = this.dataset.href; });
-});
-</script>
 {% endblock %}

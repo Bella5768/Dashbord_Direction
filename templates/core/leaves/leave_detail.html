@@ -6,198 +6,481 @@
 {% block page_subtitle %}{{ leave.employee.name }} - {{ leave.get_leave_type_display }}{% endblock %}
 
 {% block content %}
+<style>
+.leave-detail-wrap { display: grid; grid-template-columns: 1fr; gap: 20px; }
 
-<!-- Bandeau de statut -->
-<div class="card mb-4" style="border-left: 6px solid {{ leave.status_color }};">
-    <div class="card-content" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
-        <div>
-            <p class="text-xs text-gray-500">{% trans 'Statut actuel' %}</p>
-            <h3 style="margin:4px 0 0 0;">
-                <span class="badge" style="background-color:{{ leave.status_color }}; color:white;">
-                    {{ leave.get_status_display }}
-                </span>
-            </h3>
-            <p class="text-sm text-gray-600" style="margin-top:6px;">{{ leave.current_step_label }}</p>
-        </div>
-        <div class="flex gap-2">
-            {% if can_cancel %}
-            <form method="post" action="{% url 'core:leave_cancel' leave.id %}" onsubmit="return confirm('Annuler cette demande ?');">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-secondary btn-sm">{% trans 'Annuler ma demande' %}</button>
-            </form>
-            {% endif %}
-            <a href="{% url 'core:leave_list' %}" class="btn btn-secondary btn-sm">← {% trans 'Retour' %}</a>
+/* Status banner - entierement colore selon le statut */
+.status-banner {
+    position: relative;
+    background: linear-gradient(135deg, {{ leave.status_color }} 0%, {{ leave.status_color }}dd 100%);
+    border-radius: 16px;
+    padding: 26px 30px;
+    box-shadow: 0 10px 25px -10px {{ leave.status_color }}99;
+    border: 1px solid {{ leave.status_color }};
+    overflow: hidden;
+    color: white;
+}
+.status-banner::after {
+    content: '';
+    position: absolute; right: -60px; top: -60px;
+    width: 240px; height: 240px;
+    background: radial-gradient(circle, rgba(255,255,255,0.22), transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+.status-banner::before {
+    content: '';
+    position: absolute; left: -40px; bottom: -40px;
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, rgba(0,0,0,0.10), transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+.status-banner-inner {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap; position: relative; z-index: 1;
+}
+.status-info .label-tiny {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px;
+    color: rgba(255,255,255,0.75); font-weight: 600;
+}
+.status-info h2 { margin: 8px 0 6px; font-size: 24px; font-weight: 700; color: white; line-height: 1.2; }
+.status-info .step-text { color: rgba(255,255,255,0.9); font-size: 14px; margin: 0; }
+.status-pill-lg {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 9px 18px; border-radius: 999px;
+    background: rgba(255,255,255,0.18);
+    color: white;
+    font-weight: 700; font-size: 14px;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.3);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+}
+.status-pill-lg::before {
+    content: ''; width: 10px; height: 10px; border-radius: 50%;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(255,255,255,0.35);
+    animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+    0%, 100% { box-shadow: 0 0 0 4px rgba(255,255,255,0.35); }
+    50%      { box-shadow: 0 0 0 7px rgba(255,255,255,0.15); }
+}
+.status-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 16px; border-radius: 8px;
+    font-size: 13px; font-weight: 600;
+    border: 1px solid rgba(255,255,255,0.4);
+    background: rgba(255,255,255,0.95); color: #334155;
+    cursor: pointer; transition: all .15s ease;
+}
+.btn-pill:hover { background: white; transform: translateY(-1px); }
+.btn-pill.danger { color: white; border-color: rgba(255,255,255,0.5); background: rgba(0,0,0,0.2); }
+.btn-pill.danger:hover { background: rgba(0,0,0,0.3); }
+
+/* Two columns */
+.detail-columns { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; }
+@media (max-width: 980px) { .detail-columns { grid-template-columns: 1fr; } }
+
+/* Cards */
+.detail-card {
+    background: white;
+    border-radius: 14px;
+    border: 1px solid #eef2f7;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+.detail-card-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 16px 20px;
+    border-bottom: 1px solid #eef2f7;
+    background: linear-gradient(180deg, #f8fafc, #ffffff);
+}
+.detail-card-header .icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: #e8eef5; color: #1c3550;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+}
+.detail-card-header h3 { margin: 0; font-size: 15px; font-weight: 600; color: #0f172a; }
+.detail-card-body { padding: 20px; }
+
+/* Detail rows */
+.detail-row {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px dashed #f1f5f9;
+    font-size: 14px;
+}
+.detail-row:last-child { border-bottom: none; }
+.detail-row .lbl { color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; align-self: center; }
+.detail-row .val { color: #0f172a; }
+
+.period-block {
+    display: flex; align-items: center; gap: 14px;
+    background: linear-gradient(135deg, #f0f9ff, #e8eef5);
+    border: 1px solid #d1dde9;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+.period-date { text-align: center; flex: 1; }
+.period-date .d-day  { font-size: 24px; font-weight: 700; color: #1c3550; line-height: 1; }
+.period-date .d-mon  { font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; font-weight: 600; }
+.period-arrow { font-size: 20px; color: #94a3b8; }
+.period-days {
+    text-align: center; padding: 10px 16px;
+    background: white; border-radius: 10px;
+    border: 1px solid #e2e8f0; min-width: 90px;
+}
+.period-days .nb { font-size: 22px; font-weight: 700; color: #1c3550; line-height: 1; }
+.period-days .lab { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; font-weight: 600; }
+
+.btn-doc {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 14px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 13px; font-weight: 500; color: #334155;
+    transition: all .15s ease;
+}
+.btn-doc:hover { background: #e8eef5; border-color: #1c3550; color: #1c3550; }
+
+/* Timeline */
+.timeline { position: relative; }
+.timeline::before {
+    content: '';
+    position: absolute; left: 19px; top: 8px; bottom: 8px;
+    width: 2px; background: #e2e8f0;
+}
+.tl-step { position: relative; padding-left: 56px; padding-bottom: 22px; }
+.tl-step:last-child { padding-bottom: 0; }
+.tl-step .tl-dot {
+    position: absolute; left: 8px; top: 0;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: white;
+    border: 3px solid #e2e8f0;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 11px; color: #94a3b8;
+    z-index: 1;
+}
+.tl-step.done .tl-dot { background: #16a34a; border-color: #bbf7d0; color: white; }
+.tl-step.fail .tl-dot { background: #ef4444; border-color: #fecaca; color: white; }
+.tl-step.curr .tl-dot { background: #f59e0b; border-color: #fde68a; color: white; box-shadow: 0 0 0 4px #fef3c7; }
+.tl-step .tl-title { font-size: 14px; font-weight: 600; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tl-step .tl-title .deadline { font-size: 11px; color: #94a3b8; font-weight: 500; padding: 2px 8px; background: #f1f5f9; border-radius: 4px; }
+.tl-step .tl-meta { font-size: 12px; color: #64748b; margin: 4px 0 0; }
+.tl-step .tl-comment {
+    margin-top: 8px;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border-left: 3px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #475569;
+    font-style: italic;
+}
+.decision-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 9px; border-radius: 4px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px;
+}
+.decision-badge.ok  { background: #dcfce7; color: #15803d; }
+.decision-badge.no  { background: #fee2e2; color: #b91c1c; }
+.decision-badge.wait{ background: #f1f5f9; color: #64748b; }
+
+/* Action panel */
+.action-panel {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    border: 1px solid #fde68a;
+    border-radius: 14px;
+    padding: 20px;
+    margin-top: 20px;
+}
+.action-panel.hr  { background: linear-gradient(135deg, #eef2ff, #e0e7ff); border-color: #c7d2fe; }
+.action-panel.dg  { background: linear-gradient(135deg, #f0f9ff, #dbeafe); border-color: #bfdbfe; }
+.action-panel-title { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.action-panel-title h4 { margin: 0; font-size: 16px; color: #0f172a; font-weight: 700; }
+.action-panel-title .badge-step {
+    padding: 3px 10px; border-radius: 999px;
+    background: white; font-size: 11px; font-weight: 700;
+    color: #b45309; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.action-panel.hr .action-panel-title .badge-step { color: #4338ca; }
+.action-panel.dg .action-panel-title .badge-step { color: #1d4ed8; }
+.action-panel p.helper { margin: 0 0 14px; font-size: 13px; color: #475569; }
+.action-panel .form-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 14px; align-items: end; }
+@media (max-width: 700px) { .action-panel .form-grid { grid-template-columns: 1fr; } }
+.action-panel label { display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+.action-panel select, .action-panel textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+    transition: all .15s ease;
+}
+.action-panel select:focus, .action-panel textarea:focus {
+    outline: none; border-color: #1c3550; box-shadow: 0 0 0 3px rgba(28,53,80,0.1);
+}
+.action-panel textarea { min-height: 80px; resize: vertical; }
+.btn-submit {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 22px; border-radius: 8px;
+    background: linear-gradient(135deg, #1c3550, #2a4a6f);
+    color: white; font-weight: 600; font-size: 14px;
+    border: none; cursor: pointer;
+    box-shadow: 0 4px 12px -2px rgba(28,53,80,0.4);
+    transition: transform .15s ease, box-shadow .15s ease;
+    margin-top: 14px;
+}
+.btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 18px -2px rgba(28,53,80,0.5); }
+</style>
+
+<div class="leave-detail-wrap">
+
+    {# ============ Status banner ============ #}
+    <div class="status-banner">
+        <div class="status-banner-inner">
+            <div class="status-info">
+                <div class="label-tiny">{% trans 'Statut actuel' %}</div>
+                <h2>
+                    <span class="status-pill-lg">{{ leave.get_status_display }}</span>
+                </h2>
+                <p class="step-text">📍 {{ leave.current_step_label }}</p>
+            </div>
+            <div class="status-actions">
+                {% if can_cancel %}
+                <form method="post" action="{% url 'core:leave_cancel' leave.id %}" onsubmit="return confirm('Annuler cette demande ?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-pill danger">✕ {% trans 'Annuler ma demande' %}</button>
+                </form>
+                {% endif %}
+                <a href="{% url 'core:leave_list' %}" class="btn-pill">← {% trans 'Retour à la liste' %}</a>
+            </div>
         </div>
     </div>
-</div>
 
-<div class="grid grid-2" style="gap:20px;">
-    <!-- Détails de la demande -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">{% trans 'Détails de la demande' %}</h3>
-        </div>
-        <div class="card-content">
-            <table style="width:100%;">
-                <tr><td class="text-gray-500" style="padding:6px 0;">{% trans 'Demandeur' %}</td><td><strong>{{ leave.employee.name }}</strong></td></tr>
-                <tr><td class="text-gray-500" style="padding:6px 0;">{% trans 'Fonction' %}</td><td>{{ leave.employee.role }}</td></tr>
-                <tr><td class="text-gray-500" style="padding:6px 0;">{% trans 'Direction / Service' %}</td><td>{{ leave.direction.name }}</td></tr>
-                <tr><td class="text-gray-500" style="padding:6px 0;">{% trans 'Type de congé' %}</td><td>{{ leave.get_leave_type_display }}</td></tr>
-                <tr><td class="text-gray-500" style="padding:6px 0;">{% trans 'Période' %}</td><td>{{ leave.start_date|date:"d/m/Y" }} → {{ leave.end_date|date:"d/m/Y" }}</td></tr>
-                <tr><td class="text-gray-500" style="padding:6px 0;">{% trans 'Nombre de jours' %}</td><td><strong>{{ leave.days_count }}</strong></td></tr>
-                <tr><td class="text-gray-500" style="padding:6px 0; vertical-align:top;">{% trans 'Motif' %}</td><td>{{ leave.reason|linebreaksbr }}</td></tr>
+    <div class="detail-columns">
+
+        {# ============ Détails ============ #}
+        <div class="detail-card">
+            <div class="detail-card-header">
+                <div class="icon">📋</div>
+                <h3>{% trans 'Détails de la demande' %}</h3>
+            </div>
+            <div class="detail-card-body">
+
+                <div class="period-block">
+                    <div class="period-date">
+                        <div class="d-day">{{ leave.start_date|date:"d" }}</div>
+                        <div class="d-mon">{{ leave.start_date|date:"M Y" }}</div>
+                    </div>
+                    <div class="period-arrow">→</div>
+                    <div class="period-date">
+                        <div class="d-day">{{ leave.end_date|date:"d" }}</div>
+                        <div class="d-mon">{{ leave.end_date|date:"M Y" }}</div>
+                    </div>
+                    <div class="period-days">
+                        <div class="nb">{{ leave.days_count }}</div>
+                        <div class="lab">{% trans 'jour(s)' %}</div>
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="lbl">{% trans 'Demandeur' %}</div>
+                    <div class="val"><strong>{{ leave.employee.name }}</strong>{% if leave.employee.role %} · <span style="color:#64748b;">{{ leave.employee.role }}</span>{% endif %}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="lbl">{% trans 'Direction' %}</div>
+                    <div class="val">{{ leave.direction.name }}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="lbl">{% trans 'Type de congé' %}</div>
+                    <div class="val">
+                        <span style="display:inline-block; padding:4px 10px; border-radius:6px; background:#e8eef5; color:#1c3550; font-weight:500; font-size:13px;">
+                            {{ leave.get_leave_type_display }}
+                        </span>
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <div class="lbl">{% trans 'Motif' %}</div>
+                    <div class="val">{{ leave.reason|linebreaksbr }}</div>
+                </div>
                 {% if leave.replacement %}
-                <tr><td class="text-gray-500" style="padding:6px 0;">{% trans 'Suppléant' %}</td><td>{{ leave.replacement }}</td></tr>
+                <div class="detail-row">
+                    <div class="lbl">{% trans 'Suppléant' %}</div>
+                    <div class="val">👤 {{ leave.replacement }}</div>
+                </div>
                 {% endif %}
                 {% if leave.handover_note %}
-                <tr><td class="text-gray-500" style="padding:6px 0; vertical-align:top;">{% trans 'Note de passation' %}</td><td>{{ leave.handover_note|linebreaksbr }}</td></tr>
+                <div class="detail-row">
+                    <div class="lbl">{% trans 'Note de passation' %}</div>
+                    <div class="val">{{ leave.handover_note|linebreaksbr }}</div>
+                </div>
                 {% endif %}
                 {% if leave.justification %}
-                <tr><td class="text-gray-500" style="padding:6px 0;">{% trans 'Justificatif' %}</td><td><a href="{{ leave.justification.url }}" target="_blank" class="btn btn-secondary btn-sm">📎 {% trans 'Télécharger' %}</a></td></tr>
+                <div class="detail-row">
+                    <div class="lbl">{% trans 'Justificatif' %}</div>
+                    <div class="val"><a href="{{ leave.justification.url }}" target="_blank" class="btn-doc">📎 {% trans 'Télécharger le document' %}</a></div>
+                </div>
                 {% endif %}
-                <tr><td class="text-gray-500" style="padding:6px 0;">{% trans 'Soumise le' %}</td><td>{{ leave.created_at|date:"d/m/Y à H:i" }}</td></tr>
-            </table>
+                <div class="detail-row">
+                    <div class="lbl">{% trans 'Soumise le' %}</div>
+                    <div class="val">🕐 {{ leave.created_at|date:"d/m/Y à H:i" }}</div>
+                </div>
+            </div>
         </div>
-    </div>
 
-    <!-- Workflow timeline -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">{% trans 'Circuit de validation' %}</h3>
-        </div>
-        <div class="card-content">
+        {# ============ Timeline ============ #}
+        <div class="detail-card">
+            <div class="detail-card-header">
+                <div class="icon">🔁</div>
+                <h3>{% trans 'Circuit de validation' %}</h3>
+            </div>
+            <div class="detail-card-body">
+                <div class="timeline">
 
-            {% if can_see_manager_step %}
-            <!-- Étape 1 : Hiérarchie -->
-            <div style="display:flex; gap:12px; padding:12px 0; border-bottom:1px solid #e5e7eb;">
-                <div style="flex-shrink:0; width:32px; height:32px; border-radius:50%; background:{% if leave.manager_decision == 'favorable' %}#16a34a{% elif leave.manager_decision == 'defavorable' %}#ef4444{% else %}#e5e7eb{% endif %}; color:white; display:flex; align-items:center; justify-content:center; font-weight:600;">1</div>
-                <div style="flex:1;">
-                    <p style="margin:0; font-weight:600;">{% trans 'Avis hiérarchique' %} <span class="text-xs text-gray-500">({% trans '48h max' %})</span></p>
-                    {% if leave.manager_decision %}
-                        <p class="text-sm" style="margin:4px 0;">
-                            <span class="badge {% if leave.manager_decision == 'favorable' %}badge-success{% else %}badge-danger{% endif %}">{{ leave.get_manager_decision_display }}</span>
-                            {% trans 'par' %} {{ leave.manager_user.get_full_name|default:leave.manager_user.username }}
-                        </p>
-                        <p class="text-xs text-gray-500">{{ leave.manager_decision_at|date:"d/m/Y H:i" }}</p>
-                        {% if leave.manager_comment %}<p class="text-sm text-gray-600">"{{ leave.manager_comment }}"</p>{% endif %}
-                    {% else %}
-                        <p class="text-xs text-gray-500">{% trans 'En attente' %}</p>
+                    {% if can_see_manager_step %}
+                    <div class="tl-step {% if leave.manager_decision == 'favorable' %}done{% elif leave.manager_decision == 'defavorable' %}fail{% elif leave.status == 'soumise' %}curr{% endif %}">
+                        <div class="tl-dot">{% if leave.manager_decision == 'favorable' %}✓{% elif leave.manager_decision == 'defavorable' %}✕{% else %}1{% endif %}</div>
+                        <p class="tl-title">{% trans 'Avis hiérarchique' %} <span class="deadline">⏱ 48h max</span></p>
+                        {% if leave.manager_decision %}
+                            <p class="tl-meta">
+                                <span class="decision-badge {% if leave.manager_decision == 'favorable' %}ok{% else %}no{% endif %}">{{ leave.get_manager_decision_display }}</span>
+                                {% trans 'par' %} <strong>{{ leave.manager_user.get_full_name|default:leave.manager_user.username }}</strong>
+                                · {{ leave.manager_decision_at|date:"d/m/Y H:i" }}
+                            </p>
+                            {% if leave.manager_comment %}<div class="tl-comment">"{{ leave.manager_comment }}"</div>{% endif %}
+                        {% else %}
+                            <p class="tl-meta"><span class="decision-badge wait">{% trans 'En attente' %}</span></p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    {% if can_see_hr_step %}
+                    <div class="tl-step {% if leave.hr_decision == 'conforme' %}done{% elif leave.hr_decision == 'non_conforme' %}fail{% elif leave.status == 'avis_favorable' %}curr{% endif %}">
+                        <div class="tl-dot">{% if leave.hr_decision == 'conforme' %}✓{% elif leave.hr_decision == 'non_conforme' %}✕{% else %}2{% endif %}</div>
+                        <p class="tl-title">{% trans 'Vérification RH' %} <span class="deadline">⏱ 72h max</span></p>
+                        {% if leave.hr_decision %}
+                            <p class="tl-meta">
+                                <span class="decision-badge {% if leave.hr_decision == 'conforme' %}ok{% else %}no{% endif %}">{{ leave.get_hr_decision_display }}</span>
+                                {% trans 'par' %} <strong>{{ leave.hr_user.get_full_name|default:leave.hr_user.username }}</strong>
+                                · {{ leave.hr_decision_at|date:"d/m/Y H:i" }}
+                            </p>
+                            {% if leave.hr_comment %}<div class="tl-comment">"{{ leave.hr_comment }}"</div>{% endif %}
+                        {% else %}
+                            <p class="tl-meta"><span class="decision-badge wait">{% trans 'En attente' %}</span></p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    {% if can_see_final_step %}
+                    <div class="tl-step {% if leave.final_decision == 'approuve' %}done{% elif leave.final_decision == 'rejete' %}fail{% elif leave.status == 'rh_conforme' %}curr{% endif %}">
+                        <div class="tl-dot">{% if leave.final_decision == 'approuve' %}✓{% elif leave.final_decision == 'rejete' %}✕{% else %}3{% endif %}</div>
+                        <p class="tl-title">{% trans 'Décision Direction / Coordination' %} <span class="deadline">⏱ 3j max</span></p>
+                        {% if leave.final_decision %}
+                            <p class="tl-meta">
+                                <span class="decision-badge {% if leave.final_decision == 'approuve' %}ok{% else %}no{% endif %}">{{ leave.get_final_decision_display }}</span>
+                                {% trans 'par' %} <strong>{{ leave.final_user.get_full_name|default:leave.final_user.username }}</strong>
+                                · {{ leave.final_decision_at|date:"d/m/Y H:i" }}
+                            </p>
+                            {% if leave.final_comment %}<div class="tl-comment">"{{ leave.final_comment }}"</div>{% endif %}
+                        {% else %}
+                            <p class="tl-meta"><span class="decision-badge wait">{% trans 'En attente' %}</span></p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    {% if not can_see_manager_step and not can_see_hr_step and not can_see_final_step %}
+                    <p class="tl-meta" style="text-align:center; padding:24px 0;">🔒 {% trans 'Le détail des étapes de validation est confidentiel.' %}</p>
                     {% endif %}
                 </div>
             </div>
-            {% endif %}
-
-            {% if can_see_hr_step %}
-            <!-- Étape 2 : RH -->
-            <div style="display:flex; gap:12px; padding:12px 0; border-bottom:1px solid #e5e7eb;">
-                <div style="flex-shrink:0; width:32px; height:32px; border-radius:50%; background:{% if leave.hr_decision == 'conforme' %}#16a34a{% elif leave.hr_decision == 'non_conforme' %}#ef4444{% else %}#e5e7eb{% endif %}; color:white; display:flex; align-items:center; justify-content:center; font-weight:600;">2</div>
-                <div style="flex:1;">
-                    <p style="margin:0; font-weight:600;">{% trans 'Vérification RH' %} <span class="text-xs text-gray-500">({% trans '72h max' %})</span></p>
-                    {% if leave.hr_decision %}
-                        <p class="text-sm" style="margin:4px 0;">
-                            <span class="badge {% if leave.hr_decision == 'conforme' %}badge-success{% else %}badge-danger{% endif %}">{{ leave.get_hr_decision_display }}</span>
-                            {% trans 'par' %} {{ leave.hr_user.get_full_name|default:leave.hr_user.username }}
-                        </p>
-                        <p class="text-xs text-gray-500">{{ leave.hr_decision_at|date:"d/m/Y H:i" }}</p>
-                        {% if leave.hr_comment %}<p class="text-sm text-gray-600">"{{ leave.hr_comment }}"</p>{% endif %}
-                    {% else %}
-                        <p class="text-xs text-gray-500">{% trans 'En attente' %}</p>
-                    {% endif %}
-                </div>
-            </div>
-            {% endif %}
-
-            {% if can_see_final_step %}
-            <!-- Étape 3 : Direction / Coordination -->
-            <div style="display:flex; gap:12px; padding:12px 0;">
-                <div style="flex-shrink:0; width:32px; height:32px; border-radius:50%; background:{% if leave.final_decision == 'approuve' %}#16a34a{% elif leave.final_decision == 'rejete' %}#ef4444{% else %}#e5e7eb{% endif %}; color:white; display:flex; align-items:center; justify-content:center; font-weight:600;">3</div>
-                <div style="flex:1;">
-                    <p style="margin:0; font-weight:600;">{% trans 'Décision Direction / Coordination' %} <span class="text-xs text-gray-500">({% trans '3 jours max' %})</span></p>
-                    {% if leave.final_decision %}
-                        <p class="text-sm" style="margin:4px 0;">
-                            <span class="badge {% if leave.final_decision == 'approuve' %}badge-success{% else %}badge-danger{% endif %}">{{ leave.get_final_decision_display }}</span>
-                            {% trans 'par' %} {{ leave.final_user.get_full_name|default:leave.final_user.username }}
-                        </p>
-                        <p class="text-xs text-gray-500">{{ leave.final_decision_at|date:"d/m/Y H:i" }}</p>
-                        {% if leave.final_comment %}<p class="text-sm text-gray-600">"{{ leave.final_comment }}"</p>{% endif %}
-                    {% else %}
-                        <p class="text-xs text-gray-500">{% trans 'En attente' %}</p>
-                    {% endif %}
-                </div>
-            </div>
-            {% endif %}
-
-            {% if not can_see_manager_step and not can_see_hr_step and not can_see_final_step %}
-            <p class="text-sm text-gray-500" style="text-align:center; padding:24px 0;">{% trans 'Le détail des étapes de validation est confidentiel.' %}</p>
-            {% endif %}
         </div>
     </div>
-</div>
 
-<!-- Actions de décision -->
-{% if can_act_manager or can_act_hr or can_act_final %}
-<div class="card mt-4">
-    <div class="card-header">
-        <h3 class="card-title">{% trans 'Action requise' %}</h3>
-    </div>
-    <div class="card-content">
-
-        {% if can_act_manager %}
+    {# ============ Action panels ============ #}
+    {% if can_act_manager %}
+    <div class="action-panel">
+        <div class="action-panel-title">
+            <span style="font-size:24px;">📝</span>
+            <h4>{% trans 'Action requise : avis hiérarchique' %}</h4>
+            <span class="badge-step">{% trans 'Étape 1/3' %}</span>
+        </div>
+        <p class="helper">{% trans "Évaluez l'impact de cette absence sur le fonctionnement du service avant de transmettre à la RH." %}</p>
         <form method="post" action="{% url 'core:leave_decide_manager' leave.id %}">
             {% csrf_token %}
-            <p class="text-sm" style="margin-bottom:12px;"><strong>{% trans 'Avis hiérarchique requis' %}</strong> - {% trans "Évaluez l'impact sur le fonctionnement du service." %}</p>
-            <div class="grid grid-2" style="gap:16px;">
-                <div class="form-group">
-                    <label class="form-label">{{ manager_form.manager_decision.label }}</label>
+            <div class="form-grid">
+                <div>
+                    <label>{{ manager_form.manager_decision.label }}</label>
                     {{ manager_form.manager_decision }}
                 </div>
-                <div class="form-group">
-                    <label class="form-label">{{ manager_form.manager_comment.label }}</label>
+                <div>
+                    <label>{{ manager_form.manager_comment.label }}</label>
                     {{ manager_form.manager_comment }}
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary">{% trans 'Enregistrer mon avis' %}</button>
+            <button type="submit" class="btn-submit">✓ {% trans 'Enregistrer mon avis' %}</button>
         </form>
-        {% endif %}
+    </div>
+    {% endif %}
 
-        {% if can_act_hr %}
+    {% if can_act_hr %}
+    <div class="action-panel hr">
+        <div class="action-panel-title">
+            <span style="font-size:24px;">🔎</span>
+            <h4>{% trans 'Action requise : vérification RH' %}</h4>
+            <span class="badge-step">{% trans 'Étape 2/3' %}</span>
+        </div>
+        <p class="helper">{% trans 'Contrôlez la conformité réglementaire et les droits disponibles avant transmission à la Direction.' %}</p>
         <form method="post" action="{% url 'core:leave_decide_hr' leave.id %}">
             {% csrf_token %}
-            <p class="text-sm" style="margin-bottom:12px;"><strong>{% trans 'Vérification RH requise' %}</strong> - {% trans 'Contrôlez la conformité réglementaire et les droits disponibles.' %}</p>
-            <div class="grid grid-2" style="gap:16px;">
-                <div class="form-group">
-                    <label class="form-label">{{ hr_form.hr_decision.label }}</label>
+            <div class="form-grid">
+                <div>
+                    <label>{{ hr_form.hr_decision.label }}</label>
                     {{ hr_form.hr_decision }}
                 </div>
-                <div class="form-group">
-                    <label class="form-label">{{ hr_form.hr_comment.label }}</label>
+                <div>
+                    <label>{{ hr_form.hr_comment.label }}</label>
                     {{ hr_form.hr_comment }}
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary">{% trans 'Valider la vérification RH' %}</button>
+            <button type="submit" class="btn-submit">✓ {% trans 'Valider la vérification RH' %}</button>
         </form>
-        {% endif %}
+    </div>
+    {% endif %}
 
-        {% if can_act_final %}
+    {% if can_act_final %}
+    <div class="action-panel dg">
+        <div class="action-panel-title">
+            <span style="font-size:24px;">⚖️</span>
+            <h4>{% trans 'Action requise : décision finale' %}</h4>
+            <span class="badge-step">{% trans 'Étape 3/3' %}</span>
+        </div>
+        <p class="helper">{% trans "Décision officielle de la Direction Générale / Coordination. Une notification sera envoyée automatiquement à l'agent et à la chaîne de validation." %}</p>
         <form method="post" action="{% url 'core:leave_decide_final' leave.id %}">
             {% csrf_token %}
-            <p class="text-sm" style="margin-bottom:12px;"><strong>{% trans 'Décision finale Direction / Coordination' %}</strong> - {% trans "Notification officielle sera envoyée à l'agent." %}</p>
-            <div class="grid grid-2" style="gap:16px;">
-                <div class="form-group">
-                    <label class="form-label">{{ final_form.final_decision.label }}</label>
+            <div class="form-grid">
+                <div>
+                    <label>{{ final_form.final_decision.label }}</label>
                     {{ final_form.final_decision }}
                 </div>
-                <div class="form-group">
-                    <label class="form-label">{{ final_form.final_comment.label }}</label>
+                <div>
+                    <label>{{ final_form.final_comment.label }}</label>
                     {{ final_form.final_comment }}
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary">{% trans 'Enregistrer la décision finale' %}</button>
+            <button type="submit" class="btn-submit">✓ {% trans 'Enregistrer la décision finale' %}</button>
         </form>
-        {% endif %}
-
     </div>
+    {% endif %}
+
 </div>
-{% endif %}
 
 {% endblock %}

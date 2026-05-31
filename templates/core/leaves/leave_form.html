@@ -7,202 +7,349 @@
 
 {% block content %}
 <style>
-.form-container {
-    background: #1c3550;
-    padding: 32px;
-    border-radius: 16px;
-    margin: 0 auto;
-}
-.form-section {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 24px;
-    margin-bottom: 24px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-.form-section-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-    border-bottom: 2px solid #e2e8f0;
-}
-.form-section-number {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+.lf-wrap { max-width: 1100px; margin: 0 auto; }
+
+/* Hero header */
+.lf-hero {
+    background: linear-gradient(135deg, #1c3550 0%, #2a4a6f 60%, #3b82f6 100%);
     color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 16px;
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 22px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 25px -10px rgba(28,53,80,0.45);
 }
-.form-section-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: #1e293b;
-    margin: 0;
+.lf-hero::after {
+    content: '';
+    position: absolute; right: -60px; top: -60px;
+    width: 240px; height: 240px;
+    background: radial-gradient(circle, rgba(255,255,255,0.18), transparent 70%);
+    border-radius: 50%;
 }
-.form-section-description {
-    font-size: 14px;
-    color: #64748b;
-    margin: 0 0 0 auto;
+.lf-hero h2 { margin: 0; font-size: 22px; font-weight: 700; }
+.lf-hero p { margin: 6px 0 0; opacity: 0.85; font-size: 14px; max-width: 640px; }
+.lf-steps {
+    display: flex; gap: 8px; margin-top: 18px; position: relative; z-index: 2;
+    flex-wrap: wrap;
 }
-.form-group {
-    margin-bottom: 20px;
+.lf-steps .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 999px;
+    background: rgba(255,255,255,0.15);
+    color: white; font-size: 12px; font-weight: 500;
+    backdrop-filter: blur(4px);
 }
-.form-group:last-child {
-    margin-bottom: 0;
+
+/* Layout */
+.lf-grid { display: grid; grid-template-columns: 2.2fr 1fr; gap: 22px; align-items: start; }
+@media (max-width: 980px) { .lf-grid { grid-template-columns: 1fr; } }
+
+/* Sections */
+.lf-section {
+    background: white;
+    border-radius: 14px;
+    border: 1px solid #eef2f7;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    margin-bottom: 18px;
+    overflow: hidden;
 }
-.form-label {
+.lf-section-head {
+    display: flex; align-items: center; gap: 12px;
+    padding: 16px 20px;
+    background: linear-gradient(180deg, #f8fafc, #ffffff);
+    border-bottom: 1px solid #eef2f7;
+}
+.lf-section-num {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, #1c3550, #3b82f6);
+    color: white; font-weight: 700; font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 10px -2px rgba(28,53,80,0.4);
+}
+.lf-section-title { margin: 0; font-size: 15px; font-weight: 700; color: #0f172a; }
+.lf-section-desc { font-size: 12px; color: #64748b; margin: 2px 0 0; }
+.lf-section-body { padding: 20px; }
+
+.lf-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 700px) { .lf-grid-2 { grid-template-columns: 1fr; } }
+
+.lf-group { margin-bottom: 16px; }
+.lf-group:last-child { margin-bottom: 0; }
+.lf-label {
     display: block;
-    font-weight: 600;
-    color: #334155;
-    margin-bottom: 8px;
-    font-size: 14px;
+    font-size: 12px; font-weight: 600;
+    color: #475569;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
-.form-control {
+.form-control,
+.lf-section input[type="text"],
+.lf-section input[type="date"],
+.lf-section input[type="file"],
+.lf-section select,
+.lf-section textarea {
     width: 100%;
-    padding: 12px 16px;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
+    padding: 11px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
     font-size: 14px;
-    transition: all 0.2s;
-    background: #ffffff;
+    background: white;
+    color: #0f172a;
+    font-family: inherit;
+    transition: all .15s ease;
 }
-.form-control:focus {
+.form-control:focus,
+.lf-section input:focus,
+.lf-section select:focus,
+.lf-section textarea:focus {
     outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: #1c3550;
+    box-shadow: 0 0 0 4px rgba(28,53,80,0.08);
 }
-textarea.form-control {
-    min-height: 100px;
-    resize: vertical;
+textarea.form-control, .lf-section textarea { min-height: 100px; resize: vertical; }
+.lf-help { font-size: 12px; color: #64748b; margin-top: 6px; }
+.lf-error { font-size: 12px; color: #dc2626; margin-top: 6px; font-weight: 500; }
+
+/* Sidebar info */
+.lf-aside { position: sticky; top: 20px; }
+.lf-info-card {
+    background: white;
+    border-radius: 14px;
+    border: 1px solid #eef2f7;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    padding: 20px;
+    margin-bottom: 16px;
 }
-.help-text {
+.lf-info-card h4 {
+    margin: 0 0 12px;
+    font-size: 14px; font-weight: 700; color: #0f172a;
+    display: flex; align-items: center; gap: 8px;
+}
+.lf-info-list { list-style: none; padding: 0; margin: 0; }
+.lf-info-list li {
+    display: flex; gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px dashed #f1f5f9;
+    font-size: 13px; color: #475569;
+    line-height: 1.45;
+}
+.lf-info-list li:last-child { border-bottom: none; }
+.lf-info-list .ico {
+    flex-shrink: 0;
+    width: 24px; height: 24px;
+    border-radius: 6px; background: #e8eef5; color: #1c3550;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+}
+
+.lf-tip {
+    background: linear-gradient(135deg, #fffbeb, #fef3c7);
+    border: 1px solid #fde68a;
+    border-radius: 12px;
+    padding: 14px 16px;
     font-size: 13px;
-    color: #64748b;
-    margin-top: 6px;
+    color: #78350f;
+    line-height: 1.5;
 }
-.error-text {
-    font-size: 13px;
-    color: #ef4444;
-    margin-top: 6px;
+.lf-tip strong { color: #92400e; }
+
+/* Submit */
+.lf-actions {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 22px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    flex-wrap: wrap;
+}
+.lf-actions .left p { margin: 0; }
+.lf-actions .ttl { font-weight: 700; color: #0f172a; font-size: 15px; }
+.lf-actions .sub { color: #64748b; font-size: 13px; margin-top: 2px !important; }
+.lf-actions .actions { display: flex; gap: 10px; }
+.btn-cancel {
+    padding: 11px 22px; border-radius: 10px;
+    background: white; border: 1px solid #e2e8f0;
+    color: #475569; font-weight: 600; font-size: 14px;
+    transition: all .15s ease;
+}
+.btn-cancel:hover { background: #f1f5f9; border-color: #cbd5e1; }
+.btn-submit-lg {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 26px; border-radius: 10px;
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    color: white; font-weight: 700; font-size: 14px;
+    border: none; cursor: pointer;
+    box-shadow: 0 4px 14px -2px rgba(22,163,74,0.4);
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+.btn-submit-lg:hover { transform: translateY(-2px); box-shadow: 0 8px 20px -2px rgba(22,163,74,0.5); }
+
+.lf-alert {
+    margin-bottom: 18px;
+    padding: 14px 18px;
+    border-radius: 12px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    font-size: 14px;
 }
 </style>
 
-<div class="form-container" style="max-width: 900px;">
-    {% if form.non_field_errors %}
-        <div class="alert alert-danger" style="margin-bottom: 24px; padding: 16px; border-radius: 8px; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b;">
-            {{ form.non_field_errors }}
+<div class="lf-wrap">
+
+    <div class="lf-hero">
+        <h2 style="position:relative; z-index:2;">📝 {{ title }}</h2>
+        <p style="position:relative; z-index:2;">{% trans "Remplissez ce formulaire pour soumettre votre demande. Elle suivra le circuit officiel : Hiérarchie → RH → Direction." %}</p>
+        <div class="lf-steps">
+            <span class="pill">1️⃣ {% trans 'Avis hiérarchique' %}</span>
+            <span class="pill">2️⃣ {% trans 'Vérification RH' %}</span>
+            <span class="pill">3️⃣ {% trans 'Décision Direction' %}</span>
         </div>
+    </div>
+
+    {% if form.non_field_errors %}
+        <div class="lf-alert">⚠ {{ form.non_field_errors }}</div>
     {% endif %}
 
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
+        <div class="lf-grid">
 
-        <!-- Section 1: Informations personnelles -->
-        <div class="form-section">
-            <div class="form-section-header">
-                <div class="form-section-number">1</div>
-                <h3 class="form-section-title">{% trans 'Informations personnelles' %}</h3>
-                <span class="form-section-description">{% trans 'Votre identité et direction' %}</span>
-            </div>
-            <div class="grid grid-2" style="gap: 20px;">
-                <div class="form-group">
-                    <label class="form-label">{{ form.employee.label }}</label>
-                    {{ form.employee }}
-                    {% if form.employee.errors %}<p class="error-text">{{ form.employee.errors|striptags }}</p>{% endif %}
+            <div>
+                <!-- Section 1 -->
+                <div class="lf-section">
+                    <div class="lf-section-head">
+                        <div class="lf-section-num">1</div>
+                        <div>
+                            <h3 class="lf-section-title">{% trans 'Informations personnelles' %}</h3>
+                            <p class="lf-section-desc">{% trans 'Votre identité et votre direction de rattachement' %}</p>
+                        </div>
+                    </div>
+                    <div class="lf-section-body">
+                        <div class="lf-grid-2">
+                            <div class="lf-group">
+                                <label class="lf-label">{{ form.employee.label }}</label>
+                                {{ form.employee }}
+                                {% if form.employee.errors %}<p class="lf-error">{{ form.employee.errors|striptags }}</p>{% endif %}
+                            </div>
+                            <div class="lf-group">
+                                <label class="lf-label">{{ form.direction.label }}</label>
+                                {{ form.direction }}
+                                {% if form.direction.errors %}<p class="lf-error">{{ form.direction.errors|striptags }}</p>{% endif %}
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">{{ form.direction.label }}</label>
-                    {{ form.direction }}
-                    {% if form.direction.errors %}<p class="error-text">{{ form.direction.errors|striptags }}</p>{% endif %}
-                </div>
-            </div>
-        </div>
 
-        <!-- Section 2: Détails du congé -->
-        <div class="form-section">
-            <div class="form-section-header">
-                <div class="form-section-number">2</div>
-                <h3 class="form-section-title">{% trans 'Détails du congé' %}</h3>
-                <span class="form-section-description">{% trans 'Type et durée' %}</span>
-            </div>
-            <div class="form-group">
-                <label class="form-label">{{ form.leave_type.label }}</label>
-                {{ form.leave_type }}
-                {% if form.leave_type.errors %}<p class="error-text">{{ form.leave_type.errors|striptags }}</p>{% endif %}
-            </div>
-            <div class="grid grid-2" style="gap: 20px;">
-                <div class="form-group">
-                    <label class="form-label">{{ form.start_date.label }}</label>
-                    {{ form.start_date }}
-                    {% if form.start_date.errors %}<p class="error-text">{{ form.start_date.errors|striptags }}</p>{% endif %}
+                <!-- Section 2 -->
+                <div class="lf-section">
+                    <div class="lf-section-head">
+                        <div class="lf-section-num">2</div>
+                        <div>
+                            <h3 class="lf-section-title">{% trans 'Détails du congé' %}</h3>
+                            <p class="lf-section-desc">{% trans 'Type de congé, dates et motif' %}</p>
+                        </div>
+                    </div>
+                    <div class="lf-section-body">
+                        <div class="lf-group">
+                            <label class="lf-label">{{ form.leave_type.label }}</label>
+                            {{ form.leave_type }}
+                            {% if form.leave_type.errors %}<p class="lf-error">{{ form.leave_type.errors|striptags }}</p>{% endif %}
+                        </div>
+                        <div class="lf-grid-2">
+                            <div class="lf-group">
+                                <label class="lf-label">{{ form.start_date.label }}</label>
+                                {{ form.start_date }}
+                                {% if form.start_date.errors %}<p class="lf-error">{{ form.start_date.errors|striptags }}</p>{% endif %}
+                            </div>
+                            <div class="lf-group">
+                                <label class="lf-label">{{ form.end_date.label }}</label>
+                                {{ form.end_date }}
+                                {% if form.end_date.errors %}<p class="lf-error">{{ form.end_date.errors|striptags }}</p>{% endif %}
+                            </div>
+                        </div>
+                        <div class="lf-group">
+                            <label class="lf-label">{{ form.reason.label }}</label>
+                            {{ form.reason }}
+                            <p class="lf-help">{% trans "Décrivez brièvement le motif de votre demande." %}</p>
+                            {% if form.reason.errors %}<p class="lf-error">{{ form.reason.errors|striptags }}</p>{% endif %}
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">{{ form.end_date.label }}</label>
-                    {{ form.end_date }}
-                    {% if form.end_date.errors %}<p class="error-text">{{ form.end_date.errors|striptags }}</p>{% endif %}
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="form-label">{{ form.reason.label }}</label>
-                {{ form.reason }}
-                {% if form.reason.errors %}<p class="error-text">{{ form.reason.errors|striptags }}</p>{% endif %}
-            </div>
-        </div>
 
-        <!-- Section 3: Continuité de service -->
-        <div class="form-section">
-            <div class="form-section-header">
-                <div class="form-section-number">3</div>
-                <h3 class="form-section-title">{% trans 'Continuité de service' %}</h3>
-                <span class="form-section-description">{% trans 'Remplacement et passation' %}</span>
-            </div>
-            <div class="form-group">
-                <label class="form-label">{{ form.replacement.label }}</label>
-                {{ form.replacement }}
-                <p class="help-text">{% trans 'Personne désignée pour assurer la continuité du service pendant votre absence.' %}</p>
-            </div>
-            <div class="form-group">
-                <label class="form-label">{{ form.handover_note.label }}</label>
-                {{ form.handover_note }}
-                <p class="help-text">{% trans 'Brève note de passation : dossiers en cours, points d\'attention, contacts utiles.' %}</p>
-            </div>
-        </div>
-
-        <!-- Section 4: Justificatifs -->
-        <div class="form-section">
-            <div class="form-section-header">
-                <div class="form-section-number">4</div>
-                <h3 class="form-section-title">{% trans 'Documents justificatifs' %}</h3>
-                <span class="form-section-description">{% trans 'Pièces à fournir' %}</span>
-            </div>
-            <div class="form-group">
-                <label class="form-label">{{ form.justification.label }}</label>
-                {{ form.justification }}
-                <p class="help-text">{% trans 'Certificat médical, acte de naissance, convocation, ordre de mission, lettre motivée…' %}</p>
-                {% if form.justification.errors %}<p class="error-text">{{ form.justification.errors|striptags }}</p>{% endif %}
-            </div>
-        </div>
-
-        <!-- Actions -->
-        <div class="card" style="background: linear-gradient(135deg, #f8fafc, #f1f5f9); border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px;">
-            <div class="flex items-center justify-between" style="gap: 16px;">
-                <div>
-                    <p style="margin: 0; font-weight: 600; color: #334155; font-size: 16px;">{% trans 'Prêt à soumettre ?' %}</p>
-                    <p style="margin: 4px 0 0; color: #64748b; font-size: 14px;">{% trans 'Votre demande sera transmise à votre hiérarchie pour validation.' %}</p>
+                <!-- Section 3 -->
+                <div class="lf-section">
+                    <div class="lf-section-head">
+                        <div class="lf-section-num">3</div>
+                        <div>
+                            <h3 class="lf-section-title">{% trans 'Continuité de service' %}</h3>
+                            <p class="lf-section-desc">{% trans 'Remplacement et passation des dossiers' %}</p>
+                        </div>
+                    </div>
+                    <div class="lf-section-body">
+                        <div class="lf-group">
+                            <label class="lf-label">{{ form.replacement.label }}</label>
+                            {{ form.replacement }}
+                            <p class="lf-help">{% trans 'Personne désignée pour assurer la continuité du service pendant votre absence.' %}</p>
+                        </div>
+                        <div class="lf-group">
+                            <label class="lf-label">{{ form.handover_note.label }}</label>
+                            {{ form.handover_note }}
+                            <p class="lf-help">{% trans 'Brève note de passation : dossiers en cours, points d\'attention, contacts utiles.' %}</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex gap-2">
-                    <a href="{% url 'core:leave_list' %}" class="btn btn-secondary" style="padding: 12px 24px; border-radius: 8px;">{% trans 'Annuler' %}</a>
-                    <button type="submit" class="btn btn-primary" style="padding: 12px 32px; border-radius: 8px; font-weight: 600;">{% trans 'Soumettre la demande' %}</button>
+
+                <!-- Section 4 -->
+                <div class="lf-section">
+                    <div class="lf-section-head">
+                        <div class="lf-section-num">4</div>
+                        <div>
+                            <h3 class="lf-section-title">{% trans 'Documents justificatifs' %}</h3>
+                            <p class="lf-section-desc">{% trans 'Pièces à fournir selon le type de congé' %}</p>
+                        </div>
+                    </div>
+                    <div class="lf-section-body">
+                        <div class="lf-group">
+                            <label class="lf-label">{{ form.justification.label }}</label>
+                            {{ form.justification }}
+                            <p class="lf-help">{% trans 'Certificat médical, acte de naissance, convocation, ordre de mission, lettre motivée…' %}</p>
+                            {% if form.justification.errors %}<p class="lf-error">{{ form.justification.errors|striptags }}</p>{% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="lf-actions">
+                    <div class="left">
+                        <p class="ttl">✅ {% trans 'Prêt à soumettre votre demande ?' %}</p>
+                        <p class="sub">{% trans 'Elle sera transmise immédiatement à votre hiérarchie pour validation.' %}</p>
+                    </div>
+                    <div class="actions">
+                        <a href="{% url 'core:leave_list' %}" class="btn-cancel">{% trans 'Annuler' %}</a>
+                        <button type="submit" class="btn-submit-lg">📨 {% trans 'Soumettre la demande' %}</button>
+                    </div>
                 </div>
             </div>
+
+            <aside class="lf-aside">
+                <div class="lf-info-card">
+                    <h4>📌 {% trans 'À savoir' %}</h4>
+                    <ul class="lf-info-list">
+                        <li><span class="ico">📅</span><div><strong>{% trans 'Congé annuel' %}</strong> : {% trans 'à demander au moins 15 jours avant le départ.' %}</div></li>
+                        <li><span class="ico">🏥</span><div><strong>{% trans 'Maladie / maternité / formation' %}</strong> : {% trans 'un justificatif est obligatoire.' %}</div></li>
+                        <li><span class="ico">⏱</span><div><strong>{% trans 'Délai de traitement' %}</strong> : {% trans '48h hiérarchie, 72h RH, 3j Direction.' %}</div></li>
+                        <li><span class="ico">📧</span><div>{% trans "Vous serez notifié par email à chaque étape." %}</div></li>
+                    </ul>
+                </div>
+
+                <div class="lf-tip">
+                    💡 <strong>{% trans 'Conseil' %}</strong> — {% trans 'Pensez à désigner un suppléant pour faciliter la continuité du service. Une note de passation bien rédigée accélère la validation.' %}
+                </div>
+            </aside>
+
         </div>
     </form>
 </div>
