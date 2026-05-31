@@ -10,6 +10,9 @@ from reportlab.lib.units import mm
 from reportlab.lib import colors
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
+from reportlab.graphics.barcode.qr import QrCodeWidget
+from reportlab.graphics.shapes import Drawing
+from reportlab.graphics import renderPDF
 
 
 # --- Constantes design ------------------------------------------------------
@@ -418,6 +421,36 @@ def _draw_decision_stamp(c, leave, table_bottom_y):
     c.drawCentredString(cx, cy - 0.5 * mm, "Cachet")
 
 
+def _draw_qr_code(c, leave):
+    """Dessine le QR code de verification au-dessus du pied de page."""
+    code = generate_unique_code(leave)
+    qr_size = 22 * mm
+    qr_x = MARGIN_X
+    qr_y = 14 * mm  # juste au-dessus du bandeau navy
+
+    qr = QrCodeWidget(code, barLevel='M')
+    bounds = qr.getBounds()
+    w = bounds[2] - bounds[0]
+    h = bounds[3] - bounds[1]
+    d = Drawing(qr_size, qr_size, transform=[qr_size / w, 0, 0, qr_size / h, 0, 0])
+    d.add(qr)
+    renderPDF.draw(d, c, qr_x, qr_y)
+
+    # Label sous le QR
+    c.setFillColor(GREY_LIGHT)
+    c.setFont('Helvetica-Oblique', 6.5)
+    c.drawString(qr_x + qr_size + 3 * mm, qr_y + qr_size - 3 * mm, "Verification")
+    c.setFillColor(NAVY)
+    c.setFont('Courier-Bold', 7)
+    c.drawString(qr_x + qr_size + 3 * mm, qr_y + qr_size - 7 * mm, code)
+    c.setFillColor(GREY_LIGHT)
+    c.setFont('Helvetica', 6.5)
+    c.drawString(qr_x + qr_size + 3 * mm, qr_y + qr_size - 11 * mm,
+                 "Scannez le QR code pour verifier l'authenticite")
+    c.drawString(qr_x + qr_size + 3 * mm, qr_y + qr_size - 14 * mm,
+                 "de ce document aupres de la Direction Generale CSIG.")
+
+
 def _draw_footer(c, leave):
     """Pied de page institutionnel."""
     # Liseret or en bas
@@ -475,6 +508,7 @@ def generate_leave_approval_pdf(leave, output_path=None):
     _draw_motif(c, leave)
     table_bottom_y = _draw_workflow(c, leave)
     _draw_decision_stamp(c, leave, table_bottom_y)
+    _draw_qr_code(c, leave)
     _draw_footer(c, leave)
 
     c.showPage()
