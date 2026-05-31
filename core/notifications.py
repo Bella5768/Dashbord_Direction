@@ -35,7 +35,7 @@ def _attach_logo(email):
         return False
 
 
-def _send(subject, text_content, html_content, recipient):
+def _send(subject, text_content, html_content, recipient, attachment=None, attachment_filename=None):
     from_header, sender_email = _build_from()
     headers = {
         'Reply-To': sender_email,
@@ -44,6 +44,8 @@ def _send(subject, text_content, html_content, recipient):
     }
     email = EmailMultiAlternatives(subject, text_content, from_header, [recipient], headers=headers)
     email.attach_alternative(html_content, 'text/html')
+    if attachment and attachment_filename:
+        email.attach(attachment_filename, attachment, 'application/pdf')
     email.send()
 
 
@@ -535,6 +537,16 @@ def _leave_recipients_step(leave, step):
             add(leave.manager_user.get_full_name() or leave.manager_user.username, leave.manager_user.email, "Décision finale (en copie - hiérarchie) :")
         # RH : tous les RH en copie pour archivage
         _add_hr("Décision finale enregistrée (copie équipe RH) :")
+        # Direction Générale : tous les DG en copie pour information
+        try:
+            dg_users = User_.objects.filter(
+                profile__role__in=['directeur_general', 'admin'],
+                is_active=True,
+            ).exclude(email='')
+            for u in dg_users:
+                add(u.get_full_name() or u.username, u.email, "Décision finale enregistrée (copie Direction Générale) :")
+        except Exception:
+            pass
 
     return recipients
 
@@ -591,13 +603,18 @@ def _build_leave_email(recipient_name, role_label, leave, banner_color, banner_t
     return subject, text_content, html_content
 
 
-def _dispatch_leave_emails(leave, step, banner_color, banner_title, banner_subtitle):
+def _dispatch_leave_emails(leave, step, banner_color, banner_title, banner_subtitle, pdf_attachment=None):
     recipients = _leave_recipients_step(leave, step)
     sent, errors = [], []
+    employee_email = leave.employee.email if leave.employee else None
+    
     for name, email, role in recipients:
         subject, text_content, html_content = _build_leave_email(name, role, leave, banner_color, banner_title, banner_subtitle)
+        # Attacher le PDF uniquement au demandeur
+        attachment = pdf_attachment if email == employee_email else None
+        attachment_filename = f"attestation_conge_{leave.id}.pdf" if attachment else None
         try:
-            _send(subject, text_content, html_content, email)
+            _send(subject, text_content, html_content, email, attachment, attachment_filename)
             sent.append(email)
         except Exception as e:
             errors.append(f"{email}: {e}")
@@ -638,11 +655,12 @@ def notify_leave_hr_decided(leave):
     )
 
 
-def notify_leave_final_decided(leave):
+def notify_leave_final_decided(leave, pdf_attachment=None):
     approved = leave.final_decision == 'approuve'
     return _dispatch_leave_emails(
         leave, 'final',
         banner_color='#16a34a' if approved else '#ef4444',
         banner_title='Décision finale : ' + ('approuvée' if approved else 'rejetée'),
         banner_subtitle='Notification officielle CSIG',
+        pdf_attachment=pdf_attachment,
     )

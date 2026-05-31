@@ -399,7 +399,12 @@ def leave_decide_final(request, leave_id):
                 obj.status = 'rejetee'
             obj.save()
             try:
-                notifications.notify_leave_final_decided(obj)
+                # Générer le PDF d'attestation si approuvé
+                pdf_bytes = None
+                if obj.status == 'approuvee':
+                    from .pdf_generator import generate_leave_approval_pdf
+                    pdf_bytes = generate_leave_approval_pdf(obj)
+                notifications.notify_leave_final_decided(obj, pdf_bytes)
             except Exception:
                 pass
             messages.success(request, "Décision finale enregistrée et notifiée.")
