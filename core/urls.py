@@ -119,4 +119,5 @@ urlpatterns = [
     path('conges/<int:leave_id>/decision-hierarchique/', views_leave.leave_decide_manager, name='leave_decide_manager'),
     path('conges/<int:leave_id>/verification-rh/', views_leave.leave_decide_hr, name='leave_decide_hr'),
     path('conges/<int:leave_id>/decision-finale/', views_leave.leave_decide_final, name='leave_decide_final'),
+    path('conges/<int:leave_id>/attestation.pdf', views_leave.leave_pdf_download, name='leave_pdf_download'),
 ]

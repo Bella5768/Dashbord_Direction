@@ -255,6 +255,11 @@
                 <p class="step-text">📍 {{ leave.current_step_label }}</p>
             </div>
             <div class="status-actions">
+                {% if leave.status == 'approuvee' %}
+                <a href="{% url 'core:leave_pdf_download' leave.id %}" class="btn-pill" style="background:white; color:#16a34a; font-weight:700;" target="_blank">
+                    📄 {% trans 'Télécharger l\'attestation officielle' %}
+                </a>
+                {% endif %}
                 {% if can_cancel %}
                 <form method="post" action="{% url 'core:leave_cancel' leave.id %}" onsubmit="return confirm('Annuler cette demande ?');">
                     {% csrf_token %}

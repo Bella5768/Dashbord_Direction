@@ -2,7 +2,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
@@ -410,3 +410,26 @@ def leave_decide_final(request, leave_id):
             messages.success(request, "Décision finale enregistrée et notifiée.")
             return redirect('core:leave_detail', leave_id=obj.id)
     return redirect('core:leave_detail', leave_id=leave.id)
+
+
+@login_required
+def leave_pdf_download(request, leave_id):
+    """Telecharge le PDF d'attestation de conge approuve.
+    Accessible a tous les stakeholders qui peuvent voir la demande.
+    """
+    leave = get_object_or_404(
+        LeaveRequest.objects.select_related('employee', 'direction', 'user', 'manager_user', 'hr_user', 'final_user'),
+        pk=leave_id,
+    )
+    if not _user_can_view_leave(request.user, leave):
+        return HttpResponseForbidden("Vous n'avez pas accès à cette demande.")
+    if leave.status != 'approuvee':
+        messages.error(request, "L'attestation n'est disponible que pour les demandes approuvées.")
+        return redirect('core:leave_detail', leave_id=leave.id)
+
+    from .pdf_generator import generate_leave_approval_pdf
+    pdf_bytes = generate_leave_approval_pdf(leave)
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    filename = f"attestation_conge_{leave.employee.name.replace(' ', '_')}_{leave.id}.pdf"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
