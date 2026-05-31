@@ -95,6 +95,59 @@ def _draw_title_band(c, leave):
                       f"Conakry, le {datetime.now().strftime('%d/%m/%Y')}")
 
 
+def _wrap_text(c, text, font_name, font_size, max_width):
+    """Decoupe un texte en plusieurs lignes pour tenir dans max_width."""
+    if not text:
+        return ['-']
+    text = str(text)
+    words = text.split()
+    if not words:
+        return ['-']
+    lines = []
+    current = ''
+    for word in words:
+        candidate = (current + ' ' + word).strip() if current else word
+        if c.stringWidth(candidate, font_name, font_size) <= max_width:
+            current = candidate
+        else:
+            if current:
+                lines.append(current)
+            # Si le mot seul depasse, le couper caractere par caractere
+            if c.stringWidth(word, font_name, font_size) > max_width:
+                buf = ''
+                for ch in word:
+                    if c.stringWidth(buf + ch, font_name, font_size) <= max_width:
+                        buf += ch
+                    else:
+                        if buf:
+                            lines.append(buf)
+                        buf = ch
+                current = buf
+            else:
+                current = word
+    if current:
+        lines.append(current)
+    return lines or ['-']
+
+
+def _draw_wrapped_string(c, x, y, text, font_name, font_size, max_width, line_height=None, max_lines=None):
+    """Ecrit un texte avec retour a la ligne. Retourne le nombre de lignes ecrites."""
+    if line_height is None:
+        line_height = font_size + 2
+    lines = _wrap_text(c, text, font_name, font_size, max_width)
+    if max_lines and len(lines) > max_lines:
+        lines = lines[:max_lines]
+        # Ajouter "..." sur la derniere ligne si tronque
+        last = lines[-1]
+        while c.stringWidth(last + '...', font_name, font_size) > max_width and last:
+            last = last[:-1]
+        lines[-1] = last + '...'
+    c.setFont(font_name, font_size)
+    for i, line in enumerate(lines):
+        c.drawString(x, y - i * line_height, line)
+    return len(lines)
+
+
 def _draw_section_title(c, x, y, label):
     c.setFillColor(NAVY)
     c.setFont('Helvetica-Bold', 10)
@@ -105,13 +158,20 @@ def _draw_section_title(c, x, y, label):
     c.line(x, y - 1.5 * mm, x + text_w, y - 1.5 * mm)
 
 
-def _draw_kv_row(c, x, y, label, value, label_w=42 * mm):
+def _draw_kv_row(c, x, y, label, value, label_w=42 * mm, value_max_w=None, max_lines=2):
+    """Dessine une ligne label / valeur. Retourne le nombre de lignes utilisees pour la valeur."""
     c.setFillColor(GREY_LIGHT)
     c.setFont('Helvetica', 9)
     c.drawString(x, y, label)
     c.setFillColor(GREY_TEXT)
-    c.setFont('Helvetica-Bold', 9.5)
-    c.drawString(x + label_w, y, value or '-')
+    if value_max_w is None:
+        value_max_w = 40 * mm
+    n = _draw_wrapped_string(
+        c, x + label_w, y, value or '-',
+        'Helvetica-Bold', 9.5, value_max_w,
+        line_height=4 * mm, max_lines=max_lines,
+    )
+    return n
 
 
 def _draw_info_box(c, leave):
@@ -119,6 +179,8 @@ def _draw_info_box(c, leave):
     top = PAGE_H - 65 * mm
     box_h = 48 * mm
     col_w = (PAGE_W - 2 * MARGIN_X - 6 * mm) / 2
+    base_step = 6 * mm  # interligne minimum entre 2 entrees
+    extra_per_line = 4 * mm  # ajout par ligne supplementaire
 
     # --- Colonne 1 : Demandeur ---
     x1 = MARGIN_X
@@ -129,16 +191,22 @@ def _draw_info_box(c, leave):
 
     _draw_section_title(c, x1 + 4 * mm, top - 6 * mm, "Demandeur")
     yy = top - 13 * mm
+    label_w1 = 28 * mm
+    value_w1 = col_w - 4 * mm - label_w1 - 4 * mm  # padding gauche + label + padding droite
     direction_name = leave.direction.name if leave.direction else '-'
-    _draw_kv_row(c, x1 + 4 * mm, yy, "Nom complet", leave.employee.name, 28 * mm)
-    yy -= 7 * mm
-    _draw_kv_row(c, x1 + 4 * mm, yy, "Direction", direction_name, 28 * mm)
-    yy -= 7 * mm
+
+    rows1 = [
+        ("Nom complet", leave.employee.name),
+        ("Direction", direction_name),
+    ]
     if getattr(leave.employee, 'role', None):
-        _draw_kv_row(c, x1 + 4 * mm, yy, "Fonction", leave.employee.role, 28 * mm)
-        yy -= 7 * mm
+        rows1.append(("Fonction", leave.employee.role))
     if getattr(leave.employee, 'email', None):
-        _draw_kv_row(c, x1 + 4 * mm, yy, "Email", leave.employee.email, 28 * mm)
+        rows1.append(("Email", leave.employee.email))
+
+    for label, value in rows1:
+        n = _draw_kv_row(c, x1 + 4 * mm, yy, label, value, label_w1, value_max_w=value_w1, max_lines=2)
+        yy -= base_step + (n - 1) * extra_per_line
 
     # --- Colonne 2 : Details du conge ---
     x2 = x1 + col_w + 6 * mm
@@ -147,15 +215,21 @@ def _draw_info_box(c, leave):
 
     _draw_section_title(c, x2 + 4 * mm, top - 6 * mm, "Details du conge")
     yy = top - 13 * mm
-    _draw_kv_row(c, x2 + 4 * mm, yy, "Type", leave.get_leave_type_display(), 22 * mm)
-    yy -= 7 * mm
+    label_w2 = 22 * mm
+    value_w2 = col_w - 4 * mm - label_w2 - 4 * mm
     period = f"Du {leave.start_date.strftime('%d/%m/%Y')} au {leave.end_date.strftime('%d/%m/%Y')}"
-    _draw_kv_row(c, x2 + 4 * mm, yy, "Periode", period, 22 * mm)
-    yy -= 7 * mm
-    _draw_kv_row(c, x2 + 4 * mm, yy, "Duree", f"{leave.days_count} jour(s)", 22 * mm)
-    yy -= 7 * mm
+
+    rows2 = [
+        ("Type", leave.get_leave_type_display()),
+        ("Periode", period),
+        ("Duree", f"{leave.days_count} jour(s)"),
+    ]
     if leave.replacement:
-        _draw_kv_row(c, x2 + 4 * mm, yy, "Suppleant", leave.replacement, 22 * mm)
+        rows2.append(("Suppleant", leave.replacement))
+
+    for label, value in rows2:
+        n = _draw_kv_row(c, x2 + 4 * mm, yy, label, value, label_w2, value_max_w=value_w2, max_lines=2)
+        yy -= base_step + (n - 1) * extra_per_line
 
 
 def _draw_motif(c, leave):
@@ -169,9 +243,12 @@ def _draw_motif(c, leave):
 
     _draw_section_title(c, MARGIN_X + 4 * mm, top - 6 * mm, "Motif")
     c.setFillColor(GREY_TEXT)
-    c.setFont('Helvetica', 9)
-    motif = (leave.reason or '-')[:240]
-    c.drawString(MARGIN_X + 4 * mm, top - 12 * mm, motif)
+    motif = leave.reason or '-'
+    _draw_wrapped_string(
+        c, MARGIN_X + 4 * mm, top - 12 * mm, motif,
+        'Helvetica', 9, PAGE_W - 2 * MARGIN_X - 8 * mm,
+        line_height=4 * mm, max_lines=2,
+    )
 
 
 def _draw_workflow(c, leave):
@@ -229,22 +306,34 @@ def _draw_workflow(c, leave):
     y = header_y - row_h
     c.setStrokeColor(GREY_BORDER)
     c.setLineWidth(0.4)
+    pad = 3 * mm
     for idx, row in enumerate(rows):
-        y -= row_h
+        # Pre-calculer le nombre de lignes pour chaque cellule
+        cell_texts = [row[0], str(row[1]), row[2], row[3]]
+        cell_fonts = [('Helvetica', 9), ('Helvetica', 9), ('Helvetica', 9), ('Helvetica-Bold', 9)]
+        n_lines = []
+        for i, txt in enumerate(cell_texts):
+            fname, fsize = cell_fonts[i]
+            lines = _wrap_text(c, txt, fname, fsize, col_widths[i] - 2 * pad)
+            n_lines.append(min(len(lines), 2))
+        max_lines = max(n_lines)
+        dynamic_row_h = max(row_h, 4.5 * mm + max_lines * 4 * mm)
+
+        y -= dynamic_row_h
         if idx % 2 == 0:
             c.setFillColor(colors.HexColor('#f8fafc'))
-            c.rect(inner_x, y, inner_w, row_h, fill=1, stroke=0)
+            c.rect(inner_x, y, inner_w, dynamic_row_h, fill=1, stroke=0)
         c.setStrokeColor(GREY_BORDER)
-        c.rect(inner_x, y, inner_w, row_h, fill=0, stroke=1)
+        c.rect(inner_x, y, inner_w, dynamic_row_h, fill=0, stroke=1)
+
+        # Texte aligne en haut de la cellule
+        text_y = y + dynamic_row_h - 5 * mm
         c.setFillColor(GREY_TEXT)
-        c.setFont('Helvetica', 9)
-        c.drawString(col_x[0] + 3 * mm, y + 2.2 * mm, row[0])
-        c.drawString(col_x[1] + 3 * mm, y + 2.2 * mm, str(row[1])[:38])
-        c.drawString(col_x[2] + 3 * mm, y + 2.2 * mm, row[2])
-        # Decision avec couleur
+        _draw_wrapped_string(c, col_x[0] + pad, text_y, row[0], 'Helvetica', 9, col_widths[0] - 2 * pad, line_height=4 * mm, max_lines=2)
+        _draw_wrapped_string(c, col_x[1] + pad, text_y, str(row[1]), 'Helvetica', 9, col_widths[1] - 2 * pad, line_height=4 * mm, max_lines=2)
+        _draw_wrapped_string(c, col_x[2] + pad, text_y, row[2], 'Helvetica', 9, col_widths[2] - 2 * pad, line_height=4 * mm, max_lines=2)
         c.setFillColor(GREEN if row[4] else RED)
-        c.setFont('Helvetica-Bold', 9)
-        c.drawString(col_x[3] + 3 * mm, y + 2.2 * mm, row[3])
+        _draw_wrapped_string(c, col_x[3] + pad, text_y, row[3], 'Helvetica-Bold', 9, col_widths[3] - 2 * pad, line_height=4 * mm, max_lines=2)
 
     return y  # bottom Y du tableau
 
