@@ -176,6 +176,66 @@ def notify_assignment(employee, task_type, task_name, project_name, assigned_by,
     return (False, "; ".join(errors) or "Échec d'envoi")
 
 
+def notify_project_member_added(member, added_by_user):
+    if not getattr(settings, 'EMAIL_HOST_USER', '') or not getattr(settings, 'EMAIL_HOST_PASSWORD', ''):
+        logger.warning("Notification non envoyée : identifiants Outlook non configurés")
+        return (False, "Identifiants Outlook non configurés")
+
+    employee = member.employee
+    if not employee or not employee.email:
+        logger.warning(f"Notification non envoyée : pas d'email pour {employee}")
+        return (False, "Pas d'email pour ce membre")
+
+    added_by = added_by_user.get_full_name() or added_by_user.username
+    role_label = member.get_role_display() if member.role else 'Membre'
+    subject = f"[CSIG] Ajout au projet : {member.project.name}"
+    text_content = (
+        f"Bonjour {employee.name},\n\n"
+        f"Vous avez été ajouté au projet suivant :\n\n"
+        f"  Projet : {member.project.name}\n"
+        f"  Rôle : {role_label}\n"
+        f"  Ajouté par : {added_by}\n\n"
+        f"Veuillez vous connecter au tableau de bord CSIG pour consulter les détails.\n\n"
+        f"Cordialement,\nDashboard CSIG - Direction Générale"
+    )
+    html_content = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        {_logo_header('#1e3a5f', 'Ajout au projet', 'Dashboard CSIG - Direction Générale')}
+        <div style="background: #f9fafb; padding: 25px; border: 1px solid #e5e7eb;">
+            <p>Bonjour <strong>{employee.name}</strong>,</p>
+            <p>Vous avez été ajouté au projet suivant :</p>
+            <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #e5e7eb; background: white; font-weight: bold; width: 140px;">Projet</td>
+                    <td style="padding: 10px; border: 1px solid #e5e7eb; background: white;">{member.project.name}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #e5e7eb; background: #eff6ff; font-weight: bold;">Rôle</td>
+                    <td style="padding: 10px; border: 1px solid #e5e7eb; background: #eff6ff; color: #1e3a5f; font-weight: bold;">{role_label}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #e5e7eb; background: white; font-weight: bold;">Ajouté par</td>
+                    <td style="padding: 10px; border: 1px solid #e5e7eb; background: white;">{added_by}</td>
+                </tr>
+            </table>
+            <p>Veuillez vous connecter au tableau de bord CSIG pour consulter les détails.</p>
+        </div>
+        <div style="background: #f3f4f6; padding: 15px; border-radius: 0 0 8px 8px; text-align: center; font-size: 12px; color: #6b7280; border: 1px solid #e5e7eb; border-top: none;">
+            <p style="margin: 0;">© 2026 CSIG - Centre de Suivi et d'Information de Gestion</p>
+        </div>
+    </div>
+    """
+
+    try:
+        _send(subject, text_content, html_content, employee.email)
+        logger.info(f"Email ajout membre projet envoyé à {employee.email}")
+        return (True, f"Email envoyé à : {employee.email}")
+    except Exception as e:
+        err = f"Erreur envoi à {employee.email}: {e}"
+        logger.error(err)
+        return (False, err)
+
+
 def _build_completion_email(recipient_name, role_label, task_type, task_name, project_name, completed_by_name):
     subject = f"[CSIG] {task_type.capitalize()} terminée : {task_name}"
     text_content = (

@@ -2432,6 +2432,12 @@ def project_member_add(request, project_id):
                     member.save()
                 
                 log_project_activity(project, 'ajout_membre', f"Ajout du membre '{new_name}' ({project_role})", request.user)
+                from .notifications import notify_project_member_added
+                success, msg = notify_project_member_added(member, request.user)
+                if success:
+                    messages.info(request, msg)
+                else:
+                    messages.warning(request, f"Membre ajouté mais notification email échouée : {msg}")
                 messages.success(request, f"Employé '{new_name}' créé et ajouté au projet avec succès.")
                 return redirect('core:project_detail', project_id=project.id)
             except Exception as e:
@@ -2454,6 +2460,12 @@ def project_member_add(request, project_id):
                 member.project = project
                 member.save()
                 log_project_activity(project, 'ajout_membre', f"Ajout du membre '{member.employee.name}' ({member.get_role_display()})", request.user)
+                from .notifications import notify_project_member_added
+                success, msg = notify_project_member_added(member, request.user)
+                if success:
+                    messages.info(request, msg)
+                else:
+                    messages.warning(request, f"Membre ajouté mais notification email échouée : {msg}")
                 messages.success(request, "Membre ajouté avec succès.")
                 return redirect('core:project_detail', project_id=project.id)
             context['form'] = form
