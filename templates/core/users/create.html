@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}Nouveau compte utilisateur{% endblock %}
+{% block page_title %}Nouveau compte utilisateur{% endblock %}
+{% block page_subtitle %}L'employé recevra un email pour définir lui-même son mot de passe{% endblock %}
+
+{% block content %}
+<div style="max-width:600px;margin:0 auto;">
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">Créer un compte</h3>
+  </div>
+  <div class="card-content">
+
+    <!-- Info flow -->
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:14px 16px;margin-bottom:24px;display:flex;gap:12px;align-items:flex-start;">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#1e40af" width="20" height="20" style="flex-shrink:0;margin-top:1px;">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <div style="font-size:13px;color:#1e40af;line-height:1.5;">
+        <strong>Flow d'invitation</strong> : le compte est créé inactif. L'employé reçoit un email avec un lien sécurisé pour définir lui-même son mot de passe (lien valable 3 jours).
+      </div>
+    </div>
+
+    <form method="post" id="createForm">
+      {% csrf_token %}
+
+      <!-- Sélection employé -->
+      <div class="form-group" style="margin-bottom:20px;">
+        <label for="id_employee" style="font-weight:600;font-size:13px;color:#374151;display:block;margin-bottom:6px;">
+          Employé <span style="color:#dc2626;">*</span>
+        </label>
+        <select name="employee" id="id_employee" class="form-control" required onchange="onEmployeeChange(this)">
+          <option value="">-- Sélectionner un employé --</option>
+          {% for emp in form.employee.field.queryset %}
+          <option value="{{ emp.id }}"
+            {% if form.employee.value|stringformat:"s" == emp.id|stringformat:"s" %}selected{% endif %}>
+            {{ emp.name }}{% if emp.is_external %} (Externe){% endif %}
+            {% if emp.direction %} — {{ emp.direction.code }}{% endif %}
+          </option>
+          {% endfor %}
+        </select>
+        {% if form.employee.errors %}
+        <p style="font-size:12px;color:#dc2626;margin-top:4px;">{{ form.employee.errors.0 }}</p>
+        {% endif %}
+        <p style="font-size:11px;color:#6b7280;margin-top:4px;">
+          Seuls les employés sans compte sont disponibles.
+          <a href="{% url 'core:resources' %}?tab=rh" style="color:#1e3a5f;">Gérer les fiches employés</a>
+        </p>
+      </div>
+
+      <!-- Prévisualisation (se remplit via JS) -->
+      <div id="preview_block" style="display:none;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-bottom:20px;">
+        <p style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin:0 0 10px;">Informations du compte à créer</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div>
+            <span style="font-size:11px;color:#9ca3af;display:block;">Identifiant (username)</span>
+            <strong id="prev_username" style="font-size:14px;color:#1e3a5f;"></strong>
+          </div>
+          <div>
+            <span style="font-size:11px;color:#9ca3af;display:block;">Direction</span>
+            <strong id="prev_direction" style="font-size:14px;color:#374151;"></strong>
+          </div>
+          <div style="grid-column:1/-1;">
+            <span style="font-size:11px;color:#9ca3af;display:block;">Email d'invitation</span>
+            <strong id="prev_email" style="font-size:14px;color:#374151;"></strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alerte email manquant -->
+      <div id="no_email_alert" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:12px 14px;margin-bottom:20px;font-size:13px;color:#b91c1c;">
+        <strong>Attention :</strong> cet employé n'a pas d'adresse email.
+        <a href="{% url 'core:resources' %}?tab=rh" style="color:#b91c1c;font-weight:600;">Ajouter un email à sa fiche</a> avant de créer son compte.
+      </div>
+
+      <!-- Rôle -->
+      <div class="form-group" style="margin-bottom:28px;">
+        <label for="id_role" style="font-weight:600;font-size:13px;color:#374151;display:block;margin-bottom:6px;">
+          Rôle <span style="color:#dc2626;">*</span>
+        </label>
+        <select name="role" id="id_role" class="form-control">
+          {% for value, label in form.role.field.choices %}
+          <option value="{{ value }}" {% if form.role.value == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        {% if form.role.errors %}
+        <p style="font-size:12px;color:#dc2626;margin-top:4px;">{{ form.role.errors.0 }}</p>
+        {% endif %}
+        <p style="font-size:11px;color:#6b7280;margin-top:4px;">Les permissions détaillées pourront être configurées après la création.</p>
+      </div>
+
+      <div class="flex gap-3">
+        <button type="submit" id="submitBtn" class="btn btn-primary" disabled>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+          Créer et envoyer l'invitation
+        </button>
+        <a href="{% url 'core:users_list' %}" class="btn btn-outline">Annuler</a>
+      </div>
+    </form>
+  </div>
+</div>
+</div>
+
+<script>
+const EMP_DATA = {{ emp_preview_json|safe }};
+
+function onEmployeeChange(sel) {
+  const id = sel.value;
+  const preview = document.getElementById('preview_block');
+  const noEmail = document.getElementById('no_email_alert');
+  const btn = document.getElementById('submitBtn');
+
+  if (!id || !EMP_DATA[id]) {
+    preview.style.display = 'none';
+    noEmail.style.display = 'none';
+    btn.disabled = true;
+    return;
+  }
+
+  const emp = EMP_DATA[id];
+  document.getElementById('prev_username').textContent = emp.preview_username || '—';
+  document.getElementById('prev_direction').textContent = emp.direction_name || emp.direction_code || '—';
+  document.getElementById('prev_email').textContent = emp.email || '—';
+
+  if (!emp.email) {
+    noEmail.style.display = 'block';
+    preview.style.display = 'none';
+    btn.disabled = true;
+  } else {
+    noEmail.style.display = 'none';
+    preview.style.display = 'block';
+    btn.disabled = false;
+  }
+}
+
+// Trigger on page load if an employee is pre-selected
+document.addEventListener('DOMContentLoaded', function() {
+  const sel = document.getElementById('id_employee');
+  if (sel.value) onEmployeeChange(sel);
+});
+</script>
+{% endblock %}

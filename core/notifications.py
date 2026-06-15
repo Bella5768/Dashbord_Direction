@@ -1,10 +1,13 @@
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 from django.db.models import Q
 from email.mime.image import MIMEImage
 from email.utils import formataddr
 import logging
 import os
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -44,124 +47,120 @@ def _send(subject, text_content, html_content, recipient, attachment=None, attac
     }
     email = EmailMultiAlternatives(subject, text_content, from_header, [recipient], headers=headers)
     email.attach_alternative(html_content, 'text/html')
+    _attach_logo(email)
     if attachment and attachment_filename:
         email.attach(attachment_filename, attachment, 'application/pdf')
     email.send()
 
 
-def _logo_header(banner_color, title, subtitle=''):
-    """Genere l'en-tete HTML : bandeau colore avec titre et sous-titre."""
-    subtitle_html = f'<p style="margin: 5px 0 0; opacity: 0.95;">{subtitle}</p>' if subtitle else ''
-    return f"""
-    <div style="background: {banner_color}; color: white; padding: 22px 20px; text-align: center; border-radius: 8px 8px 0 0;">
-        <h2 style="margin: 0; letter-spacing: 0.3px;">{title}</h2>
-        {subtitle_html}
-    </div>
-    """
+def _render_email(template_name, context):
+    """Rend un template emails/<template_name> et retourne (text, html)."""
+    html = render_to_string(f'emails/{template_name}', context)
+    text = re.sub(r'[ \t]+', ' ', strip_tags(html))
+    text = re.sub(r'\n\s*\n\s*\n+', '\n\n', text).strip()
+    return text, html
 
 
-def _build_assignment_email(recipient_name, role_label, employee_name, task_type, task_name, project_name, assigned_by, due_date=None):
-    subject = f"[CSIG] Nouvelle attribution : {task_name}"
-    due_line = f"  Échéance : {due_date.strftime('%d/%m/%Y')}\n" if due_date else ''
-    text_content = (
-        f"Bonjour {recipient_name},\n\n"
-        f"{role_label}\n"
-        f"Une nouvelle {task_type} a été attribuée à {employee_name} :\n\n"
-        f"  Projet : {project_name}\n"
-        f"  {task_type.capitalize()} : {task_name}\n"
-        f"  Responsable : {employee_name}\n"
-        f"{due_line}"
-        f"  Attribué par : {assigned_by}\n\n"
-        f"Veuillez vous connecter au tableau de bord CSIG pour consulter les détails.\n\n"
-        f"Cordialement,\nDashboard CSIG - Direction Générale"
-    )
-    due_row = (
-        f'<tr><td style="padding: 10px; border: 1px solid #e5e7eb; background: white; font-weight: bold;">Échéance</td>'
-        f'<td style="padding: 10px; border: 1px solid #e5e7eb; background: white;">{due_date.strftime("%d/%m/%Y")}</td></tr>'
-    ) if due_date else ''
-    html_content = f"""
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        {_logo_header('#1e3a5f', 'Nouvelle attribution', 'Dashboard CSIG - Direction Générale')}
-        <div style="background: #f9fafb; padding: 25px; border: 1px solid #e5e7eb;">
-            <p>Bonjour <strong>{recipient_name}</strong>,</p>
-            <p style="color: #1e3a5f;">{role_label}</p>
-            <p>Une nouvelle <strong>{task_type}</strong> a été attribuée à <strong>{employee_name}</strong> :</p>
-            <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
-                <tr>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb; background: white; font-weight: bold; width: 140px;">Projet</td>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb; background: white;">{project_name}</td>
-                </tr>
-                <tr>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb; background: #eff6ff; font-weight: bold;">{task_type.capitalize()}</td>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb; background: #eff6ff; color: #1e3a5f; font-weight: bold;">{task_name}</td>
-                </tr>
-                <tr>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb; background: white; font-weight: bold;">Responsable</td>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb; background: white;">{employee_name}</td>
-                </tr>
-                {due_row}
-                <tr>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb; background: white; font-weight: bold;">Attribué par</td>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb; background: white;">{assigned_by}</td>
-                </tr>
-            </table>
-            <p>Veuillez vous connecter au tableau de bord CSIG pour consulter les détails.</p>
-        </div>
-        <div style="background: #f3f4f6; padding: 15px; border-radius: 0 0 8px 8px; text-align: center; font-size: 12px; color: #6b7280; border: 1px solid #e5e7eb; border-top: none;">
-            <p style="margin: 0;">© 2026 CSIG - Centre de Suivi et d'Information de Gestion</p>
-        </div>
-    </div>
-    """
-    return subject, text_content, html_content
+def _is_email_configured():
+    """Vérifie qu'un backend d'envoi est configuré (Outlook ou SendGrid)."""
+    host_user = getattr(settings, 'EMAIL_HOST_USER', '')
+    host_password = getattr(settings, 'EMAIL_HOST_PASSWORD', '')
+    return bool(host_user and host_password)
 
+
+def _resolve_manager_email(project):
+    """Résout l'email du chef de projet : manager_employee FK en priorité, puis recherche par nom."""
+    from .models import Employee
+    if project.manager_employee_id:
+        emp = project.manager_employee
+        if emp and emp.email:
+            return emp.name, emp.email
+
+    manager_name = (project.manager or '').strip()
+    if manager_name:
+        emp = Employee.objects.filter(name__iexact=manager_name, email__isnull=False).exclude(email='').first()
+        if emp:
+            return emp.name, emp.email
+
+    member = project.members.filter(role='responsable').select_related('employee').first()
+    if member and member.employee and member.employee.email:
+        return member.employee.name, member.employee.email
+
+    return manager_name or None, None
+
+
+# =====================================================================
+# Invitation à créer un compte
+# =====================================================================
+
+def notify_account_invitation(user, activation_link, invited_by=None):
+    """Envoie l'email d'invitation pour que l'utilisateur définisse son mot de passe."""
+    if not _is_email_configured():
+        logger.warning("Invitation non envoyée : email non configuré")
+        return (False, "Email non configuré")
+    if not user.email:
+        return (False, "Cet utilisateur n'a pas d'adresse email")
+
+    subject = "[CSIG] Créez votre mot de passe – Accès au tableau de bord"
+    text, html = _render_email('account_invitation.html', {
+        'recipient_name': user.get_full_name() or user.username,
+        'username': user.username,
+        'activation_link': activation_link,
+        'invited_by': invited_by,
+        'banner_color': '#1e3a5f',
+        'banner_title': 'Bienvenue sur CSIG Dashboard',
+        'banner_subtitle': 'Activez votre compte en créant votre mot de passe',
+    })
+    try:
+        _send(subject, text, html, user.email)
+        logger.info(f"Invitation envoyée à {user.email}")
+        return (True, f"Invitation envoyée à {user.email}")
+    except Exception as e:
+        err = str(e)
+        logger.error(f"Echec invitation {user.email}: {err}")
+        return (False, err)
+
+
+# =====================================================================
+# Attribution d'une tâche
+# =====================================================================
 
 def notify_assignment(employee, task_type, task_name, project_name, assigned_by, project=None, due_date=None):
-    """Notifie l'attribution d'une tache.
-
-    Destinataires :
-      - Le responsable (employee) qui recoit la tache
-      - Le chef de projet (resolu via project.manager) en CC
-
-    Pour retro-compatibilite, project_name peut etre une chaine et project None.
-    Dans ce cas, seul l'employe est notifie.
-    """
-    if not getattr(settings, 'EMAIL_HOST_USER', '') or not getattr(settings, 'EMAIL_HOST_PASSWORD', ''):
-        logger.warning("Notification non envoyée : identifiants Outlook non configurés")
-        return (False, "Identifiants Outlook non configurés")
+    """Notifie l'attribution d'une tâche au responsable (+ chef de projet en CC)."""
+    if not _is_email_configured():
+        logger.warning("Notification non envoyée : identifiants email non configurés")
+        return (False, "Identifiants email non configurés")
 
     if not employee or not employee.email:
         logger.warning(f"Notification non envoyée : pas d'email pour {employee}")
         return (False, "Pas d'email pour cet employé")
 
     employee_name = employee.name
+    recipients = [(employee_name, employee.email, "Une nouvelle tâche vous est attribuée :")]
 
-    # Construire la liste des destinataires
-    recipients = []  # tuples (name, email, role_label)
-
-    # 1. Responsable de la tache
-    recipients.append((
-        employee_name, employee.email,
-        "Une nouvelle tâche vous est attribuée :"
-    ))
-
-    # 2. Chef de projet en CC (si projet fourni)
     if project is not None:
         manager_name, manager_email = _resolve_manager_email(project)
         if manager_email and manager_email.lower() != employee.email.lower():
-            recipients.append((
-                manager_name, manager_email,
-                "En tant que chef de projet, vous êtes informé en copie :"
-            ))
+            recipients.append((manager_name, manager_email, "En tant que chef de projet, vous êtes informé en copie :"))
 
-    sent_emails = []
-    errors = []
+    subject = f"[CSIG] Nouvelle attribution : {task_name}"
+    sent_emails, errors = [], []
     for rec_name, rec_email, role_label in recipients:
-        subject, text_content, html_content = _build_assignment_email(
-            rec_name, role_label, employee_name, task_type, task_name,
-            project_name, assigned_by, due_date,
-        )
+        text, html = _render_email('assignment.html', {
+            'recipient_name': rec_name,
+            'role_label': role_label,
+            'employee_name': employee_name,
+            'task_type': task_type,
+            'task_name': task_name,
+            'project_name': project_name,
+            'assigned_by': assigned_by,
+            'due_date': due_date,
+            'banner_color': '#1e3a5f',
+            'banner_title': 'Nouvelle attribution',
+            'banner_subtitle': 'Dashboard CSIG – Direction Générale',
+        })
         try:
-            _send(subject, text_content, html_content, rec_email)
+            _send(subject, text, html, rec_email)
             logger.info(f"Email attribution envoyé à {rec_email}")
             sent_emails.append(rec_email)
         except Exception as e:
@@ -176,10 +175,14 @@ def notify_assignment(employee, task_type, task_name, project_name, assigned_by,
     return (False, "; ".join(errors) or "Échec d'envoi")
 
 
+# =====================================================================
+# Ajout membre au projet
+# =====================================================================
+
 def notify_project_member_added(member, added_by_user):
-    if not getattr(settings, 'EMAIL_HOST_USER', '') or not getattr(settings, 'EMAIL_HOST_PASSWORD', ''):
-        logger.warning("Notification non envoyée : identifiants Outlook non configurés")
-        return (False, "Identifiants Outlook non configurés")
+    if not _is_email_configured():
+        logger.warning("Notification non envoyée : identifiants email non configurés")
+        return (False, "Identifiants email non configurés")
 
     employee = member.employee
     if not employee or not employee.email:
@@ -189,45 +192,18 @@ def notify_project_member_added(member, added_by_user):
     added_by = added_by_user.get_full_name() or added_by_user.username
     role_label = member.get_role_display() if member.role else 'Membre'
     subject = f"[CSIG] Ajout au projet : {member.project.name}"
-    text_content = (
-        f"Bonjour {employee.name},\n\n"
-        f"Vous avez été ajouté au projet suivant :\n\n"
-        f"  Projet : {member.project.name}\n"
-        f"  Rôle : {role_label}\n"
-        f"  Ajouté par : {added_by}\n\n"
-        f"Veuillez vous connecter au tableau de bord CSIG pour consulter les détails.\n\n"
-        f"Cordialement,\nDashboard CSIG - Direction Générale"
-    )
-    html_content = f"""
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        {_logo_header('#1e3a5f', 'Ajout au projet', 'Dashboard CSIG - Direction Générale')}
-        <div style="background: #f9fafb; padding: 25px; border: 1px solid #e5e7eb;">
-            <p>Bonjour <strong>{employee.name}</strong>,</p>
-            <p>Vous avez été ajouté au projet suivant :</p>
-            <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
-                <tr>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb; background: white; font-weight: bold; width: 140px;">Projet</td>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb; background: white;">{member.project.name}</td>
-                </tr>
-                <tr>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb; background: #eff6ff; font-weight: bold;">Rôle</td>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb; background: #eff6ff; color: #1e3a5f; font-weight: bold;">{role_label}</td>
-                </tr>
-                <tr>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb; background: white; font-weight: bold;">Ajouté par</td>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb; background: white;">{added_by}</td>
-                </tr>
-            </table>
-            <p>Veuillez vous connecter au tableau de bord CSIG pour consulter les détails.</p>
-        </div>
-        <div style="background: #f3f4f6; padding: 15px; border-radius: 0 0 8px 8px; text-align: center; font-size: 12px; color: #6b7280; border: 1px solid #e5e7eb; border-top: none;">
-            <p style="margin: 0;">© 2026 CSIG - Centre de Suivi et d'Information de Gestion</p>
-        </div>
-    </div>
-    """
 
+    text, html = _render_email('project_member_added.html', {
+        'employee_name': employee.name,
+        'project_name': member.project.name,
+        'role_label': role_label,
+        'added_by': added_by,
+        'banner_color': '#1e3a5f',
+        'banner_title': 'Ajout au projet',
+        'banner_subtitle': 'Dashboard CSIG – Direction Générale',
+    })
     try:
-        _send(subject, text_content, html_content, employee.email)
+        _send(subject, text, html, employee.email)
         logger.info(f"Email ajout membre projet envoyé à {employee.email}")
         return (True, f"Email envoyé à : {employee.email}")
     except Exception as e:
@@ -236,112 +212,32 @@ def notify_project_member_added(member, added_by_user):
         return (False, err)
 
 
-def _build_completion_email(recipient_name, role_label, task_type, task_name, project_name, completed_by_name):
-    subject = f"[CSIG] {task_type.capitalize()} terminée : {task_name}"
-    text_content = (
-        f"Bonjour {recipient_name},\n\n"
-        f"{role_label}\n"
-        f"La {task_type} '{task_name}' est maintenant terminée :\n\n"
-        f"  Projet : {project_name}\n"
-        f"  {task_type.capitalize()} : {task_name}\n"
-        f"  Terminée par : {completed_by_name}\n\n"
-        f"Veuillez vous connecter au tableau de bord CSIG pour consulter les détails.\n\n"
-        f"Cordialement,\nDashboard CSIG - Direction Générale"
-    )
-    html_content = f"""
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        {_logo_header('#047857', f'{task_type.capitalize()} terminée', 'Dashboard CSIG - Direction Générale')}
-        <div style="background: #f9fafb; padding: 25px; border: 1px solid #e5e7eb;">
-            <p>Bonjour <strong>{recipient_name}</strong>,</p>
-            <p style="color: #065f46;">{role_label}</p>
-            <p>La {task_type} <strong>« {task_name} »</strong> est maintenant terminée.</p>
-            <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
-                <tr>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb; background: white; font-weight: bold; width: 140px;">Projet</td>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb; background: white;">{project_name}</td>
-                </tr>
-                <tr>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb; background: #ecfdf5; font-weight: bold;">{task_type.capitalize()}</td>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb; background: #ecfdf5; color: #065f46; font-weight: bold;">{task_name}</td>
-                </tr>
-                <tr>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb; background: white; font-weight: bold;">Terminée par</td>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb; background: white;">{completed_by_name}</td>
-                </tr>
-            </table>
-            <p>Veuillez vous connecter au tableau de bord CSIG pour consulter les détails.</p>
-        </div>
-        <div style="background: #f3f4f6; padding: 15px; border-radius: 0 0 8px 8px; text-align: center; font-size: 12px; color: #6b7280; border: 1px solid #e5e7eb; border-top: none;">
-            <p style="margin: 0;">© 2026 CSIG - Centre de Suivi et d'Information de Gestion</p>
-        </div>
-    </div>
-    """
-    return subject, text_content, html_content
-
-
-def _resolve_manager_email(project):
-    """Résout l'email du chef de projet : manager_employee FK en priorité, puis recherche par nom."""
-    from .models import Employee
-    # Priorité 1 : FK direct (manager_employee)
-    if project.manager_employee_id:
-        emp = project.manager_employee
-        if emp and emp.email:
-            return emp.name, emp.email
-
-    # Priorité 2 : correspondance par nom dans Employee
-    manager_name = (project.manager or '').strip()
-    if manager_name:
-        emp = Employee.objects.filter(name__iexact=manager_name, email__isnull=False).exclude(email='').first()
-        if emp:
-            return emp.name, emp.email
-
-    # Fallback : premier ProjectMember avec role responsable
-    member = project.members.filter(role='responsable').select_related('employee').first()
-    if member and member.employee and member.employee.email:
-        return member.employee.name, member.employee.email
-
-    return manager_name or None, None
-
+# =====================================================================
+# Tâche terminée
+# =====================================================================
 
 def notify_task_completed(task_type, task_name, project, assigned_employee, assigned_by_user, completed_by_user):
-    """Envoie un email a tous les destinataires concernes par la fin d'une tache.
-
-    Destinataires :
-      - Chef de projet (project.manager, resolu en email via Employee)
-      - Responsable de la tache (assigned_employee, l'employe qui avait la tache)
-      - Personne qui avait affecte la tache (assigned_by_user)
-
-    Chaque destinataire recoit un email personnalise. Pas de doublons d'envoi
-    sur la meme adresse.
-    """
-    if not getattr(settings, 'EMAIL_HOST_USER', '') or not getattr(settings, 'EMAIL_HOST_PASSWORD', ''):
-        logger.warning("Notification non envoyée : identifiants Outlook non configurés")
-        return (False, "Identifiants Outlook non configurés")
+    """Notifie la fin d'une tâche : chef de projet, responsable, et personne ayant affecté."""
+    if not _is_email_configured():
+        logger.warning("Notification non envoyée : identifiants email non configurés")
+        return (False, "Identifiants email non configurés")
 
     completed_by_name = completed_by_user.get_full_name() or completed_by_user.username
     project_name = project.name
 
-    # Construire la liste des destinataires uniques (par email)
-    recipients = []  # tuples (name, email, role_label)
-
-    # 1. Chef de projet
+    recipients = []
     manager_name, manager_email = _resolve_manager_email(project)
     if manager_email:
         recipients.append((manager_name, manager_email, "En tant que chef de projet, vous êtes informé que :"))
 
-    # 2. Responsable de la tache (Employee)
     if assigned_employee and assigned_employee.email:
         recipients.append((assigned_employee.name, assigned_employee.email, "En tant que responsable de cette tâche, vous êtes informé que :"))
 
-    # 3. Personne qui a affecte la tache (User)
     if assigned_by_user and assigned_by_user.email:
         assigned_by_name = assigned_by_user.get_full_name() or assigned_by_user.username
         recipients.append((assigned_by_name, assigned_by_user.email, "En tant que personne ayant attribué cette tâche, vous êtes informé que :"))
 
-    # Email de la personne qui a marque comme termine (a exclure)
     completed_by_email = (completed_by_user.email or '').lower().strip() if completed_by_user else ''
-
-    # Deduplication par email + exclusion de celui qui a complete
     seen = set()
     unique_recipients = []
     for name, email, role_label in recipients:
@@ -355,14 +251,22 @@ def notify_task_completed(task_type, task_name, project, assigned_employee, assi
         logger.warning(f"Aucun destinataire pour notification de fin de {task_type} {task_name}")
         return (False, "Aucun destinataire avec email pour cette notification")
 
-    sent_emails = []
-    errors = []
+    subject = f"[CSIG] {task_type.capitalize()} terminée : {task_name}"
+    sent_emails, errors = [], []
     for name, email, role_label in unique_recipients:
-        subject, text_content, html_content = _build_completion_email(
-            name, role_label, task_type, task_name, project_name, completed_by_name,
-        )
+        text, html = _render_email('task_completed.html', {
+            'recipient_name': name,
+            'role_label': role_label,
+            'task_type': task_type,
+            'task_name': task_name,
+            'project_name': project_name,
+            'completed_by_name': completed_by_name,
+            'banner_color': '#047857',
+            'banner_title': f'{task_type.capitalize()} terminée',
+            'banner_subtitle': 'Dashboard CSIG – Direction Générale',
+        })
         try:
-            _send(subject, text_content, html_content, email)
+            _send(subject, text, html, email)
             logger.info(f"Email fin de {task_type} envoyé à {email}")
             sent_emails.append(email)
         except Exception as e:
@@ -377,74 +281,18 @@ def notify_task_completed(task_type, task_name, project, assigned_employee, assi
     return (False, "; ".join(errors) or "Échec d'envoi")
 
 
-def _build_due_date_email(recipient_name, role_label, employee_name, task_type, task_name, project_name, due_date, urgency_label, banner_color, banner_text, subject_prefix):
-    subject = f"{subject_prefix} {task_name} - échéance {due_date.strftime('%d/%m/%Y')}"
-    text_content = (
-        f"Bonjour {recipient_name},\n\n"
-        f"{role_label}\n"
-        f"{banner_text}\n\n"
-        f"La {task_type} suivante affectée à {employee_name} n'est pas encore terminée :\n\n"
-        f"  Projet : {project_name}\n"
-        f"  {task_type.capitalize()} : {task_name}\n"
-        f"  Responsable : {employee_name}\n"
-        f"  Échéance : {due_date.strftime('%d/%m/%Y')}\n"
-        f"  Statut : {urgency_label}\n\n"
-        f"Cordialement,\nDashboard CSIG - Direction Générale"
-    )
-    html_content = f"""
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        {_logo_header(banner_color, banner_text, urgency_label)}
-        <div style="background: #fff; padding: 25px; border: 2px solid {banner_color};">
-            <p>Bonjour <strong>{recipient_name}</strong>,</p>
-            <p style="color: {banner_color}; font-weight: bold; font-size: 14px;">{role_label}</p>
-            <p style="color: {banner_color}; font-weight: bold; font-size: 15px;">
-                La {task_type} ci-dessous (responsable : <strong>{employee_name}</strong>) n'est pas encore terminée.
-            </p>
-            <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
-                <tr>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb; background: #fef2f2; font-weight: bold; width: 140px;">Projet</td>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb;">{project_name}</td>
-                </tr>
-                <tr>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb; background: #fef2f2; font-weight: bold;">{task_type.capitalize()}</td>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb;">{task_name}</td>
-                </tr>
-                <tr>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb; background: #fef2f2; font-weight: bold;">Responsable</td>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb;">{employee_name}</td>
-                </tr>
-                <tr>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb; background: #fef2f2; font-weight: bold;">Échéance</td>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb; color: {banner_color}; font-weight: bold;">{due_date.strftime('%d/%m/%Y')}</td>
-                </tr>
-                <tr>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb; background: #fef2f2; font-weight: bold;">Statut</td>
-                    <td style="padding: 10px; border: 1px solid #e5e7eb; color: {banner_color}; font-weight: bold;">{urgency_label}</td>
-                </tr>
-            </table>
-            <p style="background: #fef2f2; padding: 12px; border-left: 4px solid {banner_color}; color: #7f1d1d;">
-                <strong>Action requise :</strong> connectez-vous au tableau de bord CSIG pour suivre l'avancement.
-            </p>
-        </div>
-        <div style="background: #f3f4f6; padding: 15px; border-radius: 0 0 8px 8px; text-align: center; font-size: 12px; color: #6b7280; border: 1px solid #e5e7eb; border-top: none;">
-            <p style="margin: 0;">© 2026 CSIG - Centre de Suivi et d'Information de Gestion</p>
-        </div>
-    </div>
-    """
-    return subject, text_content, html_content
-
+# =====================================================================
+# Alertes d'échéance
+# =====================================================================
 
 def notify_due_date_alert(employee, task_type, task_name, project_name, due_date, days_diff, project=None):
-    """Envoie une alerte d'echeance.
+    """Envoie une alerte d'échéance (J-N, J-0, retard).
 
-    Destinataires :
-      - Le responsable de la tache (employee)
-      - Le chef de projet en CC (si project fourni)
-
-    days_diff : 0 = aujourd'hui, < 0 = en retard de |N| jours, > 0 = rappel J-N.
+    days_diff : 0 = aujourd'hui, < 0 = en retard, > 0 = rappel J-N.
+    Destinataires : responsable (employee) + chef de projet en CC.
     """
-    if not getattr(settings, 'EMAIL_HOST_USER', '') or not getattr(settings, 'EMAIL_HOST_PASSWORD', ''):
-        return (False, "Identifiants Outlook non configurés")
+    if not _is_email_configured():
+        return (False, "Identifiants email non configurés")
 
     if not employee or not employee.email:
         return (False, f"Pas d'email pour {employee}")
@@ -452,44 +300,44 @@ def notify_due_date_alert(employee, task_type, task_name, project_name, due_date
     if days_diff < 0:
         urgency_label = f"EN RETARD de {abs(days_diff)} jour{'s' if abs(days_diff) > 1 else ''}"
         banner_color = '#b91c1c'
-        banner_text = "ALERTE ECHEANCE DEPASSEE"
-        subject_prefix = "[URGENT - RETARD]"
+        banner_text = 'ALERTE ÉCHÉANCE DÉPASSÉE'
+        subject_prefix = '[URGENT - RETARD]'
     elif days_diff == 0:
         urgency_label = "À FAIRE AUJOURD'HUI"
         banner_color = '#dc2626'
-        banner_text = "ALERTE : ECHEANCE AUJOURD'HUI"
-        subject_prefix = "[URGENT]"
+        banner_text = "ALERTE : ÉCHÉANCE AUJOURD'HUI"
+        subject_prefix = '[URGENT]'
     else:
         urgency_label = f"À faire dans {days_diff} jour{'s' if days_diff > 1 else ''}"
         banner_color = '#ea580c'
-        banner_text = "RAPPEL D'ECHEANCE"
-        subject_prefix = "[RAPPEL]"
+        banner_text = "RAPPEL D'ÉCHÉANCE"
+        subject_prefix = '[RAPPEL]'
 
     employee_name = employee.name
-
-    # Destinataires
-    recipients = []
-    recipients.append((
-        employee_name, employee.email,
-        "En tant que responsable, vous devez traiter cette tâche impérativement :"
-    ))
+    recipients = [(employee_name, employee.email, "En tant que responsable, vous devez traiter cette tâche impérativement :")]
     if project is not None:
         manager_name, manager_email = _resolve_manager_email(project)
         if manager_email and manager_email.lower() != employee.email.lower():
-            recipients.append((
-                manager_name, manager_email,
-                "En tant que chef de projet, vous êtes informé en copie :"
-            ))
+            recipients.append((manager_name, manager_email, "En tant que chef de projet, vous êtes informé en copie :"))
 
-    sent_emails = []
-    errors = []
+    subject = f"{subject_prefix} {task_name} - échéance {due_date.strftime('%d/%m/%Y')}"
+    sent_emails, errors = [], []
     for rec_name, rec_email, role_label in recipients:
-        subject, text_content, html_content = _build_due_date_email(
-            rec_name, role_label, employee_name, task_type, task_name,
-            project_name, due_date, urgency_label, banner_color, banner_text, subject_prefix,
-        )
+        text, html = _render_email('due_date_alert.html', {
+            'recipient_name': rec_name,
+            'role_label': role_label,
+            'employee_name': employee_name,
+            'task_type': task_type,
+            'task_name': task_name,
+            'project_name': project_name,
+            'due_date': due_date,
+            'urgency_label': urgency_label,
+            'banner_color': banner_color,
+            'banner_title': banner_text,
+            'banner_subtitle': urgency_label,
+        })
         try:
-            _send(subject, text_content, html_content, rec_email)
+            _send(subject, text, html, rec_email)
             logger.info(f"Alerte échéance envoyée à {rec_email} pour {task_name}")
             sent_emails.append(rec_email)
         except Exception as e:
@@ -505,18 +353,11 @@ def notify_due_date_alert(employee, task_type, task_name, project_name, due_date
 
 
 # =====================================================================
-# Notifications liees aux conges
+# Notifications liées aux congés
 # =====================================================================
 
 def _leave_recipients_step(leave, step):
-    """Construit la liste des destinataires (name, email, role_label) pour une etape donnee.
-
-    step:
-      - 'submitted'    : nouveaux destinataires : hierarchie + demandeur en copie
-      - 'manager'      : RH (si favorable) ou demandeur (si defavorable)
-      - 'hr'           : DG/Coordination (si conforme) ou demandeur (si non conforme)
-      - 'final'        : demandeur + RH + hierarchie en copie
-    """
+    """Construit la liste des destinataires (name, email, role_label) pour une étape donnée."""
     from django.contrib.auth.models import User
     User_ = User
     recipients = []
@@ -548,7 +389,6 @@ def _leave_recipients_step(leave, step):
             add(u.get_full_name() or u.username, u.email, role_label)
 
     def _direction_managers():
-        """Directeurs (responsables hierarchiques) de la direction du demandeur."""
         try:
             return User_.objects.filter(
                 profile__role='directeur',
@@ -563,21 +403,16 @@ def _leave_recipients_step(leave, step):
             add(u.get_full_name() or u.username, u.email, role_label)
 
     if step == 'submitted':
-        # Hierarchie : action requise (avis hierarchique)
         _add_managers("Demande de congé soumise par un membre de votre équipe (avis hiérarchique requis) :")
-        # Demandeur (confirmation) + RH (information / suivi)
         add(employee_name, employee_email, "Confirmation de soumission de votre demande de congé :")
         _add_hr("Nouvelle demande de congé soumise (information RH) :")
 
     elif step == 'manager':
         if leave.manager_decision == 'favorable':
-            # RH : action requise (verification)
             _add_hr("Demande de congé à vérifier (RH) :")
         else:
-            # RH informee meme en cas d'avis defavorable
             _add_hr("Avis hiérarchique défavorable enregistré (information RH) :")
         add(employee_name, employee_email, "Avis hiérarchique enregistré sur votre demande :")
-        # Hierarchie : copie pour suivi (autres directeurs de la direction)
         _add_managers("Avis hiérarchique enregistré (copie hiérarchie) :")
 
     elif step == 'hr':
@@ -592,20 +427,15 @@ def _leave_recipients_step(leave, step):
             except Exception:
                 pass
         add(employee_name, employee_email, "Vérification RH enregistrée sur votre demande :")
-        # RH informee (copie de la decision RH a toute l'equipe RH)
         _add_hr("Vérification RH enregistrée (copie équipe RH) :")
-        # Hierarchie : copie pour suivi
         _add_managers("Vérification RH enregistrée (copie hiérarchie) :")
 
     elif step == 'final':
         add(employee_name, employee_email, "Décision finale sur votre demande de congé :")
-        # Hierarchie : tous les directeurs de la direction (validateur + collegues)
         _add_managers("Décision finale enregistrée (copie hiérarchie) :")
         if leave.manager_user and leave.manager_user.email:
             add(leave.manager_user.get_full_name() or leave.manager_user.username, leave.manager_user.email, "Décision finale (en copie - hiérarchie) :")
-        # RH : tous les RH en copie pour archivage
         _add_hr("Décision finale enregistrée (copie équipe RH) :")
-        # Direction Générale : tous les DG en copie pour information
         try:
             dg_users = User_.objects.filter(
                 profile__role__in=['directeur_general', 'admin'],
@@ -619,78 +449,45 @@ def _leave_recipients_step(leave, step):
     return recipients
 
 
-def _build_leave_email(recipient_name, role_label, leave, banner_color, banner_title, banner_subtitle):
-    """Construit le sujet et les contenus text/html pour un email lie a un conge."""
-    subject = f"[CSIG] {banner_title} - {leave.employee.name}"
-    type_label = leave.get_leave_type_display()
-    period = f"{leave.start_date.strftime('%d/%m/%Y')} au {leave.end_date.strftime('%d/%m/%Y')} ({leave.days_count} jour(s))"
-    status_label = leave.get_status_display()
-
-    def fmt_line(label, value):
-        return f"  {label} : {value}\n" if value else ''
-
-    text_content = (
-        f"Bonjour {recipient_name},\n\n"
-        f"{role_label}\n\n"
-        f"  Demandeur : {leave.employee.name}\n"
-        f"  Direction / Service : {leave.direction.name if leave.direction else '-'}\n"
-        f"  Type de congé : {type_label}\n"
-        f"  Période : {period}\n"
-        f"  Motif : {leave.reason}\n"
-        f"{fmt_line('Suppléant', leave.replacement)}"
-        f"  Statut actuel : {status_label}\n"
-        f"  Étape : {leave.current_step_label}\n\n"
-        f"-- CSIG Dashboard"
-    )
-
-    html_content = f"""
-    <!DOCTYPE html>
-    <html><body style="font-family: Arial, sans-serif; background:#f3f4f6; padding:20px; margin:0;">
-      <div style="max-width:620px; margin:auto; background:white; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-        {_logo_header(banner_color, banner_title, banner_subtitle)}
-        <div style="padding:24px 24px 12px;">
-          <p style="margin:0 0 10px;">Bonjour <strong>{recipient_name}</strong>,</p>
-          <p style="margin:0 0 16px; color:#374151;">{role_label}</p>
-          <table cellpadding="6" cellspacing="0" style="width:100%; border-collapse:collapse; font-size:14px;">
-            <tr><td style="color:#6b7280;">Demandeur</td><td><strong>{leave.employee.name}</strong></td></tr>
-            <tr><td style="color:#6b7280;">Direction / Service</td><td>{leave.direction.name if leave.direction else '-'}</td></tr>
-            <tr><td style="color:#6b7280;">Type de congé</td><td>{type_label}</td></tr>
-            <tr><td style="color:#6b7280;">Période</td><td>{period}</td></tr>
-            <tr><td style="color:#6b7280;">Motif</td><td>{leave.reason}</td></tr>
-            {('<tr><td style="color:#6b7280;">Suppléant</td><td>' + leave.replacement + '</td></tr>') if leave.replacement else ''}
-            <tr><td style="color:#6b7280;">Statut</td><td><span style="background:{leave.status_color}; color:white; padding:3px 10px; border-radius:4px; font-size:12px;">{status_label}</span></td></tr>
-            <tr><td style="color:#6b7280;">Étape</td><td>{leave.current_step_label}</td></tr>
-          </table>
-        </div>
-        <div style="padding:0 24px 24px; color:#6b7280; font-size:12px;">
-          <p style="margin:18px 0 0;">CSIG - Cité des Sciences et de l'Innovation de Guinée</p>
-        </div>
-      </div>
-    </body></html>
-    """
-    return subject, text_content, html_content
-
-
 def _dispatch_leave_emails(leave, step, banner_color, banner_title, banner_subtitle, pdf_attachment=None):
     recipients = _leave_recipients_step(leave, step)
     sent, errors = [], []
     employee_email = leave.employee.email if leave.employee else None
-    
+    type_label = leave.get_leave_type_display()
+    period = f"{leave.start_date.strftime('%d/%m/%Y')} au {leave.end_date.strftime('%d/%m/%Y')} ({leave.days_count} jour(s))"
+    status_label = leave.get_status_display()
+
     for name, email, role in recipients:
-        subject, text_content, html_content = _build_leave_email(name, role, leave, banner_color, banner_title, banner_subtitle)
-        # Attacher le PDF uniquement au demandeur
+        text, html = _render_email('leave.html', {
+            'recipient_name': name,
+            'role_label': role,
+            'employee_name': leave.employee.name if leave.employee else '–',
+            'direction_name': leave.direction.name if leave.direction else '–',
+            'type_label': type_label,
+            'period': period,
+            'reason': leave.reason,
+            'replacement': leave.replacement,
+            'status_label': status_label,
+            'status_color': leave.status_color,
+            'step_label': leave.current_step_label,
+            'banner_color': banner_color,
+            'banner_title': banner_title,
+            'banner_subtitle': banner_subtitle,
+        })
+        subject = f"[CSIG] {banner_title} – {leave.employee.name if leave.employee else 'Demandeur'}"
         attachment = pdf_attachment if email == employee_email else None
         attachment_filename = f"attestation_conge_{leave.id}.pdf" if attachment else None
         try:
-            _send(subject, text_content, html_content, email, attachment, attachment_filename)
+            _send(subject, text, html, email, attachment, attachment_filename)
             sent.append(email)
         except Exception as e:
             errors.append(f"{email}: {e}")
             logger.error(f"Echec envoi conge a {email}: {e}")
+
     if sent and not errors:
-        return True, f"Envoye a : {', '.join(sent)}"
+        return True, f"Envoyé à : {', '.join(sent)}"
     if sent:
-        return True, f"Envoye a : {', '.join(sent)} (echecs: {len(errors)})"
+        return True, f"Envoyé à : {', '.join(sent)} (échecs : {len(errors)})"
     return False, '; '.join(errors) or 'Aucun destinataire'
 
 
@@ -699,7 +496,7 @@ def notify_leave_submitted(leave):
         leave, 'submitted',
         banner_color='#f59e0b',
         banner_title='Nouvelle demande de congé',
-        banner_subtitle='Étape 1/3 - Avis hiérarchique requis',
+        banner_subtitle='Étape 1/3 – Avis hiérarchique requis',
     )
 
 
@@ -709,7 +506,7 @@ def notify_leave_manager_decided(leave):
         leave, 'manager',
         banner_color='#3b82f6' if favorable else '#ef4444',
         banner_title='Avis hiérarchique : ' + ('favorable' if favorable else 'défavorable'),
-        banner_subtitle='Étape 2/3 - Vérification RH' if favorable else 'Demande refusée par la hiérarchie',
+        banner_subtitle='Étape 2/3 – Vérification RH' if favorable else 'Demande refusée par la hiérarchie',
     )
 
 
@@ -719,7 +516,7 @@ def notify_leave_hr_decided(leave):
         leave, 'hr',
         banner_color='#6366f1' if conforme else '#ef4444',
         banner_title='Vérification RH : ' + ('conforme' if conforme else 'non conforme'),
-        banner_subtitle='Étape 3/3 - Décision Direction' if conforme else 'Demande non conforme',
+        banner_subtitle='Étape 3/3 – Décision Direction' if conforme else 'Demande non conforme',
     )
 
 

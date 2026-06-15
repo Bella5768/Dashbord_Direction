@@ -16,12 +16,7 @@
             <form method="post">
                 {% csrf_token %}
                 
-                <!-- Champs cachés pour soumission (toujours dans le DOM) -->
-                <input type="hidden" name="first_name" id="id_first_name" value="{{ form.first_name.value|default:'' }}">
-                <input type="hidden" name="last_name"  id="id_last_name"  value="{{ form.last_name.value|default:'' }}">
-                <input type="hidden" name="email"      id="id_email"      value="{{ form.email.value|default:'' }}">
-
-                <!-- Username — toujours visible -->
+                <!-- Username -->
                 <div class="grid grid-2" style="gap:16px;margin-bottom:16px;">
                     <div class="form-group">
                         <label for="id_username">{% trans "Nom d'utilisateur" %} *</label>
@@ -30,59 +25,58 @@
                     </div>
                 </div>
 
-                <!-- Champs identité — visibles seulement si pas d'employé sélectionné -->
-                <div id="identity_fields">
-                    <div class="grid grid-2" style="gap:16px;margin-bottom:16px;">
-                        <div class="form-group">
-                            <label>{% trans 'Prénom' %} *</label>
-                            <input type="text" id="id_first_name_vis" class="form-control" value="{{ form.first_name.value|default:'' }}"
-                                   oninput="document.getElementById('id_first_name').value=this.value;suggestFromFirstLast();">
+                <!-- Identité : lecture seule depuis la fiche si employé lié, sinon éditable -->
+                {% if user_obj.profile.employee %}
+                <div style="background:var(--primary-50);border:1px solid var(--primary-100);border-radius:6px;padding:14px 16px;margin-bottom:20px;">
+                    <p style="font-size:11px;font-weight:600;color:var(--primary-600);margin:0 0 8px;text-transform:uppercase;letter-spacing:.4px;">{% trans 'Identité (depuis la fiche employé)' %}</p>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                        <div>
+                            <span style="font-size:11px;color:var(--gray-400);display:block;">{% trans 'Prénom' %}</span>
+                            <strong style="font-size:14px;color:var(--gray-800);">{{ user_obj.first_name|default:"—" }}</strong>
                         </div>
-                        <div class="form-group">
-                            <label>{% trans 'Nom' %} *</label>
-                            <input type="text" id="id_last_name_vis" class="form-control" value="{{ form.last_name.value|default:'' }}"
-                                   oninput="document.getElementById('id_last_name').value=this.value;suggestFromFirstLast();">
+                        <div>
+                            <span style="font-size:11px;color:var(--gray-400);display:block;">{% trans 'Nom' %}</span>
+                            <strong style="font-size:14px;color:var(--gray-800);">{{ user_obj.last_name|default:"—" }}</strong>
+                        </div>
+                        <div style="grid-column:1/-1;">
+                            <span style="font-size:11px;color:var(--gray-400);display:block;">Email</span>
+                            <strong style="font-size:14px;color:var(--gray-800);">{{ user_obj.email|default:"—" }}</strong>
                         </div>
                     </div>
-                    <div class="grid grid-2" style="gap:16px;margin-bottom:16px;">
-                        <div class="form-group">
-                            <label>Email *</label>
-                            <input type="email" id="id_email_vis" class="form-control" value="{{ form.email.value|default:'' }}"
-                                   oninput="document.getElementById('id_email').value=this.value;">
-                            {% if form.email.errors %}<p class="text-xs" style="color:var(--red-600);margin-top:4px;">{{ form.email.errors.0 }}</p>{% endif %}
-                        </div>
-                        <div></div>
-                    </div>
-                </div>
-
-                <!-- Résumé identité — visible quand un employé existant est sélectionné -->
-                <div id="emp_identity_summary" style="display:none;background:var(--primary-50);border:1px solid var(--primary-100);border-radius:6px;padding:12px 16px;margin-bottom:16px;">
-                    <p style="font-size:11px;font-weight:600;color:var(--primary-600);margin-bottom:6px;">{% trans 'Identité reprise de la fiche' %}</p>
-                    <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center;">
-                        <span id="emp_summary_name" style="font-size:13px;font-weight:600;color:var(--gray-800);"></span>
-                        <span id="emp_summary_email" style="font-size:13px;color:var(--gray-500);"></span>
-                        <span id="emp_summary_phone" style="font-size:13px;color:var(--gray-400);"></span>
-                    </div>
-                </div>
-                
-                {% if not user_obj %}
-                <div class="grid grid-2" style="gap: 16px; margin-bottom: 24px;">
-                    <div class="form-group">
-                        <label for="id_password1">{% trans 'Mot de passe' %} *</label>
-                        <input type="password" name="password1" id="id_password1" class="form-control" required>
-                        {% if form.password1.errors %}
-                        <p class="text-xs" style="color: var(--red-600); margin-top: 4px;">{{ form.password1.errors.0 }}</p>
+                    <p style="font-size:11px;color:var(--gray-400);margin:10px 0 0;">
+                        Pour modifier ces informations, mettez à jour la
+                        {% if user_obj.profile.employee %}
+                        <a href="{% url 'core:employee_edit' user_obj.profile.employee.id %}" style="color:var(--primary-600);">fiche employé</a>.
+                        {% else %}
+                        fiche employé.
                         {% endif %}
+                    </p>
+                </div>
+                <!-- Champs cachés : valeurs inchangées -->
+                <input type="hidden" name="first_name" value="{{ user_obj.first_name }}">
+                <input type="hidden" name="last_name"  value="{{ user_obj.last_name }}">
+                <input type="hidden" name="email"      value="{{ user_obj.email }}">
+                {% else %}
+                <!-- Pas de fiche liée : champs éditables manuellement -->
+                <div class="grid grid-2" style="gap:16px;margin-bottom:16px;">
+                    <div class="form-group">
+                        <label>{% trans 'Prénom' %}</label>
+                        <input type="text" name="first_name" class="form-control" value="{{ form.first_name.value|default:'' }}">
                     </div>
                     <div class="form-group">
-                        <label for="id_password2">{% trans 'Confirmer le mot de passe' %} *</label>
-                        <input type="password" name="password2" id="id_password2" class="form-control" required>
-                        {% if form.password2.errors %}
-                        <p class="text-xs" style="color: var(--red-600); margin-top: 4px;">{{ form.password2.errors.0 }}</p>
-                        {% endif %}
+                        <label>{% trans 'Nom' %}</label>
+                        <input type="text" name="last_name" class="form-control" value="{{ form.last_name.value|default:'' }}">
+                    </div>
+                </div>
+                <div class="grid grid-2" style="gap:16px;margin-bottom:16px;">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" name="email" class="form-control" value="{{ form.email.value|default:'' }}">
+                        {% if form.email.errors %}<p class="text-xs" style="color:var(--red-600);margin-top:4px;">{{ form.email.errors.0 }}</p>{% endif %}
                     </div>
                 </div>
                 {% endif %}
+                
                 
                 <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
                 <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">{% trans 'Rôle et permissions' %}</h4>
@@ -107,77 +101,7 @@
                     </div>
                 </div>
 
-                {% if not user_obj %}
-                <!-- ===== FICHE EMPLOYÉ (création uniquement) ===== -->
-                <div style="margin-bottom: 24px;">
-                  <label style="font-size:13px;font-weight:600;color:var(--gray-700);display:block;margin-bottom:10px;">{% trans 'Fiche employé' %}</label>
-
-                  <!-- Toggle -->
-                  <div style="display:flex;gap:16px;margin-bottom:14px;">
-                    <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
-                      <input type="radio" name="employee_mode" id="emp_mode_existing" value="existing"
-                             {% if employee_mode != 'new' %}checked{% endif %}>
-                      {% trans 'Lier à une fiche existante' %}
-                    </label>
-                    <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
-                      <input type="radio" name="employee_mode" id="emp_mode_new" value="new"
-                             {% if employee_mode == 'new' %}checked{% endif %}>
-                      {% trans 'Créer une nouvelle fiche' %}
-                    </label>
-                  </div>
-
-                  <!-- Panel: Lier à une fiche existante -->
-                  <div id="emp_panel_existing">
-                    <div class="form-group">
-                      <select name="employee" id="id_employee" class="form-control">
-                          <option value="">-- {% trans 'Aucun employé lié' %} --</option>
-                          {% for emp in form.employee.field.queryset %}
-                          <option value="{{ emp.id }}" {% if form.employee.value|stringformat:"s" == emp.id|stringformat:"s" %}selected{% endif %}>
-                              {{ emp.name }}{% if emp.is_external %} (Externe — {{ emp.organization }}){% else %} — {{ emp.direction.code|default:"Sans direction" }}{% endif %}
-                          </option>
-                          {% endfor %}
-                      </select>
-                      {% if form.employee.errors %}
-                      <p class="text-xs" style="color:var(--red-600);margin-top:4px;">{{ form.employee.errors.0 }}</p>
-                      {% endif %}
-                      <p style="font-size:11px;color:var(--gray-500);margin-top:4px;">
-                          {% trans 'Seuls les employés sans compte sont disponibles.' %}
-                          <a href="{% url 'core:resources' %}?tab=rh" style="color:var(--primary-600);">{% trans 'Gérer les fiches employés' %}</a>
-                      </p>
-                    </div>
-                  </div>
-
-                  <!-- Panel: Créer une nouvelle fiche -->
-                  <div id="emp_panel_new" style="display:none;background:var(--primary-50);border:1px solid var(--primary-100);border-radius:6px;padding:16px;">
-                    <p style="font-size:11px;color:var(--primary-600);margin-bottom:12px;">
-                      {% trans 'Le nom et la direction seront repris depuis les champs ci-dessus.' %}
-                    </p>
-                    <div class="form-group" style="margin-bottom:12px;">
-                      <label for="new_emp_role">{% trans 'Poste / Fonction' %}</label>
-                      <input type="text" id="new_emp_role" name="new_emp_role" class="form-control"
-                             value="{{ request.POST.new_emp_role|default:'' }}"
-                             placeholder="{% trans 'Ex : Ingénieur, Analyste…' %}">
-                    </div>
-                    <div class="form-group" style="margin-bottom:8px;">
-                      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
-                        <input type="checkbox" id="new_emp_is_external" name="new_emp_is_external"
-                               {% if request.POST.new_emp_is_external %}checked{% endif %}
-                               style="width:15px;height:15px;">
-                        {% trans 'Personne externe' %}
-                      </label>
-                    </div>
-                    <div id="new_emp_org_row" style="display:none;">
-                      <div class="form-group" style="margin-top:8px;">
-                        <label for="new_emp_organization">{% trans 'Organisation / Entreprise' %}</label>
-                        <input type="text" id="new_emp_organization" name="new_emp_organization" class="form-control"
-                               value="{{ request.POST.new_emp_organization|default:'' }}"
-                               placeholder="{% trans 'Ex : Cabinet XYZ, ONG Alpha…' %}">
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                {% else %}
-                <!-- mode édition : garder le dropdown simple -->
+                <!-- Fiche employé (mode édition) -->
                 <div class="grid grid-2" style="gap: 16px; margin-bottom: 24px;">
                     <div class="form-group">
                         <label for="id_employee">{% trans 'Fiche employé' %}</label>
@@ -195,7 +119,6 @@
                     </div>
                     <div></div>
                 </div>
-                {% endif %}
 
                 <div class="grid grid-2" style="gap: 16px; margin-bottom: 24px;">
                     <div class="form-group">
@@ -205,10 +128,19 @@
                     {% if user_obj %}
                     <div class="form-group">
                         <label style="display: block; margin-bottom: 8px;">{% trans 'Statut du compte' %}</label>
+                        {% if not user_obj.is_active and not user_obj.has_usable_password %}
+                        <div style="background:#fef9c3;border:1px solid #fde047;border-radius:6px;padding:10px 12px;font-size:12px;color:#854d0e;display:flex;gap:8px;align-items:flex-start;">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="15" height="15" style="flex-shrink:0;margin-top:1px;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                            </svg>
+                            <span>Invitation en attente — le compte s'activera automatiquement quand l'employé définira son mot de passe.</span>
+                        </div>
+                        {% else %}
                         <label class="remember-me" style="cursor: pointer;">
                             <input type="checkbox" name="is_active" {% if form.is_active.value %}checked{% endif %}>
                             <span>{% trans 'Compte actif' %}</span>
                         </label>
+                        {% endif %}
                     </div>
                     {% endif %}
                 </div>
@@ -365,9 +297,13 @@
                     </div>
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-500">Statut</span>
-                        <span class="badge {% if user_obj.is_active %}badge-success{% else %}badge-danger{% endif %}">
-                            {% if user_obj.is_active %}{% trans 'Actif' %}{% else %}{% trans 'Inactif' %}{% endif %}
-                        </span>
+                        {% if user_obj.is_active %}
+                        <span class="badge badge-success">{% trans 'Actif' %}</span>
+                        {% elif not user_obj.has_usable_password %}
+                        <span class="badge badge-warning">En attente</span>
+                        {% else %}
+                        <span class="badge badge-danger">{% trans 'Inactif' %}</span>
+                        {% endif %}
                     </div>
                 </div>
             </div>

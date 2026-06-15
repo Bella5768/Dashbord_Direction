@@ -273,35 +273,21 @@
         </label>
 
         <div id="create_user_fields" class="mt-create-account-fields" style="display:none;">
-          <div class="grid grid-2 fg-grid-sm">
-            <div class="form-group">
-              <label for="new_user_username">{% trans "Nom d'utilisateur" %} *</label>
-              <input type="text" id="new_user_username" name="new_user_username" class="form-control"
-                     value="{{ request.POST.new_user_username|default:'' }}"
-                     placeholder="prenom.nom" autocomplete="off">
-            </div>
-            <div class="form-group">
-              <label for="new_user_role">{% trans 'Rôle système' %}</label>
-              <select id="new_user_role" name="new_user_role" class="form-control">
-                {% for val, lbl in role_choices %}
-                <option value="{{ val }}"
-                  {% if request.POST.new_user_role == val %}selected
-                  {% elif not request.POST.new_user_role and val == 'employe' %}selected{% endif %}>{{ lbl }}</option>
-                {% endfor %}
-              </select>
-            </div>
+          <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:#1e40af;display:flex;gap:10px;align-items:flex-start;">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="flex-shrink:0;margin-top:1px;">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+            <span>Le compte sera créé inactif. Un email d'invitation sera envoyé à la personne pour qu'elle définisse elle-même son mot de passe.</span>
           </div>
-          <div class="grid grid-2 fg-grid-sm">
-            <div class="form-group">
-              <label for="new_user_password1">{% trans 'Mot de passe' %} *</label>
-              <input type="password" id="new_user_password1" name="new_user_password1" class="form-control"
-                     placeholder="{% trans 'Au moins 6 caractères' %}">
-            </div>
-            <div class="form-group">
-              <label for="new_user_password2">{% trans 'Confirmer le mot de passe' %} *</label>
-              <input type="password" id="new_user_password2" name="new_user_password2" class="form-control"
-                     placeholder="{% trans 'Répéter le mot de passe' %}">
-            </div>
+          <div class="form-group">
+            <label for="new_user_role">{% trans 'Rôle système' %}</label>
+            <select id="new_user_role" name="new_user_role" class="form-control">
+              {% for val, lbl in role_choices %}
+              <option value="{{ val }}"
+                {% if request.POST.new_user_role == val %}selected
+                {% elif not request.POST.new_user_role and val == 'employe' %}selected{% endif %}>{{ lbl }}</option>
+              {% endfor %}
+            </select>
           </div>
         </div>
       </div>
@@ -323,18 +309,6 @@
 {% block extra_js %}
 <script>
 (function() {
-  // ---- Utility: slugify a full name into prenom.nom ----
-  function slugify(str) {
-    return str
-      .normalize('NFD').replace(/[̀-ͯ]/g, '')  // strip accents
-      .toLowerCase()
-      .replace(/[^a-z0-9\s]/g, '')                        // keep alphanum + space
-      .trim()
-      .split(/\s+/)                                        // split on whitespace
-      .filter(function(p) { return p.length > 0; })
-      .join('.');                                          // join with dot (prenom.nom)
-  }
-
   var radios = document.querySelectorAll('input[name="member_type"]');
   var panels = {
     existing:     document.getElementById('panel_existing'),
@@ -346,40 +320,7 @@
   var alertExternal       = document.getElementById('alert_external_account');
   var toggleCreateUser    = document.getElementById('toggle_create_user');
   var createUserFields    = document.getElementById('create_user_fields');
-  var usernameInput       = document.getElementById('new_user_username');
   var roleSelect          = document.getElementById('new_user_role');
-
-  // Track if user manually edited the username field
-  var usernameManuallyEdited = usernameInput && usernameInput.value.length > 0;
-  if (usernameInput) {
-    usernameInput.addEventListener('input', function() {
-      usernameManuallyEdited = true;
-    });
-  }
-
-  // Auto-suggest username from name field
-  function suggestUsername(nameVal) {
-    if (!usernameInput || usernameManuallyEdited) return;
-    var parts = nameVal.trim().split(/\s+/).filter(function(p){ return p.length > 0; });
-    if (parts.length === 0) return;
-    var suggested = '';
-    if (parts.length === 1) {
-      suggested = slugify(parts[0]);
-    } else {
-      // first part = prenom, rest = nom
-      suggested = slugify(parts[0]) + '.' + slugify(parts.slice(1).join(' '));
-    }
-    if (suggested) usernameInput.value = suggested;
-  }
-
-  var intNameInput = document.getElementById('int_name');
-  var extNameInput = document.getElementById('ext_name');
-  if (intNameInput) {
-    intNameInput.addEventListener('input', function() { suggestUsername(this.value); });
-  }
-  if (extNameInput) {
-    extNameInput.addEventListener('input', function() { suggestUsername(this.value); });
-  }
 
   // Show/hide the create-account section depending on member_type
   function updateAccountSection(memberType) {
@@ -428,18 +369,11 @@
       panels[k].style.display = (k === val) ? '' : 'none';
     });
     updateAccountSection(val);
-    // Reset username suggestion when switching panels
-    if (!usernameManuallyEdited && usernameInput) {
-      usernameInput.value = '';
-      usernameManuallyEdited = false;
-    }
   }
 
   radios.forEach(function(r) {
     r.addEventListener('change', function() {
       toggleCreateUser._userTouched = false;
-      usernameManuallyEdited = false;
-      if (usernameInput) usernameInput.value = '';
       switchPanel(this.value);
     });
   });

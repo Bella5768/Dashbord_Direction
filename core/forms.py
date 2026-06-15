@@ -1,7 +1,7 @@
 from django import forms
 from django.db.models import Q
 from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import SetPasswordForm  # noqa: F401  (réexporté pour les vues)
 from .models import UserProfile, Direction, Employee, Event
 
 
@@ -22,121 +22,46 @@ class DirectionForm(forms.ModelForm):
         }
 
 
-class UserCreateForm(UserCreationForm):
-    """Formulaire de création d'utilisateur avec profil"""
-    email = forms.EmailField(required=True, label="Email")
-    first_name = forms.CharField(max_length=100, required=True, label="Prénom")
-    last_name = forms.CharField(max_length=100, required=True, label="Nom")
-    
-    role = forms.ChoiceField(choices=UserProfile.ROLE_CHOICES, label="Rôle")
-    direction = forms.ModelChoiceField(
-        queryset=Direction.objects.all(), 
-        required=False, 
-        label="Direction",
-        empty_label="-- Aucune direction --"
-    )
+class UserCreateForm(forms.Form):
+    """Création de compte depuis une fiche employé existante.
+
+    L'admin choisit l'employé et le rôle. Le username est auto-généré (nom.prenom),
+    la direction est reprise de la fiche, et un email d'invitation est envoyé —
+    l'employé définit lui-même son mot de passe via le lien reçu.
+    """
     employee = forms.ModelChoiceField(
-        queryset=Employee.objects.all(),
-        required=False,
+        queryset=Employee.objects.none(),
+        required=True,
         label="Employé",
-        empty_label="-- Aucun employé --"
+        empty_label="-- Sélectionner un employé --",
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_employee'}),
     )
-    phone = forms.CharField(max_length=20, required=False, label="Téléphone")
-    
-    # Permissions budgets
-    budget_view = forms.BooleanField(required=False, label="Peut voir les budgets")
-    budget_manage = forms.BooleanField(required=False, label="Peut gérer les budgets")
-    budget_view_all_directions = forms.BooleanField(required=False, label="Peut voir les budgets de toutes les directions")
-    
-    # Permissions projets
-    can_create_project = forms.BooleanField(required=False, label="Peut créer des projets")
-    can_edit_projects = forms.BooleanField(required=False, label="Peut modifier les projets")
-    can_add_milestones = forms.BooleanField(required=False, label="Peut ajouter des jalons")
-    can_add_members = forms.BooleanField(required=False, label="Peut ajouter des membres")
-    
-    # Permissions utilisateurs et demandes
-    can_manage_users = forms.BooleanField(required=False, label="Peut gérer les utilisateurs")
-    can_approve_requests = forms.BooleanField(required=False, label="Peut approuver les demandes")
-    
-    # Permissions événements
-    can_create_events = forms.BooleanField(required=False, label="Peut créer des événements")
-
-    # Permissions congés / RH
-    is_hr_manager = forms.BooleanField(required=False, label="Gestionnaire RH")
-    can_approve_leaves = forms.BooleanField(required=False, label="Peut approuver les congés (avis hiérarchique)")
-
-    class Meta:
-        model = User
-        fields = ['username', 'email', 'first_name', 'last_name', 'password1', 'password2']
+    role = forms.ChoiceField(
+        choices=UserProfile.ROLE_CHOICES,
+        label="Rôle",
+        widget=forms.Select(attrs={'class': 'form-control'}),
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form-control'
-            if field_name == 'password1':
-                field.widget.attrs['placeholder'] = 'Mot de passe'
-            elif field_name == 'password2':
-                field.widget.attrs['placeholder'] = 'Confirmer le mot de passe'
-        # Only show employees not yet linked to any user account
-        self.fields['employee'].queryset = Employee.objects.filter(
-            user_profile__isnull=True
-        ).order_by('name')
+        self.fields['employee'].queryset = (
+            Employee.objects
+            .filter(user_profile__isnull=True)
+            .select_related('direction')
+            .order_by('name')
+        )
 
-    def clean(self):
-        cleaned_data = super().clean()
-        employee = cleaned_data.get('employee')
-        if employee:
-            if UserProfile.objects.filter(employee=employee).exists():
-                self.add_error('employee',
-                    f"Cet employé ({employee.name}) est déjà lié à un autre compte utilisateur.")
-        return cleaned_data
-
-    def save(self, commit=True):
-        user = super().save(commit=False)
-        user.email = self.cleaned_data['email']
-        user.first_name = self.cleaned_data['first_name']
-        user.last_name = self.cleaned_data['last_name']
-
-        if commit:
-            user.save()
-            # Update or create profile
-            profile, created = UserProfile.objects.get_or_create(user=user)
-            profile.role = self.cleaned_data['role']
-            profile.direction = self.cleaned_data.get('direction')
-            profile.employee = self.cleaned_data.get('employee')
-            profile.phone = self.cleaned_data.get('phone', '')
-
-            # Permissions budgets
-            profile.budget_view = self.cleaned_data.get('budget_view', False)
-            profile.budget_manage = self.cleaned_data.get('budget_manage', False)
-            profile.budget_view_all_directions = self.cleaned_data.get('budget_view_all_directions', False)
-
-            # Permissions projets
-            profile.can_create_project = self.cleaned_data.get('can_create_project', False)
-            profile.can_edit_projects = self.cleaned_data.get('can_edit_projects', False)
-            profile.can_add_milestones = self.cleaned_data.get('can_add_milestones', False)
-            profile.can_add_members = self.cleaned_data.get('can_add_members', False)
-
-            # Permissions utilisateurs et demandes
-            profile.can_manage_users = self.cleaned_data.get('can_manage_users', False)
-            profile.can_approve_requests = self.cleaned_data.get('can_approve_requests', False)
-
-            # Permissions événements
-            profile.can_create_events = self.cleaned_data.get('can_create_events', False)
-
-            # Permissions congés / RH
-            profile.is_hr_manager = self.cleaned_data.get('is_hr_manager', False)
-            profile.can_approve_leaves = self.cleaned_data.get('can_approve_leaves', False)
-
-            profile.save()
-
-            # Sync employee.email if employee has no email yet
-            employee = self.cleaned_data.get('employee')
-            if employee and not employee.email and user.email:
-                employee.email = user.email
-                employee.save(update_fields=['email'])
-
-        return user
+    def clean_employee(self):
+        emp = self.cleaned_data.get('employee')
+        if emp:
+            if not emp.email:
+                raise forms.ValidationError(
+                    f"La fiche de {emp.name} n'a pas d'adresse email. "
+                    "Ajoutez-en une avant de créer un compte."
+                )
+            if UserProfile.objects.filter(employee=emp).exists():
+                raise forms.ValidationError(f"{emp.name} a déjà un compte utilisateur.")
+        return emp
 
 
 class UserUpdateForm(forms.ModelForm):
@@ -227,6 +152,12 @@ class UserUpdateForm(forms.ModelForm):
             self.fields['is_hr_manager'].initial = profile.is_hr_manager
             self.fields['can_approve_leaves'].initial = profile.can_approve_leaves
 
+    def clean_username(self):
+        username = self.cleaned_data.get('username', '').strip()
+        if self.instance and User.objects.filter(username=username).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError(f"Le nom d'utilisateur « {username} » est déjà utilisé.")
+        return username
+
     def clean(self):
         cleaned_data = super().clean()
         employee = cleaned_data.get('employee')
@@ -275,27 +206,6 @@ class UserUpdateForm(forms.ModelForm):
 
         return user
 
-
-class PasswordChangeForm(forms.Form):
-    """Formulaire de changement de mot de passe"""
-    new_password1 = forms.CharField(
-        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Nouveau mot de passe'}),
-        label="Nouveau mot de passe"
-    )
-    new_password2 = forms.CharField(
-        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Confirmer le mot de passe'}),
-        label="Confirmer le mot de passe"
-    )
-    
-    def clean(self):
-        cleaned_data = super().clean()
-        password1 = cleaned_data.get('new_password1')
-        password2 = cleaned_data.get('new_password2')
-        
-        if password1 and password2 and password1 != password2:
-            raise forms.ValidationError("Les mots de passe ne correspondent pas.")
-        
-        return cleaned_data
 
 
 class EventForm(forms.ModelForm):

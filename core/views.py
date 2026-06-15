@@ -133,6 +133,48 @@ def get_accessible_projects_qs(user):
     return qs.filter(manager_q | member_q).distinct()
 
 
+# ── Helpers comptes utilisateurs ─────────────────────────────────────────────
+
+def _generate_username(full_name):
+    """Génère un username unique au format nom.prenom (sans accents, ASCII uniquement)."""
+    import unicodedata
+    import re
+    from django.contrib.auth.models import User as _User
+
+    def _norm(s):
+        s = unicodedata.normalize('NFD', s)
+        s = ''.join(c for c in s if unicodedata.category(c) != 'Mn')
+        return re.sub(r'[^a-z0-9]', '', s.lower())
+
+    parts = full_name.strip().split()
+    if len(parts) >= 2:
+        base = f"{_norm(parts[-1])}.{_norm(parts[0])}"
+    elif parts:
+        base = _norm(parts[0])
+    else:
+        base = 'utilisateur'
+
+    username, counter = base, 2
+    while _User.objects.filter(username=username).exists():
+        username = f"{base}{counter}"
+        counter += 1
+    return username
+
+
+def _build_activation_link(request, user):
+    """Génère le lien d'activation sécurisé (uid + token Django, valable 3 jours)."""
+    from django.contrib.auth.tokens import default_token_generator
+    from django.utils.http import urlsafe_base64_encode
+    from django.utils.encoding import force_bytes
+    from django.urls import reverse
+
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    token = default_token_generator.make_token(user)
+    return request.build_absolute_uri(
+        reverse('core:account_activate', kwargs={'uidb64': uid, 'token': token})
+    )
+
+
 def login_view(request):
     """Vue de connexion"""
     if request.user.is_authenticated:
@@ -157,8 +199,10 @@ def login_view(request):
                 )
                 next_url = request.GET.get('next', 'core:dashboard')
                 return redirect(next_url)
+            elif not user.has_usable_password():
+                messages.error(request, "Votre compte est en attente d'activation. Consultez votre email pour le lien d'invitation.")
             else:
-                messages.error(request, 'Votre compte est désactivé.')
+                messages.error(request, 'Votre compte a été désactivé. Contactez un administrateur.')
         else:
             messages.error(request, 'Identifiants incorrects.')
     
@@ -182,6 +226,28 @@ def logout_view(request):
 def password_reset_info(request):
     """Page d'information pour mot de passe oublié"""
     return render(request, 'registration/password_reset.html')
+
+
+@login_required
+def password_change(request):
+    """L'utilisateur connecté change son propre mot de passe."""
+    from django.contrib.auth.forms import PasswordChangeForm
+    from django.contrib.auth import update_session_auth_hash
+
+    form = PasswordChangeForm(request.user, request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        user = form.save()
+        update_session_auth_hash(request, user)
+        UserActivity.objects.create(
+            user=request.user,
+            action='update',
+            description="Changement de mot de passe",
+            ip_address=get_client_ip(request),
+        )
+        messages.success(request, "Mot de passe modifié avec succès.")
+        return redirect('core:dashboard')
+
+    return render(request, 'registration/password_change.html', {'form': form})
 
 
 @login_required
@@ -1309,110 +1375,97 @@ def users_list(request):
 
 @login_required
 def user_create(request):
-    """Créer un nouvel utilisateur"""
+    """Crée un compte inactif et envoie un email d'invitation à l'employé."""
     from .forms import UserCreateForm
+    from django.contrib.auth.models import User as DjangoUser
+    import json
 
     if not request.user.profile.has_manage_users_permission():
         messages.error(request, "Vous n'avez pas les permissions pour créer des utilisateurs.")
         return redirect('core:dashboard')
 
-    # Pre-fill from ?employee_id= query param
-    employee_id = request.GET.get('employee_id')
     initial = {}
+    employee_id = request.GET.get('employee_id')
     if employee_id:
         try:
-            emp = Employee.objects.select_related('direction').get(pk=employee_id)
+            emp = Employee.objects.get(pk=employee_id)
             initial['employee'] = emp
-            name_parts = emp.name.split()
-            initial['first_name'] = name_parts[0] if name_parts else ''
-            initial['last_name'] = ' '.join(name_parts[1:]) if len(name_parts) > 1 else ''
-            initial['email'] = emp.email or ''
-            initial['phone'] = emp.phone or ''
-            initial['direction'] = emp.direction_id
             initial['role'] = 'visiteur' if emp.is_external else 'employe'
         except Employee.DoesNotExist:
             pass
 
     if request.method == 'POST':
         form = UserCreateForm(request.POST)
-        employee_mode = request.POST.get('employee_mode', 'existing')
-        new_employee = None
-
-        if employee_mode == 'new':
-            new_emp_role = request.POST.get('new_emp_role', '').strip()
-            new_emp_is_external = request.POST.get('new_emp_is_external') == 'on'
-            new_emp_organization = request.POST.get('new_emp_organization', '').strip()
-
         if form.is_valid():
-            # Handle inline employee creation
-            if employee_mode == 'new':
-                # Dériver nom et direction depuis les champs du formulaire principal
-                first = form.cleaned_data.get('first_name', '').strip()
-                last = form.cleaned_data.get('last_name', '').strip()
-                new_emp_name = f"{first} {last}".strip() or form.cleaned_data.get('username', '')
-                direction = form.cleaned_data.get('direction')
-                new_employee = Employee.objects.create(
-                    name=new_emp_name,
-                    direction=direction,
-                    role=new_emp_role,
-                    is_external=new_emp_is_external,
-                    organization=new_emp_organization if new_emp_is_external else '',
-                    email=form.cleaned_data.get('email', ''),
-                )
-                # Inject into form so the profile's employee field gets set
-                form.cleaned_data['employee'] = new_employee
+            emp = form.cleaned_data['employee']
+            role = form.cleaned_data['role']
 
-            user = form.save()
+            username = _generate_username(emp.name)
+            name_parts = emp.name.strip().split()
 
-            # Log activity
+            user = DjangoUser(
+                username=username,
+                email=emp.email,
+                first_name=name_parts[0] if name_parts else '',
+                last_name=' '.join(name_parts[1:]) if len(name_parts) > 1 else '',
+                is_active=False,
+            )
+            user.set_unusable_password()
+            user.save()
+
+            profile, _ = UserProfile.objects.get_or_create(user=user)
+            profile.role = role
+            profile.direction = emp.direction
+            profile.employee = emp
+            profile.save()
+
+            activation_link = _build_activation_link(request, user)
+            invited_by = request.user.get_full_name() or request.user.username
+            from .notifications import notify_account_invitation
+            email_ok, email_msg = notify_account_invitation(user, activation_link, invited_by)
+
             UserActivity.objects.create(
                 user=request.user,
                 action='create',
-                description=f"Création de l'utilisateur {user.username}",
+                description=f"Création du compte {username} pour {emp.name}",
                 ip_address=get_client_ip(request),
-                user_agent=request.META.get('HTTP_USER_AGENT', '')[:500]
+                user_agent=request.META.get('HTTP_USER_AGENT', '')[:500],
             )
 
-            messages.success(request, f"L'utilisateur {user.username} a été créé avec succès.")
+            if email_ok:
+                messages.success(request, f"Compte créé pour {emp.name}. Invitation envoyée à {emp.email}.")
+            else:
+                messages.warning(request, f"Compte créé (identifiant : {username}) mais l'email n'a pas pu être envoyé : {email_msg}")
             return redirect('core:users_list')
-        else:
-            # form invalid — pass back employee_mode and name error if any
-            employees_without_user = Employee.objects.filter(user_profile__isnull=True).count()
-            return render(request, 'core/users/form.html', {
-                'form': form,
-                'title': 'Nouvel utilisateur',
-                'employees_without_user': employees_without_user,
-                'employee_mode': employee_mode,
-            })
     else:
         form = UserCreateForm(initial=initial)
 
-    employees_without_user = Employee.objects.filter(user_profile__isnull=True).count()
-    employee_mode = 'existing'
+    # Données JSON pour la prévisualisation JS (username, direction, email)
+    import unicodedata, re as _re
 
-    # JSON des données employés pour auto-remplissage côté JS
-    import json
-    emp_qs = form.fields['employee'].queryset.select_related('direction')
-    employees_data_json = json.dumps({
-        str(e.id): {
-            'first_name': e.name.split()[0] if e.name else '',
-            'last_name': ' '.join(e.name.split()[1:]) if e.name and len(e.name.split()) > 1 else '',
-            'email': e.email or '',
-            'phone': e.phone or '',
-            'direction': str(e.direction_id) if e.direction_id else '',
-            'role': 'visiteur' if e.is_external else 'employe',
+    def _norm(s):
+        s = unicodedata.normalize('NFD', s)
+        s = ''.join(c for c in s if unicodedata.category(c) != 'Mn')
+        return _re.sub(r'[^a-z0-9]', '', s.lower())
+
+    emp_preview = {}
+    for emp in form.fields['employee'].queryset:
+        parts = emp.name.strip().split()
+        prenom = _norm(parts[0]) if parts else ''
+        nom = _norm(parts[-1]) if len(parts) >= 2 else prenom
+        emp_preview[str(emp.id)] = {
+            'name': emp.name,
+            'email': emp.email or '',
+            'direction_code': emp.direction.code if emp.direction else '',
+            'direction_name': emp.direction.name if emp.direction else '',
+            'preview_username': f"{nom}.{prenom}" if prenom and nom != prenom else nom,
         }
-        for e in emp_qs
-    })
 
-    context = {
+    return render(request, 'core/users/create.html', {
         'form': form,
-        'title': 'Nouvel utilisateur',
-        'employees_without_user': employees_without_user,
-        'employee_mode': employee_mode,
-        'employees_data_json': employees_data_json,
-    }
-    return render(request, 'core/users/form.html', context)
+        'emp_preview_json': json.dumps(emp_preview),
+        'title': 'Nouveau compte utilisateur',
+    })
 
 
 @login_required
@@ -1430,8 +1483,22 @@ def user_edit(request, user_id):
     if request.method == 'POST':
         form = UserUpdateForm(request.POST, instance=user_obj)
         if form.is_valid():
+            # Bloquer l'activation d'un compte en attente d'invitation
+            if not user_obj.has_usable_password() and not user_obj.is_active:
+                form.instance.is_active = False
+
+            # Identité verrouillée sur la fiche employé si liée
+            employee = form.cleaned_data.get('employee') or (
+                user_obj.profile.employee if hasattr(user_obj, 'profile') else None
+            )
+            if employee:
+                name_parts = employee.name.split() if employee.name else []
+                form.instance.first_name = name_parts[0] if name_parts else ''
+                form.instance.last_name  = ' '.join(name_parts[1:]) if len(name_parts) > 1 else ''
+                form.instance.email      = employee.email or user_obj.email
+
             form.save()
-            
+
             # Log activity
             UserActivity.objects.create(
                 user=request.user,
@@ -1440,7 +1507,7 @@ def user_edit(request, user_id):
                 ip_address=get_client_ip(request),
                 user_agent=request.META.get('HTTP_USER_AGENT', '')[:500]
             )
-            
+
             messages.success(request, f"L'utilisateur {user_obj.username} a été modifié avec succès.")
             return redirect('core:users_list')
     else:
@@ -1501,14 +1568,18 @@ def user_toggle_status(request, user_id):
         return redirect('core:dashboard')
     
     user_obj = get_object_or_404(User, pk=user_id)
-    
+
     if user_obj == request.user:
         messages.error(request, "Vous ne pouvez pas désactiver votre propre compte.")
         return redirect('core:users_list')
-    
+
+    if not user_obj.is_active and not user_obj.has_usable_password():
+        messages.error(request, f"{user_obj.username} est en attente d'invitation. Renvoyez l'invitation pour qu'il active son compte lui-même.")
+        return redirect('core:users_list')
+
     user_obj.is_active = not user_obj.is_active
     user_obj.save()
-    
+
     status = "activé" if user_obj.is_active else "désactivé"
     messages.success(request, f"L'utilisateur {user_obj.username} a été {status}.")
     
@@ -1517,32 +1588,112 @@ def user_toggle_status(request, user_id):
 
 @login_required
 def user_change_password(request, user_id):
-    """Changer le mot de passe d'un utilisateur"""
-    from django.contrib.auth.models import User
-    from .forms import PasswordChangeForm
-    
-    if not request.user.profile.has_manage_users_permission():
-        messages.error(request, "Vous n'avez pas les permissions.")
+    """L'admin ne peut plus modifier les mots de passe des autres utilisateurs."""
+    messages.error(
+        request,
+        "Pour des raisons de sécurité, vous ne pouvez pas modifier le mot de passe "
+        "d'un autre utilisateur. Utilisez « Renvoyer l'invitation » pour lui permettre "
+        "de définir lui-même son mot de passe."
+    )
+    return redirect('core:users_list')
+
+
+def account_activate(request, uidb64, token):
+    """Activation du compte via le lien reçu par email (définition du mot de passe)."""
+    from django.contrib.auth.tokens import default_token_generator
+    from django.utils.http import urlsafe_base64_decode
+    from django.utils.encoding import force_str
+    from django.contrib.auth import login as auth_login
+    from django.contrib.auth.models import User as DjangoUser
+    from django.contrib.auth.forms import SetPasswordForm
+
+    if request.user.is_authenticated:
         return redirect('core:dashboard')
-    
-    user_obj = get_object_or_404(User, pk=user_id)
-    
+
+    user = None
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = DjangoUser.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, DjangoUser.DoesNotExist):
+        pass
+
+    token_valid = (
+        user is not None
+        and not user.is_active
+        and not user.has_usable_password()
+        and default_token_generator.check_token(user, token)
+    )
+
+    if not token_valid:
+        # Compte déjà activé → rediriger vers login avec message
+        if user is not None and user.is_active:
+            messages.info(request, "Ce compte est déjà activé. Connectez-vous normalement.")
+            return redirect('core:login')
+        return render(request, 'core/users/activate.html', {'valid': False})
+
     if request.method == 'POST':
-        form = PasswordChangeForm(request.POST)
+        form = SetPasswordForm(user, request.POST)
         if form.is_valid():
-            user_obj.set_password(form.cleaned_data['new_password1'])
-            user_obj.save()
-            
-            messages.success(request, f"Le mot de passe de {user_obj.username} a été modifié.")
-            return redirect('core:users_list')
+            form.save()
+            user.is_active = True
+            user.save(update_fields=['is_active'])
+            UserActivity.objects.create(
+                user=user,
+                action='activate',
+                description="Activation du compte via lien email",
+            )
+            from django.contrib.auth import update_session_auth_hash
+            auth_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            update_session_auth_hash(request, user)
+            messages.success(request, f"Bienvenue {user.get_full_name() or user.username} ! Votre compte est activé.")
+            return redirect('core:dashboard')
     else:
-        form = PasswordChangeForm()
-    
-    context = {
+        form = SetPasswordForm(user)
+
+    return render(request, 'core/users/activate.html', {
+        'valid': True,
         'form': form,
-        'user_obj': user_obj,
-    }
-    return render(request, 'core/users/change_password.html', context)
+        'username': user.username,
+        'full_name': user.get_full_name(),
+    })
+
+
+@login_required
+def resend_invitation(request, user_id):
+    """Renvoie l'email d'invitation à un utilisateur inactif (POST uniquement)."""
+    from django.contrib.auth.models import User as DjangoUser
+
+    if not request.user.profile.has_manage_users_permission():
+        return redirect('core:dashboard')
+
+    if request.method != 'POST':
+        return redirect('core:users_list')
+
+    user_obj = get_object_or_404(DjangoUser, pk=user_id)
+
+    if user_obj.is_active:
+        messages.warning(request, f"Le compte de {user_obj.username} est déjà actif.")
+        return redirect('core:users_list')
+
+    if user_obj.has_usable_password():
+        messages.warning(request, f"Le compte de {user_obj.username} n'est pas en attente d'invitation (il a déjà un mot de passe).")
+        return redirect('core:users_list')
+
+    if not user_obj.email:
+        messages.error(request, "Ce compte n'a pas d'adresse email.")
+        return redirect('core:users_list')
+
+    activation_link = _build_activation_link(request, user_obj)
+    invited_by = request.user.get_full_name() or request.user.username
+    from .notifications import notify_account_invitation
+    ok, msg = notify_account_invitation(user_obj, activation_link, invited_by)
+
+    if ok:
+        messages.success(request, f"Invitation renvoyée à {user_obj.email}.")
+    else:
+        messages.error(request, f"Échec de l'envoi : {msg}")
+
+    return redirect('core:users_list')
 
 
 @login_required
@@ -2796,6 +2947,20 @@ def project_member_add(request, project_id):
                 errors.append("Le poste / fonction est requis.")
             if not is_external and not project.direction_id:
                 errors.append("Ce projet n'a pas de direction. Assignez-en une avant d'ajouter un employé interne.")
+            if is_external and not new_org:
+                errors.append("L'organisation est obligatoire pour une personne externe.")
+            if not is_external and not new_email:
+                errors.append("L'email est obligatoire pour un employé interne (nécessaire pour la création de compte).")
+            if new_email:
+                from django.core.validators import validate_email as _validate_email
+                from django.core.exceptions import ValidationError as _VE
+                try:
+                    _validate_email(new_email)
+                except _VE:
+                    errors.append("L'adresse email n'est pas valide.")
+                else:
+                    if Employee.objects.filter(email__iexact=new_email).exists():
+                        errors.append(f"Un employé avec l'email « {new_email} » existe déjà.")
 
             if errors:
                 for e in errors:
@@ -2836,57 +3001,39 @@ def project_member_add(request, project_id):
                 if success:
                     messages.info(request, msg)
 
-                # --- Créer un compte de connexion si demandé ---
+                # --- Créer un compte de connexion (flow invitation) ---
                 create_user = request.POST.get('create_user') == 'on'
                 if create_user:
                     from django.contrib.auth.models import User as DjangoUser
-                    new_username = request.POST.get('new_user_username', '').strip()
-                    new_password1 = request.POST.get('new_user_password1', '')
-                    new_password2 = request.POST.get('new_user_password2', '')
                     default_role = 'visiteur' if is_external else 'employe'
                     new_user_role = request.POST.get('new_user_role', default_role) or default_role
 
-                    user_errors = []
-                    if not new_username:
-                        user_errors.append("Le nom d'utilisateur est requis pour créer un compte.")
-                    elif DjangoUser.objects.filter(username=new_username).exists():
-                        user_errors.append(f"Le nom d'utilisateur '{new_username}' est déjà pris.")
-                    if new_password1 != new_password2:
-                        user_errors.append("Les mots de passe ne correspondent pas.")
-                    if len(new_password1) < 6:
-                        user_errors.append("Le mot de passe doit faire au moins 6 caractères.")
-
-                    if user_errors:
-                        new_employee.delete()
-                        member.delete()
-                        for e in user_errors:
-                            messages.error(request, e)
-                        context.update({
-                            'member_type': member_type,
-                            'new_employee_name': new_name,
-                            'new_employee_role': new_role_val,
-                            'new_employee_phone': new_phone,
-                            'new_employee_email': new_email,
-                            'new_employee_organization': new_org,
-                            'form': ProjectMemberForm(project, request.POST),
-                        })
-                        return render(request, 'core/project_member_form.html', context)
-
-                    name_parts = new_employee.name.split() if new_employee.name else []
-                    new_user = DjangoUser.objects.create_user(
-                        username=new_username,
-                        password=new_password1,
-                        email=new_employee.email or '',
-                        first_name=name_parts[0] if name_parts else '',
-                        last_name=' '.join(name_parts[1:]) if len(name_parts) > 1 else '',
-                    )
-                    # post_save signal already created an empty UserProfile; update it
-                    UserProfile.objects.filter(user=new_user).update(
-                        employee=new_employee,
-                        role=new_user_role,
-                        direction=new_employee.direction,
-                    )
-                    messages.success(request, f"Compte '{new_username}' créé pour {new_employee.name}.")
+                    if not new_employee.email:
+                        messages.warning(request, f"Compte non créé : {new_employee.name} n'a pas d'adresse email. Ajoutez-en une à sa fiche.")
+                    else:
+                        new_username = _generate_username(new_employee.name)
+                        name_parts = new_employee.name.split() if new_employee.name else []
+                        new_user = DjangoUser.objects.create(
+                            username=new_username,
+                            email=new_employee.email,
+                            first_name=name_parts[0] if name_parts else '',
+                            last_name=' '.join(name_parts[1:]) if len(name_parts) > 1 else '',
+                            is_active=False,
+                        )
+                        new_user.set_unusable_password()
+                        new_user.save()
+                        UserProfile.objects.filter(user=new_user).update(
+                            employee=new_employee,
+                            role=new_user_role,
+                            direction=new_employee.direction,
+                        )
+                        activation_link = _build_activation_link(request, new_user)
+                        from .notifications import notify_account_invitation
+                        ok, msg = notify_account_invitation(new_user, activation_link, invited_by=request.user.get_full_name() or request.user.username)
+                        if ok:
+                            messages.success(request, f"Invitation envoyée à {new_employee.email} (identifiant : {new_username}).")
+                        else:
+                            messages.warning(request, f"Compte '{new_username}' créé mais l'email n'a pas pu être envoyé : {msg}.")
 
                 label = "externe" if is_external else "interne"
                 messages.success(request, f"Personne {label} '{new_name}' créée et ajoutée au projet.")
@@ -3266,6 +3413,20 @@ def employee_edit(request, employee_id):
             if profile.role == 'directeur' and profile.direction_id:
                 obj.direction_id = profile.direction_id
             obj.save()
+
+            # Synchroniser User lié si la fiche est modifiée
+            try:
+                linked_profile = obj.user_profile
+                linked_user = linked_profile.user
+                name_parts = obj.name.split() if obj.name else []
+                linked_user.first_name = name_parts[0] if name_parts else ''
+                linked_user.last_name = ' '.join(name_parts[1:]) if len(name_parts) > 1 else ''
+                if obj.email:
+                    linked_user.email = obj.email
+                linked_user.save(update_fields=['first_name', 'last_name', 'email'])
+            except Exception:
+                pass  # pas de compte lié
+
             messages.success(request, "Employé modifié avec succès.")
             return redirect('core:resources')
     else:
@@ -3283,12 +3444,34 @@ def employee_delete(request, employee_id):
         messages.error(request, "Vous ne pouvez supprimer que les employés de votre direction.")
         return redirect('core:resources')
 
+    # Calcul des dépendances pour afficher l'avertissement
+    managed_projects = employee.managed_projects.all()
+    memberships = employee.project_memberships.select_related('project').all()
+    leave_count = employee.leave_requests.count()
+    has_account = hasattr(employee, 'user_profile') and employee.user_profile is not None
+
     if request.method == 'POST':
-        employee.delete()
-        messages.success(request, "Employé supprimé.")
+        if leave_count > 0:
+            messages.error(request, f"Impossible de supprimer {employee.name} : {leave_count} demande(s) de congé sont liées à cette fiche.")
+            return redirect('core:resources')
+        try:
+            name = employee.name
+            employee.delete()
+            messages.success(request, f"Employé « {name} » supprimé.")
+        except Exception as e:
+            messages.error(request, f"Suppression impossible : {e}")
         return redirect('core:resources')
 
-    return render(request, 'core/confirm_delete.html', {'object': employee, 'type': 'employé', 'back_url': 'core:resources'})
+    context = {
+        'object': employee,
+        'type': 'employé',
+        'back_url': 'core:resources',
+        'managed_projects': managed_projects,
+        'memberships': memberships,
+        'leave_count': leave_count,
+        'has_account': has_account,
+    }
+    return render(request, 'core/confirm_delete.html', context)
 
 
 # Budget management views

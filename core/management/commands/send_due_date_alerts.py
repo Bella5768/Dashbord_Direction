@@ -1,8 +1,12 @@
 """
-Envoie les alertes d'echeance par email aux responsables des jalons et sous-etapes
-non termines dont la date d'echeance approche ou est depassee.
+Envoie les alertes d'échéance par email aux responsables des jalons et sous-étapes
+non terminés dont la date d'échéance approche ou est dépassée.
 
-A planifier quotidiennement via le Planificateur de taches Windows.
+Déclencheurs par défaut (configurable via --trigger-days) :
+  J-7, J-3, J-1, J-0, J+1 (1er jour de retard), J+7 (1 semaine de retard)
+
+Planifier quotidiennement via le Planificateur de tâches Windows :
+  python manage.py send_due_date_alerts
 """
 from datetime import date, timedelta
 
@@ -11,113 +15,128 @@ from django.core.management.base import BaseCommand
 from core.models import Milestone, SubMilestone
 from core.notifications import notify_due_date_alert
 
+DEFAULT_TRIGGER_DAYS = (7, 3, 1, 0, -1, -7)
+
 
 class Command(BaseCommand):
-    help = "Envoie les alertes d'echeance aux responsables des taches non terminees."
+    help = "Envoie les alertes d'échéance aux responsables des tâches non terminées (M2M)."
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--reminder-days',
+            '--trigger-days',
             type=int,
-            default=1,
-            help="Nombre de jours avant echeance pour envoyer un rappel (defaut: 1 = J-1).",
-        )
-        parser.add_argument(
-            '--include-overdue',
-            action='store_true',
-            default=True,
-            help="Inclure aussi les taches en retard (defaut: True).",
-        )
-        parser.add_argument(
-            '--max-overdue-days',
-            type=int,
-            default=30,
-            help="Limite l'envoi aux taches en retard de moins de N jours (defaut: 30).",
+            nargs='+',
+            default=list(DEFAULT_TRIGGER_DAYS),
+            metavar='N',
+            help=(
+                "Jours de déclenchement (positif = J-N à venir, négatif = retard). "
+                f"Défaut : {DEFAULT_TRIGGER_DAYS}"
+            ),
         )
         parser.add_argument(
             '--dry-run',
             action='store_true',
-            help="Affiche ce qui serait envoye sans envoyer reellement.",
+            help="Affiche ce qui serait envoyé sans envoyer réellement.",
         )
 
     def handle(self, *args, **options):
         today = date.today()
-        reminder_days = options['reminder_days']
-        max_overdue = options['max_overdue_days']
+        trigger_set = set(options['trigger_days'])
         dry_run = options['dry_run']
 
-        target_dates = [today, today + timedelta(days=reminder_days)]
-        if options['include_overdue']:
-            for d in range(1, max_overdue + 1):
-                target_dates.append(today - timedelta(days=d))
+        # Calcule la fenêtre de dates à requêter (évite un full-scan)
+        max_ahead = max((d for d in trigger_set if d >= 0), default=7)
+        max_behind = abs(min((d for d in trigger_set if d < 0), default=0))
+        date_min = today - timedelta(days=max_behind)
+        date_max = today + timedelta(days=max_ahead)
 
-        self.stdout.write(f"Date courante : {today}")
-        self.stdout.write(f"Recherche des taches non terminees avec echeance dans la fenetre.")
-
-        sent = 0
-        skipped = 0
-        errors = 0
-
-        # Jalons
-        milestones = Milestone.objects.select_related('project', 'assigned_to').filter(
-            completed=False,
-            due_date__in=target_dates,
-            assigned_to__isnull=False,
+        self.stdout.write(
+            f"Date courante : {today}  |  Fenetre : {date_min} -> {date_max}"
+            + ("  [DRY-RUN]" if dry_run else "")
         )
+
+        sent = skipped = errors = 0
+
+        # ── Jalons ──────────────────────────────────────────────────────
+        milestones = (
+            Milestone.objects
+            .filter(completed=False, due_date__range=(date_min, date_max))
+            .exclude(status='termine')
+            .prefetch_related('assigned_to')
+            .select_related('project', 'project__direction')
+        )
+
         for m in milestones:
-            if not m.assigned_to or not m.assigned_to.email:
-                skipped += 1
-                continue
             days_diff = (m.due_date - today).days
-            self.stdout.write(
-                f"  Jalon #{m.id} '{m.name}' (projet {m.project.name}) "
-                f"-> {m.assigned_to.name} <{m.assigned_to.email}> "
-                f"echeance {m.due_date} (J{days_diff:+d})"
-            )
-            if dry_run:
+            if days_diff not in trigger_set:
                 continue
-            ok, msg = notify_due_date_alert(
-                m.assigned_to, 'jalon', m.name, m.project.name, m.due_date, days_diff,
-                project=m.project,
-            )
-            if ok:
-                sent += 1
-            else:
-                errors += 1
-                self.stdout.write(self.style.WARNING(f"    ECHEC : {msg}"))
 
-        # Sous-etapes
-        sub_milestones = SubMilestone.objects.select_related(
-            'milestone__project', 'assigned_to'
-        ).filter(
-            completed=False,
-            due_date__in=target_dates,
-            assigned_to__isnull=False,
-        )
-        for s in sub_milestones:
-            if not s.assigned_to or not s.assigned_to.email:
+            assignees = list(m.assigned_to.all())
+            if not assignees:
+                self.stdout.write(f"  ! Jalon '{m.name}' sans responsable assigne - ignore")
                 skipped += 1
                 continue
-            days_diff = (s.due_date - today).days
-            project = s.milestone.project
-            self.stdout.write(
-                f"  Sous-etape #{s.id} '{s.name}' (projet {project.name}) "
-                f"-> {s.assigned_to.name} <{s.assigned_to.email}> "
-                f"echeance {s.due_date} (J{days_diff:+d})"
-            )
-            if dry_run:
-                continue
-            ok, msg = notify_due_date_alert(
-                s.assigned_to, 'sous-etape', s.name, project.name, s.due_date, days_diff,
-                project=project,
-            )
-            if ok:
-                sent += 1
-            else:
-                errors += 1
-                self.stdout.write(self.style.WARNING(f"    ECHEC : {msg}"))
 
+            for emp in assignees:
+                if not emp.email:
+                    skipped += 1
+                    continue
+                self.stdout.write(
+                    f"  Jalon '{m.name}' (projet {m.project.name}) "
+                    f"-> {emp.name} <{emp.email}>  J{days_diff:+d}"
+                )
+                if dry_run:
+                    continue
+                ok, msg = notify_due_date_alert(
+                    emp, 'jalon', m.name, m.project.name, m.due_date, days_diff,
+                    project=m.project,
+                )
+                if ok:
+                    sent += 1
+                else:
+                    errors += 1
+                    self.stdout.write(self.style.WARNING(f"    ECHEC {msg}"))
+
+        # ── Sous-étapes ──────────────────────────────────────────────────
+        sub_milestones = (
+            SubMilestone.objects
+            .filter(completed=False, due_date__range=(date_min, date_max))
+            .prefetch_related('assigned_to')
+            .select_related('milestone__project', 'milestone__project__direction')
+        )
+
+        for s in sub_milestones:
+            days_diff = (s.due_date - today).days
+            if days_diff not in trigger_set:
+                continue
+
+            assignees = list(s.assigned_to.all())
+            if not assignees:
+                skipped += 1
+                continue
+
+            project = s.milestone.project
+            for emp in assignees:
+                if not emp.email:
+                    skipped += 1
+                    continue
+                self.stdout.write(
+                    f"  Sous-étape '{s.name}' (projet {project.name}) "
+                    f"-> {emp.name} <{emp.email}>  J{days_diff:+d}"
+                )
+                if dry_run:
+                    continue
+                ok, msg = notify_due_date_alert(
+                    emp, 'sous-étape', s.name, project.name, s.due_date, days_diff,
+                    project=project,
+                )
+                if ok:
+                    sent += 1
+                else:
+                    errors += 1
+                    self.stdout.write(self.style.WARNING(f"    ECHEC {msg}"))
+
+        suffix = "  (dry-run, aucun email envoye)" if dry_run else ""
         self.stdout.write(self.style.SUCCESS(
-            f"Termine. Envoyes : {sent} | Erreurs : {errors} | Ignores : {skipped}"
-            + (" (dry-run)" if dry_run else "")
+            f"\nTermine.  Envoyes : {sent}  |  Erreurs : {errors}  |  Ignores : {skipped}{suffix}"
         ))

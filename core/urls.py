@@ -9,6 +9,7 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('mot-de-passe-oublie/', views.password_reset_info, name='password_reset_info'),
+    path('mon-compte/mot-de-passe/', views.password_change, name='password_change'),
     
     # Main pages
     path('', views.dashboard, name='dashboard'),
@@ -41,10 +42,12 @@ urlpatterns = [
     # User Management
     path('utilisateurs/', views.users_list, name='users_list'),
     path('utilisateurs/nouveau/', views.user_create, name='user_create'),
+    path('utilisateurs/activer/<uidb64>/<token>/', views.account_activate, name='account_activate'),
     path('utilisateurs/<int:user_id>/modifier/', views.user_edit, name='user_edit'),
     path('utilisateurs/<int:user_id>/supprimer/', views.user_delete, name='user_delete'),
     path('utilisateurs/<int:user_id>/toggle/', views.user_toggle_status, name='user_toggle_status'),
     path('utilisateurs/<int:user_id>/password/', views.user_change_password, name='user_change_password'),
+    path('utilisateurs/<int:user_id>/renvoyer-invitation/', views.resend_invitation, name='resend_invitation'),
     path('utilisateurs/activites/', views.user_activities, name='user_activities'),
     
     # Project CRUD

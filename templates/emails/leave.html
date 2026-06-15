@@ -1,0 +1,44 @@
+{% extends "emails/base_email.html" %}
+{% block content %}
+<p style="margin:0 0 10px;">Bonjour <strong>{{ recipient_name }}</strong>,</p>
+<p style="margin:0 0 18px;color:#374151;">{{ role_label }}</p>
+
+<table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;font-size:14px;">
+  <tr>
+    <td style="padding:8px 10px;color:#6b7280;width:170px;vertical-align:top;">Demandeur</td>
+    <td style="padding:8px 10px;font-weight:bold;">{{ employee_name }}</td>
+  </tr>
+  <tr style="background:#f9fafb;">
+    <td style="padding:8px 10px;color:#6b7280;">Direction / Service</td>
+    <td style="padding:8px 10px;">{{ direction_name }}</td>
+  </tr>
+  <tr>
+    <td style="padding:8px 10px;color:#6b7280;">Type de congé</td>
+    <td style="padding:8px 10px;">{{ type_label }}</td>
+  </tr>
+  <tr style="background:#f9fafb;">
+    <td style="padding:8px 10px;color:#6b7280;">Période</td>
+    <td style="padding:8px 10px;">{{ period }}</td>
+  </tr>
+  <tr>
+    <td style="padding:8px 10px;color:#6b7280;vertical-align:top;">Motif</td>
+    <td style="padding:8px 10px;">{{ reason }}</td>
+  </tr>
+  {% if replacement %}
+  <tr style="background:#f9fafb;">
+    <td style="padding:8px 10px;color:#6b7280;">Suppléant</td>
+    <td style="padding:8px 10px;">{{ replacement }}</td>
+  </tr>
+  {% endif %}
+  <tr>
+    <td style="padding:8px 10px;color:#6b7280;">Statut</td>
+    <td style="padding:8px 10px;">
+      <span style="background:{{ status_color }};color:white;padding:3px 10px;border-radius:4px;font-size:12px;">{{ status_label }}</span>
+    </td>
+  </tr>
+  <tr style="background:#f9fafb;">
+    <td style="padding:8px 10px;color:#6b7280;">Étape</td>
+    <td style="padding:8px 10px;">{{ step_label }}</td>
+  </tr>
+</table>
+{% endblock %}

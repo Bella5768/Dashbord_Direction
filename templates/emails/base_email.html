@@ -1,57 +1,30 @@
-<!DOCTYPE html>
+{% load i18n %}<!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ subject }}</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .header {
-            background-color: #0066cc;
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-        .content {
-            padding: 20px;
-            background-color: #f9f9f9;
-        }
-        .footer {
-            padding: 20px;
-            text-align: center;
-            font-size: 12px;
-            color: #666;
-        }
-        .button {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #0066cc;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            margin: 10px 0;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body>
-    <div class="header">
-        <h1>CSIG - Centre Supérieur d'Informatique et de Gestion</h1>
-    </div>
-    
-    <div class="content">
-        {% block content %}{% endblock %}
-    </div>
-    
-    <div class="footer">
-        <p>Cet email a été envoyé automatiquement. Merci de ne pas y répondre.</p>
-        <p>&copy; {{ "now"|date:"Y" }} CSIG - Guinée</p>
-    </div>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,sans-serif;">
+<div style="max-width:620px;margin:20px auto;">
+
+  <!-- Banner -->
+  <div style="background:{{ banner_color|default:'#1e3a5f' }};color:white;padding:22px 20px;text-align:center;border-radius:8px 8px 0 0;">
+    <img src="cid:csig_logo" alt="CSIG" height="44" style="display:block;margin:0 auto 10px;">
+    <h2 style="margin:0;font-size:18px;letter-spacing:.3px;">{{ banner_title }}</h2>
+    {% if banner_subtitle %}<p style="margin:5px 0 0;font-size:13px;opacity:.9;">{{ banner_subtitle }}</p>{% endif %}
+  </div>
+
+  <!-- Content -->
+  <div style="background:#f9fafb;padding:28px 24px;border:1px solid #e5e7eb;border-top:none;">
+    {% block content %}{% endblock %}
+  </div>
+
+  <!-- Footer -->
+  <div style="background:#f3f4f6;padding:14px 20px;text-align:center;font-size:12px;color:#6b7280;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px;">
+    <p style="margin:0;">© {% now "Y" %} CSIG &ndash; Centre de Suivi et d'Information de Gestion</p>
+    <p style="margin:4px 0 0;font-size:11px;">Email automatique &mdash; merci de ne pas répondre.</p>
+  </div>
+
+</div>
 </body>
 </html>

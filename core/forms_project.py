@@ -352,21 +352,24 @@ class EmployeeForm(forms.ModelForm):
     """Formulaire pour les employés"""
     class Meta:
         model = Employee
-        fields = ['name', 'direction', 'role', 'phone', 'email', 'workload', 'skills']
+        fields = ['name', 'direction', 'role', 'phone', 'email', 'workload', 'skills', 'is_external', 'organization']
         widgets = {
             'workload': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 100}),
             'skills': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Compétences séparées par des virgules'}),
+            'organization': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex : Cabinet XYZ, ONG Alpha…'}),
         }
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
-            if field_name not in ('workload', 'skills'):
+            if field_name not in ('workload', 'skills', 'is_external', 'organization'):
                 field.widget.attrs['class'] = 'form-control'
         self.fields['name'].label = 'Nom complet'
         self.fields['phone'].label = 'Téléphone'
         self.fields['email'].label = 'Email'
         self.fields['direction'].required = False
+        self.fields['organization'].required = False
+        self.fields['email'].required = False
 
         # Restriction : un directeur ne peut creer/modifier que des employes de sa direction
         profile = getattr(user, 'profile', None) if user else None
@@ -376,3 +379,28 @@ class EmployeeForm(forms.ModelForm):
             self.fields['direction'].initial = profile.direction_id
             self.fields['direction'].disabled = True
             self.fields['direction'].help_text = "Verrouillé sur votre direction."
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email', '').strip()
+        if email:
+            qs = Employee.objects.filter(email__iexact=email)
+            if self.instance and self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                other = qs.first()
+                raise forms.ValidationError(f"L'email « {email} » est déjà utilisé par {other.name}.")
+        return email
+
+    def clean(self):
+        cleaned = super().clean()
+        is_external = cleaned.get('is_external', False)
+        organization = cleaned.get('organization', '').strip()
+        email = cleaned.get('email', '').strip()
+
+        if is_external and not organization:
+            self.add_error('organization', "L'organisation est obligatoire pour une personne externe.")
+
+        if not is_external and not email:
+            self.add_error('email', "L'email est obligatoire pour un employé interne (nécessaire pour la création de compte).")
+
+        return cleaned
