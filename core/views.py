@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date as _date
 from django.db import models
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -15,7 +15,7 @@ from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
 from reportlab.pdfgen import canvas
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
-from .models import Direction, Project, Document, Partner, Event, Request, Employee, Budget, UserProfile, UserActivity, ProjectMember, Milestone, ProjectNeed, ProjectComment, ProjectDocument, ProjectFolder, ProjectActivity
+from .models import Direction, Project, Document, Partner, Event, Request, Employee, Budget, UserProfile, UserActivity, ProjectMember, Milestone, SubMilestone, ProjectNeed, ProjectComment, ProjectDocument, ProjectFolder, ProjectActivity
 
 
 def log_project_activity(project, action, description, user):
@@ -29,11 +29,119 @@ def log_project_activity(project, action, description, user):
     )
 
 
+_AVATAR_COLORS = [
+    '#2a4a6f',  # --primary-500
+    '#16a34a',  # --green-600
+    '#d97706',  # --amber-600
+    '#dc2626',  # --red-600
+    '#9333ea',  # --purple-600
+    '#1c3550',  # --primary-700
+    '#15803d',  # --green-700
+    '#b45309',  # --amber-700
+    '#b91c1c',  # --red-700
+    '#7c3aed',  # --purple-700
+]
+
+
+def _get_project_member_cards(project):
+    """Return (project_members, other_employees) as lists of card dicts for the assignment picker."""
+    member_pks = set(
+        project.members.filter(employee__isnull=False).values_list('employee_id', flat=True)
+    )
+    pm_roles = {
+        pm.employee_id: pm.get_role_display()
+        for pm in project.members.filter(employee__isnull=False)
+    }
+    m_counts = dict(
+        Employee.objects.filter(assigned_milestones__project=project)
+        .values('id').annotate(n=Count('assigned_milestones', distinct=True))
+        .values_list('id', 'n')
+    )
+    s_counts = dict(
+        Employee.objects.filter(assigned_sub_milestones__milestone__project=project)
+        .values('id').annotate(n=Count('assigned_sub_milestones', distinct=True))
+        .values_list('id', 'n')
+    )
+    all_emps = list(Employee.objects.select_related('direction').order_by('name'))
+    members, others = [], []
+    for emp in all_emps:
+        parts = emp.name.split()
+        initials = parts[0][0].upper() if parts else '?'
+        if len(parts) > 1:
+            initials += parts[-1][0].upper()
+        card = {
+            'id': emp.id,
+            'name': emp.name,
+            'job_role': emp.role,
+            'project_role': pm_roles.get(emp.id, ''),
+            'direction': emp.direction.code if emp.direction else (emp.organization or ''),
+            'task_count': m_counts.get(emp.id, 0) + s_counts.get(emp.id, 0),
+            'initials': initials,
+            'color': _AVATAR_COLORS[sum(ord(c) for c in emp.name) % len(_AVATAR_COLORS)],
+            'is_external': emp.is_external,
+        }
+        if emp.id in member_pks:
+            members.append(card)
+        else:
+            others.append(card)
+    return members, others
+
+
+def _user_is_assignee(user, assigned_m2m):
+    """Vérifie si l'utilisateur connecté est parmi les responsables d'une tâche (M2M)."""
+    profile_employee = getattr(getattr(user, 'profile', None), 'employee', None)
+    if not profile_employee:
+        return False
+    try:
+        return assigned_m2m.filter(pk=profile_employee.pk).exists()
+    except Exception:
+        return False
+
+
+def get_accessible_projects_qs(user):
+    """Retourne le queryset de base des projets accessibles selon le rôle de l'utilisateur."""
+    from django.db.models import Q
+    profile = user.profile
+    qs = Project.objects.select_related('direction')
+    if profile.is_directeur_general() or user.is_staff:
+        return qs
+    if profile.role == 'directeur':
+        if profile.direction_id:
+            return qs.filter(direction_id=profile.direction_id)
+        return qs.none()
+
+    employee_id = getattr(profile, 'employee_id', None)
+
+    # External users: only see projects where they are a ProjectMember
+    if employee_id:
+        try:
+            emp = profile.employee
+            if emp and emp.is_external:
+                return qs.filter(members__employee_id=employee_id).distinct()
+        except Exception:
+            pass
+
+    # Build membership filter using employee FK (no name fallback)
+    if employee_id:
+        member_q = Q(members__employee_id=employee_id)
+        manager_q = Q(manager_employee_id=employee_id)
+    else:
+        user_name = user.get_full_name() or user.username
+        member_q = Q(members__employee__name__iexact=user_name)
+        manager_q = Q(manager__icontains=user_name)
+
+    return qs.filter(manager_q | member_q).distinct()
+
+
 def login_view(request):
     """Vue de connexion"""
     if request.user.is_authenticated:
         return redirect('core:dashboard')
-    
+
+    if request.method == 'GET':
+        storage = messages.get_messages(request)
+        list(storage)
+
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
@@ -42,7 +150,11 @@ def login_view(request):
         if user is not None:
             if user.is_active:
                 login(request, user)
-                messages.success(request, f'Bienvenue, {user.get_full_name() or user.username}!')
+                UserActivity.objects.create(
+                    user=user, action='login',
+                    ip_address=request.META.get('REMOTE_ADDR'),
+                    user_agent=request.META.get('HTTP_USER_AGENT', ''),
+                )
                 next_url = request.GET.get('next', 'core:dashboard')
                 return redirect(next_url)
             else:
@@ -53,11 +165,18 @@ def login_view(request):
     return render(request, 'registration/login.html')
 
 
+@login_required
 def logout_view(request):
     """Vue de déconnexion"""
-    logout(request)
-    messages.success(request, 'Vous avez été déconnecté avec succès.')
-    return redirect('core:login')
+    if request.method == 'POST':
+        if request.user.is_authenticated:
+            UserActivity.objects.create(
+                user=request.user, action='logout',
+                ip_address=request.META.get('REMOTE_ADDR'),
+            )
+        logout(request)
+        return redirect(reverse('core:login') + '?logout=1')
+    return redirect('core:dashboard')
 
 
 def password_reset_info(request):
@@ -161,19 +280,7 @@ def dashboard(request):
     active_partners = Partner.objects.filter(status='actif').count()
     
     # Projets en cours (filtrés par permissions)
-    if request.user.profile.is_directeur_general() or request.user.is_staff:
-        active_projects = Project.objects.filter(status='en_cours').select_related('direction')[:4]
-    else:
-        user_name = request.user.get_full_name() or request.user.username
-        employee_id = getattr(request.user.profile, 'employee_id', None)
-        member_q = (
-            Q(members__employee_id=employee_id)
-            if employee_id
-            else Q(members__employee__name__iexact=user_name) | Q(members__employee__name__icontains=request.user.username)
-        )
-        active_projects = Project.objects.filter(
-            Q(manager__icontains=user_name) | member_q, status='en_cours'
-        ).select_related('direction').distinct()[:4]
+    active_projects = get_accessible_projects_qs(request.user).filter(status='en_cours')[:3]
     
     # Documents en attente
     pending_docs = Document.objects.exclude(status='signe').select_related('direction')[:4]
@@ -255,35 +362,14 @@ def projects(request):
     direction_filter = request.GET.get('direction', 'all')
     search = request.GET.get('search', '')
 
-    projects_qs = Project.objects.select_related('direction').prefetch_related('milestones')
-    profile = request.user.profile
+    base_qs = get_accessible_projects_qs(request.user)
+    projects_qs = base_qs.prefetch_related('milestones')
 
-    # Permission filtering
-    if profile.is_directeur_general() or request.user.is_staff:
-        # DG et admin voient tous les projets
-        pass
-    elif profile.role == 'directeur':
-        # Directeur : uniquement les projets de sa direction
-        if profile.direction_id:
-            projects_qs = projects_qs.filter(direction_id=profile.direction_id)
-        else:
-            projects_qs = projects_qs.none()
-    else:
-        # Chef de projet et autres : seulement les projets où ils sont manager OU membres
-        from django.db.models import Q
+    today = _date.today()
 
-        user_name = request.user.get_full_name() or request.user.username
-        employee_id = getattr(profile, 'employee_id', None)
-
-        member_q = (
-            Q(members__employee_id=employee_id)
-            if employee_id
-            else Q(members__employee__name__iexact=user_name) | Q(members__employee__name__icontains=request.user.username)
-        )
-
-        projects_qs = projects_qs.filter(Q(manager__icontains=user_name) | member_q).distinct()
-
-    if status_filter != 'all':
+    if status_filter == 'en_retard':
+        projects_qs = projects_qs.filter(status__in=['planifie', 'en_cours'], end_date__lt=today)
+    elif status_filter != 'all':
         projects_qs = projects_qs.filter(status=status_filter)
     if direction_filter != 'all':
         projects_qs = projects_qs.filter(direction__code=direction_filter)
@@ -292,29 +378,13 @@ def projects(request):
 
     directions = Direction.objects.all()
 
-    # Stats filtered by permissions (même logique que le filtrage principal)
-    if profile.is_directeur_general() or request.user.is_staff:
-        base_qs = Project.objects.all()
-    elif profile.role == 'directeur':
-        if profile.direction_id:
-            base_qs = Project.objects.filter(direction_id=profile.direction_id)
-        else:
-            base_qs = Project.objects.none()
-    else:
-        from django.db.models import Q
-        user_name = request.user.get_full_name() or request.user.username
-        employee_id = getattr(profile, 'employee_id', None)
-        member_q = (
-            Q(members__employee_id=employee_id)
-            if employee_id
-            else Q(members__employee__name__iexact=user_name) | Q(members__employee__name__icontains=request.user.username)
-        )
-        base_qs = Project.objects.filter(Q(manager__icontains=user_name) | member_q).distinct()
     stats = {
         'total': base_qs.count(),
         'en_cours': base_qs.filter(status='en_cours').count(),
         'termine': base_qs.filter(status='termine').count(),
         'planifie': base_qs.filter(status='planifie').count(),
+        'suspendu': base_qs.filter(status='suspendu').count(),
+        'en_retard': base_qs.filter(status__in=['planifie', 'en_cours'], end_date__lt=today).count(),
     }
 
     context = {
@@ -394,6 +464,11 @@ def resources(request):
     
     directions = Direction.objects.all()
     
+    # Employees linked to a user account (for badge display in template)
+    employees_with_profile = set(
+        UserProfile.objects.filter(employee__isnull=False).values_list('employee_id', flat=True)
+    )
+
     context = {
         'tab': tab,
         'budgets': budgets,
@@ -408,6 +483,7 @@ def resources(request):
         'avg_workload': round(avg_workload),
         'overloaded': overloaded,
         'directions': directions,
+        'employees_with_profile': employees_with_profile,
     }
     return render(request, 'core/resources.html', context)
 
@@ -569,7 +645,11 @@ def calendar(request):
 def event_create(request):
     """Créer un événement"""
     from .forms import EventForm
-    
+
+    if not request.user.profile.has_create_events_permission():
+        messages.error(request, "Permission insuffisante pour gérer les événements.")
+        return redirect('core:calendar')
+
     if request.method == 'POST':
         form = EventForm(request.POST)
         if form.is_valid():
@@ -591,7 +671,11 @@ def event_create(request):
 def event_edit(request, event_id):
     """Modifier un événement"""
     from .forms import EventForm
-    
+
+    if not request.user.profile.has_create_events_permission():
+        messages.error(request, "Permission insuffisante pour gérer les événements.")
+        return redirect('core:calendar')
+
     event = get_object_or_404(Event, pk=event_id)
     
     if request.method == 'POST':
@@ -609,6 +693,10 @@ def event_edit(request, event_id):
 @login_required
 def event_delete(request, event_id):
     """Supprimer un événement"""
+    if not request.user.profile.has_create_events_permission():
+        messages.error(request, "Permission insuffisante pour gérer les événements.")
+        return redirect('core:calendar')
+
     event = get_object_or_404(Event, pk=event_id)
     
     if request.method == 'POST':
@@ -621,9 +709,9 @@ def event_delete(request, event_id):
 
 @login_required
 def reports(request):
-    """Vue des rapports - Réservée au Directeur Général"""
-    if not (request.user.profile.is_directeur_general() or request.user.is_staff):
-        messages.error(request, "Cette section est réservée au Directeur Général.")
+    """Vue des rapports"""
+    if not request.user.profile.can_view_reports():
+        messages.error(request, "Accès insuffisant pour consulter les rapports.")
         return redirect('core:dashboard')
     
     # Projets par direction
@@ -680,7 +768,9 @@ def reports(request):
             })
     
     # Performance par projet
-    projects_en_retard = Project.objects.filter(status='en_retard').count()
+    projects_en_retard = Project.objects.filter(
+        status__in=['planifie', 'en_cours'], end_date__lt=_date.today()
+    ).count()
     projects_en_cours = Project.objects.filter(status='en_cours').count()
     avg_progress = all_projects.aggregate(avg=Avg('progress'))['avg'] or 0
     
@@ -710,6 +800,9 @@ def reports(request):
 @login_required
 def export_employees_pdf(request):
     """Exporter la liste des employés en PDF"""
+    if not request.user.profile.is_directeur():
+        messages.error(request, "Accès réservé aux directeurs et administrateurs.")
+        return redirect('core:resources')
     employees = Employee.objects.select_related('direction').all()
     
     response = HttpResponse(content_type='application/pdf')
@@ -1174,7 +1267,7 @@ def users_list(request):
     role_filter = request.GET.get('role', 'all')
     status_filter = request.GET.get('status', 'all')
     
-    users = User.objects.select_related('profile').all()
+    users = User.objects.select_related('profile', 'profile__employee', 'profile__direction').all()
     
     if search:
         users = users.filter(
@@ -1218,16 +1311,59 @@ def users_list(request):
 def user_create(request):
     """Créer un nouvel utilisateur"""
     from .forms import UserCreateForm
-    
+
     if not request.user.profile.has_manage_users_permission():
         messages.error(request, "Vous n'avez pas les permissions pour créer des utilisateurs.")
         return redirect('core:dashboard')
-    
+
+    # Pre-fill from ?employee_id= query param
+    employee_id = request.GET.get('employee_id')
+    initial = {}
+    if employee_id:
+        try:
+            emp = Employee.objects.select_related('direction').get(pk=employee_id)
+            initial['employee'] = emp
+            name_parts = emp.name.split()
+            initial['first_name'] = name_parts[0] if name_parts else ''
+            initial['last_name'] = ' '.join(name_parts[1:]) if len(name_parts) > 1 else ''
+            initial['email'] = emp.email or ''
+            initial['phone'] = emp.phone or ''
+            initial['direction'] = emp.direction_id
+            initial['role'] = 'visiteur' if emp.is_external else 'employe'
+        except Employee.DoesNotExist:
+            pass
+
     if request.method == 'POST':
         form = UserCreateForm(request.POST)
+        employee_mode = request.POST.get('employee_mode', 'existing')
+        new_employee = None
+
+        if employee_mode == 'new':
+            new_emp_role = request.POST.get('new_emp_role', '').strip()
+            new_emp_is_external = request.POST.get('new_emp_is_external') == 'on'
+            new_emp_organization = request.POST.get('new_emp_organization', '').strip()
+
         if form.is_valid():
+            # Handle inline employee creation
+            if employee_mode == 'new':
+                # Dériver nom et direction depuis les champs du formulaire principal
+                first = form.cleaned_data.get('first_name', '').strip()
+                last = form.cleaned_data.get('last_name', '').strip()
+                new_emp_name = f"{first} {last}".strip() or form.cleaned_data.get('username', '')
+                direction = form.cleaned_data.get('direction')
+                new_employee = Employee.objects.create(
+                    name=new_emp_name,
+                    direction=direction,
+                    role=new_emp_role,
+                    is_external=new_emp_is_external,
+                    organization=new_emp_organization if new_emp_is_external else '',
+                    email=form.cleaned_data.get('email', ''),
+                )
+                # Inject into form so the profile's employee field gets set
+                form.cleaned_data['employee'] = new_employee
+
             user = form.save()
-            
+
             # Log activity
             UserActivity.objects.create(
                 user=request.user,
@@ -1236,15 +1372,45 @@ def user_create(request):
                 ip_address=get_client_ip(request),
                 user_agent=request.META.get('HTTP_USER_AGENT', '')[:500]
             )
-            
+
             messages.success(request, f"L'utilisateur {user.username} a été créé avec succès.")
             return redirect('core:users_list')
+        else:
+            # form invalid — pass back employee_mode and name error if any
+            employees_without_user = Employee.objects.filter(user_profile__isnull=True).count()
+            return render(request, 'core/users/form.html', {
+                'form': form,
+                'title': 'Nouvel utilisateur',
+                'employees_without_user': employees_without_user,
+                'employee_mode': employee_mode,
+            })
     else:
-        form = UserCreateForm()
-    
+        form = UserCreateForm(initial=initial)
+
+    employees_without_user = Employee.objects.filter(user_profile__isnull=True).count()
+    employee_mode = 'existing'
+
+    # JSON des données employés pour auto-remplissage côté JS
+    import json
+    emp_qs = form.fields['employee'].queryset.select_related('direction')
+    employees_data_json = json.dumps({
+        str(e.id): {
+            'first_name': e.name.split()[0] if e.name else '',
+            'last_name': ' '.join(e.name.split()[1:]) if e.name and len(e.name.split()) > 1 else '',
+            'email': e.email or '',
+            'phone': e.phone or '',
+            'direction': str(e.direction_id) if e.direction_id else '',
+            'role': 'visiteur' if e.is_external else 'employe',
+        }
+        for e in emp_qs
+    })
+
     context = {
         'form': form,
         'title': 'Nouvel utilisateur',
+        'employees_without_user': employees_without_user,
+        'employee_mode': employee_mode,
+        'employees_data_json': employees_data_json,
     }
     return render(request, 'core/users/form.html', context)
 
@@ -1417,26 +1583,64 @@ def project_detail(request, project_id):
         pk=project_id,
     )
 
-    # Nouveau système de permissions basé sur les rôles des membres
-    can_manage_members = request.user.profile.can_manage_project_members(project)
-    can_perform_actions = request.user.profile.can_perform_actions_as_member(project)
-    is_readonly = request.user.profile.is_project_readonly(project)
-    can_edit_project = request.user.profile.can_edit_project(project)
-    can_add_milestones = request.user.profile.can_add_project_milestones(project)
-    can_add_documents = request.user.profile.can_add_project_documents(project)
-
-    # Permission check
     if not request.user.profile.can_view_project(project):
         messages.error(request, "Vous n'avez pas accès à ce projet.")
         return redirect('core:projects')
 
+    profile = request.user.profile
+    can_manage_members = profile.can_manage_project_members(project)
+    can_perform_actions = profile.can_perform_actions_as_member(project)
+    is_readonly = profile.is_project_readonly(project)
+    can_edit_project = profile.can_edit_project(project)
+    can_add_milestones = profile.can_add_project_milestones(project)
+    can_add_documents = profile.can_add_project_documents(project)
+    user_employee = profile.employee
+
+    # Statistiques de charge par membre : {employee_id: {'total': n, 'done': n}}
+    from django.db.models import Count, Q as Qm
+    milestones_qs = project.milestones.prefetch_related('assigned_to', 'sub_milestones__assigned_to').all()
+    member_task_stats = {}
+    for m in milestones_qs:
+        for emp in m.assigned_to.all():
+            s = member_task_stats.setdefault(emp.id, {'total': 0, 'done': 0})
+            s['total'] += 1
+            if m.completed:
+                s['done'] += 1
+        for sub in m.sub_milestones.all():
+            for emp in sub.assigned_to.all():
+                s = member_task_stats.setdefault(emp.id, {'total': 0, 'done': 0})
+                s['total'] += 1
+                if sub.completed:
+                    s['done'] += 1
+
+    # Build member cards for inline quick-assign (only project members)
+    members_cards = []
+    for pm in project.members.select_related('employee', 'employee__direction').filter(employee__isnull=False):
+        emp = pm.employee
+        parts = emp.name.split()
+        initials = parts[0][0].upper() if parts else '?'
+        if len(parts) > 1:
+            initials += parts[-1][0].upper()
+        task_info = member_task_stats.get(emp.id, {'total': 0, 'done': 0})
+        members_cards.append({
+            'id': emp.id,
+            'name': emp.name,
+            'job_role': emp.role,
+            'project_role': pm.get_role_display(),
+            'direction': emp.direction.code if emp.direction else '',
+            'task_count': task_info['total'],
+            'task_done': task_info['done'],
+            'initials': initials,
+            'color': _AVATAR_COLORS[sum(ord(c) for c in emp.name) % len(_AVATAR_COLORS)],
+        })
+
     context = {
         'project': project,
-        'milestones': project.milestones.all(),
+        'milestones': milestones_qs,
         'needs': project.needs.all(),
         'comments': project.comments.all(),
         'activities': project.activities.all()[:20],
-        'members': project.members.all(),
+        'members': project.members.select_related('employee').all(),
         'documents': project.project_documents.all(),
         'can_manage_members': can_manage_members,
         'can_perform_actions': can_perform_actions,
@@ -1444,6 +1648,9 @@ def project_detail(request, project_id):
         'can_edit_project': can_edit_project,
         'can_add_milestones': can_add_milestones,
         'can_add_documents': can_add_documents,
+        'user_employee': user_employee,
+        'member_task_stats': member_task_stats,
+        'members_cards': members_cards,
     }
     return render(request, 'core/project_detail.html', context)
 
@@ -1452,6 +1659,9 @@ def project_detail(request, project_id):
 def export_project_activities(request, project_id):
     """Exporter le journal d'activité d'un projet en PDF"""
     project = get_object_or_404(Project, pk=project_id)
+    if not request.user.profile.can_view_project(project):
+        messages.error(request, "Vous n'avez pas accès à ce projet.")
+        return redirect('core:projects')
     activities = project.activities.all()
     
     # Créer le PDF
@@ -1529,8 +1739,7 @@ def project_need_create(request, project_id):
 
     project = get_object_or_404(Project, pk=project_id)
 
-    # Permission check - utiliser le nouveau système basé sur les rôles
-    if not request.user.profile.can_perform_actions_as_member(project):
+    if not request.user.profile.can_add_project_needs(project):
         messages.error(request, "Vous n'avez pas les permissions pour ajouter des besoins à ce projet.")
         return redirect('core:project_detail', project_id=project.id)
 
@@ -1557,8 +1766,7 @@ def project_comment_create(request, project_id):
 
     project = get_object_or_404(Project, pk=project_id)
 
-    # Permission check - utiliser le nouveau système basé sur les rôles
-    if not request.user.profile.can_perform_actions_as_member(project):
+    if not request.user.profile.can_add_project_comments(project):
         messages.error(request, "Vous n'avez pas les permissions pour ajouter des commentaires à ce projet.")
         return redirect('core:project_detail', project_id=project.id)
 
@@ -1589,13 +1797,18 @@ def project_create(request):
     if request.method == 'POST':
         form = ProjectForm(request.POST)
         if form.is_valid():
-            project = form.save()
+            project = form.save(commit=False)
+            # Sync manager string from manager_employee FK
+            if project.manager_employee:
+                project.manager = project.manager_employee.name
+            project.save()
+            form.save_m2m()
             log_project_activity(project, 'creation', f"Création du projet '{project.name}'", request.user)
             messages.success(request, "Projet créé avec succès.")
             return redirect('core:project_detail', project_id=project.id)
     else:
         form = ProjectForm()
-    
+
     return render(request, 'core/project_form.html', {'form': form, 'title': 'Nouveau projet'})
 
 
@@ -1605,22 +1818,34 @@ def project_edit(request, project_id):
     from .forms_project import ProjectForm
     
     project = get_object_or_404(Project, pk=project_id)
-    
+
     # Vérifier les permissions
     if not request.user.profile.can_edit_project(project):
         messages.error(request, "Vous n'avez pas les permissions pour modifier ce projet.")
         return redirect('core:projects')
-    
+
+    # Migration silencieuse : sync manager_employee depuis le string manager si FK est vide
+    if project.manager and not project.manager_employee_id:
+        emp = Employee.objects.filter(name__iexact=project.manager.strip(), is_external=False).first()
+        if emp:
+            project.manager_employee = emp
+            project.save(update_fields=['manager_employee'])
+
     if request.method == 'POST':
         form = ProjectForm(request.POST, instance=project)
         if form.is_valid():
-            form.save()
-            log_project_activity(project, 'modification', f"Modification des informations du projet", request.user)
+            project = form.save(commit=False)
+            # Sync manager string from manager_employee FK
+            if project.manager_employee:
+                project.manager = project.manager_employee.name
+            project.save()
+            form.save_m2m()
+            log_project_activity(project, 'modification', "Modification des informations du projet", request.user)
             messages.success(request, "Projet modifié avec succès.")
             return redirect('core:project_detail', project_id=project.id)
     else:
         form = ProjectForm(instance=project)
-    
+
     return render(request, 'core/project_form.html', {'form': form, 'project': project, 'title': f'Modifier {project.name}'})
 
 
@@ -1645,6 +1870,39 @@ def project_delete(request, project_id):
 # ==================== MILESTONE CRUD ====================
 
 @login_required
+def milestone_detail(request, milestone_id):
+    """Vue détail d'un jalon"""
+    milestone = get_object_or_404(
+        Milestone.objects.select_related('project', 'project__direction', 'assigned_by')
+                         .prefetch_related('assigned_to', 'sub_milestones__assigned_to'),
+        pk=milestone_id,
+    )
+    project = milestone.project
+
+    if not request.user.profile.can_view_project(project):
+        messages.error(request, "Vous n'avez pas accès à ce projet.")
+        return redirect('core:projects')
+
+    profile = request.user.profile
+    can_edit    = profile.can_add_project_milestones(project)
+    user_employee = profile.employee
+
+    sub_milestones = milestone.sub_milestones.prefetch_related('assigned_to').all()
+    sub_total      = sub_milestones.count()
+    sub_done       = sub_milestones.filter(completed=True).count()
+
+    return render(request, 'core/milestone_detail.html', {
+        'milestone':      milestone,
+        'project':        project,
+        'can_edit':       can_edit,
+        'user_employee':  user_employee,
+        'sub_milestones': sub_milestones,
+        'sub_total':      sub_total,
+        'sub_done':       sub_done,
+    })
+
+
+@login_required
 def milestone_create(request, project_id):
     """Créer un jalon pour un projet"""
     from .forms_project import MilestoneForm
@@ -1661,25 +1919,31 @@ def milestone_create(request, project_id):
         if form.is_valid():
             milestone = form.save(commit=False)
             milestone.project = project
-            if milestone.assigned_to:
-                milestone.assigned_by = request.user
             milestone.save()
-            log_project_activity(project, 'ajout_jalon', f"Ajout du jalon '{milestone.name}'", request.user)
-            # Notification email au responsable + chef de projet en CC
-            if milestone.assigned_to:
+            assigned_ids = request.POST.getlist('assigned_to')
+            assigned_emps = list(Employee.objects.filter(pk__in=assigned_ids)) if assigned_ids else []
+            if assigned_emps:
+                milestone.assigned_to.set(assigned_emps)
+                milestone.assigned_by = request.user
+                milestone.save(update_fields=['assigned_by'])
                 from .notifications import notify_assignment
-                assigned_by = request.user.get_full_name() or request.user.username
-                success, msg = notify_assignment(milestone.assigned_to, 'jalon', milestone.name, project.name, assigned_by, project=project, due_date=milestone.due_date)
-                if success:
-                    messages.info(request, msg)
-                else:
-                    messages.warning(request, f"Jalon créé mais notification email échouée : {msg}")
+                assigned_by_name = request.user.get_full_name() or request.user.username
+                for emp in assigned_emps:
+                    success, msg = notify_assignment(emp, 'jalon', milestone.name, project.name, assigned_by_name, project=project, due_date=milestone.due_date)
+                    if success:
+                        messages.info(request, msg)
+            log_project_activity(project, 'ajout_jalon', f"Ajout du jalon '{milestone.name}'", request.user)
             messages.success(request, "Jalon créé avec succès.")
             return redirect('core:project_detail', project_id=project.id)
     else:
         form = MilestoneForm(project=project)
-    
-    return render(request, 'core/milestone_form.html', {'form': form, 'project': project, 'title': 'Nouveau jalon'})
+
+    project_members, other_employees = _get_project_member_cards(project)
+    return render(request, 'core/milestone_form.html', {
+        'form': form, 'project': project, 'title': 'Nouveau jalon',
+        'project_members': project_members, 'other_employees': other_employees,
+        'initial_assignee_ids': [],
+    })
 
 
 @login_required
@@ -1695,38 +1959,46 @@ def milestone_edit(request, milestone_id):
         messages.error(request, "Vous n'avez pas les permissions pour modifier ce jalon.")
         return redirect('core:projects')
     
-    old_assigned = milestone.assigned_to_id
+    old_assigned_ids = set(milestone.assigned_to.values_list('id', flat=True))
     was_completed = milestone.completed
     if request.method == 'POST':
         form = MilestoneForm(project=project, data=request.POST, instance=milestone)
         if form.is_valid():
             milestone = form.save(commit=False)
-            if milestone.assigned_to and milestone.assigned_to_id != old_assigned:
-                milestone.assigned_by = request.user
             milestone.save()
-            log_project_activity(project, 'modif_jalon', f"Modification du jalon '{milestone.name}'", request.user)
-            # Notification email si le responsable a changé (chef de projet en CC)
-            if milestone.assigned_to and milestone.assigned_to_id != old_assigned:
+            assigned_ids = request.POST.getlist('assigned_to')
+            assigned_emps = list(Employee.objects.filter(pk__in=assigned_ids)) if assigned_ids else []
+            milestone.assigned_to.set(assigned_emps)
+            new_assigned_ids = {emp.id for emp in assigned_emps}
+            newly_added_ids = new_assigned_ids - old_assigned_ids
+            if newly_added_ids:
+                milestone.assigned_by = request.user
+                milestone.save(update_fields=['assigned_by'])
                 from .notifications import notify_assignment
-                assigned_by = request.user.get_full_name() or request.user.username
-                success, msg = notify_assignment(milestone.assigned_to, 'jalon', milestone.name, project.name, assigned_by, project=project, due_date=milestone.due_date)
-                if success:
-                    messages.info(request, msg)
-                else:
-                    messages.warning(request, f"Jalon modifié mais notification email échouée : {msg}")
+                assigned_by_name = request.user.get_full_name() or request.user.username
+                for emp in assigned_emps:
+                    if emp.id in newly_added_ids:
+                        success, msg = notify_assignment(emp, 'jalon', milestone.name, project.name, assigned_by_name, project=project, due_date=milestone.due_date)
+                        if success:
+                            messages.info(request, msg)
             if milestone.completed and not was_completed:
                 from .notifications import notify_task_completed
-                success, msg = notify_task_completed('jalon', milestone.name, project, milestone.assigned_to, milestone.assigned_by, request.user)
-                if success:
-                    messages.info(request, msg)
-                else:
-                    messages.warning(request, f"Jalon terminé mais notification email échouée : {msg}")
+                for emp in assigned_emps:
+                    notify_task_completed('jalon', milestone.name, project, emp, milestone.assigned_by, request.user)
+            log_project_activity(project, 'modif_jalon', f"Modification du jalon '{milestone.name}'", request.user)
             messages.success(request, "Jalon modifié avec succès.")
             return redirect('core:project_detail', project_id=project.id)
     else:
         form = MilestoneForm(project=project, instance=milestone)
-    
-    return render(request, 'core/milestone_form.html', {'form': form, 'project': project, 'milestone': milestone, 'title': f'Modifier {milestone.name}'})
+
+    project_members, other_employees = _get_project_member_cards(project)
+    initial_assignee_ids = list(old_assigned_ids)
+    return render(request, 'core/milestone_form.html', {
+        'form': form, 'project': project, 'milestone': milestone,
+        'title': f'Modifier {milestone.name}',
+        'project_members': project_members, 'other_employees': other_employees,
+        'initial_assignee_ids': initial_assignee_ids,
+    })
 
 
 @login_required
@@ -1771,29 +2043,31 @@ def sub_milestone_create(request, milestone_id):
         if form.is_valid():
             sub_milestone = form.save(commit=False)
             sub_milestone.milestone = milestone
-            if sub_milestone.assigned_to:
-                sub_milestone.assigned_by = request.user
             sub_milestone.save()
-            log_project_activity(project, 'ajout_sous_etape', f"Ajout de la sous-étape '{sub_milestone.name}' au jalon '{milestone.name}'", request.user)
-            # Notification email au responsable + chef de projet en CC
-            if sub_milestone.assigned_to:
+            assigned_ids = request.POST.getlist('assigned_to')
+            assigned_emps = list(Employee.objects.filter(pk__in=assigned_ids)) if assigned_ids else []
+            if assigned_emps:
+                sub_milestone.assigned_to.set(assigned_emps)
+                sub_milestone.assigned_by = request.user
+                sub_milestone.save(update_fields=['assigned_by'])
                 from .notifications import notify_assignment
-                assigned_by = request.user.get_full_name() or request.user.username
-                success, msg = notify_assignment(sub_milestone.assigned_to, 'sous-étape', sub_milestone.name, project.name, assigned_by, project=project, due_date=sub_milestone.due_date)
-                if success:
-                    messages.info(request, msg)
-                else:
-                    messages.warning(request, f"Sous-étape créée mais notification email échouée : {msg}")
+                assigned_by_name = request.user.get_full_name() or request.user.username
+                for emp in assigned_emps:
+                    success, msg = notify_assignment(emp, 'sous-étape', sub_milestone.name, project.name, assigned_by_name, project=project, due_date=sub_milestone.due_date)
+                    if success:
+                        messages.info(request, msg)
+            log_project_activity(project, 'ajout_sous_etape', f"Ajout de la sous-étape '{sub_milestone.name}' au jalon '{milestone.name}'", request.user)
             messages.success(request, "Sous-étape ajoutée avec succès.")
             return redirect('core:project_detail', project_id=project.id)
     else:
         form = SubMilestoneForm(milestone=milestone)
-    
+
+    project_members, other_employees = _get_project_member_cards(project)
     return render(request, 'core/sub_milestone_form.html', {
-        'form': form, 
-        'milestone': milestone, 
-        'project': project, 
-        'title': f'Nouvelle sous-étape pour "{milestone.name}"'
+        'form': form, 'milestone': milestone, 'project': project,
+        'title': f'Nouvelle sous-étape pour "{milestone.name}"',
+        'project_members': project_members, 'other_employees': other_employees,
+        'initial_assignee_ids': [],
     })
 
 
@@ -1812,43 +2086,45 @@ def sub_milestone_edit(request, sub_milestone_id):
         messages.error(request, "Vous n'avez pas les permissions pour modifier cette sous-étape.")
         return redirect('core:project_detail', project_id=project.id)
     
-    old_assigned = sub_milestone.assigned_to_id
+    old_assigned_ids = set(sub_milestone.assigned_to.values_list('id', flat=True))
     was_completed = sub_milestone.completed
     if request.method == 'POST':
         form = SubMilestoneForm(milestone=milestone, data=request.POST, instance=sub_milestone)
         if form.is_valid():
             sub_milestone = form.save(commit=False)
-            if sub_milestone.assigned_to and sub_milestone.assigned_to_id != old_assigned:
-                sub_milestone.assigned_by = request.user
             sub_milestone.save()
-            log_project_activity(project, 'modif_sous_etape', f"Modification de la sous-étape '{sub_milestone.name}'", request.user)
-            # Notification email si le responsable a changé (chef de projet en CC)
-            if sub_milestone.assigned_to and sub_milestone.assigned_to_id != old_assigned:
+            assigned_ids = request.POST.getlist('assigned_to')
+            assigned_emps = list(Employee.objects.filter(pk__in=assigned_ids)) if assigned_ids else []
+            sub_milestone.assigned_to.set(assigned_emps)
+            new_assigned_ids = {emp.id for emp in assigned_emps}
+            newly_added_ids = new_assigned_ids - old_assigned_ids
+            if newly_added_ids:
+                sub_milestone.assigned_by = request.user
+                sub_milestone.save(update_fields=['assigned_by'])
                 from .notifications import notify_assignment
-                assigned_by = request.user.get_full_name() or request.user.username
-                success, msg = notify_assignment(sub_milestone.assigned_to, 'sous-étape', sub_milestone.name, project.name, assigned_by, project=project, due_date=sub_milestone.due_date)
-                if success:
-                    messages.info(request, msg)
-                else:
-                    messages.warning(request, f"Sous-étape modifiée mais notification email échouée : {msg}")
+                assigned_by_name = request.user.get_full_name() or request.user.username
+                for emp in assigned_emps:
+                    if emp.id in newly_added_ids:
+                        success, msg = notify_assignment(emp, 'sous-étape', sub_milestone.name, project.name, assigned_by_name, project=project, due_date=sub_milestone.due_date)
+                        if success:
+                            messages.info(request, msg)
             if sub_milestone.completed and not was_completed:
                 from .notifications import notify_task_completed
-                success, msg = notify_task_completed('sous-étape', sub_milestone.name, project, sub_milestone.assigned_to, sub_milestone.assigned_by, request.user)
-                if success:
-                    messages.info(request, msg)
-                else:
-                    messages.warning(request, f"Sous-étape terminée mais notification email échouée : {msg}")
+                for emp in assigned_emps:
+                    notify_task_completed('sous-étape', sub_milestone.name, project, emp, sub_milestone.assigned_by, request.user)
+            log_project_activity(project, 'modif_sous_etape', f"Modification de la sous-étape '{sub_milestone.name}'", request.user)
             messages.success(request, "Sous-étape modifiée avec succès.")
             return redirect('core:project_detail', project_id=project.id)
     else:
         form = SubMilestoneForm(milestone=milestone, instance=sub_milestone)
-    
+
+    project_members, other_employees = _get_project_member_cards(project)
+    initial_assignee_ids = list(old_assigned_ids)
     return render(request, 'core/sub_milestone_form.html', {
-        'form': form, 
-        'milestone': milestone, 
-        'project': project, 
-        'sub_milestone': sub_milestone,
-        'title': f'Modifier "{sub_milestone.name}"'
+        'form': form, 'milestone': milestone, 'project': project,
+        'sub_milestone': sub_milestone, 'title': f'Modifier "{sub_milestone.name}"',
+        'project_members': project_members, 'other_employees': other_employees,
+        'initial_assignee_ids': initial_assignee_ids,
     })
 
 
@@ -1869,8 +2145,6 @@ def sub_milestone_delete(request, sub_milestone_id):
     if request.method == 'POST':
         sub_name = sub_milestone.name
         sub_milestone.delete()
-        milestone.update_completion()
-        project.recalculate_progress()
         log_project_activity(project, 'suppr_sous_etape', f"Suppression de la sous-étape '{sub_name}'", request.user)
         messages.success(request, "Sous-étape supprimée.")
         return redirect('core:project_detail', project_id=project.id)
@@ -1884,34 +2158,296 @@ def sub_milestone_delete(request, sub_milestone_id):
 
 
 @login_required
+def milestone_quick_assign(request, milestone_id):
+    """AJAX toggle : ajouter/retirer un employé des responsables d'un jalon.
+    POST assigned_to=<id> pour toggler, assigned_to= (vide) pour tout effacer."""
+    if request.method != 'POST':
+        return JsonResponse({'ok': False}, status=405)
+    milestone = get_object_or_404(Milestone.objects.select_related('project'), pk=milestone_id)
+    project = milestone.project
+    if not request.user.profile.can_add_project_milestones(project):
+        return JsonResponse({'ok': False, 'error': 'Permission refusée'}, status=403)
+
+    emp_id = request.POST.get('assigned_to') or None
+
+    if emp_id:
+        try:
+            emp = Employee.objects.get(pk=emp_id)
+        except Employee.DoesNotExist:
+            return JsonResponse({'ok': False, 'error': 'Employé introuvable'}, status=400)
+        if milestone.assigned_to.filter(pk=emp_id).exists():
+            milestone.assigned_to.remove(emp)
+        else:
+            milestone.assigned_to.add(emp)
+            milestone.assigned_by = request.user
+            milestone.save(update_fields=['assigned_by'])
+            from .notifications import notify_assignment
+            notify_assignment(
+                emp, 'jalon', milestone.name, project.name,
+                request.user.get_full_name() or request.user.username,
+                project=project, due_date=milestone.due_date,
+            )
+    else:
+        milestone.assigned_to.clear()
+
+    log_project_activity(project, 'modif_jalon', f"Réassignation du jalon '{milestone.name}'", request.user)
+    assignees = list(milestone.assigned_to.values('id', 'name'))
+    return JsonResponse({
+        'ok': True,
+        'assigned_names': [a['name'] for a in assignees],
+        'assigned_ids': [a['id'] for a in assignees],
+    })
+
+
+@login_required
+def sub_milestone_quick_assign(request, sub_milestone_id):
+    """AJAX toggle : ajouter/retirer un employé des responsables d'une sous-étape."""
+    if request.method != 'POST':
+        return JsonResponse({'ok': False}, status=405)
+    sub = get_object_or_404(SubMilestone.objects.select_related('milestone__project'), pk=sub_milestone_id)
+    project = sub.milestone.project
+    if not request.user.profile.can_add_project_milestones(project):
+        return JsonResponse({'ok': False, 'error': 'Permission refusée'}, status=403)
+
+    emp_id = request.POST.get('assigned_to') or None
+
+    if emp_id:
+        try:
+            emp = Employee.objects.get(pk=emp_id)
+        except Employee.DoesNotExist:
+            return JsonResponse({'ok': False, 'error': 'Employé introuvable'}, status=400)
+        if sub.assigned_to.filter(pk=emp_id).exists():
+            sub.assigned_to.remove(emp)
+        else:
+            sub.assigned_to.add(emp)
+            sub.assigned_by = request.user
+            sub.save(update_fields=['assigned_by'])
+            from .notifications import notify_assignment
+            notify_assignment(
+                emp, 'sous-étape', sub.name, project.name,
+                request.user.get_full_name() or request.user.username,
+                project=project, due_date=sub.due_date,
+            )
+    else:
+        sub.assigned_to.clear()
+
+    log_project_activity(project, 'modif_sous_etape', f"Réassignation de la sous-étape '{sub.name}'", request.user)
+    assignees = list(sub.assigned_to.values('id', 'name'))
+    return JsonResponse({
+        'ok': True,
+        'assigned_names': [a['name'] for a in assignees],
+        'assigned_ids': [a['id'] for a in assignees],
+    })
+
+
+@login_required
 def sub_milestone_toggle(request, sub_milestone_id):
-    """Basculer le statut complété d'une sous-étape"""
+    """Basculer le statut complété d'une sous-étape.
+    Autorisé : utilisateurs avec can_add_project_milestones OU le responsable assigné."""
     from .models import SubMilestone
-    
+
     sub_milestone = get_object_or_404(SubMilestone.objects.select_related('milestone__project'), pk=sub_milestone_id)
     milestone = sub_milestone.milestone
     project = milestone.project
-    
-    # Permission check
-    if not request.user.profile.can_add_project_milestones(project):
-        messages.error(request, "Vous n'avez pas les permissions.")
+
+    can_toggle = (
+        request.user.profile.can_add_project_milestones(project)
+        or _user_is_assignee(request.user, sub_milestone.assigned_to)
+    )
+    if not can_toggle:
+        messages.error(request, "Vous n'avez pas les permissions pour modifier cette sous-étape.")
         return redirect('core:project_detail', project_id=project.id)
-    
+
     was_completed = sub_milestone.completed
     sub_milestone.completed = not sub_milestone.completed
     sub_milestone.save()
-    
+
     status = "complétée" if sub_milestone.completed else "non complétée"
     log_project_activity(project, 'toggle_sous_etape', f"Sous-étape '{sub_milestone.name}' marquée comme {status}", request.user)
     if sub_milestone.completed and not was_completed:
         from .notifications import notify_task_completed
-        success, msg = notify_task_completed('sous-étape', sub_milestone.name, project, sub_milestone.assigned_to, sub_milestone.assigned_by, request.user)
-        if success:
-            messages.info(request, msg)
-        else:
-            messages.warning(request, f"Sous-étape terminée mais notification email échouée : {msg}")
+        for emp in sub_milestone.assigned_to.all():
+            success, msg = notify_task_completed('sous-étape', sub_milestone.name, project, emp, sub_milestone.assigned_by, request.user)
+            if not success:
+                messages.warning(request, f"Sous-étape terminée mais notification email échouée : {msg}")
     messages.success(request, f"Sous-étape marquée comme {status}.")
     return redirect('core:project_detail', project_id=project.id)
+
+
+@login_required
+def milestone_toggle(request, milestone_id):
+    """Basculer le statut complété d'un jalon (sans sous-étapes).
+    Autorisé : utilisateurs avec can_add_project_milestones OU le responsable assigné."""
+    milestone = get_object_or_404(Milestone.objects.select_related('project'), pk=milestone_id)
+    project = milestone.project
+
+    can_toggle = (
+        request.user.profile.can_add_project_milestones(project)
+        or _user_is_assignee(request.user, milestone.assigned_to)
+    )
+    if not can_toggle:
+        messages.error(request, "Vous n'avez pas les permissions pour modifier ce jalon.")
+        return redirect('core:project_detail', project_id=project.id)
+
+    if milestone.sub_milestones.exists():
+        messages.warning(request, "Ce jalon contient des sous-étapes : sa progression est calculée automatiquement.")
+        return redirect('core:project_detail', project_id=project.id)
+
+    from django.utils import timezone
+    was_completed = milestone.completed
+    milestone.completed = not milestone.completed
+    milestone.manual_progress = 100 if milestone.completed else 0
+    milestone.status = 'termine' if milestone.completed else 'a_faire'
+    milestone.completed_at = timezone.now() if milestone.completed else None
+    milestone.save()
+
+    label = "complété" if milestone.completed else "non complété"
+    log_project_activity(project, 'toggle_jalon', f"Jalon '{milestone.name}' marqué comme {label}", request.user)
+    if milestone.completed and not was_completed:
+        from .notifications import notify_task_completed
+        for emp in milestone.assigned_to.all():
+            success, msg = notify_task_completed('jalon', milestone.name, project, emp, milestone.assigned_by, request.user)
+            if not success:
+                messages.warning(request, f"Jalon terminé mais notification email échouée : {msg}")
+    messages.success(request, f"Jalon marqué comme {label}.")
+    return redirect('core:project_detail', project_id=project.id)
+
+
+@login_required
+def milestone_update_status(request, milestone_id):
+    """Changer le statut d'un jalon (AJAX-compatible, méthode POST)."""
+    milestone = get_object_or_404(Milestone.objects.select_related('project'), pk=milestone_id)
+    project = milestone.project
+    if not (request.user.profile.can_add_project_milestones(project) or _user_is_assignee(request.user, milestone.assigned_to)):
+        messages.error(request, "Permissions insuffisantes.")
+        return redirect('core:project_detail', project_id=project.id)
+
+    new_status = request.POST.get('status', '')
+    valid = dict(Milestone.TASK_STATUS_CHOICES)
+    if new_status not in valid:
+        messages.error(request, "Statut invalide.")
+        return redirect('core:project_detail', project_id=project.id)
+
+    from django.utils import timezone
+    old_status = milestone.status
+    milestone.status = new_status
+    if new_status == 'termine':
+        milestone.completed = True
+        milestone.manual_progress = 100
+        if not milestone.completed_at:
+            milestone.completed_at = timezone.now()
+    else:
+        milestone.completed = False
+        if new_status == 'a_faire':
+            milestone.manual_progress = 0
+        milestone.completed_at = None
+    milestone.save()
+
+    log_project_activity(project, 'modif_statut_jalon', f"Statut de '{milestone.name}' : {valid.get(old_status, old_status)} → {valid[new_status]}", request.user)
+    if milestone.completed and old_status != 'termine':
+        from .notifications import notify_task_completed
+        for emp in milestone.assigned_to.all():
+            notify_task_completed('jalon', milestone.name, project, emp, milestone.assigned_by, request.user)
+    messages.success(request, f"Statut mis à jour : {valid[new_status]}.")
+    return redirect('core:project_detail', project_id=project.id)
+
+
+@login_required
+def project_need_update_status(request, need_id):
+    """Mettre à jour le statut d'un besoin (résolu, rejeté, etc.)."""
+    from .models import ProjectNeed
+    from django.utils import timezone
+    need = get_object_or_404(ProjectNeed.objects.select_related('project'), pk=need_id)
+    project = need.project
+
+    if not request.user.profile.can_view_project(project):
+        messages.error(request, "Accès refusé.")
+        return redirect('core:projects')
+    if not (request.user.profile.can_add_project_needs(project) or request.user.profile.can_manage_project_members(project)):
+        messages.error(request, "Permissions insuffisantes.")
+        return redirect('core:project_detail', project_id=project.id)
+
+    new_status = request.POST.get('status', '')
+    valid = dict(ProjectNeed.NEED_STATUS_CHOICES)
+    if new_status not in valid:
+        messages.error(request, "Statut invalide.")
+        return redirect('core:project_detail', project_id=project.id)
+
+    need.status = new_status
+    if new_status in ('resolu', 'rejete'):
+        need.resolved_by = request.user.get_full_name() or request.user.username
+        need.resolved_at = timezone.now()
+    else:
+        need.resolved_by = ''
+        need.resolved_at = None
+    need.save()
+    messages.success(request, f"Besoin marqué : {valid[new_status]}.")
+    return redirect('core:project_detail', project_id=project.id)
+
+
+@login_required
+def my_tasks(request):
+    """Vue 'Mes tâches' : toutes les tâches assignées à l'utilisateur courant."""
+    from .models import Milestone, SubMilestone
+    from collections import defaultdict
+
+    user_employee = getattr(request.user.profile, 'employee', None)
+    if not user_employee:
+        messages.info(request, "Votre compte n'est pas encore lié à un employé. Contactez un administrateur.")
+        return redirect('core:dashboard')
+
+    milestones_qs = (
+        Milestone.objects
+        .filter(assigned_to=user_employee)
+        .select_related('project__direction')
+        .prefetch_related('sub_milestones')
+        .order_by('completed', 'due_date')
+    )
+    sub_milestones_qs = (
+        SubMilestone.objects
+        .filter(assigned_to=user_employee)
+        .select_related('milestone__project__direction', 'milestone')
+        .order_by('completed', 'due_date')
+    )
+
+    by_project = defaultdict(lambda: {'project': None, '_items': [], 'total': 0, 'done': 0})
+
+    for m in milestones_qs:
+        can_toggle = (m.sub_milestones.count() == 0)
+        entry = by_project[m.project_id]
+        entry['project'] = m.project
+        entry['_items'].append({
+            'id': m.id, 'type': 'jalon', 'name': m.name,
+            'milestone_name': None, 'due_date': m.due_date,
+            'completed': m.completed, 'completed_at': m.completed_at,
+            'status': m.status, 'can_toggle': can_toggle,
+        })
+        entry['total'] += 1
+        if m.completed:
+            entry['done'] += 1
+
+    for s in sub_milestones_qs:
+        p = s.milestone.project
+        entry = by_project[p.id]
+        entry['project'] = p
+        entry['_items'].append({
+            'id': s.id, 'type': 'sous_etape', 'name': s.name,
+            'milestone_name': s.milestone.name, 'due_date': s.due_date,
+            'completed': s.completed, 'completed_at': s.completed_at,
+            'status': None, 'can_toggle': True,
+        })
+        entry['total'] += 1
+        if s.completed:
+            entry['done'] += 1
+
+    for entry in by_project.values():
+        entry['milestones'] = sorted(
+            entry.pop('_items'),
+            key=lambda x: (x['completed'], str(x['due_date']) if x['due_date'] else '9999-99-99')
+        )
+
+    task_groups = sorted(by_project.values(), key=lambda e: e['project'].name)
+    return render(request, 'core/my_tasks.html', {'task_groups': task_groups, 'user_employee': user_employee})
 
 
 @login_required
@@ -2017,34 +2553,16 @@ def api_project_task_update(request, milestone_id):
 def project_folder_create(request, project_id):
     """Créer un dossier pour un projet"""
     from .forms_project import ProjectFolderForm
-    
+
     project = get_object_or_404(Project, pk=project_id)
     parent_id = request.GET.get('parent')
     parent_folder = None
     if parent_id:
         parent_folder = get_object_or_404(ProjectFolder, pk=parent_id, project=project)
-    
-    # Permission check
-    if not (request.user.profile.is_directeur_general() or request.user.is_staff):
-        if request.user.profile.is_directeur():
-            # Directeur ne peut gérer que les projets de sa direction
-            if project.direction != request.user.profile.direction:
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
-        else:
-            # Chef de projet et autres voient les projets où ils sont manager OU membres
-            from django.db.models import Q
-            
-            # Récupérer le nom de l'utilisateur
-            user_name = request.user.get_full_name() or request.user.username
-            
-            # Vérifier si l'utilisateur est manager OU membre du projet
-            is_manager = project.manager and user_name in project.manager
-            is_member = project.members.filter(employee__name=user_name).exists()
-            
-            if not (is_manager or is_member):
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
+
+    if not request.user.profile.can_add_project_documents(project):
+        messages.error(request, "Vous n'avez pas les permissions pour gérer les dossiers de ce projet.")
+        return redirect('core:projects')
     
     if request.method == 'POST':
         form = ProjectFolderForm(project, request.POST)
@@ -2071,21 +2589,9 @@ def project_folder_detail(request, folder_id):
     folder = get_object_or_404(ProjectFolder.objects.select_related('project', 'parent'), pk=folder_id)
     project = folder.project
 
-    # Permission check
-    if not (request.user.profile.is_directeur_general() or request.user.is_staff):
-        if request.user.profile.is_directeur():
-            # Directeur ne peut voir que les projets de sa direction
-            if project.direction != request.user.profile.direction:
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
-        else:
-            # Chef de projet et autres voient les projets où ils sont manager OU membres
-            user_name = request.user.get_full_name() or request.user.username
-            is_manager = project.manager and user_name in project.manager
-            is_member = project.members.filter(employee__name=user_name).exists()
-            if not (is_manager or is_member):
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
+    if not request.user.profile.can_view_project(project):
+        messages.error(request, "Vous n'avez pas accès à ce projet.")
+        return redirect('core:projects')
 
     subfolders = folder.subfolders.all().order_by('name')
     documents = folder.documents.all().order_by('-uploaded_at')
@@ -2103,31 +2609,13 @@ def project_folder_detail(request, folder_id):
 def project_folder_edit(request, folder_id):
     """Modifier un dossier de projet"""
     from .forms_project import ProjectFolderForm
-    
+
     folder = get_object_or_404(ProjectFolder.objects.select_related('project'), pk=folder_id)
     project = folder.project
-    
-    # Permission check
-    if not (request.user.profile.is_directeur_general() or request.user.is_staff):
-        if request.user.profile.is_directeur():
-            # Directeur ne peut gérer que les projets de sa direction
-            if project.direction != request.user.profile.direction:
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
-        else:
-            # Chef de projet et autres voient les projets où ils sont manager OU membres
-            from django.db.models import Q
-            
-            # Récupérer le nom de l'utilisateur
-            user_name = request.user.get_full_name() or request.user.username
-            
-            # Vérifier si l'utilisateur est manager OU membre du projet
-            is_manager = project.manager and user_name in project.manager
-            is_member = project.members.filter(employee__name=user_name).exists()
-            
-            if not (is_manager or is_member):
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
+
+    if not request.user.profile.can_add_project_documents(project):
+        messages.error(request, "Vous n'avez pas les permissions pour gérer les dossiers de ce projet.")
+        return redirect('core:projects')
     
     if request.method == 'POST':
         form = ProjectFolderForm(project, request.POST, instance=folder)
@@ -2146,28 +2634,10 @@ def project_folder_delete(request, folder_id):
     """Supprimer un dossier de projet"""
     folder = get_object_or_404(ProjectFolder.objects.select_related('project'), pk=folder_id)
     project = folder.project
-    
-    # Permission check
-    if not (request.user.profile.is_directeur_general() or request.user.is_staff):
-        if request.user.profile.is_directeur():
-            # Directeur ne peut gérer que les projets de sa direction
-            if project.direction != request.user.profile.direction:
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
-        else:
-            # Chef de projet et autres voient les projets où ils sont manager OU membres
-            from django.db.models import Q
-            
-            # Récupérer le nom de l'utilisateur
-            user_name = request.user.get_full_name() or request.user.username
-            
-            # Vérifier si l'utilisateur est manager OU membre du projet
-            is_manager = project.manager and user_name in project.manager
-            is_member = project.members.filter(employee__name=user_name).exists()
-            
-            if not (is_manager or is_member):
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
+
+    if not request.user.profile.can_add_project_documents(project):
+        messages.error(request, "Vous n'avez pas les permissions pour gérer les dossiers de ce projet.")
+        return redirect('core:projects')
     
     if request.method == 'POST':
         folder.delete()
@@ -2181,34 +2651,16 @@ def project_folder_delete(request, folder_id):
 def project_document_create(request, project_id):
     """Créer un document pour un projet"""
     from .forms_project import ProjectDocumentForm
-    
+
     project = get_object_or_404(Project, pk=project_id)
     folder_id = request.GET.get('folder')
     initial_folder = None
     if folder_id:
         initial_folder = get_object_or_404(ProjectFolder, pk=folder_id, project=project)
-    
-    # Permission check
-    if not (request.user.profile.is_directeur_general() or request.user.is_staff):
-        if request.user.profile.is_directeur():
-            # Directeur ne peut gérer que les projets de sa direction
-            if project.direction != request.user.profile.direction:
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
-        else:
-            # Chef de projet et autres voient les projets où ils sont manager OU membres
-            from django.db.models import Q
-            
-            # Récupérer le nom de l'utilisateur
-            user_name = request.user.get_full_name() or request.user.username
-            
-            # Vérifier si l'utilisateur est manager OU membre du projet
-            is_manager = project.manager and user_name in project.manager
-            is_member = project.members.filter(employee__name=user_name).exists()
-            
-            if not (is_manager or is_member):
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
+
+    if not request.user.profile.can_add_project_documents(project):
+        messages.error(request, "Vous n'avez pas les permissions pour ajouter des documents à ce projet.")
+        return redirect('core:projects')
     
     if request.method == 'POST':
         form = ProjectDocumentForm(project, request.POST, request.FILES)
@@ -2235,31 +2687,13 @@ def project_document_create(request, project_id):
 def project_document_edit(request, doc_id):
     """Modifier un document de projet"""
     from .forms_project import ProjectDocumentForm
-    
+
     doc = get_object_or_404(ProjectDocument.objects.select_related('project'), pk=doc_id)
     project = doc.project
-    
-    # Permission check
-    if not (request.user.profile.is_directeur_general() or request.user.is_staff):
-        if request.user.profile.is_directeur():
-            # Directeur ne peut gérer que les projets de sa direction
-            if project.direction != request.user.profile.direction:
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
-        else:
-            # Chef de projet et autres voient les projets où ils sont manager OU membres
-            from django.db.models import Q
-            
-            # Récupérer le nom de l'utilisateur
-            user_name = request.user.get_full_name() or request.user.username
-            
-            # Vérifier si l'utilisateur est manager OU membre du projet
-            is_manager = project.manager and user_name in project.manager
-            is_member = project.members.filter(employee__name=user_name).exists()
-            
-            if not (is_manager or is_member):
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
+
+    if not request.user.profile.can_add_project_documents(project):
+        messages.error(request, "Vous n'avez pas les permissions pour modifier les documents de ce projet.")
+        return redirect('core:projects')
     
     if request.method == 'POST':
         form = ProjectDocumentForm(project, request.POST, request.FILES, instance=doc)
@@ -2278,28 +2712,10 @@ def project_document_delete(request, doc_id):
     """Supprimer un document de projet"""
     doc = get_object_or_404(ProjectDocument.objects.select_related('project'), pk=doc_id)
     project = doc.project
-    
-    # Permission check
-    if not (request.user.profile.is_directeur_general() or request.user.is_staff):
-        if request.user.profile.is_directeur():
-            # Directeur ne peut gérer que les projets de sa direction
-            if project.direction != request.user.profile.direction:
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
-        else:
-            # Chef de projet et autres voient les projets où ils sont manager OU membres
-            from django.db.models import Q
-            
-            # Récupérer le nom de l'utilisateur
-            user_name = request.user.get_full_name() or request.user.username
-            
-            # Vérifier si l'utilisateur est manager OU membre du projet
-            is_manager = project.manager and user_name in project.manager
-            is_member = project.members.filter(employee__name=user_name).exists()
-            
-            if not (is_manager or is_member):
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
+
+    if not request.user.profile.can_add_project_documents(project):
+        messages.error(request, "Vous n'avez pas les permissions pour supprimer les documents de ce projet.")
+        return redirect('core:projects')
     
     if request.method == 'POST':
         doc.delete()
@@ -2314,24 +2730,13 @@ def project_document_download(request, doc_id):
     """Télécharger un document de projet"""
     from django.http import FileResponse
     import os
-    
+
     doc = get_object_or_404(ProjectDocument.objects.select_related('project'), pk=doc_id)
     project = doc.project
-    
-    # Permission check
-    if not (request.user.profile.is_directeur_general() or request.user.is_staff):
-        if request.user.profile.is_directeur():
-            if project.direction != request.user.profile.direction:
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
-        else:
-            user_name = request.user.get_full_name() or request.user.username
-            is_manager = project.manager and user_name in project.manager
-            is_member = project.members.filter(employee__name=user_name).exists()
-            
-            if not (is_manager or is_member):
-                messages.error(request, "Vous n'avez pas accès à ce projet.")
-                return redirect('core:projects')
+
+    if not request.user.profile.can_view_project(project):
+        messages.error(request, "Vous n'avez pas accès à ce projet.")
+        return redirect('core:projects')
     
     # Retourner le fichier
     file_path = doc.file.path
@@ -2359,69 +2764,64 @@ def project_member_add(request, project_id):
         return redirect('core:project_detail', project_id=project.id)
     
     directions = Direction.objects.all()
-    
+
     # Calculate available employees count
     existing_member_ids = project.members.values_list('employee_id', flat=True)
     available_employees_count = Employee.objects.exclude(id__in=existing_member_ids).count()
-    
+
     context = {
         'project': project,
         'title': 'Ajouter un membre',
         'directions': directions,
         'available_employees_count': available_employees_count,
+        'role_choices': UserProfile.ROLE_CHOICES,
     }
     
     if request.method == 'POST':
-        # Debug: afficher les données POST
-        print(f"POST data: {request.POST}")
-        create_new_employee = request.POST.get('create_new_employee') == 'on'
-        
-        if create_new_employee:
-            # Créer un nouvel employé
+        member_type = request.POST.get('member_type', 'existing')  # 'existing' | 'new_internal' | 'new_external'
+
+        if member_type in ('new_internal', 'new_external'):
+            is_external = (member_type == 'new_external')
             new_name = request.POST.get('new_employee_name', '').strip()
-            new_role_employee = request.POST.get('new_employee_role', '').strip()
+            new_role_val = request.POST.get('new_employee_role', '').strip()
             new_phone = request.POST.get('new_employee_phone', '').strip()
             new_email = request.POST.get('new_employee_email', '').strip()
+            new_org = request.POST.get('new_employee_organization', '').strip()
             project_role = request.POST.get('role', 'membre')
-            
-            # Validation
+
             errors = []
             if not new_name:
-                errors.append("Le nom de l'employé est requis.")
-            if not new_role_employee:
-                errors.append("Le poste/fonction est requis.")
-            
+                errors.append("Le nom est requis.")
+            if not new_role_val:
+                errors.append("Le poste / fonction est requis.")
+            if not is_external and not project.direction_id:
+                errors.append("Ce projet n'a pas de direction. Assignez-en une avant d'ajouter un employé interne.")
+
             if errors:
-                for error in errors:
-                    messages.error(request, error)
-                context['create_new_employee'] = True
-                context['new_employee_name'] = new_name
-                context['new_employee_role'] = new_role_employee
-                context['new_employee_phone'] = new_phone
-                context['new_employee_email'] = new_email
-                # Créer un formulaire avec les données POST pour préserver les permissions
-                form = ProjectMemberForm(project, request.POST)
-                context['form'] = form
+                for e in errors:
+                    messages.error(request, e)
+                context.update({
+                    'member_type': member_type,
+                    'new_employee_name': new_name,
+                    'new_employee_role': new_role_val,
+                    'new_employee_phone': new_phone,
+                    'new_employee_email': new_email,
+                    'new_employee_organization': new_org,
+                    'form': ProjectMemberForm(project, request.POST),
+                })
                 return render(request, 'core/project_member_form.html', context)
-            
-            # Créer l'employé (utiliser la direction du projet)
+
             try:
                 new_employee = Employee.objects.create(
                     name=new_name,
-                    direction=project.direction,
-                    role=new_role_employee,
+                    direction=project.direction if not is_external else None,
+                    role=new_role_val,
                     phone=new_phone,
-                    email=new_email
+                    email=new_email,
+                    is_external=is_external,
+                    organization=new_org if is_external else '',
                 )
-                
-                # Créer le membre de projet
-                member = ProjectMember.objects.create(
-                    project=project,
-                    employee=new_employee,
-                    role=project_role
-                )
-                
-                # Si le rôle est personnalisé, récupérer les permissions du formulaire
+                member = ProjectMember.objects.create(project=project, employee=new_employee, role=project_role)
                 if project_role == 'custom':
                     member.can_manage_members_perm = request.POST.get('can_manage_members_perm') == 'on'
                     member.can_edit_project_perm = request.POST.get('can_edit_project_perm') == 'on'
@@ -2430,27 +2830,70 @@ def project_member_add(request, project_id):
                     member.can_add_needs_perm = request.POST.get('can_add_needs_perm') == 'on'
                     member.can_add_comments_perm = request.POST.get('can_add_comments_perm') == 'on'
                     member.save()
-                
                 log_project_activity(project, 'ajout_membre', f"Ajout du membre '{new_name}' ({project_role})", request.user)
                 from .notifications import notify_project_member_added
                 success, msg = notify_project_member_added(member, request.user)
                 if success:
                     messages.info(request, msg)
-                else:
-                    messages.warning(request, f"Membre ajouté mais notification email échouée : {msg}")
-                messages.success(request, f"Employé '{new_name}' créé et ajouté au projet avec succès.")
+
+                # --- Créer un compte de connexion si demandé ---
+                create_user = request.POST.get('create_user') == 'on'
+                if create_user:
+                    from django.contrib.auth.models import User as DjangoUser
+                    new_username = request.POST.get('new_user_username', '').strip()
+                    new_password1 = request.POST.get('new_user_password1', '')
+                    new_password2 = request.POST.get('new_user_password2', '')
+                    default_role = 'visiteur' if is_external else 'employe'
+                    new_user_role = request.POST.get('new_user_role', default_role) or default_role
+
+                    user_errors = []
+                    if not new_username:
+                        user_errors.append("Le nom d'utilisateur est requis pour créer un compte.")
+                    elif DjangoUser.objects.filter(username=new_username).exists():
+                        user_errors.append(f"Le nom d'utilisateur '{new_username}' est déjà pris.")
+                    if new_password1 != new_password2:
+                        user_errors.append("Les mots de passe ne correspondent pas.")
+                    if len(new_password1) < 6:
+                        user_errors.append("Le mot de passe doit faire au moins 6 caractères.")
+
+                    if user_errors:
+                        new_employee.delete()
+                        member.delete()
+                        for e in user_errors:
+                            messages.error(request, e)
+                        context.update({
+                            'member_type': member_type,
+                            'new_employee_name': new_name,
+                            'new_employee_role': new_role_val,
+                            'new_employee_phone': new_phone,
+                            'new_employee_email': new_email,
+                            'new_employee_organization': new_org,
+                            'form': ProjectMemberForm(project, request.POST),
+                        })
+                        return render(request, 'core/project_member_form.html', context)
+
+                    name_parts = new_employee.name.split() if new_employee.name else []
+                    new_user = DjangoUser.objects.create_user(
+                        username=new_username,
+                        password=new_password1,
+                        email=new_employee.email or '',
+                        first_name=name_parts[0] if name_parts else '',
+                        last_name=' '.join(name_parts[1:]) if len(name_parts) > 1 else '',
+                    )
+                    # post_save signal already created an empty UserProfile; update it
+                    UserProfile.objects.filter(user=new_user).update(
+                        employee=new_employee,
+                        role=new_user_role,
+                        direction=new_employee.direction,
+                    )
+                    messages.success(request, f"Compte '{new_username}' créé pour {new_employee.name}.")
+
+                label = "externe" if is_external else "interne"
+                messages.success(request, f"Personne {label} '{new_name}' créée et ajoutée au projet.")
                 return redirect('core:project_detail', project_id=project.id)
-            except Exception as e:
-                import traceback
-                traceback.print_exc()
-                messages.error(request, f"Erreur lors de la création: {str(e)}")
-                context['create_new_employee'] = True
-                context['new_employee_name'] = new_name
-                context['new_employee_role'] = new_role_employee
-                context['new_employee_phone'] = new_phone
-                context['new_employee_email'] = new_email
-                form = ProjectMemberForm(project, request.POST)
-                context['form'] = form
+            except Exception as exc:
+                messages.error(request, f"Erreur : {exc}")
+                context.update({'member_type': member_type, 'form': ProjectMemberForm(project, request.POST)})
                 return render(request, 'core/project_member_form.html', context)
         else:
             # Employé existant
@@ -2464,15 +2907,13 @@ def project_member_add(request, project_id):
                 success, msg = notify_project_member_added(member, request.user)
                 if success:
                     messages.info(request, msg)
-                else:
-                    messages.warning(request, f"Membre ajouté mais notification email échouée : {msg}")
                 messages.success(request, "Membre ajouté avec succès.")
                 return redirect('core:project_detail', project_id=project.id)
             context['form'] = form
             return render(request, 'core/project_member_form.html', context)
     else:
         form = ProjectMemberForm(project)
-    
+
     context['form'] = form
     return render(request, 'core/project_member_form.html', context)
 
@@ -2626,29 +3067,51 @@ def document_validate(request, doc_id):
     return redirect('core:documents')
 
 
+@login_required
+def document_download(request, doc_id):
+    """Télécharger un document"""
+    import mimetypes
+    import os
+    from django.http import FileResponse
+    doc = get_object_or_404(Document, pk=doc_id)
+    if not doc.file:
+        messages.error(request, "Aucun fichier attaché à ce document.")
+        return redirect('core:documents')
+    file_path = doc.file.path
+    if not os.path.exists(file_path):
+        messages.error(request, "Fichier introuvable.")
+        return redirect('core:documents')
+    mime_type, _ = mimetypes.guess_type(file_path)
+    response = FileResponse(open(file_path, 'rb'), content_type=mime_type or 'application/octet-stream')
+    response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
+    return response
+
+
 # ==================== REQUEST CRUD ====================
 
 @login_required
 def request_create(request):
     """Créer une nouvelle demande"""
     from .forms_project import RequestForm
-    
+
     if request.method == 'POST':
         form = RequestForm(request.POST)
         if form.is_valid():
-            form.save()
+            req = form.save(commit=False)
+            req.status = 'en_attente'
+            req.save()
             messages.success(request, "Demande créée avec succès.")
             return redirect('core:requests')
     else:
         form = RequestForm()
-    
+
     return render(request, 'core/request_form.html', {'form': form, 'title': 'Nouvelle demande'})
 
 
 @login_required
 def request_approve(request, req_id):
     """Approuver une demande"""
-    if not request.user.profile.can_approve_requests:
+    if not request.user.profile.has_approve_requests_permission():
         messages.error(request, "Vous n'avez pas les permissions.")
         return redirect('core:requests')
     
@@ -2663,7 +3126,7 @@ def request_approve(request, req_id):
 @login_required
 def request_reject(request, req_id):
     """Rejeter une demande"""
-    if not request.user.profile.can_approve_requests:
+    if not request.user.profile.has_approve_requests_permission():
         messages.error(request, "Vous n'avez pas les permissions.")
         return redirect('core:requests')
     
@@ -2892,6 +3355,7 @@ def budget_delete(request, budget_id):
 
 
 # API endpoints pour les graphiques
+@login_required
 def api_budget_data(request):
     """API pour les données de budget"""
     can_view_budgets = request.user.profile.can_view_budgets()
@@ -2914,6 +3378,7 @@ def api_budget_data(request):
     return JsonResponse(data, safe=False)
 
 
+@login_required
 def api_projects_data(request):
     """API pour les données de projets"""
     directions = Direction.objects.all()

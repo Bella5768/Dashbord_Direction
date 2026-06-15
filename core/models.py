@@ -19,8 +19,8 @@ class UserProfile(models.Model):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='visiteur', verbose_name="Rôle")
     direction = models.ForeignKey('Direction', on_delete=models.SET_NULL, null=True, blank=True, 
                                   related_name='users', verbose_name="Direction")
-    employee = models.ForeignKey('Employee', on_delete=models.SET_NULL, null=True, blank=True,
-                                 related_name='user_profiles', verbose_name="Employé")
+    employee = models.OneToOneField('Employee', on_delete=models.SET_NULL, null=True, blank=True,
+                                    related_name='user_profile', verbose_name="Employé")
     employee_identifier = models.CharField(max_length=50, null=True, blank=True, verbose_name="ID Employé")
     phone = models.CharField(max_length=20, blank=True, verbose_name="Téléphone")
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True, verbose_name="Photo")
@@ -64,15 +64,10 @@ class UserProfile(models.Model):
         return self.user.username[:2].upper()
     
     def get_project_membership(self, project):
-        """Trouve le ProjectMember lié à cet utilisateur pour un projet donné"""
-        # 1. Chercher par le lien direct employee du profil
-        if self.employee_id:
-            membership = project.members.filter(employee_id=self.employee_id).first()
-            if membership:
-                return membership
-        # 2. Fallback par nom
-        user_name = self.user.get_full_name() or self.user.username
-        return project.members.filter(employee__name=user_name).first()
+        """Trouve le ProjectMember lié à cet utilisateur pour un projet donné."""
+        if not self.employee_id:
+            return None
+        return project.members.filter(employee_id=self.employee_id).first()
 
     # Permission methods
     def is_admin(self):
@@ -148,8 +143,7 @@ class UserProfile(models.Model):
         """Vérifie si l'utilisateur peut ajouter des membres à un projet"""
         # Permission explicite
         if self.can_add_members:
-            if self.direction and self.direction == project.direction:
-                return True
+            return True
         # Rôles par défaut
         if self.role in ['admin', 'directeur_general']:
             return True
@@ -157,7 +151,11 @@ class UserProfile(models.Model):
             return True
         if self.role == 'chef_projet' and project.manager:
             user_name = self.user.get_full_name() or self.user.username
-            if user_name in project.manager:
+            # Priorité 1 : FK manager_employee
+            if self.employee_id and project.manager_employee_id and project.manager_employee_id == self.employee_id:
+                return True
+            # Priorité 2 : comparaison exacte sur CharField
+            if project.manager and project.manager.strip() == user_name:
                 return True
         # Vérifier les permissions de membre
         membership = self.get_project_membership(project)
@@ -174,7 +172,9 @@ class UserProfile(models.Model):
             return True
         if self.role == 'chef_projet':
             user_name = self.user.get_full_name() or self.user.username
-            if project.manager and user_name in project.manager:
+            if self.employee_id and project.manager_employee_id and project.manager_employee_id == self.employee_id:
+                return True
+            if project.manager and project.manager.strip() == user_name:
                 return True
         
         # Vérifier les permissions de membre
@@ -194,7 +194,9 @@ class UserProfile(models.Model):
         # Chef de projet principal peut gérer
         if self.role == 'chef_projet' and project.manager:
             user_name = self.user.get_full_name() or self.user.username
-            if user_name in project.manager:
+            if self.employee_id and project.manager_employee_id and project.manager_employee_id == self.employee_id:
+                return True
+            if project.manager.strip() == user_name:
                 return True
         # Vérifier les permissions de membre
         membership = self.get_project_membership(project)
@@ -212,7 +214,9 @@ class UserProfile(models.Model):
         # Vérifier si c'est un chef de projet
         if self.role == 'chef_projet':
             user_name = self.user.get_full_name() or self.user.username
-            if project.manager and user_name in project.manager:
+            if self.employee_id and project.manager_employee_id and project.manager_employee_id == self.employee_id:
+                return False
+            if project.manager and project.manager.strip() == user_name:
                 return False
         # Vérifier les droits de membre
         membership = self.get_project_membership(project)
@@ -224,8 +228,7 @@ class UserProfile(models.Model):
         """Vérifie si l'utilisateur peut ajouter des jalons à un projet"""
         # Permission explicite du profil
         if self.can_add_milestones:
-            if self.direction and self.direction == project.direction:
-                return True
+            return True
         # Admin, DG, Directeur
         if self.role in ['admin', 'directeur_general']:
             return True
@@ -234,7 +237,9 @@ class UserProfile(models.Model):
         # Chef de projet principal
         if self.role == 'chef_projet' and project.manager:
             user_name = self.user.get_full_name() or self.user.username
-            if user_name in project.manager:
+            if self.employee_id and project.manager_employee_id and project.manager_employee_id == self.employee_id:
+                return True
+            if project.manager.strip() == user_name:
                 return True
         # Vérifier les permissions de membre (y compris custom)
         membership = self.get_project_membership(project)
@@ -244,19 +249,52 @@ class UserProfile(models.Model):
     
     def can_add_project_documents(self, project):
         """Vérifie si l'utilisateur peut ajouter des documents à un projet"""
-        # Admin, DG, Directeur
         if self.role in ['admin', 'directeur_general']:
             return True
         if self.role == 'directeur' and self.direction == project.direction:
             return True
-        # Chef de projet principal
         if self.role == 'chef_projet' and project.manager:
             user_name = self.user.get_full_name() or self.user.username
-            if user_name in project.manager:
+            if self.employee_id and project.manager_employee_id and project.manager_employee_id == self.employee_id:
                 return True
-        # Vérifier les permissions de membre (y compris custom)
+            if project.manager.strip() == user_name:
+                return True
         membership = self.get_project_membership(project)
         if membership and membership.can_add_documents():
+            return True
+        return False
+
+    def can_add_project_needs(self, project):
+        """Vérifie si l'utilisateur peut ajouter des besoins à un projet"""
+        if self.role in ['admin', 'directeur_general']:
+            return True
+        if self.role == 'directeur' and self.direction == project.direction:
+            return True
+        if self.role == 'chef_projet' and project.manager:
+            user_name = self.user.get_full_name() or self.user.username
+            if self.employee_id and project.manager_employee_id and project.manager_employee_id == self.employee_id:
+                return True
+            if project.manager.strip() == user_name:
+                return True
+        membership = self.get_project_membership(project)
+        if membership and membership.can_add_needs():
+            return True
+        return False
+
+    def can_add_project_comments(self, project):
+        """Vérifie si l'utilisateur peut ajouter des commentaires à un projet"""
+        if self.role in ['admin', 'directeur_general']:
+            return True
+        if self.role == 'directeur' and self.direction == project.direction:
+            return True
+        if self.role == 'chef_projet' and project.manager:
+            user_name = self.user.get_full_name() or self.user.username
+            if self.employee_id and project.manager_employee_id and project.manager_employee_id == self.employee_id:
+                return True
+            if project.manager.strip() == user_name:
+                return True
+        membership = self.get_project_membership(project)
+        if membership and membership.can_add_comments():
             return True
         return False
     
@@ -267,10 +305,15 @@ class UserProfile(models.Model):
             return True
         if self.role == 'directeur' and self.direction == project.direction:
             return True
+        # Permission explicite
+        if self.can_edit_projects:
+            return True
         # Chef de projet principal peut modifier
         if self.role == 'chef_projet' and project.manager:
             user_name = self.user.get_full_name() or self.user.username
-            if user_name in project.manager:
+            if self.employee_id and project.manager_employee_id and project.manager_employee_id == self.employee_id:
+                return True
+            if project.manager.strip() == user_name:
                 return True
         # Vérifier les permissions de membre
         membership = self.get_project_membership(project)
@@ -287,7 +330,9 @@ class UserProfile(models.Model):
             return self.direction_id is not None and project.direction_id == self.direction_id
         # Vérifier si l'utilisateur est manager du projet
         user_name = self.user.get_full_name() or self.user.username
-        if project.manager and user_name in project.manager:
+        if self.employee_id and project.manager_employee_id and project.manager_employee_id == self.employee_id:
+            return True
+        if project.manager and project.manager.strip() == user_name:
             return True
         # Vérifier si l'utilisateur est membre du projet
         membership = self.get_project_membership(project)
@@ -340,6 +385,7 @@ class Project(models.Model):
     STATUS_CHOICES = [
         ('planifie', 'Planifié'),
         ('en_cours', 'En cours'),
+        ('suspendu', 'Suspendu'),
         ('termine', 'Terminé'),
         ('en_retard', 'En retard'),
     ]
@@ -363,6 +409,7 @@ class Project(models.Model):
     original_start_date = models.DateField(null=True, blank=True, editable=False, verbose_name="Date de début originale")
     original_end_date = models.DateField(null=True, blank=True, editable=False, verbose_name="Date de fin originale")
     manager = models.CharField(max_length=100, verbose_name="Responsable")
+    manager_employee = models.ForeignKey('Employee', on_delete=models.SET_NULL, null=True, blank=True, related_name='managed_projects', verbose_name="Responsable (lié)")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -381,31 +428,35 @@ class Project(models.Model):
             self.original_end_date = self.end_date
         super().save(*args, **kwargs)
 
+    @property
+    def computed_status(self):
+        """Retourne 'en_retard' si la date est dépassée et le projet non terminé, sinon le statut stocké."""
+        from datetime import date
+        if self.status != 'termine' and self.end_date and self.end_date < date.today():
+            return 'en_retard'
+        return self.status
+
     def recalculate_progress(self, save=True):
         """Recalcule la progression basée sur toutes les sous-étapes de tous les jalons"""
-        milestones = self.milestones.all()
-        total_milestones = milestones.count()
+        milestones = list(self.milestones.prefetch_related('sub_milestones').all())
+        total_milestones = len(milestones)
         
         if total_milestones <= 0:
             new_progress = 0
         else:
-            # Calculer la progression totale en tenant compte de chaque jalon
             total_progress = 0
             for milestone in milestones:
-                sub_count = milestone.sub_milestones.count()
+                subs = list(milestone.sub_milestones.all())
+                sub_count = len(subs)
                 if sub_count > 0:
-                    # Si le jalon a des sous-étapes, calculer sa progression partielle
-                    completed_subs = milestone.sub_milestones.filter(completed=True).count()
+                    completed_subs = sum(1 for s in subs if s.completed)
                     milestone_progress = (completed_subs / sub_count) * 100
                 else:
-                    # Si pas de sous-étapes, utiliser la progression manuelle du jalon
                     if milestone.completed:
                         milestone_progress = 100
                     else:
                         milestone_progress = milestone.manual_progress
                 total_progress += milestone_progress
-            
-            # Moyenne de la progression de tous les jalons
             new_progress = round(total_progress / total_milestones)
 
         new_progress = max(0, min(100, int(new_progress)))
@@ -512,12 +563,22 @@ class ProjectMember(models.Model):
 
 
 class Milestone(models.Model):
+    TASK_STATUS_CHOICES = [
+        ('a_faire', 'À faire'),
+        ('en_cours', 'En cours'),
+        ('bloque', 'Bloqué'),
+        ('en_revision', 'En révision'),
+        ('termine', 'Terminé'),
+    ]
+
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='milestones', verbose_name="Projet")
     name = models.CharField(max_length=200, verbose_name="Nom du jalon")
-    assigned_to = models.ForeignKey('Employee', on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_milestones', verbose_name="Responsable")
+    assigned_to = models.ManyToManyField('Employee', blank=True, related_name='assigned_milestones', verbose_name="Responsables")
     assigned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_milestones_created', verbose_name="Attribué par")
     due_date = models.DateField(null=True, blank=True, verbose_name="Date de la tâche")
+    status = models.CharField(max_length=20, choices=TASK_STATUS_CHOICES, default='a_faire', verbose_name="Statut")
     completed = models.BooleanField(default=False, verbose_name="Complété")
+    completed_at = models.DateTimeField(null=True, blank=True, verbose_name="Terminé le")
     need = models.TextField(blank=True, default='', verbose_name="Besoin")
     manual_progress = models.IntegerField(default=0, verbose_name="Progression manuelle (%)")
     order = models.IntegerField(default=0, verbose_name="Ordre")
@@ -543,26 +604,40 @@ class Milestone(models.Model):
         completed = self.sub_milestones.filter(completed=True).count()
         return round((completed / total) * 100)
     
+    def save(self, *args, **kwargs):
+        """Enforce la cohérence entre completed, status et completed_at avant chaque écriture."""
+        from django.utils import timezone
+        if self.completed:
+            self.status = 'termine'
+            if not self.completed_at:
+                self.completed_at = timezone.now()
+        else:
+            if self.status == 'termine':
+                self.status = 'en_cours'
+            self.completed_at = None
+        super().save(*args, **kwargs)
+
     def update_completion(self):
-        """Met à jour le statut complété basé sur les sous-étapes ou la progression manuelle"""
+        """Met à jour completed depuis les sous-étapes ou la progression manuelle."""
         total = self.sub_milestones.count()
         if total > 0:
-            completed = self.sub_milestones.filter(completed=True).count()
-            self.completed = (completed == total)
+            done = self.sub_milestones.filter(completed=True).count()
+            self.completed = (done == total)
         else:
-            # Sans sous-étapes : complété si progression manuelle = 100%
             self.completed = (self.manual_progress >= 100)
-        self.save(update_fields=['completed'])
+        # save() enforce la cohérence status/completed_at automatiquement
+        self.save(update_fields=['completed', 'status', 'completed_at'])
 
 
 class SubMilestone(models.Model):
     """Sous-étapes d'un jalon"""
     milestone = models.ForeignKey(Milestone, on_delete=models.CASCADE, related_name='sub_milestones', verbose_name="Jalon parent")
     name = models.CharField(max_length=200, verbose_name="Nom de la sous-étape")
-    assigned_to = models.ForeignKey('Employee', on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_sub_milestones', verbose_name="Responsable")
+    assigned_to = models.ManyToManyField('Employee', blank=True, related_name='assigned_sub_milestones', verbose_name="Responsables")
     assigned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_sub_milestones_created', verbose_name="Attribué par")
     due_date = models.DateField(null=True, blank=True, verbose_name="Date de la sous-tâche")
     completed = models.BooleanField(default=False, verbose_name="Complétée")
+    completed_at = models.DateTimeField(null=True, blank=True, verbose_name="Terminée le")
     need = models.TextField(blank=True, default='', verbose_name="Besoin")
     order = models.IntegerField(default=0, verbose_name="Ordre")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -576,9 +651,12 @@ class SubMilestone(models.Model):
         return f"{self.milestone.name} - {self.name}"
     
     def save(self, *args, **kwargs):
+        from django.utils import timezone
+        if self.completed and not self.completed_at:
+            self.completed_at = timezone.now()
+        elif not self.completed:
+            self.completed_at = None
         super().save(*args, **kwargs)
-        self.milestone.update_completion()
-        self.milestone.project.recalculate_progress()
 
 
 class ProjectNeed(models.Model):
@@ -587,21 +665,34 @@ class ProjectNeed(models.Model):
         ('moyenne', 'Moyenne'),
         ('haute', 'Haute'),
     ]
+    NEED_STATUS_CHOICES = [
+        ('ouvert', 'Ouvert'),
+        ('en_cours', 'En cours'),
+        ('resolu', 'Résolu'),
+        ('rejete', 'Rejeté'),
+    ]
 
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='needs', verbose_name="Projet")
     title = models.CharField(max_length=200, verbose_name="Titre")
     description = models.TextField(blank=True, verbose_name="Description")
     priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='moyenne', verbose_name="Priorité")
+    status = models.CharField(max_length=20, choices=NEED_STATUS_CHOICES, default='ouvert', verbose_name="Statut")
     created_by = models.CharField(max_length=100, verbose_name="Créé par")
     created_at = models.DateTimeField(auto_now_add=True)
+    resolved_by = models.CharField(max_length=100, blank=True, verbose_name="Traité par")
+    resolved_at = models.DateTimeField(null=True, blank=True, verbose_name="Traité le")
 
     class Meta:
         verbose_name = "Besoin de projet"
         verbose_name_plural = "Besoins de projet"
-        ordering = ['-created_at']
+        ordering = ['status', '-created_at']
 
     def __str__(self):
         return f"{self.project.name} - {self.title}"
+
+    @property
+    def is_open(self):
+        return self.status in ('ouvert', 'en_cours')
 
 
 class ProjectComment(models.Model):
@@ -851,12 +942,14 @@ class Request(models.Model):
 
 class Employee(models.Model):
     name = models.CharField(max_length=100, verbose_name="Nom")
-    direction = models.ForeignKey(Direction, on_delete=models.CASCADE, related_name='employees', verbose_name="Direction")
-    role = models.CharField(max_length=100, verbose_name="Rôle")
+    direction = models.ForeignKey(Direction, on_delete=models.SET_NULL, null=True, blank=True, related_name='employees', verbose_name="Direction")
+    role = models.CharField(max_length=100, verbose_name="Rôle / Fonction")
     phone = models.CharField(max_length=20, blank=True, verbose_name="Téléphone")
     email = models.EmailField(blank=True, verbose_name="Email")
     workload = models.IntegerField(default=0, verbose_name="Charge de travail (%)")
     skills = models.TextField(blank=True, verbose_name="Compétences")
+    is_external = models.BooleanField(default=False, verbose_name="Personne externe")
+    organization = models.CharField(max_length=150, blank=True, verbose_name="Organisation / Entreprise")
     
     class Meta:
         verbose_name = "Employé"

@@ -231,6 +231,12 @@
                 <h3>{{ employee.name }}</h3>
                 <p>{{ employee.role }}</p>
                 <span class="badge badge-secondary">{{ employee.direction.code }}</span>
+                {% if employee.id in employees_with_profile %}
+                <span class="badge badge-success" style="font-size:10px;">A un compte</span>
+                {% else %}
+                <span class="badge badge-secondary" style="font-size:10px;">Sans compte</span>
+                <a href="{% url 'core:user_create' %}?employee_id={{ employee.id }}" style="font-size:11px;color:var(--primary-600);" title="Créer un compte pour cet employé">Créer</a>
+                {% endif %}
             </div>
             <div class="employee-actions">
                 <a href="{% url 'core:employee_edit' employee.id %}" class="action-btn" title="Modifier">

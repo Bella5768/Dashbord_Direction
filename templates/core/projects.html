@@ -8,88 +8,167 @@
 
 {% block extra_css %}
 <style>
+/* ===== PROJECTS STATS ===== */
+.projects-stat-row {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.pstat {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: inherit;
+    transition: box-shadow 0.15s, transform 0.15s;
+    min-width: 0;
+}
+.pstat:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.09); transform: translateY(-1px); }
+.pstat-icon {
+    width: 34px; height: 34px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.pstat-icon svg { width: 16px; height: 16px; }
+.pstat-icon.gray  { background: #f1f5f9; color: #64748b; }
+.pstat-icon.blue  { background: #dbeafe; color: #1d4ed8; }
+.pstat-icon.green { background: #dcfce7; color: #16a34a; }
+.pstat-icon.amber { background: #fef3c7; color: #b45309; }
+.pstat-icon.red   { background: #fee2e2; color: #dc2626; }
+.pstat-icon.slate { background: #f1f5f9; color: #475569; }
+.pstat-label { font-size: 11px; color: #6b7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pstat-value { font-size: 20px; font-weight: 800; color: #111827; line-height: 1.1; }
+.pstat.pstat-alert { border-color: #fca5a5; background: #fff5f5; }
+.pstat.pstat-alert .pstat-value { color: #dc2626; }
+
+@media (max-width: 1200px) { .projects-stat-row { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 768px)  { .projects-stat-row { grid-template-columns: repeat(2, 1fr); } }
+
 /* ===== PROJECT CARDS GRID ===== */
-.projects-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: stretch; }
+.projects-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: stretch; }
 
-.project-card { border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s, box-shadow 0.2s; border: 1px solid rgba(255,255,255,0.18); color: #fff; min-height: 500px; cursor: pointer; }
-.project-card.status-en_cours { background: #294f78; }
-.project-card.status-planifie { background: #f59e0b; }
-.project-card.status-termine { background: #11845b; }
-.project-card.status-en_retard { background: #c4314b; }
-.project-card:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(15,23,42,0.22); }
+.project-card {
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    border-left: 4px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    color: inherit;
+    transition: box-shadow 0.18s, transform 0.15s;
+    overflow: hidden;
+}
+.project-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.08); transform: translateY(-1px); border-color: #d1d5db; border-left-color: inherit; }
+.project-card.status-en_cours  { border-left-color: #3b82f6; }
+.project-card.status-planifie  { border-left-color: #f59e0b; }
+.project-card.status-suspendu  { border-left-color: #9ca3af; }
+.project-card.status-termine   { border-left-color: #22c55e; }
+.project-card.status-en_retard { border-left-color: #ef4444; }
 
-.project-card-header { padding: 14px 16px 8px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.pc-badge { padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; background: rgba(255,255,255,0.92); color: #1f2937; }
-.pc-badge.direction { margin-left: auto; border-radius: 4px; }
+.pc-top { padding: 13px 16px 0; display: flex; align-items: center; gap: 6px; }
+.pc-status { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+.pc-status.s-en_cours  { background: #dbeafe; color: #1d4ed8; }
+.pc-status.s-planifie  { background: #fef3c7; color: #92400e; }
+.pc-status.s-suspendu  { background: #f3f4f6; color: #374151; }
+.pc-status.s-termine   { background: #dcfce7; color: #166534; }
+.pc-status.s-en_retard { background: #fee2e2; color: #991b1b; }
+.pc-dir { margin-left: auto; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 600; background: #e2e8f0; color: #1e3a5f; }
 
-.project-card-body { padding: 0 16px 12px; flex: 1; }
-.pc-name { font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 6px; line-height: 1.3; }
-.pc-desc { font-size: 12px; color: rgba(255,255,255,0.9); line-height: 1.45; margin-bottom: 14px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.pc-body { padding: 10px 16px 14px; flex: 1; }
+.pc-name { font-size: 14px; font-weight: 700; color: #111827; margin-bottom: 4px; line-height: 1.35; }
+.pc-desc { font-size: 12px; color: #4b5563; line-height: 1.5; margin-bottom: 14px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 36px; }
 
-.pc-progress-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
-.pc-progress-label { font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.9); }
-.pc-progress-val { font-size: 13px; font-weight: 700; color: #fff; }
-.pc-progress-track { width: 100%; height: 6px; background: rgba(255,255,255,0.88); border-radius: 3px; overflow: hidden; margin-bottom: 14px; }
-.pc-progress-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
-.pc-progress-fill.green { background: #22c55e; }
-.pc-progress-fill.blue { background: #22c55e; }
-.pc-progress-fill.orange { background: #fff; }
-.pc-progress-fill.red { background: #fff; }
+.pc-progress-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
+.pc-progress-label { font-size: 11px; color: #6b7280; }
+.pc-progress-val { font-size: 12px; font-weight: 700; color: #1f2937; }
+.pc-bar-track { width: 100%; height: 5px; background: #e5e7eb; border-radius: 3px; overflow: hidden; }
+.pc-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+.pc-bar-fill.high    { background: #22c55e; }
+.pc-bar-fill.mid     { background: #3b82f6; }
+.pc-bar-fill.low     { background: #f59e0b; }
+.pc-bar-fill.very-low{ background: #ef4444; }
 
-.pc-meta { display: flex; align-items: center; gap: 12px; font-size: 11px; color: rgba(255,255,255,0.72); margin-bottom: 14px; }
-.pc-meta svg { width: 13px; height: 13px; opacity: 0.6; }
-.pc-meta-item { display: inline-flex; align-items: center; gap: 4px; }
+.pc-foot { padding: 10px 16px; border-top: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.pc-manager { font-size: 12px; color: #374151; display: flex; align-items: center; gap: 5px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pc-manager svg { width: 13px; height: 13px; flex-shrink: 0; opacity: 0.7; }
+.pc-open { font-size: 12px; font-weight: 600; color: #2563eb; text-decoration: none; flex-shrink: 0; }
+.pc-open:hover { color: #1d4ed8; }
 
-.pc-manager { display: flex; align-items: center; gap: 8px; font-size: 12px; color: rgba(255,255,255,0.92); margin-bottom: 16px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.48); }
-.pc-manager svg { width: 14px; height: 14px; opacity: 0.5; }
-
-.pc-milestones { border-top: 1px solid rgba(255,255,255,0.48); padding-top: 12px; margin-bottom: 14px; }
-.pc-milestones-title { font-size: 12px; font-weight: 700; color: #fff; margin-bottom: 8px; }
-.pc-milestone { display: flex; align-items: flex-start; gap: 8px; padding: 3px 0; font-size: 12px; color: #fff; line-height: 1.4; }
-.pc-milestone-dot { width: 7px; height: 7px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
-.pc-milestone-dot.done { background: #fff; }
-.pc-milestone-dot.pending { border: 1.5px solid #fff; background: transparent; }
-
-.project-card-footer { padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.48); display: flex; gap: 8px; }
-.pc-btn { padding: 7px 11px; border-radius: 6px; font-size: 11px; font-weight: 700; text-align: center; text-decoration: none; transition: all 0.15s; cursor: pointer; border: none; }
-.pc-btn.primary { background: #0f2743; color: #fff; }
-.pc-btn.primary:hover { background: #0b1e34; }
-.pc-btn.secondary { background: #fff; color: #1f2937; }
-.pc-btn.secondary:hover { background: #f3f4f6; }
-.pc-btn.danger { background: #fff; color: #dc2626; }
-.pc-btn.danger:hover { background: #fee2e2; }
-
-.projects-empty { text-align: center; padding: 60px 20px; color: #8b95a8; }
-.projects-empty svg { width: 48px; height: 48px; margin-bottom: 16px; opacity: 0.4; }
+.projects-empty { text-align: center; padding: 60px 20px; color: #8b95a8; grid-column: 1 / -1; }
+.projects-empty svg { width: 48px; height: 48px; margin-bottom: 16px; opacity: 0.35; }
 
 @media (max-width: 1200px) { .projects-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 768px) { .projects-grid { grid-template-columns: 1fr; } }
+@media (max-width: 768px)  { .projects-grid { grid-template-columns: 1fr; } }
+
 </style>
 {% endblock %}
 
 {% block content %}
 <!-- Stats -->
-<div class="stats-row">
-    <a class="stat-box stat-box-link" href="{% url 'core:projects' %}?status=all">
-        <p class="stat-box-label">{% trans 'Total projets' %}</p>
-        <p class="stat-box-value">{{ stats.total }}</p>
+<div class="projects-stat-row">
+    <a class="pstat" href="{% url 'core:projects' %}?status=all">
+        <div class="pstat-icon gray">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+        </div>
+        <div>
+            <div class="pstat-label">{% trans 'Total' %}</div>
+            <div class="pstat-value">{{ stats.total }}</div>
+        </div>
     </a>
-    <a class="stat-box blue stat-box-link" href="{% url 'core:projects' %}?status=en_cours">
-        <p class="stat-box-label">{% trans 'En cours' %}</p>
-        <p class="stat-box-value">{{ stats.en_cours }}</p>
+    <a class="pstat" href="{% url 'core:projects' %}?status=en_cours">
+        <div class="pstat-icon blue">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div>
+            <div class="pstat-label">{% trans 'En cours' %}</div>
+            <div class="pstat-value">{{ stats.en_cours }}</div>
+        </div>
     </a>
-    <a class="stat-box green stat-box-link" href="{% url 'core:projects' %}?status=termine">
-        <p class="stat-box-label">{% trans 'Terminés' %}</p>
-        <p class="stat-box-value">{{ stats.termine }}</p>
+    <a class="pstat" href="{% url 'core:projects' %}?status=termine">
+        <div class="pstat-icon green">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div>
+            <div class="pstat-label">{% trans 'Terminés' %}</div>
+            <div class="pstat-value">{{ stats.termine }}</div>
+        </div>
     </a>
-    <a class="stat-box stat-box-link" href="{% url 'core:projects' %}?status=planifie">
-        <p class="stat-box-label">{% trans 'Planifiés' %}</p>
-        <p class="stat-box-value">{{ stats.planifie }}</p>
+    <a class="pstat" href="{% url 'core:projects' %}?status=planifie">
+        <div class="pstat-icon amber">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div>
+            <div class="pstat-label">{% trans 'Planifiés' %}</div>
+            <div class="pstat-value">{{ stats.planifie }}</div>
+        </div>
+    </a>
+    <a class="pstat {% if stats.en_retard %}pstat-alert{% endif %}" href="{% url 'core:projects' %}?status=en_retard">
+        <div class="pstat-icon red">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div>
+            <div class="pstat-label">{% trans 'En retard' %}</div>
+            <div class="pstat-value">{{ stats.en_retard|default:0 }}</div>
+        </div>
+    </a>
+    <a class="pstat" href="{% url 'core:projects' %}?status=suspendu">
+        <div class="pstat-icon slate">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div>
+            <div class="pstat-label">{% trans 'Suspendus' %}</div>
+            <div class="pstat-value">{{ stats.suspendu|default:0 }}</div>
+        </div>
     </a>
 </div>
 
 <!-- Filters -->
-<form method="get" class="filters-bar" style="flex-wrap: wrap;">
+<form method="get" class="filters-bar" style="flex-wrap:wrap;margin-bottom:20px;">
     <div class="search-box">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -99,82 +178,61 @@
     <select name="status" class="form-control" onchange="this.form.submit()">
         <option value="all" {% if current_status == 'all' %}selected{% endif %}>{% trans 'Tous les statuts' %}</option>
         <option value="en_cours" {% if current_status == 'en_cours' %}selected{% endif %}>{% trans 'En cours' %}</option>
-        <option value="termine" {% if current_status == 'termine' %}selected{% endif %}>{% trans 'Terminé' %}</option>
         <option value="planifie" {% if current_status == 'planifie' %}selected{% endif %}>{% trans 'Planifié' %}</option>
+        <option value="suspendu" {% if current_status == 'suspendu' %}selected{% endif %}>{% trans 'Suspendu' %}</option>
+        <option value="termine" {% if current_status == 'termine' %}selected{% endif %}>{% trans 'Terminé' %}</option>
+        <option value="en_retard" {% if current_status == 'en_retard' %}selected{% endif %}>{% trans 'En retard' %}</option>
     </select>
     <select name="direction" class="form-control" onchange="this.form.submit()">
-        <option value="all" {% if current_direction == 'all' %}selected{% endif %}>{% trans 'Toutes les directions' %}</option>
+        <option value="all" {% if current_direction == 'all' %}selected{% endif %}>{% trans 'Toutes directions' %}</option>
         {% for dir in directions %}
         <option value="{{ dir.code }}" {% if current_direction == dir.code %}selected{% endif %}>{{ dir.code }}</option>
         {% endfor %}
     </select>
-    <a href="{% url 'core:project_create' %}" class="btn btn-primary">
+    <a href="{% url 'core:project_create' %}" class="btn btn-primary" style="white-space:nowrap;">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
         {% trans 'Nouveau projet' %}
     </a>
 </form>
-
-<!-- Project Cards Grid -->
 <div class="projects-grid">
     {% for project in projects %}
-    <div class="project-card status-{{ project.status }}" data-detail-url="{% url 'core:project_detail' project.id %}" role="link" tabindex="0" aria-label="{% trans 'Ouvrir le projet' %} {{ project.name }}">
-        <div class="project-card-header">
-            <span class="pc-badge">{{ project.get_status_display }}</span>
-            <span class="pc-badge priority">{{ project.get_priority_display }}</span>
-            <span class="pc-badge direction">{{ project.direction.code }}</span>
+    <div class="project-card status-{{ project.computed_status }}"
+         data-detail-url="{% url 'core:project_detail' project.id %}"
+         role="link" tabindex="0" aria-label="{{ project.name }}">
+
+        <div class="pc-top">
+            <span class="pc-status s-{{ project.computed_status }}">
+                {% if project.computed_status == 'en_retard' %}{% trans 'En retard' %}{% else %}{{ project.get_status_display }}{% endif %}
+            </span>
+            {% if project.direction %}<span class="pc-dir">{{ project.direction.code }}</span>{% endif %}
         </div>
-        <div class="project-card-body">
+
+        <div class="pc-body">
             <div class="pc-name">{{ project.name }}</div>
-            <div class="pc-desc">{% if project.description %}{{ project.description|truncatewords:20 }}{% else %}{% trans 'Aucune description' %}{% endif %}</div>
+            <div class="pc-desc">{{ project.description|truncatewords:20|default:"—" }}</div>
 
             <div class="pc-progress-row">
                 <span class="pc-progress-label">{% trans 'Progression' %}</span>
                 <span class="pc-progress-val">{{ project.progress }}%</span>
             </div>
-            <div class="pc-progress-track">
-                <div class="pc-progress-fill {% if project.progress >= 80 %}green{% elif project.progress >= 50 %}blue{% elif project.progress >= 25 %}orange{% else %}red{% endif %}" style="width: {{ project.progress }}%;"></div>
+            <div class="pc-bar-track">
+                <div class="pc-bar-fill {% if project.progress >= 80 %}high{% elif project.progress >= 50 %}mid{% elif project.progress >= 25 %}low{% else %}very-low{% endif %}"
+                     style="width:{{ project.progress }}%"></div>
             </div>
-
-            <div class="pc-meta">
-                <span class="pc-meta-item">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    {{ project.budget|number_format }} {{ project.currency }}
-                </span>
-                <span class="pc-meta-item">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                    {{ project.end_date|date:"d/m/Y" }}
-                </span>
-            </div>
-
-            <div class="pc-manager">
-                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                {% trans 'Responsable' %}: {{ project.manager }}
-            </div>
-
-            {% with milestones=project.milestones.all %}
-            {% if milestones %}
-            <div class="pc-milestones">
-                <div class="pc-milestones-title">{% trans 'Jalons du projet' %}</div>
-                {% for milestone in milestones %}
-                <div class="pc-milestone">
-                    <span class="pc-milestone-dot {% if milestone.completed %}done{% else %}pending{% endif %}"></span>
-                    {{ milestone.name }}
-                </div>
-                {% endfor %}
-            </div>
-            {% endif %}
-            {% endwith %}
         </div>
-        <div class="project-card-footer">
-            <a href="{% url 'core:project_detail' project.id %}" class="pc-btn primary">{% trans 'Ouvrir' %}</a>
-            <a href="{% url 'core:project_edit' project.id %}" class="pc-btn secondary">{% trans 'Modifier' %}</a>
-            <a href="{% url 'core:project_delete' project.id %}" class="pc-btn danger">{% trans 'Supprimer' %}</a>
+
+        <div class="pc-foot">
+            <span class="pc-manager">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                {{ project.manager }}
+            </span>
+            <a href="{% url 'core:project_detail' project.id %}" class="pc-open" onclick="event.stopPropagation()">{% trans 'Ouvrir' %} →</a>
         </div>
     </div>
     {% empty %}
-    <div class="projects-empty" style="grid-column: 1 / -1;">
+    <div class="projects-empty">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
@@ -183,16 +241,16 @@
     {% endfor %}
 </div>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.project-card[data-detail-url]').forEach(function(card) {
-        card.addEventListener('click', function(event) {
-            if (event.target.closest('a, button, input, select, textarea')) return;
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.project-card[data-detail-url]').forEach(function (card) {
+        card.addEventListener('click', function (e) {
+            if (e.target.closest('a, button, input, select, textarea')) return;
             window.location.href = card.dataset.detailUrl;
         });
-        card.addEventListener('keydown', function(event) {
-            if (event.key !== 'Enter' && event.key !== ' ') return;
-            if (event.target.closest('a, button, input, select, textarea')) return;
-            event.preventDefault();
+        card.addEventListener('keydown', function (e) {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            if (e.target.closest('a, button, input, select, textarea')) return;
+            e.preventDefault();
             window.location.href = card.dataset.detailUrl;
         });
     });

@@ -7,17 +7,19 @@ from .currencies import CURRENCY_CHOICES, convert_currency, format_currency
 class ProjectForm(forms.ModelForm):
     """Formulaire pour les projets"""
     currency = forms.ChoiceField(choices=CURRENCY_CHOICES, initial='GNF', label="Devise")
-    
+
     class Meta:
         model = Project
-        fields = ['name', 'description', 'direction', 'status', 'priority', 
-                  'budget', 'budget_consumed', 'currency', 'start_date', 'end_date', 'manager']
+        fields = ['name', 'description', 'direction', 'status', 'priority',
+                  'budget', 'budget_consumed', 'currency', 'start_date', 'end_date',
+                  'manager_employee']
         widgets = {
             'start_date': forms.DateInput(attrs={'type': 'date'}),
             'end_date': forms.DateInput(attrs={'type': 'date'}),
             'description': forms.Textarea(attrs={'rows': 3}),
+            'manager_employee': forms.Select(attrs={'class': 'form-control select-searchable'}),
         }
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
@@ -26,6 +28,12 @@ class ProjectForm(forms.ModelForm):
         # Direction optionnelle
         self.fields['direction'].required = False
         self.fields['direction'].empty_label = "-- Aucune direction --"
+        # manager_employee : filtrer les internes uniquement
+        self.fields['manager_employee'].queryset = Employee.objects.filter(is_external=False).order_by('name')
+        self.fields['manager_employee'].required = True
+        self.fields['manager_employee'].empty_label = "-- Sélectionner un responsable --"
+        self.fields['manager_employee'].label = "Responsable du projet"
+        self.fields['manager_employee'].help_text = "Associe un employé interne comme responsable du projet."
 
         # Budget et budget consomme optionnels (valeur par defaut 0 si vide)
         self.fields['budget'].required = False
@@ -92,13 +100,13 @@ class MilestoneForm(forms.ModelForm):
     """Formulaire pour les jalons"""
     class Meta:
         model = Milestone
-        fields = ['name', 'assigned_to', 'due_date', 'need', 'manual_progress', 'completed', 'order']
+        fields = ['name', 'due_date', 'need', 'status', 'manual_progress', 'completed', 'order']
         widgets = {
             'order': forms.HiddenInput(),
             'manual_progress': forms.NumberInput(attrs={'min': 0, 'max': 100, 'style': 'width: 100px;'}),
-            'assigned_to': forms.Select(attrs={'class': 'form-control'}),
             'due_date': forms.DateInput(attrs={'type': 'date'}),
             'need': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Décrivez le besoin lié à cette étape...'}),
+            'status': forms.Select(attrs={'class': 'form-control'}),
         }
     
     def __init__(self, project=None, *args, **kwargs):
@@ -109,10 +117,6 @@ class MilestoneForm(forms.ModelForm):
         self.fields['manual_progress'].label = 'Progression (%)'
         self.fields['manual_progress'].help_text = 'Utilisé uniquement si le jalon n\'a pas de sous-étapes'
         if project:
-            from .models import Employee
-            # Montrer tous les employés du système pour l'affectation
-            self.fields['assigned_to'].queryset = Employee.objects.select_related('direction').all().order_by('direction__name', 'name')
-            self.fields['assigned_to'].label_from_instance = lambda obj: f"{obj.name} — {obj.direction.code} ({obj.role})"
             # Auto-incrémenter l'ordre si nouveau jalon
             if not self.instance.pk:
                 max_order = project.milestones.aggregate(Max('order'))['order__max']
@@ -123,24 +127,19 @@ class SubMilestoneForm(forms.ModelForm):
     """Formulaire pour les sous-étapes"""
     class Meta:
         model = SubMilestone
-        fields = ['name', 'assigned_to', 'due_date', 'need', 'completed', 'order']
+        fields = ['name', 'due_date', 'need', 'completed', 'order']
         widgets = {
             'order': forms.HiddenInput(),
-            'assigned_to': forms.Select(attrs={'class': 'form-control'}),
             'due_date': forms.DateInput(attrs={'type': 'date'}),
             'need': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Décrivez le besoin lié à cette sous-étape...'}),
         }
-    
+
     def __init__(self, milestone=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.milestone = milestone
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
         if milestone:
-            from .models import Employee
-            # Montrer tous les employés du système pour l'affectation
-            self.fields['assigned_to'].queryset = Employee.objects.select_related('direction').all().order_by('direction__name', 'name')
-            self.fields['assigned_to'].label_from_instance = lambda obj: f"{obj.name} — {obj.direction.code} ({obj.role})"
             # Auto-incrémenter l'ordre si nouvelle sous-étape
             if not self.instance.pk:
                 max_order = milestone.sub_milestones.aggregate(Max('order'))['order__max']
@@ -279,7 +278,7 @@ class RequestForm(forms.ModelForm):
     """Formulaire pour les demandes"""
     class Meta:
         model = Request
-        fields = ['title', 'description', 'direction', 'priority', 'status', 'created_by']
+        fields = ['title', 'description', 'direction', 'priority', 'created_by']
         widgets = {
             'description': forms.Textarea(attrs={'rows': 3}),
         }
@@ -353,15 +352,21 @@ class EmployeeForm(forms.ModelForm):
     """Formulaire pour les employés"""
     class Meta:
         model = Employee
-        fields = ['name', 'direction', 'role', 'phone', 'email']
+        fields = ['name', 'direction', 'role', 'phone', 'email', 'workload', 'skills']
+        widgets = {
+            'workload': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 100}),
+            'skills': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Compétences séparées par des virgules'}),
+        }
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form-control'
+            if field_name not in ('workload', 'skills'):
+                field.widget.attrs['class'] = 'form-control'
         self.fields['name'].label = 'Nom complet'
         self.fields['phone'].label = 'Téléphone'
         self.fields['email'].label = 'Email'
+        self.fields['direction'].required = False
 
         # Restriction : un directeur ne peut creer/modifier que des employes de sa direction
         profile = getattr(user, 'profile', None) if user else None

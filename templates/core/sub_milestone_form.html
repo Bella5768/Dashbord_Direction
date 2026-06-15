@@ -3,178 +3,287 @@
 
 {% block title %}{{ title }}{% endblock %}
 {% block page_title %}{{ title }}{% endblock %}
-{% block page_subtitle %}{% trans 'Projet' %} : {{ project.name }} | {% trans 'Jalon' %} : {{ milestone.name }}{% endblock %}
+{% block page_subtitle %}{% trans 'Projet' %} : {{ project.name }} &rsaquo; {{ milestone.name }}{% endblock %}
 
 {% block extra_css %}
 <style>
-.sub-milestone-form-card { max-width: 760px; }
-.sub-milestone-form-card .card-body { padding: 0; }
-.sub-milestone-form { display: flex; flex-direction: column; gap: 20px; padding: 24px 30px 30px; }
-.sub-milestone-form .form-group { display: flex; flex-direction: column; gap: 8px; margin: 0 !important; }
-.sub-milestone-form label { font-weight: 600; color: #0f172a; }
-.sub-milestone-form .form-control { width: 100%; max-width: 100%; box-sizing: border-box; }
-.employee-picker { display: flex; flex-direction: column; gap: 10px; align-items: stretch; }
-.employee-picker select { min-height: 170px; }
-.selected-employee-card { padding: 10px 12px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; }
-.sub-milestone-form textarea.form-control { min-height: 96px; resize: vertical; }
-.need-help { margin: 0; }
-.form-actions { display: flex; gap: 12px; flex-wrap: wrap; padding-top: 4px; }
-@media (max-width: 720px) { .sub-milestone-form { padding: 20px; } }
+.mf-wrap  { display:flex; gap:20px; align-items:flex-start; max-width:1060px; }
+.mf-main  { flex:1; min-width:0; }
+.mf-aside { flex:0 0 340px; }
+@media (max-width:860px) { .mf-wrap { flex-direction:column; } .mf-aside { flex:none; width:100%; } }
+
+/* Member picker */
+.mp-search-wrap { position:relative; margin-bottom:10px; }
+.mp-search-wrap svg { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--gray-400); pointer-events:none; }
+.mp-search-wrap input { padding-left:36px; }
+.mp-none { display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:var(--radius-sm); border:1.5px solid var(--gray-200); background:var(--gray-50); cursor:pointer; font-size:13px; color:var(--gray-500); transition:all .15s; margin-bottom:12px; }
+.mp-none:hover    { border-color:var(--gray-400); color:var(--gray-700); }
+.mp-none.mp-active { border-color:var(--gray-400); background:var(--gray-100); color:var(--gray-700); }
+.mp-section-label { font-size:11px; font-weight:600; color:var(--gray-400); text-transform:uppercase; letter-spacing:.05em; margin:12px 0 8px; }
+.mp-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+@media (max-width:480px) { .mp-grid { grid-template-columns:1fr; } }
+.mp-card { padding:10px; border-radius:var(--radius-sm); border:1.5px solid var(--gray-200); background:var(--gray-50); cursor:pointer; transition:all .15s; }
+.mp-card:hover    { border-color:var(--primary-200); background:var(--primary-50); }
+.mp-card.mp-active { border-color:var(--primary-500); background:var(--primary-50); }
+.mp-card.mp-dim   { opacity:.55; }
+.mp-card-row { display:flex; align-items:center; gap:8px; }
+.mp-av   { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#fff; flex-shrink:0; }
+.mp-info { flex:1; min-width:0; }
+.mp-name { font-size:12px; font-weight:600; color:var(--gray-800); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mp-dir  { font-size:11px; color:var(--gray-500); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mp-chk  { width:16px; height:16px; border-radius:50%; border:1.5px solid var(--gray-300); background:white; display:flex; align-items:center; justify-content:center; font-size:9px; color:white; flex-shrink:0; transition:all .15s; }
+.mp-card.mp-active .mp-chk { background:var(--primary-600); border-color:var(--primary-600); }
+.mp-badges { display:flex; gap:4px; flex-wrap:wrap; margin-top:6px; }
+
+/* Form helpers */
+.fg           { margin-bottom:16px; }
+.fg-last      { margin-bottom:24px; }
+.fg-sublabel  { font-weight:400; color:var(--gray-400); font-size:12px; }
+.fg-check-label { display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:400; }
+.fg-actions   { border-top:1px solid var(--gray-100); padding-top:20px; }
+.ferr-box     { background:var(--red-50); border:1px solid var(--red-100); border-radius:var(--radius-sm); padding:12px; margin-bottom:20px; }
+.ferr-title   { font-size:13px; font-weight:600; color:var(--red-700); margin-bottom:4px; }
+.ferr-list    { color:var(--red-600); margin:0; padding-left:18px; font-size:12px; }
+
+/* Parent banner */
+.sf-parent    { background:var(--primary-50); border:1px solid var(--primary-100); border-radius:var(--radius-sm); padding:10px 14px; margin-bottom:20px; display:flex; align-items:center; gap:8px; font-size:13px; color:var(--primary-700); }
+.sf-parent svg { color:var(--primary-600); flex-shrink:0; }
+
+/* Details / other employees */
+.mp-details { margin-top:14px; }
+.mp-details-summary { cursor:pointer; font-size:11px; font-weight:600; color:var(--gray-400); text-transform:uppercase; letter-spacing:.05em; list-style:none; display:flex; align-items:center; gap:6px; }
+.mp-details-summary::-webkit-details-marker { display:none; }
+.mp-details .mp-grid { margin-top:8px; }
+.mp-empty { font-size:13px; color:var(--gray-400); text-align:center; padding:24px 0; }
+
+/* Badge helpers */
+.badge-sm  { font-size:10px !important; padding:1px 6px !important; }
+.badge-ext { font-size:10px; padding:1px 6px; background:var(--amber-100,#fef3c7); color:var(--amber-700,#b45309); border-radius:var(--radius-sm); }
 </style>
+{% endblock %}
+
+{% block content %}
+<div class="mf-wrap">
+
+  <!-- ===== COLONNE FORMULAIRE ===== -->
+  <div class="mf-main">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">{% trans 'Informations de la sous-étape' %}</h3>
+      </div>
+      <div class="card-content">
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="order" value="{{ form.order.value|default:0 }}">
+
+          {% if form.errors %}
+          <div class="ferr-box">
+            <p class="ferr-title">{% trans 'Erreurs' %}</p>
+            <ul class="ferr-list">
+              {% for field, errs in form.errors.items %}<li>{{ field }}: {{ errs.0 }}</li>{% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+
+          <!-- Jalon parent -->
+          <div class="sf-parent">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+            <span><strong>{% trans 'Jalon parent' %} :</strong> {{ milestone.name }}</span>
+          </div>
+
+          <!-- Nom -->
+          <div class="form-group fg">
+            <label for="id_name">{% trans 'Nom de la sous-étape' %} *</label>
+            <input type="text" name="name" id="id_name" class="form-control"
+                   value="{{ form.name.value|default:'' }}" required
+                   placeholder="{% trans 'Ex : Rédiger le cahier des charges' %}">
+            {% if form.name.errors %}<p class="text-xs" style="color:var(--red-600);margin-top:4px;">{{ form.name.errors.0 }}</p>{% endif %}
+          </div>
+
+          <!-- Date -->
+          <div class="form-group fg">
+            <label for="id_due_date">{% trans 'Date limite' %}</label>
+            <input type="date" name="due_date" id="id_due_date" class="form-control"
+                   value="{{ form.due_date.value|date:'Y-m-d'|default:'' }}">
+          </div>
+
+          <!-- Besoin -->
+          <div class="form-group fg">
+            <label for="id_need">
+              {% trans 'Besoin' %}
+              <span class="fg-sublabel">({% trans "optionnel" %})</span>
+            </label>
+            <textarea name="need" id="id_need" class="form-control" rows="3" style="height:auto;"
+                      placeholder="{% trans 'Décrivez le besoin lié à cette sous-étape...' %}">{{ form.need.value|default:'' }}</textarea>
+          </div>
+
+          <!-- Complété -->
+          <div class="form-group fg-last">
+            <label class="fg-check-label">
+              <input type="checkbox" name="completed" {% if form.completed.value %}checked{% endif %}>
+              <span>{% trans 'Marquer comme complétée' %}</span>
+            </label>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex gap-3 fg-actions">
+            <button type="submit" class="btn btn-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              {% if sub_milestone %}{% trans 'Enregistrer' %}{% else %}{% trans 'Créer la sous-étape' %}{% endif %}
+            </button>
+            <a href="{% url 'core:project_detail' project.id %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== COLONNE ASSIGNATION ===== -->
+  <div class="mf-aside">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">{% trans 'Assigner à un membre' %}</h3>
+      </div>
+      <div class="card-content">
+
+        <div class="mp-search-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input type="text" id="mp-search" class="form-control" placeholder="{% trans 'Rechercher un membre...' %}" autocomplete="off">
+        </div>
+
+        <div class="mp-none" id="mp-none" onclick="mpToggle('', this)">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+          </svg>
+          {% trans 'Aucun responsable' %}
+        </div>
+
+        {% if project_members %}
+        <p class="mp-section-label">{% trans 'Membres du projet' %} ({{ project_members|length }})</p>
+        <div class="mp-grid">
+          {% for m in project_members %}
+          <div class="mp-card" data-id="{{ m.id }}" data-search="{{ m.name|lower }} {{ m.direction|lower }}"
+               onclick="mpToggle('{{ m.id }}', this)">
+            <div class="mp-card-row">
+              <div class="mp-av" style="background:{{ m.color }};">{{ m.initials }}</div>
+              <div class="mp-info">
+                <div class="mp-name">{{ m.name }}</div>
+                <div class="mp-dir">{{ m.direction }}</div>
+              </div>
+              <div class="mp-chk"></div>
+            </div>
+            <div class="mp-badges">
+              <span class="badge badge-success badge-sm">{% trans 'Membre' %}</span>
+              {% if m.is_external %}<span class="badge-ext">{% trans 'Externe' %}</span>{% endif %}
+              {% if m.project_role %}<span class="badge badge-primary badge-sm">{{ m.project_role }}</span>{% endif %}
+              <span class="badge {% if m.task_count >= 3 %}badge-warning{% else %}badge-secondary{% endif %} badge-sm">
+                {{ m.task_count }} {% trans 'tâche' %}{% if m.task_count != 1 %}s{% endif %}
+              </span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if other_employees %}
+        <details class="mp-details">
+          <summary class="mp-details-summary">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+            {% trans 'Autres employés' %} ({{ other_employees|length }})
+          </summary>
+          <div class="mp-grid">
+            {% for m in other_employees %}
+            <div class="mp-card mp-dim" data-id="{{ m.id }}" data-search="{{ m.name|lower }} {{ m.direction|lower }}"
+                 onclick="mpToggle('{{ m.id }}', this)">
+              <div class="mp-card-row">
+                <div class="mp-av" style="background:{{ m.color }};">{{ m.initials }}</div>
+                <div class="mp-info">
+                  <div class="mp-name">{{ m.name }}</div>
+                  <div class="mp-dir">{{ m.direction }}</div>
+                </div>
+                <div class="mp-chk"></div>
+              </div>
+              <div class="mp-badges">
+                {% if m.is_external %}<span class="badge-ext">{% trans 'Externe' %}</span>{% endif %}
+                <span class="badge badge-secondary badge-sm">
+                  {{ m.task_count }} {% trans 'tâche' %}{% if m.task_count != 1 %}s{% endif %}
+                </span>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </details>
+        {% endif %}
+
+        {% if not project_members and not other_employees %}
+        <p class="mp-empty">{% trans 'Aucun employé disponible' %}</p>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-const searchInput = document.getElementById('employee-search');
-const selectEl = document.getElementById('id_assigned_to');
-const selectedDiv = document.getElementById('selected-employee');
-const empAvatar = document.getElementById('emp-avatar');
-const empName = document.getElementById('emp-name');
-const empInfo = document.getElementById('emp-info');
-if (!searchInput || !selectEl || !selectedDiv) return;
-const allOptions = Array.from(selectEl.options).map(function(opt) {
-    const clone = opt.cloneNode(true);
-    if (opt.value) {
-        clone.dataset.direction = opt.dataset.direction || '';
-        clone.dataset.role = opt.dataset.role || '';
-    }
-    return clone;
-});
+var mpSelected = new Set({{ initial_assignee_ids|default:"[]" }}.map(String));
 
-searchInput.addEventListener('input', function() {
-    const query = this.value.toLowerCase();
-    const currentValue = selectEl.value;
-    selectEl.innerHTML = '';
-    let hasSelected = false;
-    allOptions.forEach(function(opt) {
-        if (opt.value === '' || opt.text.toLowerCase().includes(query)) {
-            const clone = opt.cloneNode(true);
-            if (clone.value === currentValue) {
-                clone.selected = true;
-                hasSelected = true;
-            }
-            selectEl.appendChild(clone);
-        }
-    });
-    if (!hasSelected && currentValue) {
-        const selectedOpt = allOptions.find(function(opt) { return opt.value === currentValue; });
-        if (selectedOpt) {
-            const clone = selectedOpt.cloneNode(true);
-            clone.selected = true;
-            selectEl.appendChild(clone);
-        }
-    }
-});
-
-selectEl.addEventListener('change', function() {
-    const opt = this.options[this.selectedIndex];
-    if (opt && opt.value) {
-        const name = opt.text.split(' \u2014 ')[0].trim();
-        empAvatar.textContent = name.charAt(0).toUpperCase();
-        empName.textContent = name;
-        empInfo.textContent = (opt.dataset.direction || '') + ' \u2022 ' + (opt.dataset.role || '');
-        selectedDiv.style.display = 'block';
-    } else {
-        selectedDiv.style.display = 'none';
-    }
-});
-
-window.clearEmployee = function() {
-    selectEl.value = '';
-    selectedDiv.style.display = 'none';
-    searchInput.value = '';
-    searchInput.dispatchEvent(new Event('input'));
-};
-
-const opt = selectEl.options[selectEl.selectedIndex];
-if (opt && opt.value) {
-    const name = opt.text.split(' \u2014 ')[0].trim();
-    empAvatar.textContent = name.charAt(0).toUpperCase();
-    empName.textContent = name;
-    empInfo.textContent = (opt.dataset.direction || '') + ' \u2022 ' + (opt.dataset.role || '');
-    selectedDiv.style.display = 'block';
+function mpSyncHiddenInputs() {
+  document.querySelectorAll('input[name="assigned_to"]').forEach(function(el) { el.remove(); });
+  var form = document.querySelector('form[method="post"]');
+  mpSelected.forEach(function(id) {
+    var inp = document.createElement('input');
+    inp.type = 'hidden'; inp.name = 'assigned_to'; inp.value = id;
+    form.appendChild(inp);
+  });
+  document.getElementById('mp-none').classList.toggle('mp-active', mpSelected.size === 0);
 }
+
+function mpToggle(id, clickedEl) {
+  if (!id) {
+    mpSelected.clear();
+    document.querySelectorAll('.mp-card').forEach(function(c) {
+      c.classList.remove('mp-active');
+      var chk = c.querySelector('.mp-chk'); if (chk) chk.textContent = '';
+    });
+  } else {
+    if (mpSelected.has(id)) {
+      mpSelected.delete(id);
+      clickedEl.classList.remove('mp-active');
+      var chk = clickedEl.querySelector('.mp-chk'); if (chk) chk.textContent = '';
+    } else {
+      mpSelected.add(id);
+      clickedEl.classList.add('mp-active');
+      var chk = clickedEl.querySelector('.mp-chk'); if (chk) chk.textContent = '✓';
+    }
+  }
+  mpSyncHiddenInputs();
+}
+
+document.getElementById('mp-search').addEventListener('input', function() {
+  var q = this.value.toLowerCase().trim();
+  document.querySelectorAll('.mp-card').forEach(function(c) {
+    c.style.display = (!q || (c.dataset.search || '').includes(q)) ? '' : 'none';
+  });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  mpSelected.forEach(function(id) {
+    var card = document.querySelector('.mp-card[data-id="' + id + '"]');
+    if (card) { card.classList.add('mp-active'); var chk = card.querySelector('.mp-chk'); if (chk) chk.textContent = '✓'; }
+  });
+  mpSyncHiddenInputs();
 });
 </script>
-{% endblock %}
-{% block content %}
-<div class="card sub-milestone-form-card">
-    <div class="card-header">
-        <h3 class="card-title">{{ title }}</h3>
-    </div>
-    <div class="card-body">
-        <form method="post" class="sub-milestone-form">
-            {% csrf_token %}
-            
-            <div class="form-group">
-                <label for="id_name">{% trans 'Nom de la sous-étape' %} *</label>
-                <input type="text" name="name" id="id_name" class="form-control" 
-                       value="{{ form.name.value|default:'' }}" required
-                       placeholder="Ex: Rédiger le cahier des charges">
-            </div>
-            
-            <div class="form-group">
-                <label for="id_due_date">{% trans 'Date de la sous-tâche' %}</label>
-                <input type="date" name="due_date" id="id_due_date" class="form-control" value="{{ form.due_date.value|date:'Y-m-d'|default:'' }}">
-            </div>
-            
-            <div class="form-group">
-                <label for="employee-search">{% trans 'Rechercher' %}</label>
-                <div class="employee-picker">
-                    <input type="text" id="employee-search" class="form-control" placeholder="🔍 {% trans 'Rechercher un employé...' %}" autocomplete="off"
-                           style="margin-bottom: 0;">
-                    <select name="assigned_to" id="id_assigned_to" class="form-control" size="6"
-                            style="cursor: pointer;">
-                        <option value="">-- {% trans 'Aucun responsable' %} --</option>
-                        {% for employee in form.assigned_to.field.queryset %}
-                        <option value="{{ employee.pk }}" {% if form.assigned_to.value|stringformat:"s" == employee.pk|stringformat:"s" %}selected{% endif %}
-                                data-direction="{{ employee.direction.code }}" data-role="{{ employee.role }}">
-                            {{ employee.name }} — {{ employee.direction.code }} ({{ employee.role }})
-                        </option>
-                        {% endfor %}
-                    </select>
-                    <div id="selected-employee" class="selected-employee-card" style="display: none;">
-                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <div style="width: 32px; height: 32px; border-radius: 50%; background: #2563eb; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px;" id="emp-avatar"></div>
-                                <div>
-                                    <div style="font-weight: 600; font-size: 14px; color: #1e293b;" id="emp-name"></div>
-                                    <div style="font-size: 12px; color: #64748b;" id="emp-info"></div>
-                                </div>
-                            </div>
-                            <button type="button" onclick="clearEmployee()" style="background: none; border: none; cursor: pointer; color: #94a3b8; font-size: 18px;" title="{% trans 'Retirer' %}">&times;</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <input type="hidden" name="order" id="id_order" value="{{ form.order.value|default:0 }}">
-
-            <div class="form-group">
-                <label for="id_need">{% trans 'Besoin' %}</label>
-                <textarea name="need" id="id_need" class="form-control" rows="3" placeholder="{% trans 'Décrivez le besoin lié à cette sous-étape...' %}">{{ form.need.value|default:'' }}</textarea>
-                <p class="text-xs text-gray-500 need-help">{% trans 'Optionnel : décrivez le besoin lié à cette sous-étape' %}</p>
-            </div>
-
-            <div class="form-group">
-                <label style="display: block; margin-bottom: 8px;">{% trans 'Statut' %}</label>
-                <label class="remember-me" style="cursor: pointer; display: flex; gap: 8px; align-items: center;">
-                    <input type="checkbox" name="completed" {% if form.completed.value %}checked{% endif %}>
-                    <span>{% trans 'Complétée' %}</span>
-                </label>
-            </div>
-            
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    {% if sub_milestone %}{% trans 'Enregistrer' %}{% else %}{% trans 'Créer la sous-étape' %}{% endif %}
-                </button>
-                <a href="{% url 'core:project_detail' project.id %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
-            </div>
-        </form>
-    </div>
-</div>
 {% endblock %}

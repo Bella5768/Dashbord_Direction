@@ -23,6 +23,15 @@ urlpatterns = [
     path('evenements/<int:event_id>/modifier/', views.event_edit, name='event_edit'),
     path('evenements/<int:event_id>/supprimer/', views.event_delete, name='event_delete'),
     
+    # Document CRUD (module Documents global)
+    path('documents/', views.documents, name='documents'),
+    path('documents/nouveau/', views.document_create, name='document_create'),
+    path('documents/<int:doc_id>/modifier/', views.document_edit, name='document_edit'),
+    path('documents/<int:doc_id>/supprimer/', views.document_delete, name='document_delete'),
+    path('documents/<int:doc_id>/signer/', views.document_sign, name='document_sign'),
+    path('documents/<int:doc_id>/valider/', views.document_validate, name='document_validate'),
+    path('documents/<int:doc_id>/telecharger/', views.document_download, name='document_download'),
+
     # Reports
     path('rapports/', views.reports, name='reports'),
     path('rapports/export/pdf/', views.export_reports_pdf, name='export_reports_pdf'),
@@ -49,14 +58,19 @@ urlpatterns = [
     
     # Milestone CRUD
     path('projets/<int:project_id>/jalons/nouveau/', views.milestone_create, name='milestone_create'),
+    path('jalons/<int:milestone_id>/', views.milestone_detail, name='milestone_detail'),
     path('jalons/<int:milestone_id>/modifier/', views.milestone_edit, name='milestone_edit'),
     path('jalons/<int:milestone_id>/supprimer/', views.milestone_delete, name='milestone_delete'),
-    
+    path('jalons/<int:milestone_id>/toggle/', views.milestone_toggle, name='milestone_toggle'),
+    path('jalons/<int:milestone_id>/statut/', views.milestone_update_status, name='milestone_update_status'),
+    path('jalons/<int:milestone_id>/assigner/', views.milestone_quick_assign, name='milestone_quick_assign'),
+
     # SubMilestone CRUD
     path('jalons/<int:milestone_id>/sous-etapes/nouveau/', views.sub_milestone_create, name='sub_milestone_create'),
     path('sous-etapes/<int:sub_milestone_id>/modifier/', views.sub_milestone_edit, name='sub_milestone_edit'),
     path('sous-etapes/<int:sub_milestone_id>/supprimer/', views.sub_milestone_delete, name='sub_milestone_delete'),
     path('sous-etapes/<int:sub_milestone_id>/toggle/', views.sub_milestone_toggle, name='sub_milestone_toggle'),
+    path('sous-etapes/<int:sub_milestone_id>/assigner/', views.sub_milestone_quick_assign, name='sub_milestone_quick_assign'),
     
     # Project Folder & Document CRUD
     path('projets/<int:project_id>/dossiers/nouveau/', views.project_folder_create, name='project_folder_create'),
@@ -68,12 +82,18 @@ urlpatterns = [
     path('projets/documents/<int:doc_id>/supprimer/', views.project_document_delete, name='project_document_delete'),
     path('projets/documents/<int:doc_id>/telecharger/', views.project_document_download, name='project_document_download'),
     
+    # Project Need status
+    path('besoins/<int:need_id>/statut/', views.project_need_update_status, name='project_need_update_status'),
+
     # Project Member CRUD
     path('projets/<int:project_id>/membres/ajouter/', views.project_member_add, name='project_member_add'),
     path('projets/membres/<int:member_id>/modifier/', views.project_member_edit, name='project_member_edit'),
     path('projets/membres/<int:member_id>/supprimer/', views.project_member_delete, name='project_member_delete'),
     
     
+    # My tasks
+    path('mes-taches/', views.my_tasks, name='my_tasks'),
+
     # Request CRUD
     path('demandes/nouveau/', views.request_create, name='request_create'),
     path('demandes/<int:req_id>/approuver/', views.request_approve, name='request_approve'),

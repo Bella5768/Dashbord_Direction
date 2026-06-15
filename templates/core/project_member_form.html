@@ -5,290 +5,500 @@
 {% block page_title %}{{ title }}{% endblock %}
 {% block page_subtitle %}{% trans 'Projet' %} : {{ project.name }}{% endblock %}
 
+{% block extra_css %}
+<style>
+.mt-card { max-width: 680px; }
+
+/* Type selector */
+.mt-type-header { margin-bottom: 4px; }
+.mt-section-label { font-size:12px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:.05em; margin-bottom:10px; }
+.mt-type-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:20px; }
+@media(max-width:600px){ .mt-type-grid { grid-template-columns:1fr; } }
+.mt-type-opt { position:relative; }
+.mt-type-opt input[type=radio] { position:absolute; opacity:0; width:0; height:0; }
+.mt-type-label { display:flex; flex-direction:column; align-items:center; gap:8px; padding:14px 10px; border-radius:var(--radius-sm); border:2px solid var(--gray-200); background:var(--gray-50); cursor:pointer; transition:all .15s; text-align:center; }
+.mt-type-label svg { color:var(--gray-400); }
+.mt-type-label .mt-type-title { font-size:13px; font-weight:600; color:var(--gray-700); }
+.mt-type-label .mt-type-sub { font-size:11px; color:var(--gray-400); }
+.mt-type-opt input:checked + .mt-type-label { border-color:var(--primary-500); background:var(--primary-50); }
+.mt-type-opt input:checked + .mt-type-label svg { color:var(--primary-600); }
+.mt-type-opt input:checked + .mt-type-label .mt-type-title { color:var(--primary-700); }
+
+/* Panels */
+.mt-panel { background:var(--gray-50); border:1px solid var(--gray-200); border-radius:var(--radius-sm); padding:16px; margin-bottom:16px; }
+.mt-panel-ext { background:var(--amber-50,#fffbeb); border-color:var(--amber-200,#fde68a); }
+.mt-panel-int { background:var(--primary-50); border-color:var(--primary-100); }
+.mt-panel-title { font-size:13px; font-weight:600; margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+.mt-panel-title.int { color:var(--primary-700); }
+.mt-panel-title.ext { color:var(--amber-700,#b45309); }
+.mt-panel-title svg { flex-shrink:0; }
+.mt-panel-icon-int { color:var(--primary-600); }
+.mt-panel-desc { font-size:12px; margin-bottom:12px; }
+.mt-panel-desc.int { color:var(--primary-600); }
+.mt-panel-desc.ext { color:var(--amber-700,#b45309); }
+.mt-panel-count { font-size:12px; color:var(--gray-500); }
+
+/* Form helpers */
+.fg-sm      { margin-bottom:12px; }
+.fg-grid-sm { gap:12px; }
+.fg-actions { border-top:1px solid var(--gray-100); padding-top:20px; }
+
+/* Permissions section */
+.mt-perm-section { background:var(--gray-50); border:1px solid var(--gray-200); border-radius:var(--radius-sm); padding:16px; margin-bottom:24px; }
+.mt-perm-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.mt-perm-title { font-size:13px; font-weight:600; color:var(--gray-700); margin:0; display:flex; align-items:center; gap:6px; }
+.mt-perm-title svg { flex-shrink:0; }
+.mt-perm-note { font-size:11px; color:var(--primary-600); }
+.mt-perm-label { display:flex; align-items:center; gap:8px; padding:8px; background:white; border-radius:6px; cursor:pointer; font-size:13px; }
+.mt-custom-hint { font-size:11px; color:var(--primary-600); margin-top:10px; }
+
+/* Create account */
+.mt-create-account { background:var(--gray-50); border:1px solid var(--gray-200); border-radius:var(--radius-sm); padding:16px; margin-bottom:16px; }
+.mt-create-account-fields { margin-top:14px; display:flex; flex-direction:column; gap:12px; }
+.mt-alert-amber { background:#fffbeb; border:1px solid #fde68a; border-radius:6px; padding:10px 14px; font-size:12px; color:#92400e; margin-bottom:10px; display:flex; align-items:flex-start; gap:6px; }
+.mt-account-label { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:var(--gray-700); cursor:pointer; }
+.mt-account-chk { width:16px; height:16px; cursor:pointer; }
+
+/* Badge helpers */
+.badge-sm { font-size:10px !important; padding:1px 6px !important; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="card" style="max-width: 700px;">
-    <div class="card-header">
-        <h3 class="card-title">{% trans 'Informations du membre' %}</h3>
-    </div>
-    <div class="card-content">
-        <form method="post">
-            {% csrf_token %}
-            
-            <!-- Toggle entre employé existant et nouveau -->
-            <div class="form-group" style="margin-bottom: 16px;">
-                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                    <input type="checkbox" id="toggle_new_employee" name="create_new_employee" style="width: 18px; height: 18px;" {% if create_new_employee %}checked{% endif %}>
-                    <span>{% trans 'Créer un nouvel employé (personne non enregistrée dans le système)' %}</span>
-                </label>
+<div class="card mt-card">
+  <div class="card-header">
+    <h3 class="card-title">{% trans 'Informations du membre' %}</h3>
+  </div>
+  <div class="card-content">
+    <form method="post" id="member-form">
+      {% csrf_token %}
+
+      <!-- ===== SÉLECTEUR TYPE ===== -->
+      <div class="mt-type-header">
+        <p class="mt-section-label">{% trans 'Type de membre' %}</p>
+        <div class="mt-type-grid">
+
+          <div class="mt-type-opt">
+            <input type="radio" name="member_type" id="mt_existing" value="existing"
+              {% if not member_type or member_type == 'existing' %}checked{% endif %}>
+            <label for="mt_existing" class="mt-type-label">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="22" height="22">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+              </svg>
+              <span class="mt-type-title">{% trans 'Employé existant' %}</span>
+              <span class="mt-type-sub">{% trans 'Déjà dans le système' %}</span>
+            </label>
+          </div>
+
+          <div class="mt-type-opt">
+            <input type="radio" name="member_type" id="mt_internal" value="new_internal"
+              {% if member_type == 'new_internal' %}checked{% endif %}>
+            <label for="mt_internal" class="mt-type-label">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="22" height="22">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+              </svg>
+              <span class="mt-type-title">{% trans 'Nouvel employé' %}</span>
+              <span class="mt-type-sub">{% trans 'Créer une fiche interne' %}</span>
+            </label>
+          </div>
+
+          <div class="mt-type-opt">
+            <input type="radio" name="member_type" id="mt_external" value="new_external"
+              {% if member_type == 'new_external' %}checked{% endif %}>
+            <label for="mt_external" class="mt-type-label">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="22" height="22">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="mt-type-title">{% trans 'Personne externe' %}</span>
+              <span class="mt-type-sub">{% trans 'Consultant, partenaire…' %}</span>
+            </label>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ===== SECTION EMPLOYÉ EXISTANT ===== -->
+      <div id="panel_existing" class="mt-panel">
+        <p class="mt-panel-title">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="15" height="15" class="mt-panel-icon-int">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          {% trans 'Sélectionner un employé existant' %}
+        </p>
+        <div class="form-group fg-sm">
+          {{ form.employee }}
+          {% if form.employee.errors %}<p class="text-xs" style="color:var(--red-600);margin-top:4px;">{{ form.employee.errors.0 }}</p>{% endif %}
+        </div>
+        {% if available_employees_count is not None %}
+        <p class="mt-panel-count">{{ available_employees_count }} {% trans 'employé(s) disponible(s) pour ce projet' %}</p>
+        {% endif %}
+      </div>
+
+      <!-- ===== SECTION NOUVEL EMPLOYÉ INTERNE ===== -->
+      <div id="panel_internal" class="mt-panel mt-panel-int" style="display:none;">
+        <p class="mt-panel-title int">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="15" height="15">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+          </svg>
+          {% trans 'Créer un nouvel employé interne' %}
+          {% if project.direction %}<span class="badge badge-primary badge-sm" style="margin-left:6px;">{{ project.direction.code }}</span>{% endif %}
+        </p>
+        <p class="mt-panel-desc int">{% trans "L'employé sera rattaché à la direction du projet et stocké dans le système." %}</p>
+        <div class="form-group fg-sm">
+          <label for="int_name">{% trans 'Nom complet' %} *</label>
+          <input type="text" id="int_name" name="new_employee_name" class="form-control"
+                 value="{{ new_employee_name|default:'' }}" placeholder="{% trans 'Ex : Amadou Diallo' %}">
+        </div>
+        <div class="form-group fg-sm">
+          <label for="int_role">{% trans 'Poste / Fonction' %} *</label>
+          <input type="text" id="int_role" name="new_employee_role" class="form-control"
+                 value="{{ new_employee_role|default:'' }}" placeholder="{% trans 'Ex : Ingénieur, Analyste, Chef de division…' %}">
+        </div>
+        <div class="grid grid-2 fg-grid-sm">
+          <div class="form-group">
+            <label for="int_phone">{% trans 'Téléphone' %}</label>
+            <input type="text" id="int_phone" name="new_employee_phone" class="form-control"
+                   value="{{ new_employee_phone|default:'' }}" placeholder="621 234 567">
+          </div>
+          <div class="form-group">
+            <label for="int_email">{% trans 'Email' %}</label>
+            <input type="email" id="int_email" name="new_employee_email" class="form-control"
+                   value="{{ new_employee_email|default:'' }}" placeholder="nom@organisation.gn">
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== SECTION PERSONNE EXTERNE ===== -->
+      <div id="panel_external" class="mt-panel mt-panel-ext" style="display:none;">
+        <p class="mt-panel-title ext">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="15" height="15">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          {% trans 'Personne externe au projet' %}
+        </p>
+        <p class="mt-panel-desc ext">{% trans "Consultant, prestataire, partenaire — la fiche est créée et stockée avec le marqueur « Externe »." %}</p>
+        <div class="form-group fg-sm">
+          <label for="ext_name">{% trans 'Nom complet' %} *</label>
+          <input type="text" id="ext_name" name="new_employee_name" class="form-control"
+                 value="{{ new_employee_name|default:'' }}" placeholder="{% trans 'Ex : Marie Konaté' %}">
+        </div>
+        <div class="form-group fg-sm">
+          <label for="ext_org">{% trans 'Organisation / Entreprise' %}</label>
+          <input type="text" id="ext_org" name="new_employee_organization" class="form-control"
+                 value="{{ new_employee_organization|default:'' }}" placeholder="{% trans 'Ex : Cabinet XYZ, ONG Alpha…' %}">
+        </div>
+        <div class="form-group fg-sm">
+          <label for="ext_role">{% trans 'Poste / Fonction' %} *</label>
+          <input type="text" id="ext_role" name="new_employee_role" class="form-control"
+                 value="{{ new_employee_role|default:'' }}" placeholder="{% trans 'Ex : Consultant senior, Expert technique…' %}">
+        </div>
+        <div class="grid grid-2 fg-grid-sm">
+          <div class="form-group">
+            <label for="ext_phone">{% trans 'Téléphone' %}</label>
+            <input type="text" id="ext_phone" name="new_employee_phone" class="form-control"
+                   value="{{ new_employee_phone|default:'' }}" placeholder="621 234 567">
+          </div>
+          <div class="form-group">
+            <label for="ext_email">{% trans 'Email' %}</label>
+            <input type="email" id="ext_email" name="new_employee_email" class="form-control"
+                   value="{{ new_employee_email|default:'' }}" placeholder="nom@exemple.com">
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== RÔLE DANS LE PROJET ===== -->
+      <div class="form-group" style="margin-bottom:16px;">
+        <label for="id_role">{% trans 'Rôle dans le projet' %} *</label>
+        {{ form.role }}
+        {% if form.role.errors %}<p class="text-xs" style="color:var(--red-600);">{{ form.role.errors.0 }}</p>{% endif %}
+      </div>
+
+      <!-- ===== PERMISSIONS ===== -->
+      <div id="permissions_section" class="mt-perm-section">
+        <div class="mt-perm-hdr">
+          <p class="mt-perm-title">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="15" height="15">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+            {% trans 'Permissions sur ce projet' %}
+          </p>
+          <span id="perm_preset_note" class="mt-perm-note"></span>
+        </div>
+        <div class="grid grid-2" style="gap:8px;">
+          {% with post=request.POST %}
+          <label id="lbl_can_manage_members_perm" class="mt-perm-label">
+            <input type="checkbox" name="can_manage_members_perm" {% if post.can_manage_members_perm %}checked{% endif %}>
+            {% trans 'Gérer les membres' %}
+          </label>
+          <label id="lbl_can_edit_project_perm" class="mt-perm-label">
+            <input type="checkbox" name="can_edit_project_perm" {% if post.can_edit_project_perm %}checked{% endif %}>
+            {% trans 'Modifier le projet' %}
+          </label>
+          <label id="lbl_can_add_milestones_perm" class="mt-perm-label">
+            <input type="checkbox" name="can_add_milestones_perm" {% if post.can_add_milestones_perm %}checked{% endif %}>
+            {% trans 'Ajouter des jalons' %}
+          </label>
+          <label id="lbl_can_add_documents_perm" class="mt-perm-label">
+            <input type="checkbox" name="can_add_documents_perm" {% if post.can_add_documents_perm %}checked{% endif %}>
+            {% trans 'Ajouter des documents' %}
+          </label>
+          <label id="lbl_can_add_needs_perm" class="mt-perm-label">
+            <input type="checkbox" name="can_add_needs_perm" {% if post.can_add_needs_perm %}checked{% endif %}>
+            {% trans 'Ajouter des besoins' %}
+          </label>
+          <label id="lbl_can_add_comments_perm" class="mt-perm-label">
+            <input type="checkbox" name="can_add_comments_perm" {% if post.can_add_comments_perm %}checked{% endif %}>
+            {% trans 'Ajouter des commentaires' %}
+          </label>
+          {% endwith %}
+        </div>
+        <p id="custom_perm_hint" class="mt-custom-hint" style="display:none;">
+          {% trans 'Rôle Personnalisé — cochez uniquement les permissions souhaitées.' %}
+        </p>
+      </div>
+
+      <!-- ===== CRÉER UN COMPTE DE CONNEXION ===== -->
+      <div id="panel_create_account" class="mt-create-account" style="display:none;">
+
+        <div id="alert_external_account" class="mt-alert-amber" style="display:none;">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="flex-shrink:0;margin-top:1px;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+          </svg>
+          <span>{% trans "Cette personne externe doit avoir un compte pour consulter le projet." %}</span>
+        </div>
+
+        <label class="mt-account-label">
+          <input type="checkbox" id="toggle_create_user" name="create_user" class="mt-account-chk">
+          {% trans 'Créer un compte de connexion pour cette personne' %}
+        </label>
+
+        <div id="create_user_fields" class="mt-create-account-fields" style="display:none;">
+          <div class="grid grid-2 fg-grid-sm">
+            <div class="form-group">
+              <label for="new_user_username">{% trans "Nom d'utilisateur" %} *</label>
+              <input type="text" id="new_user_username" name="new_user_username" class="form-control"
+                     value="{{ request.POST.new_user_username|default:'' }}"
+                     placeholder="prenom.nom" autocomplete="off">
             </div>
-            
-            <!-- Section employé existant -->
-            <div id="existing_employee_section" {% if create_new_employee %}style="display: none;"{% endif %}>
-                <div class="form-group" style="margin-bottom: 16px;">
-                    <label for="id_employee">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                        {% trans 'Employé existant' %} *
-                    </label>
-                    
-                    {{ form.employee }}
-                    {% if form.employee.errors %}<p class="text-xs" style="color: var(--red-600);">{{ form.employee.errors.0 }}</p>{% endif %}
-                    <p class="text-xs" style="color: var(--gray-600); margin-top: 4px;">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12" style="display: inline-block; vertical-align: middle;">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                        {% trans 'Utilisez la recherche pour trouver rapidement un employé par nom, poste, département ou email' %}
-                    </p>
-                </div>
-                
-                <!-- Statistiques des employés disponibles -->
-                <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; margin-bottom: 16px;">
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="color: var(--blue-600);">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span style="font-weight: 600; color: var(--blue-900);">{% trans 'Employés disponibles' %}</span>
-                    </div>
-                    <div style="font-size: 14px; color: var(--gray-700);">
-                        {% if available_employees_count %}
-                            {{ available_employees_count }} {% trans 'employé(s) disponible(s) pour ce projet' %}
-                        {% else %}
-                            {% trans 'Tous les employés sont déjà membres de ce projet' %}
-                        {% endif %}
-                    </div>
-                </div>
+            <div class="form-group">
+              <label for="new_user_role">{% trans 'Rôle système' %}</label>
+              <select id="new_user_role" name="new_user_role" class="form-control">
+                {% for val, lbl in role_choices %}
+                <option value="{{ val }}"
+                  {% if request.POST.new_user_role == val %}selected
+                  {% elif not request.POST.new_user_role and val == 'employe' %}selected{% endif %}>{{ lbl }}</option>
+                {% endfor %}
+              </select>
             </div>
-            
-            <!-- Section nouvel employé -->
-            <div id="new_employee_section" {% if not create_new_employee %}style="display: none;"{% endif %}>
-                <div style="background-color: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
-                    <h4 style="margin-bottom: 12px; color: #0369a1;">{% trans 'Informations du nouvel employé' %}</h4>
-                    
-                    <div class="form-group" style="margin-bottom: 12px;">
-                        <label for="new_employee_name">{% trans 'Nom complet' %} *</label>
-                        <input type="text" id="new_employee_name" name="new_employee_name" class="form-control" value="{{ new_employee_name|default:'' }}" placeholder="Ex: Jean Dupont">
-                    </div>
-                    
-                    <div class="form-group" style="margin-bottom: 12px;">
-                        <label for="new_employee_role">{% trans 'Poste/Fonction' %} *</label>
-                        <input type="text" id="new_employee_role" name="new_employee_role" class="form-control" value="{{ new_employee_role|default:'' }}" placeholder="Ex: Analyste, Consultant, etc.">
-                    </div>
-                    
-                    <div class="grid grid-2" style="gap: 12px;">
-                        <div class="form-group">
-                            <label for="new_employee_phone">{% trans 'Téléphone' %}</label>
-                            <input type="text" id="new_employee_phone" name="new_employee_phone" class="form-control" value="{{ new_employee_phone|default:'' }}" placeholder="Ex: 621234567">
-                        </div>
-                        <div class="form-group">
-                            <label for="new_employee_email">{% trans 'Email' %}</label>
-                            <input type="email" id="new_employee_email" name="new_employee_email" class="form-control" value="{{ new_employee_email|default:'' }}" placeholder="Ex: jean@exemple.com">
-                        </div>
-                    </div>
-                </div>
+          </div>
+          <div class="grid grid-2 fg-grid-sm">
+            <div class="form-group">
+              <label for="new_user_password1">{% trans 'Mot de passe' %} *</label>
+              <input type="password" id="new_user_password1" name="new_user_password1" class="form-control"
+                     placeholder="{% trans 'Au moins 6 caractères' %}">
             </div>
-            
-            <div class="form-group" style="margin-bottom: 24px;">
-                <label for="id_role">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>
-                    {% trans 'Rôle dans le projet' %} *
-                </label>
-                {{ form.role }}
-                {% if form.role.errors %}<p class="text-xs" style="color: var(--red-600);">{{ form.role.errors.0 }}</p>{% endif %}
-                <p class="text-xs" style="color: var(--gray-600); margin-top: 4px;">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12" style="display: inline-block; vertical-align: middle;">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <strong>Responsable</strong> : Peut gérer les membres et modifier le projet<br>
-                    <strong>Membre</strong> : Peut ajouter des jalons, documents et commentaires<br>
-                    <strong>Observateur</strong> : Accès en lecture seule<br>
-                    <strong>Ressource externe</strong> : Collaborateur externe avec droits limités<br>
-                    <strong>Personnalisé</strong> : Cochez les permissions ci-dessous
-                </p>
+            <div class="form-group">
+              <label for="new_user_password2">{% trans 'Confirmer le mot de passe' %} *</label>
+              <input type="password" id="new_user_password2" name="new_user_password2" class="form-control"
+                     placeholder="{% trans 'Répéter le mot de passe' %}">
             </div>
-            
-            <!-- Section permissions personnalisées -->
-            <div id="permissions_section" style="display: none; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
-                <h4 style="margin-bottom: 16px; color: #374151; display: flex; align-items: center; gap: 8px;">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>
-                    Permissions personnalisées
-                </h4>
-                
-                <div class="grid grid-2" style="gap: 12px;">
-                    <div class="form-check" style="display: flex; align-items: center; gap: 8px; padding: 8px; background: white; border-radius: 6px;">
-                        <input type="checkbox" name="can_manage_members_perm" id="id_can_manage_members_perm" class="form-check-input" {% if form.can_manage_members_perm.value %}checked{% endif %}>
-                        <label for="id_can_manage_members_perm" style="margin: 0; font-size: 14px; cursor: pointer;">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                            </svg>
-                            Gérer les membres
-                        </label>
-                    </div>
-                    
-                    <div class="form-check" style="display: flex; align-items: center; gap: 8px; padding: 8px; background: white; border-radius: 6px;">
-                        <input type="checkbox" name="can_edit_project_perm" id="id_can_edit_project_perm" class="form-check-input" {% if form.can_edit_project_perm.value %}checked{% endif %}>
-                        <label for="id_can_edit_project_perm" style="margin: 0; font-size: 14px; cursor: pointer;">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                            Modifier le projet
-                        </label>
-                    </div>
-                    
-                    <div class="form-check" style="display: flex; align-items: center; gap: 8px; padding: 8px; background: white; border-radius: 6px;">
-                        <input type="checkbox" name="can_add_milestones_perm" id="id_can_add_milestones_perm" class="form-check-input" {% if form.can_add_milestones_perm.value %}checked{% endif %}>
-                        <label for="id_can_add_milestones_perm" style="margin: 0; font-size: 14px; cursor: pointer;">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                            </svg>
-                            Ajouter des jalons
-                        </label>
-                    </div>
-                    
-                    <div class="form-check" style="display: flex; align-items: center; gap: 8px; padding: 8px; background: white; border-radius: 6px;">
-                        <input type="checkbox" name="can_add_documents_perm" id="id_can_add_documents_perm" class="form-check-input" {% if form.can_add_documents_perm.value %}checked{% endif %}>
-                        <label for="id_can_add_documents_perm" style="margin: 0; font-size: 14px; cursor: pointer;">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            {% trans 'Ajouter des documents' %}
-                        </label>
-                    </div>
-                    
-                    <div class="form-check" style="display: flex; align-items: center; gap: 8px; padding: 8px; background: white; border-radius: 6px;">
-                        <input type="checkbox" name="can_add_needs_perm" id="id_can_add_needs_perm" class="form-check-input" {% if form.can_add_needs_perm.value %}checked{% endif %}>
-                        <label for="id_can_add_needs_perm" style="margin: 0; font-size: 14px; cursor: pointer;">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                            </svg>
-                            {% trans 'Ajouter des besoins' %}
-                        </label>
-                    </div>
-                    
-                    <div class="form-check" style="display: flex; align-items: center; gap: 8px; padding: 8px; background: white; border-radius: 6px;">
-                        <input type="checkbox" name="can_add_comments_perm" id="id_can_add_comments_perm" class="form-check-input" {% if form.can_add_comments_perm.value %}checked{% endif %}>
-                        <label for="id_can_add_comments_perm" style="margin: 0; font-size: 14px; cursor: pointer;">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                            </svg>
-                            {% trans 'Ajouter des commentaires' %}
-                        </label>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="flex gap-3">
-                <button type="submit" class="btn btn-primary">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    {% if member %}{% trans 'Enregistrer' %}{% else %}{% trans 'Ajouter le membre' %}{% endif %}
-                </button>
-                <a href="{% url 'core:project_detail' project.id %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
-            </div>
-        </form>
-    </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-3 fg-actions">
+        <button type="submit" class="btn btn-primary">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          {% trans 'Ajouter le membre' %}
+        </button>
+        <a href="{% url 'core:project_detail' project.id %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
+      </div>
+    </form>
+  </div>
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script>
-document.getElementById('toggle_new_employee').addEventListener('change', function() {
-    const existingSection = document.getElementById('existing_employee_section');
-    const newSection = document.getElementById('new_employee_section');
-    
-    if (this.checked) {
-        existingSection.style.display = 'none';
-        newSection.style.display = 'block';
-    } else {
-        existingSection.style.display = 'block';
-        newSection.style.display = 'none';
-    }
-});
+(function() {
+  // ---- Utility: slugify a full name into prenom.nom ----
+  function slugify(str) {
+    return str
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')  // strip accents
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, '')                        // keep alphanum + space
+      .trim()
+      .split(/\s+/)                                        // split on whitespace
+      .filter(function(p) { return p.length > 0; })
+      .join('.');                                          // join with dot (prenom.nom)
+  }
 
-// Initialiser Select2 pour la recherche d'employés si disponible
-if (typeof $ !== 'undefined' && $.fn.select2) {
-    $('#id_employee').select2({
-        placeholder: 'Sélectionner un employé...',
-        allowClear: true,
-        width: '100%',
-        minimumResultsForSearch: Infinity,
-        language: {
-            noResults: function() {
-                return 'Aucun employé trouvé';
-            },
-            searching: function() {
-                return 'Recherche en cours...';
-            }
-        }
+  var radios = document.querySelectorAll('input[name="member_type"]');
+  var panels = {
+    existing:     document.getElementById('panel_existing'),
+    new_internal: document.getElementById('panel_internal'),
+    new_external: document.getElementById('panel_external'),
+  };
+
+  var panelCreateAccount  = document.getElementById('panel_create_account');
+  var alertExternal       = document.getElementById('alert_external_account');
+  var toggleCreateUser    = document.getElementById('toggle_create_user');
+  var createUserFields    = document.getElementById('create_user_fields');
+  var usernameInput       = document.getElementById('new_user_username');
+  var roleSelect          = document.getElementById('new_user_role');
+
+  // Track if user manually edited the username field
+  var usernameManuallyEdited = usernameInput && usernameInput.value.length > 0;
+  if (usernameInput) {
+    usernameInput.addEventListener('input', function() {
+      usernameManuallyEdited = true;
     });
-}
+  }
 
-// Alternative: Simple search functionality if Select2 is not available
-document.addEventListener('DOMContentLoaded', function() {
-    const employeeSelect = document.getElementById('id_employee');
-    const searchInput = document.getElementById('employee-search');
-    
-    if (employeeSelect && searchInput) {
-        searchInput.addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
-            const options = employeeSelect.options;
-            let hasVisibleOptions = false;
-            
-            for (let i = 0; i < options.length; i++) {
-                const option = options[i];
-                const text = option.text.toLowerCase();
-                
-                if (text.includes(searchTerm) || i === 0) { // Keep the first option (placeholder)
-                    option.style.display = '';
-                    if (i > 0) hasVisibleOptions = true;
-                } else {
-                    option.style.display = 'none';
-                }
-            }
-            
-            // Show/hide select based on search results
-            if (searchTerm === '') {
-                employeeSelect.style.display = '';
-            } else if (hasVisibleOptions) {
-                employeeSelect.style.display = '';
-                // Auto-expand dropdown when searching
-                employeeSelect.size = Math.min(options.length, 5);
-            } else {
-                employeeSelect.size = 1;
-            }
-        });
-        
-        // Reset size when selection is made
-        employeeSelect.addEventListener('change', function() {
-            this.size = 1;
-        });
+  // Auto-suggest username from name field
+  function suggestUsername(nameVal) {
+    if (!usernameInput || usernameManuallyEdited) return;
+    var parts = nameVal.trim().split(/\s+/).filter(function(p){ return p.length > 0; });
+    if (parts.length === 0) return;
+    var suggested = '';
+    if (parts.length === 1) {
+      suggested = slugify(parts[0]);
+    } else {
+      // first part = prenom, rest = nom
+      suggested = slugify(parts[0]) + '.' + slugify(parts.slice(1).join(' '));
     }
-    
-    // Gérer l'affichage des permissions personnalisées
-    const roleSelect = document.getElementById('id_role');
-    const permissionsSection = document.getElementById('permissions_section');
-    
-    function togglePermissions() {
-        console.log('Role changed to:', roleSelect.value); // Debug
-        if (roleSelect.value === 'custom') {
-            permissionsSection.style.display = 'block';
-            console.log('Showing permissions section'); // Debug
-        } else {
-            permissionsSection.style.display = 'none';
-            console.log('Hiding permissions section'); // Debug
+    if (suggested) usernameInput.value = suggested;
+  }
+
+  var intNameInput = document.getElementById('int_name');
+  var extNameInput = document.getElementById('ext_name');
+  if (intNameInput) {
+    intNameInput.addEventListener('input', function() { suggestUsername(this.value); });
+  }
+  if (extNameInput) {
+    extNameInput.addEventListener('input', function() { suggestUsername(this.value); });
+  }
+
+  // Show/hide the create-account section depending on member_type
+  function updateAccountSection(memberType) {
+    var showSection = (memberType === 'new_internal' || memberType === 'new_external');
+    panelCreateAccount.style.display = showSection ? '' : 'none';
+
+    if (!showSection) return;
+
+    // External: alert visible + checkbox checked by default (first time)
+    if (memberType === 'new_external') {
+      alertExternal.style.display = '';
+      // Set default role to 'visiteur'
+      if (roleSelect) {
+        for (var i = 0; i < roleSelect.options.length; i++) {
+          if (roleSelect.options[i].value === 'visiteur') {
+            roleSelect.selectedIndex = i;
+            break;
+          }
         }
+      }
+      // Auto-check the checkbox for externals if not already modified
+      if (!toggleCreateUser._userTouched) {
+        toggleCreateUser.checked = true;
+        createUserFields.style.display = '';
+      }
+    } else {
+      // Internal
+      alertExternal.style.display = 'none';
+      if (roleSelect) {
+        for (var j = 0; j < roleSelect.options.length; j++) {
+          if (roleSelect.options[j].value === 'employe') {
+            roleSelect.selectedIndex = j;
+            break;
+          }
+        }
+      }
+      if (!toggleCreateUser._userTouched) {
+        toggleCreateUser.checked = false;
+        createUserFields.style.display = 'none';
+      }
     }
-    
-    // Initialiser l'affichage des permissions
-    togglePermissions();
-    
-    // Ajouter l'écouteur d'événement pour le changement de rôle
-    if (roleSelect) {
-        roleSelect.addEventListener('change', togglePermissions);
+  }
+
+  function switchPanel(val) {
+    Object.keys(panels).forEach(function(k) {
+      panels[k].style.display = (k === val) ? '' : 'none';
+    });
+    updateAccountSection(val);
+    // Reset username suggestion when switching panels
+    if (!usernameManuallyEdited && usernameInput) {
+      usernameInput.value = '';
+      usernameManuallyEdited = false;
     }
-});
+  }
+
+  radios.forEach(function(r) {
+    r.addEventListener('change', function() {
+      toggleCreateUser._userTouched = false;
+      usernameManuallyEdited = false;
+      if (usernameInput) usernameInput.value = '';
+      switchPanel(this.value);
+    });
+  });
+
+  // Toggle create-user fields
+  if (toggleCreateUser) {
+    toggleCreateUser._userTouched = false;
+    toggleCreateUser.addEventListener('change', function() {
+      this._userTouched = true;
+      createUserFields.style.display = this.checked ? '' : 'none';
+    });
+  }
+
+  // Init
+  var checked = document.querySelector('input[name="member_type"]:checked');
+  if (checked) switchPanel(checked.value);
+
+  // ===== PRESETS PERMISSIONS PAR RÔLE PROJET =====
+  var PROJECT_ROLE_PRESETS = {
+    'responsable':               { can_manage_members_perm:true,  can_edit_project_perm:true,  can_add_milestones_perm:true,  can_add_documents_perm:true,  can_add_needs_perm:true,  can_add_comments_perm:true  },
+    'membre':                    { can_manage_members_perm:false, can_edit_project_perm:false, can_add_milestones_perm:true,  can_add_documents_perm:true,  can_add_needs_perm:true,  can_add_comments_perm:true  },
+    'observateur':               { can_manage_members_perm:false, can_edit_project_perm:false, can_add_milestones_perm:false, can_add_documents_perm:false, can_add_needs_perm:false, can_add_comments_perm:false },
+    'ressource_externe_observateur': { can_manage_members_perm:false, can_edit_project_perm:false, can_add_milestones_perm:false, can_add_documents_perm:false, can_add_needs_perm:false, can_add_comments_perm:true  },
+    'ressource_externe_edit':    { can_manage_members_perm:false, can_edit_project_perm:false, can_add_milestones_perm:true,  can_add_documents_perm:true,  can_add_needs_perm:true,  can_add_comments_perm:true  },
+    'custom':                    null  // libre
+  };
+
+  var projRoleSelect  = document.getElementById('id_role');
+  var permPresetNote  = document.getElementById('perm_preset_note');
+  var customHint      = document.getElementById('custom_perm_hint');
+
+  function applyProjectRolePreset(role) {
+    var preset = PROJECT_ROLE_PRESETS[role];
+    var isCustom = (role === 'custom');
+    if (customHint) customHint.style.display = isCustom ? '' : 'none';
+
+    Object.keys(PROJECT_ROLE_PRESETS['responsable']).forEach(function(name) {
+      var chk  = document.querySelector('input[name="' + name + '"]');
+      var lbl  = document.getElementById('lbl_' + name);
+      if (!chk) return;
+      if (preset !== null) {
+        chk.checked  = preset[name];
+        chk.disabled = !isCustom;
+        if (lbl) lbl.style.opacity = isCustom ? '1' : (preset[name] ? '1' : '0.45');
+      } else {
+        chk.disabled = false;
+        if (lbl) lbl.style.opacity = '1';
+      }
+    });
+
+    if (permPresetNote) {
+      permPresetNote.textContent = isCustom ? 'Permissions libres' : 'Pré-remplies par le rôle';
+    }
+  }
+
+  if (projRoleSelect) {
+    projRoleSelect.addEventListener('change', function() { applyProjectRolePreset(this.value); });
+    applyProjectRolePreset(projRoleSelect.value);
+  }
+})();
 </script>
 {% endblock %}

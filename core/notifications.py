@@ -280,19 +280,27 @@ def _build_completion_email(recipient_name, role_label, task_type, task_name, pr
 
 
 def _resolve_manager_email(project):
-    """Tente de trouver l'email du chef de projet a partir de Project.manager (nom)."""
+    """Résout l'email du chef de projet : manager_employee FK en priorité, puis recherche par nom."""
     from .models import Employee
+    # Priorité 1 : FK direct (manager_employee)
+    if project.manager_employee_id:
+        emp = project.manager_employee
+        if emp and emp.email:
+            return emp.name, emp.email
+
+    # Priorité 2 : correspondance par nom dans Employee
     manager_name = (project.manager or '').strip()
-    if not manager_name:
-        return None, None
-    emp = Employee.objects.filter(name__iexact=manager_name, email__isnull=False).exclude(email='').first()
-    if emp:
-        return emp.name, emp.email
-    # Fallback : chercher dans les ProjectMember avec role responsable
+    if manager_name:
+        emp = Employee.objects.filter(name__iexact=manager_name, email__isnull=False).exclude(email='').first()
+        if emp:
+            return emp.name, emp.email
+
+    # Fallback : premier ProjectMember avec role responsable
     member = project.members.filter(role='responsable').select_related('employee').first()
     if member and member.employee and member.employee.email:
         return member.employee.name, member.employee.email
-    return manager_name, None
+
+    return manager_name or None, None
 
 
 def notify_task_completed(task_type, task_name, project, assigned_employee, assigned_by_user, completed_by_user):

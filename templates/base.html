@@ -11,6 +11,24 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     {% block extra_css %}{% endblock %}
+    <style>
+        .toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;max-width:380px;pointer-events:none}
+        .toast{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:10px;background:white;box-shadow:0 4px 20px rgba(0,0,0,.14);border-left:4px solid #3b82f6;pointer-events:all;animation:toastIn .3s ease;transition:opacity .3s,transform .3s}
+        .toast.hiding{opacity:0;transform:translateX(20px)}
+        @keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+        .toast-success{border-left-color:#22c55e}
+        .toast-error{border-left-color:#ef4444}
+        .toast-warning{border-left-color:#f59e0b}
+        .toast-icon{flex-shrink:0;margin-top:1px}
+        .toast-icon svg{width:18px;height:18px}
+        .toast-success .toast-icon svg{color:#22c55e}
+        .toast-error .toast-icon svg{color:#ef4444}
+        .toast-warning .toast-icon svg{color:#f59e0b}
+        .toast-info .toast-icon svg{color:#3b82f6}
+        .toast-body{flex:1;font-size:13.5px;color:#374151;line-height:1.45}
+        .toast-close{background:none;border:none;cursor:pointer;color:#9ca3af;font-size:18px;line-height:1;padding:0;margin-left:4px;align-self:flex-start}
+        .toast-close:hover{color:#374151}
+    </style>
 </head>
 <body>
     <div class="layout">
@@ -38,8 +56,8 @@
                         </a>
                     </li>
                     
-                    <!-- Projets - Chef de projet et plus -->
-                    {% if user.profile.can_manage_projects %}
+                    <!-- Projets - Employés et plus -->
+                    {% if user.profile.can_manage_projects or user.profile.employee %}
                     <li>
                         <a href="{% url 'core:projects' %}" {% if request.resolver_match.url_name == 'projects' %}class="active"{% endif %}>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -74,6 +92,18 @@
                     </li>
                     {% endif %}
                     
+                    <!-- Mes tâches - Visible si l'utilisateur est lié à un employé -->
+                    {% if user.profile.employee %}
+                    <li>
+                        <a href="{% url 'core:my_tasks' %}" {% if request.resolver_match.url_name == 'my_tasks' %}class="active"{% endif %}>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                            </svg>
+                            {% trans 'Mes tâches' %}
+                        </a>
+                    </li>
+                    {% endif %}
+
                     <!-- Calendrier - Visible par tous -->
                     <li>
                         <a href="{% url 'core:calendar' %}" {% if request.resolver_match.url_name == 'calendar' %}class="active"{% endif %}>
@@ -106,6 +136,18 @@
                     </li>
                     {% endif %}
                     
+                    <!-- Documents - Directeurs et plus -->
+                    {% if user.profile.is_directeur %}
+                    <li>
+                        <a href="{% url 'core:documents' %}" {% if request.resolver_match.url_name == 'documents' %}class="active"{% endif %}>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            {% trans 'Documents' %}
+                        </a>
+                    </li>
+                    {% endif %}
+
                     <!-- Partenaires - Directeurs et plus -->
                     {% if user.profile.can_manage_partners %}
                     <li>
@@ -155,17 +197,6 @@
                     </li>
                     {% endif %}
 
-                    <!-- Deconnexion -->
-                    {% if user.is_authenticated %}
-                    <li style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);">
-                        <a href="{% url 'core:logout' %}" style="color: rgba(255,255,255,0.7);">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                            </svg>
-                            {% trans 'Déconnexion' %}
-                        </a>
-                    </li>
-                    {% endif %}
                 </ul>
             </nav>
 
@@ -206,11 +237,14 @@
                         {% endif %}
                     </div>
                     {% if user.is_authenticated %}
-                    <a href="{% url 'core:logout' %}" class="sidebar-logout" title="{% trans 'Déconnexion' %}">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                        </svg>
-                    </a>
+                    <form method="post" action="{% url 'core:logout' %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="sidebar-logout" title="{% trans 'Déconnexion' %}" style="background:none;border:none;padding:0;cursor:pointer;">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                        </button>
+                    </form>
                     {% endif %}
                 </div>
             </div>
@@ -244,6 +278,43 @@
                     </script>
                 </div>
             </header>
+
+            <!-- Django Messages Toasts -->
+            {% if messages %}
+            <div class="toast-container" id="django-toasts">
+                {% for message in messages %}
+                {% if 'success' in message.tags %}
+                <div class="toast toast-success" role="alert">
+                    <div class="toast-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+                    <span class="toast-body">{{ message }}</span>
+                    <button class="toast-close" onclick="dismissToast(this.parentElement)">×</button>
+                </div>
+                {% elif 'error' in message.tags %}
+                <div class="toast toast-error" role="alert">
+                    <div class="toast-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+                    <span class="toast-body">{{ message }}</span>
+                    <button class="toast-close" onclick="dismissToast(this.parentElement)">×</button>
+                </div>
+                {% elif 'warning' in message.tags %}
+                <div class="toast toast-warning" role="alert">
+                    <div class="toast-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></div>
+                    <span class="toast-body">{{ message }}</span>
+                    <button class="toast-close" onclick="dismissToast(this.parentElement)">×</button>
+                </div>
+                {% else %}
+                <div class="toast toast-info" role="alert">
+                    <div class="toast-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+                    <span class="toast-body">{{ message }}</span>
+                    <button class="toast-close" onclick="dismissToast(this.parentElement)">×</button>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            <script>
+                function dismissToast(el){el.classList.add('hiding');setTimeout(function(){el.remove()},300)}
+                setTimeout(function(){document.querySelectorAll('#django-toasts .toast').forEach(function(t){dismissToast(t)})},5000);
+            </script>
+            {% endif %}
 
             <!-- Page Content -->
             <div class="page-content">

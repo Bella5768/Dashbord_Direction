@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% load i18n %}
+
+{% block title %}{% trans 'Mes tâches' %}{% endblock %}
+{% block page_title %}{% trans 'Mes tâches' %}{% endblock %}
+{% block page_subtitle %}{% trans 'Toutes les tâches qui vous sont assignées' %}{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Empty state ── */
+.mt-empty { text-align:center; padding:64px 24px; }
+.mt-empty svg { display:block; margin:0 auto 16px; color:#d1d5db; }
+.mt-empty p { font-size:16px; color:#6b7280; }
+
+/* ── Group list ── */
+.mt-list { display:flex; flex-direction:column; gap:24px; }
+
+/* ── Card header ── */
+.mt-card-hdr { display:flex; justify-content:space-between; align-items:center; }
+.mt-project-link { color:#1e3a5f; text-decoration:none; }
+.mt-project-link:hover { text-decoration:underline; }
+.mt-summary { font-size:13px; color:#64748b; margin-top:2px; }
+.mt-summary .overdue-date { color:#dc2626; font-weight:600; }
+.mt-hdr-right { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+.mt-prog-track { width:100px; height:6px; background:#e5e7eb; border-radius:9999px; overflow:hidden; }
+.mt-prog-fill { height:100%; }
+.mt-prog-fill.high { background:#16a34a; }
+.mt-prog-fill.mid  { background:#3b82f6; }
+.mt-prog-fill.low  { background:#f59e0b; }
+.mt-pct { font-size:12px; font-weight:600; color:#1f2937; }
+
+/* ── Task rows ── */
+.mt-rows { display:flex; flex-direction:column; gap:8px; }
+.mt-row { display:flex; align-items:center; gap:12px; padding:10px 14px; border-radius:8px; border:1px solid #d1d5db; background:#fff; }
+.mt-row.done    { border-color:#86efac; background:#f0fdf4; }
+.mt-row.overdue { border-color:#fca5a5; background:#fef2f2; }
+
+/* ── Type badge ── */
+.mt-type { flex-shrink:0; font-size:10px; font-weight:600; border-radius:4px; padding:1px 6px; white-space:nowrap; }
+.mt-type.jalon { background:#bfdbfe; color:#1e40af; }
+.mt-type.sub   { background:#ede9fe; color:#6d28d9; }
+
+/* ── Name ── */
+.mt-name { flex:1; min-width:0; font-size:13px; font-weight:500; color:#1e3a5f; }
+.mt-name.done { text-decoration:line-through; color:#9ca3af; font-weight:400; }
+.mt-sub-ref { font-size:11px; color:#9ca3af; margin-left:6px; }
+
+/* ── Status badge (jalons) ── */
+.mt-sbadge { font-size:10px; font-weight:500; border-radius:4px; padding:1px 6px; white-space:nowrap; }
+.mt-sbadge.s-a_faire     { background:#e2e8f0; color:#374151; }
+.mt-sbadge.s-en_cours    { background:#bfdbfe; color:#1e40af; }
+.mt-sbadge.s-bloque      { background:#fecaca; color:#991b1b; }
+.mt-sbadge.s-en_revision { background:#fde68a; color:#78350f; }
+.mt-sbadge.s-termine     { background:#bbf7d0; color:#14532d; }
+
+/* ── Date ── */
+.mt-date { font-size:11px; white-space:nowrap; color:#6b7280; }
+.mt-date.overdue { color:#dc2626; font-weight:600; }
+.mt-done-at { font-size:11px; color:#16a34a; white-space:nowrap; }
+
+/* ── Toggle checkbox ── */
+.mt-chk { flex-shrink:0; width:18px; height:18px; border-radius:4px; border:2px solid #64748b; background:#fff; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; color:#fff; font-size:10px; }
+.mt-chk.done { border-color:#16a34a; background:#16a34a; }
+.mt-chk-ro { flex-shrink:0; width:18px; height:18px; border-radius:4px; display:inline-flex; align-items:center; justify-content:center; color:#fff; font-size:10px; }
+.mt-chk-ro.done    { border:2px solid #16a34a; background:#16a34a; }
+.mt-chk-ro.pending { border:2px solid #9ca3af; background:#f3f4f6; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% if not task_groups %}
+<div class="card">
+  <div class="card-content mt-empty">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="48" height="48">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+    </svg>
+    <p>{% trans 'Aucune tâche ne vous est assignée pour l\'instant.' %}</p>
+  </div>
+</div>
+{% else %}
+
+<div class="mt-list">
+  {% for group in task_groups %}
+  <div class="card">
+    <div class="card-header mt-card-hdr">
+      <div>
+        <h3 class="card-title">
+          <a href="{% url 'core:project_detail' group.project.id %}" class="mt-project-link">{{ group.project.name }}</a>
+        </h3>
+        <p class="mt-summary">
+          {{ group.total }} {% trans 'tâche' %}{% if group.total != 1 %}s{% endif %} — {{ group.done }} {% trans 'terminée' %}{% if group.done != 1 %}s{% endif %}
+          {% if group.project.end_date %}
+          · {% trans 'Fin' %} : <span {% if group.project.end_date|is_overdue and group.project.computed_status != 'termine' %}class="overdue-date"{% endif %}>{{ group.project.end_date|date:"d/m/Y" }}</span>
+          {% endif %}
+        </p>
+      </div>
+      <div class="mt-hdr-right">
+        {% if group.total > 0 %}
+        {% widthratio group.done group.total 100 as pct %}
+        <div class="mt-prog-track">
+          <div class="mt-prog-fill {% if pct >= 80 %}high{% elif pct >= 40 %}mid{% else %}low{% endif %}" style="width:{{ pct }}%;"></div>
+        </div>
+        <span class="mt-pct">{{ pct }}%</span>
+        {% endif %}
+        {% with cs=group.project.computed_status %}
+        <span class="badge {% if cs == 'en_cours' %}badge-info{% elif cs == 'termine' %}badge-success{% elif cs == 'en_retard' %}badge-danger{% else %}badge-secondary{% endif %}" style="font-size:11px;">
+          {% if cs == 'en_retard' %}{% trans 'En retard' %}{% else %}{{ group.project.get_status_display }}{% endif %}
+        </span>
+        {% endwith %}
+      </div>
+    </div>
+
+    <div class="card-content" style="padding-top:0;">
+      <div class="mt-rows">
+        {% for item in group.milestones %}
+        {% with overdue=item.due_date|is_overdue %}
+        <div class="mt-row{% if item.completed %} done{% elif overdue and not item.completed %} overdue{% endif %}">
+
+          <span class="mt-type {% if item.type == 'jalon' %}jalon{% else %}sub{% endif %}">
+            {% if item.type == 'jalon' %}{% trans 'Jalon' %}{% else %}{% trans 'Sous-étape' %}{% endif %}
+          </span>
+
+          <div class="mt-name{% if item.completed %} done{% endif %}">
+            {{ item.name }}
+            {% if item.type == 'sous_etape' and item.milestone_name %}
+            <span class="mt-sub-ref">↳ {{ item.milestone_name }}</span>
+            {% endif %}
+          </div>
+
+          {% if item.type == 'jalon' and item.status %}
+          <span class="mt-sbadge s-{{ item.status }}">{{ item.status|title }}</span>
+          {% endif %}
+
+          {% if item.due_date %}
+          <span class="mt-date{% if not item.completed and overdue %} overdue{% endif %}">
+            {{ item.due_date|date:"d/m/Y" }}{% if not item.completed and overdue %} ↑{% endif %}
+          </span>
+          {% endif %}
+
+          {% if item.completed and item.completed_at %}
+          <span class="mt-done-at">✓ {{ item.completed_at|date:"d/m" }}</span>
+          {% endif %}
+
+          {% if item.can_toggle %}
+          <a href="{% if item.type == 'jalon' %}{% url 'core:milestone_toggle' item.id %}{% else %}{% url 'core:sub_milestone_toggle' item.id %}{% endif %}"
+             class="mt-chk{% if item.completed %} done{% endif %}"
+             title="{% if item.completed %}{% trans 'Marquer non terminé' %}{% else %}{% trans 'Marquer terminé' %}{% endif %}">
+            {% if item.completed %}✓{% endif %}
+          </a>
+          {% else %}
+          <span class="mt-chk-ro {% if item.completed %}done{% else %}pending{% endif %}">
+            {% if item.completed %}✓{% endif %}
+          </span>
+          {% endif %}
+
+        </div>
+        {% endwith %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% endblock %}

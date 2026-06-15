@@ -1,0 +1,342 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% load i18n %}
+
+{% block title %}{{ milestone.name }} — {{ project.name }}{% endblock %}
+{% block page_title %}{{ milestone.name }}{% endblock %}
+{% block page_subtitle %}Jalon · {{ project.name }}{% endblock %}
+
+{% block content %}
+<style>
+/* ── Layout ── */
+.md-bc { display:flex; align-items:center; gap:6px; font-size:13px; color:#475569; margin-bottom:20px; flex-wrap:wrap; }
+.md-bc a { color:#475569; text-decoration:none; }
+.md-bc a:hover { color:#1e3a5f; text-decoration:underline; }
+.md-bc-sep { color:#94a3b8; }
+.md-bc-cur { color:#1e3a5f; font-weight:600; }
+.md-layout { display:flex; gap:20px; align-items:flex-start; flex-wrap:wrap; }
+.md-main { flex:1; min-width:0; display:flex; flex-direction:column; gap:16px; }
+.md-aside { flex:0 0 280px; min-width:220px; display:flex; flex-direction:column; gap:16px; }
+
+/* ── Header card ── */
+.md-hdr-top { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:16px; }
+.md-badges { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.md-badge-done { font-size:11px; font-weight:600; background:#bbf7d0; color:#14532d; border-radius:4px; padding:2px 8px; display:inline-flex; align-items:center; gap:4px; }
+.md-badge-done svg { width:11px; height:11px; flex-shrink:0; }
+.md-due { font-size:12px; display:inline-flex; align-items:center; gap:4px; color:#475569; }
+.md-due svg { width:12px; height:12px; flex-shrink:0; }
+.md-due.overdue { color:#dc2626; font-weight:600; }
+.md-actions { display:flex; gap:8px; }
+.md-prog-row { display:flex; align-items:center; gap:12px; }
+.md-prog-val { font-size:15px; font-weight:700; color:#1f2937; white-space:nowrap; }
+.md-need-box { background:#f8fafc; border:1px solid #d1d5db; border-radius:8px; padding:12px 16px; margin-top:16px; }
+.md-need-label { font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
+.md-need-text { font-size:13px; color:#1f2937; line-height:1.6; white-space:pre-line; margin:0; }
+
+/* ── Status buttons ── */
+.md-status-form { display:flex; flex-wrap:wrap; gap:8px; }
+.md-status-btn { padding:7px 16px; border-radius:6px; font-size:13px; font-weight:500; cursor:pointer; transition:all .15s; border:1.5px solid #d1d5db; background:#fff; color:#374151; }
+.md-status-btn.s-a_faire     { color:#374151; }
+.md-status-btn.s-en_cours    { color:#1e40af; }
+.md-status-btn.s-bloque      { color:#b91c1c; }
+.md-status-btn.s-en_revision { color:#78350f; }
+.md-status-btn.s-termine     { color:#14532d; }
+.md-status-btn.s-a_faire.cur     { background:#e2e8f0; border-color:#64748b;  font-weight:700; color:#1f2937; }
+.md-status-btn.s-en_cours.cur    { background:#bfdbfe; border-color:#2563eb;  font-weight:700; color:#1e40af; }
+.md-status-btn.s-bloque.cur      { background:#fecaca; border-color:#dc2626;  font-weight:700; color:#991b1b; }
+.md-status-btn.s-en_revision.cur { background:#fde68a; border-color:#d97706;  font-weight:700; color:#78350f; }
+.md-status-btn.s-termine.cur     { background:#bbf7d0; border-color:#16a34a;  font-weight:700; color:#14532d; }
+
+/* ── Sub-milestone rows ── */
+.msub-list { display:flex; flex-direction:column; gap:6px; }
+.msub-row { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; border:1px solid #d1d5db; background:#fff; }
+.msub-row.row-done { border-color:#86efac; background:#f0fdf4; }
+.msub-row.row-mine { border-color:#93c5fd; background:#eff6ff; }
+.msub-check { flex-shrink:0; width:18px; height:18px; border-radius:4px; border:2px solid #64748b; background:#fff; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; color:#fff; font-size:11px; }
+.msub-check.done { border-color:#16a34a; background:#16a34a; }
+.msub-check-ro { flex-shrink:0; width:18px; height:18px; border-radius:4px; display:inline-flex; align-items:center; justify-content:center; color:#fff; font-size:11px; }
+.msub-check-ro.done    { border:2px solid #16a34a; background:#16a34a; }
+.msub-check-ro.pending { border:2px solid #9ca3af; background:#f3f4f6; }
+.msub-name { flex:1; font-size:13px; color:#1f2937; }
+.msub-name.done { text-decoration:line-through; color:#9ca3af; }
+.msub-assignees { font-size:11px; color:#475569; }
+.msub-date { font-size:11px; color:#6b7280; }
+.msub-date.overdue { color:#dc2626; font-weight:600; }
+.msub-acts { display:flex; gap:4px; flex-shrink:0; }
+
+/* ── Sidebar ── */
+.md-info-list { display:flex; flex-direction:column; gap:10px; }
+.md-info-field { display:flex; flex-direction:column; gap:3px; }
+.md-info-label { font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.5px; }
+.md-info-val { font-size:13px; color:#1f2937; }
+.md-info-val.overdue { color:#dc2626; font-weight:600; }
+.md-info-val a { color:#1e3a5f; font-weight:600; text-decoration:none; }
+.md-info-val a:hover { text-decoration:underline; }
+.md-member-list { display:flex; flex-direction:column; gap:8px; }
+.md-member { display:flex; align-items:center; gap:10px; }
+.md-avatar { width:32px; height:32px; border-radius:50%; background:#1e3a5f; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; }
+.md-member-name { font-size:13px; font-weight:600; color:#1f2937; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.md-member-role { font-size:11px; color:#475569; }
+.md-empty { font-size:13px; color:#6b7280; text-align:center; padding:16px 0; }
+.md-manage { margin-top:12px; padding-top:10px; border-top:1px solid #e5e7eb; }
+.md-manage a { font-size:12px; color:#1e3a5f; text-decoration:none; display:inline-flex; align-items:center; gap:4px; font-weight:500; }
+.md-manage a:hover { text-decoration:underline; }
+.md-manage svg { width:12px; height:12px; flex-shrink:0; }
+</style>
+
+<!-- Fil d'Ariane -->
+<nav class="md-bc">
+  <a href="{% url 'core:projects' %}">Projets</a>
+  <span class="md-bc-sep">›</span>
+  <a href="{% url 'core:project_detail' project.id %}">{{ project.name }}</a>
+  <span class="md-bc-sep">›</span>
+  <span class="md-bc-cur">{{ milestone.name }}</span>
+</nav>
+
+<div class="md-layout">
+
+  <!-- ── Colonne principale ── -->
+  <div class="md-main">
+
+    <!-- Carte en-tête jalon -->
+    <div class="card">
+      <div class="card-content" style="padding:20px 24px;">
+
+        <div class="md-hdr-top">
+          <div class="md-badges">
+            {% if milestone.status == 'a_faire' %}<span class="badge badge-secondary">À faire</span>
+            {% elif milestone.status == 'en_cours' %}<span class="badge badge-info">En cours</span>
+            {% elif milestone.status == 'bloque' %}<span class="badge badge-danger">Bloqué</span>
+            {% elif milestone.status == 'en_revision' %}<span class="badge badge-warning">En révision</span>
+            {% elif milestone.status == 'termine' %}<span class="badge badge-success">Terminé</span>
+            {% endif %}
+            {% if milestone.completed %}
+            <span class="md-badge-done">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              Complété{% if milestone.completed_at %} le {{ milestone.completed_at|date:"d/m/Y" }}{% endif %}
+            </span>
+            {% endif %}
+            {% if milestone.due_date %}
+            {% with overdue=milestone.due_date|is_overdue %}
+            <span class="md-due{% if not milestone.completed and overdue %} overdue{% endif %}">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              Échéance : {{ milestone.due_date|date:"d/m/Y" }}{% if not milestone.completed and overdue %} — En retard{% endif %}
+            </span>
+            {% endwith %}
+            {% endif %}
+          </div>
+          {% if can_edit %}
+          <div class="md-actions">
+            <a href="{% url 'core:milestone_edit' milestone.id %}" class="btn btn-outline btn-sm">Modifier</a>
+            <a href="{% url 'core:milestone_delete' milestone.id %}" class="btn btn-sm" style="background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;">Supprimer</a>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Barre de progression -->
+        <div class="md-prog-row" style="margin-bottom:{% if milestone.need %}0{% else %}0{% endif %};">
+          <div class="progress" style="flex:1;height:10px;">
+            <div class="progress-bar {% if milestone.progress >= 80 %}green{% elif milestone.progress >= 50 %}blue{% elif milestone.progress >= 25 %}amber{% else %}red{% endif %}" style="width:{{ milestone.progress }}%"></div>
+          </div>
+          <span class="md-prog-val">{{ milestone.progress }}%</span>
+        </div>
+
+        {% if milestone.need %}
+        <div class="md-need-box">
+          <p class="md-need-label">Description / Besoin</p>
+          <p class="md-need-text">{{ milestone.need }}</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Carte changement de statut rapide -->
+    {% if can_edit %}
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Changer le statut</h3>
+      </div>
+      <div class="card-content">
+        <form method="post" action="{% url 'core:milestone_update_status' milestone.id %}" class="md-status-form">
+          {% csrf_token %}
+          {% for val, label in milestone.TASK_STATUS_CHOICES %}
+          <button type="submit" name="status" value="{{ val }}"
+            class="md-status-btn s-{{ val }}{% if milestone.status == val %} cur{% endif %}">
+            {{ label }}
+          </button>
+          {% endfor %}
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Carte sous-étapes -->
+    <div class="card">
+      <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <h3 class="card-title">Sous-étapes</h3>
+          <p class="text-sm text-gray-500">{{ sub_done }}/{{ sub_total }} complétée{% if sub_total != 1 %}s{% endif %}</p>
+        </div>
+        {% if can_edit %}
+        <a href="{% url 'core:sub_milestone_create' milestone.id %}" class="btn btn-primary btn-sm" style="display:flex;align-items:center;gap:6px;">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+          Ajouter
+        </a>
+        {% endif %}
+      </div>
+      <div class="card-content">
+        {% if sub_milestones %}
+        <div class="msub-list">
+          {% for sub in sub_milestones %}
+          {% with is_mine=sub.assigned_to|is_user_employee:user_employee %}
+          <div class="msub-row{% if sub.completed %} row-done{% elif is_mine %} row-mine{% endif %}">
+            {% if can_edit or is_mine %}
+            <a href="{% url 'core:sub_milestone_toggle' sub.id %}"
+               class="msub-check{% if sub.completed %} done{% endif %}"
+               title="{% if sub.completed %}Marquer non terminée{% else %}Marquer terminée{% endif %}">
+              {% if sub.completed %}✓{% endif %}
+            </a>
+            {% else %}
+            <span class="msub-check-ro {% if sub.completed %}done{% else %}pending{% endif %}">
+              {% if sub.completed %}✓{% endif %}
+            </span>
+            {% endif %}
+
+            <span class="msub-name{% if sub.completed %} done{% endif %}">{{ sub.name }}</span>
+
+            {% if sub.assigned_to.exists %}
+            <span class="msub-assignees">
+              {% for emp in sub.assigned_to.all %}{{ emp.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+            </span>
+            {% endif %}
+
+            {% if sub.due_date %}
+            {% with sub_overdue=sub.due_date|is_overdue %}
+            <span class="msub-date{% if not sub.completed and sub_overdue %} overdue{% endif %}">
+              {{ sub.due_date|date:"d/m/Y" }}{% if not sub.completed and sub_overdue %} ↑{% endif %}
+            </span>
+            {% endwith %}
+            {% endif %}
+
+            {% if can_edit %}
+            <div class="msub-acts">
+              <a href="{% url 'core:sub_milestone_edit' sub.id %}" class="action-btn" title="Modifier">
+                <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              </a>
+              <a href="{% url 'core:sub_milestone_delete' sub.id %}" class="action-btn danger" title="Supprimer">
+                <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </a>
+            </div>
+            {% endif %}
+          </div>
+          {% endwith %}
+          {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align:center;padding:32px 16px;">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="36" height="36" style="color:#d1d5db;margin:0 auto 10px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          <p class="text-gray-500" style="margin-bottom:12px;">Aucune sous-étape définie.</p>
+          {% if can_edit %}
+          <a href="{% url 'core:sub_milestone_create' milestone.id %}" class="btn btn-primary btn-sm">Ajouter la première sous-étape</a>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Colonne latérale ── -->
+  <div class="md-aside">
+
+    <!-- Infos du jalon -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Informations</h3>
+      </div>
+      <div class="card-content">
+        <div class="md-info-list">
+
+          <div class="md-info-field">
+            <span class="md-info-label">Projet</span>
+            <span class="md-info-val"><a href="{% url 'core:project_detail' project.id %}">{{ project.name }}</a></span>
+          </div>
+
+          <div class="md-info-field">
+            <span class="md-info-label">Progression</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="progress" style="flex:1;height:6px;">
+                <div class="progress-bar {% if milestone.progress >= 80 %}green{% elif milestone.progress >= 50 %}blue{% elif milestone.progress >= 25 %}amber{% else %}red{% endif %}" style="width:{{ milestone.progress }}%"></div>
+              </div>
+              <span class="md-info-val" style="font-weight:600;white-space:nowrap;">{{ milestone.progress }}%</span>
+            </div>
+          </div>
+
+          {% if milestone.due_date %}
+          <div class="md-info-field">
+            <span class="md-info-label">Échéance</span>
+            {% with overdue=milestone.due_date|is_overdue %}
+            <span class="md-info-val{% if not milestone.completed and overdue %} overdue{% endif %}">
+              {{ milestone.due_date|date:"d/m/Y" }}{% if not milestone.completed and overdue %} — En retard{% endif %}
+            </span>
+            {% endwith %}
+          </div>
+          {% endif %}
+
+          {% if milestone.assigned_by %}
+          <div class="md-info-field">
+            <span class="md-info-label">Attribué par</span>
+            <span class="md-info-val">{{ milestone.assigned_by.get_full_name|default:milestone.assigned_by.username }}</span>
+          </div>
+          {% endif %}
+
+          <div class="md-info-field">
+            <span class="md-info-label">Sous-étapes</span>
+            <span class="md-info-val">{{ sub_done }}/{{ sub_total }} complétée{% if sub_total != 1 %}s{% endif %}</span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Membres assignés -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Assignés</h3>
+      </div>
+      <div class="card-content">
+        {% if milestone.assigned_to.exists %}
+        <div class="md-member-list">
+          {% for emp in milestone.assigned_to.all %}
+          <div class="md-member">
+            <div class="md-avatar">{{ emp.name|slice:":1"|upper }}</div>
+            <div style="min-width:0;">
+              <p class="md-member-name">{{ emp.name }}</p>
+              {% if emp.role %}<p class="md-member-role">{{ emp.role }}</p>{% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="md-empty">Aucun membre assigné</p>
+        {% endif %}
+        {% if can_edit %}
+        <div class="md-manage">
+          <a href="{% url 'core:milestone_edit' milestone.id %}">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            Gérer les assignés
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Retour -->
+    <a href="{% url 'core:project_detail' project.id %}" class="btn btn-outline btn-sm" style="text-align:center;">
+      ← Retour au projet
+    </a>
+
+  </div>
+</div>
+
+{% endblock %}

@@ -70,6 +70,7 @@
                         <th>Email</th>
                         <th>{% trans 'Rôle' %}</th>
                         <th>{% trans 'Direction' %}</th>
+                        <th>{% trans 'Fiche employé' %}</th>
                         <th style="text-align: center;">{% trans 'Statut' %}</th>
                         <th>{% trans 'Dernière connexion' %}</th>
                         <th style="text-align: center;">{% trans 'Actions' %}</th>
@@ -104,6 +105,16 @@
                                 {{ u.profile.direction.code }}
                             {% else %}
                                 <span class="text-gray-400">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if u.profile and u.profile.employee %}
+                                <span class="font-medium text-sm">{{ u.profile.employee.name }}</span>
+                                {% if u.profile.employee.is_external %}
+                                <span class="badge badge-secondary" style="font-size:10px;">Externe</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge badge-warning" style="font-size:10px;" title="Aucun employé lié à ce compte">Non lié</span>
                             {% endif %}
                         </td>
                         <td style="text-align: center;">
@@ -155,7 +166,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 48px;">
+                        <td colspan="8" style="text-align: center; padding: 48px;">
                             <p class="text-gray-500">{% trans 'Aucun utilisateur trouvé' %}</p>
                         </td>
                     </tr>

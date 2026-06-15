@@ -2,363 +2,371 @@
 {% load custom_filters %}
 {% load i18n %}
 
-{% block title %}{% trans 'Tableau de bord' %}{% endblock %}
-{% block page_title %}{% trans 'Tableau de bord' %}{% endblock %}
-{% block page_subtitle %}{% trans "Vue d'ensemble des activités de la CSIG" %}{% endblock %}
+{% block title %}Tableau de bord{% endblock %}
+{% block page_title %}Tableau de bord{% endblock %}
+{% block page_subtitle %}Vue d'ensemble des activités de la CSIG{% endblock %}
 
 {% block content %}
-<!-- KPI Cards -->
-<div class="stats-row">
-    <a class="stat-card stat-card-blue stat-card-link" href="{% url 'core:projects' %}">
-        <div class="stat-card-header">
-            <div>
-                <p class="stat-card-label">{% trans 'Projets en cours' %}</p>
-                <p class="stat-card-value">{{ projects_in_progress }}</p>
-                <p class="stat-card-subtitle">{{ total_projects }} {% trans 'projets au total' %}</p>
-            </div>
-            <div class="stat-card-icon blue">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                </svg>
-            </div>
-        </div>
-    </a>
-    
-    <a class="stat-card stat-card-amber stat-card-link" href="{% url 'core:resources' %}">
-        <div class="stat-card-header">
-            <div>
-                <p class="stat-card-label">{% trans 'Budget consommé' %}</p>
-                <p class="stat-card-value">{{ budget_percentage }}%</p>
-                <p class="stat-card-subtitle">{{ total_consumed|number_format }} GNF</p>
-            </div>
-            <div class="stat-card-icon amber">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                </svg>
-            </div>
-        </div>
-    </a>
-    
-    <a class="stat-card stat-card-green stat-card-link" href="{% url 'core:partners' %}">
-        <div class="stat-card-header">
-            <div>
-                <p class="stat-card-label">{% trans 'Partenaires actifs' %}</p>
-                <p class="stat-card-value">{{ active_partners }}</p>
-                <p class="stat-card-subtitle">{% trans 'Collaborations en cours' %}</p>
-            </div>
-            <div class="stat-card-icon green">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-            </div>
-        </div>
-    </a>
-    
-</div>
 
-<!-- Charts Row -->
-<div class="grid grid-2 mb-6">
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Budget par projet (en millions GNF)</h3>
-            <span class="card-subtitle" style="font-size: 12px; color: #6b7280;">Alloué vs Consommé — Top 10</span>
-        </div>
-        <div class="card-content">
-            <div class="chart-container" style="position: relative; height: 280px;">
-                <canvas id="budgetChart"></canvas>
-                <div id="budgetEmpty" style="display:none; position:absolute; inset:0; align-items:center; justify-content:center; color:#9ca3af; font-size:14px; text-align:center;">
-                    Aucun projet n'a encore de budget renseigné.<br>
-                    <a href="{% url 'core:projects' %}" style="color:#3b82f6;">Créer / éditer un projet →</a>
-                </div>
-            </div>
-        </div>
+<!-- ── KPI Cards ─────────────────────────────────────────────────────────── -->
+<div class="stats-row">
+  <a class="stat-card stat-card-blue stat-card-link" href="{% url 'core:projects' %}">
+    <div class="stat-card-header">
+      <div>
+        <p class="stat-card-label">Projets en cours</p>
+        <p class="stat-card-value">{{ projects_in_progress }}</p>
+        <p class="stat-card-subtitle">{{ total_projects }} projet{{ total_projects|pluralize }} au total</p>
+      </div>
+      <div class="stat-card-icon blue">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+        </svg>
+      </div>
     </div>
-    
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Répartition des projets</h3>
-            <span class="card-subtitle" style="font-size: 12px; color: #6b7280;">{{ total_projects }} projet{{ total_projects|pluralize }} au total</span>
-        </div>
-        <div class="card-content">
-            <div class="chart-container" style="position: relative; height: 280px;">
-                <canvas id="progressChart"></canvas>
-                <div id="progressEmpty" style="display:none; position:absolute; inset:0; align-items:center; justify-content:center; color:#9ca3af; font-size:14px; text-align:center;">
-                    Aucun projet enregistré.<br>
-                    <a href="{% url 'core:projects' %}" style="color:#3b82f6;">Créer un projet →</a>
-                </div>
-            </div>
-        </div>
+  </a>
+
+  <a class="stat-card stat-card-amber stat-card-link" href="{% url 'core:resources' %}">
+    <div class="stat-card-header">
+      <div>
+        <p class="stat-card-label">Budget consommé</p>
+        <p class="stat-card-value">{{ budget_percentage }}%</p>
+        <p class="stat-card-subtitle">{{ total_consumed|number_format }} GNF</p>
+      </div>
+      <div class="stat-card-icon amber">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+        </svg>
+      </div>
     </div>
+  </a>
+
+  <a class="stat-card stat-card-green stat-card-link" href="{% url 'core:partners' %}">
+    <div class="stat-card-header">
+      <div>
+        <p class="stat-card-label">Partenaires actifs</p>
+        <p class="stat-card-value">{{ active_partners }}</p>
+        <p class="stat-card-subtitle">Collaborations en cours</p>
+      </div>
+      <div class="stat-card-icon green">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+      </div>
+    </div>
+  </a>
 </div>
 
 {{ budget_data|json_script:"budget-data-json" }}
-<script id="dashboard-counts" type="application/json">{"in_progress": {{ projects_in_progress }}, "completed": {{ projects_completed }}, "planned": {{ projects_planned }}}</script>
+<script id="dashboard-counts" type="application/json">{"in_progress":{{ projects_in_progress }},"completed":{{ projects_completed }},"planned":{{ projects_planned }}}</script>
 
-<!-- Projects and Documents -->
+<!-- ── Budget — pleine largeur ───────────────────────────────────────────── -->
+<div class="card mb-6">
+  <div class="card-header">
+    <div>
+      <h3 class="card-title">Budget par projet</h3>
+      <span class="card-subtitle" style="font-size:12px;color:#6b7280;">Alloué vs Consommé — Top 10 (en millions GNF)</span>
+    </div>
+    <a href="{% url 'core:resources' %}" class="card-link">Voir détail →</a>
+  </div>
+  <div class="card-content">
+    <div class="chart-container" style="position:relative;height:260px;">
+      <canvas id="budgetChart"></canvas>
+      <div id="budgetEmpty" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;color:#9ca3af;font-size:14px;text-align:center;">
+        Aucun projet n'a encore de budget renseigné.<br>
+        <a href="{% url 'core:projects' %}" style="color:#3b82f6;">Créer / éditer un projet →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Projets en cours + Répartition ───────────────────────────────────── -->
 <div class="grid grid-2 mb-6">
-    <!-- Active Projects -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">{% trans 'Projets en cours' %}</h3>
-            <a href="{% url 'core:projects' %}" class="card-link">{% trans 'Voir tout' %} →</a>
-        </div>
-        <div class="card-content">
-            <div class="item-list">
-                {% for project in active_projects %}
-                <div class="project-card">
-                    <div class="project-card-header">
-                        <div class="project-card-badges">
-                            <span class="badge badge-info">{% trans 'En cours' %}</span>
-                            <span class="badge {% if project.priority == 'haute' %}badge-danger{% elif project.priority == 'moyenne' %}badge-warning{% else %}badge-secondary{% endif %}">
-                                {{ project.get_priority_display }}
-                            </span>
-                        </div>
-                        <span class="project-card-direction">{{ project.direction.code }}</span>
-                    </div>
-                    <h4 class="project-card-title">{{ project.name }}</h4>
-                    <div class="project-card-progress">
-                        <div class="project-card-progress-header">
-                            <span class="project-card-progress-label">{% trans 'Progression' %}</span>
-                            <span class="project-card-progress-value">{{ project.progress }}%</span>
-                        </div>
-                        <div class="progress">
-                            <div class="progress-bar {% if project.progress >= 80 %}green{% elif project.progress >= 50 %}blue{% elif project.progress >= 25 %}amber{% else %}red{% endif %}" style="width: {{ project.progress }}%"></div>
-                        </div>
-                    </div>
-                    <div class="project-card-meta">
-                        <span class="project-card-meta-item">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            {{ project.end_date|date:"d/m/Y" }}
-                        </span>
-                        <span class="project-card-meta-item">
-                            {% trans 'Budget' %}: {{ project.budget_percentage }}% {% trans 'consommé' %}
-                        </span>
-                    </div>
-                </div>
-                {% empty %}
-                <p class="text-gray-500">{% trans 'Aucun projet en cours' %}</p>
-                {% endfor %}
-            </div>
-        </div>
+
+  <!-- Projets en cours -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Projets en cours</h3>
+      <a href="{% url 'core:projects' %}" class="card-link">Voir tout →</a>
     </div>
-    
+    <div class="card-content">
+      {% if active_projects %}
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        {% for project in active_projects %}
+        <a href="{% url 'core:project_detail' project.id %}" style="text-decoration:none;display:block;padding:14px;border-radius:10px;border:1px solid #e2e8f0;background:#f8fafc;transition:box-shadow .15s;"
+           onmouseenter="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseleave="this.style.boxShadow='none'">
+          <!-- Badges + direction -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px;">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <span class="badge {% if project.computed_status == 'en_retard' %}badge-danger{% elif project.computed_status == 'en_cours' %}badge-info{% elif project.computed_status == 'planifie' %}badge-warning{% else %}badge-success{% endif %}">
+                {% if project.computed_status == 'en_retard' %}En retard{% else %}{{ project.get_status_display }}{% endif %}
+              </span>
+              <span class="badge {% if project.priority == 'haute' %}badge-danger{% elif project.priority == 'moyenne' %}badge-warning{% else %}badge-secondary{% endif %}">
+                {{ project.get_priority_display }}
+              </span>
+            </div>
+            {% if project.direction %}
+            <span style="font-size:11px;font-weight:600;color:#64748b;background:#f1f5f9;border-radius:4px;padding:1px 7px;">{{ project.direction.code }}</span>
+            {% endif %}
+          </div>
+          <!-- Nom -->
+          <p style="font-size:14px;font-weight:600;color:#1e3a5f;margin-bottom:8px;line-height:1.3;">{{ project.name }}</p>
+          <!-- Progression -->
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="progress" style="flex:1;height:6px;">
+              <div class="progress-bar {% if project.progress >= 80 %}green{% elif project.progress >= 50 %}blue{% elif project.progress >= 25 %}amber{% else %}red{% endif %}" style="width:{{ project.progress }}%"></div>
+            </div>
+            <span style="font-size:12px;font-weight:600;color:#374151;white-space:nowrap;">{{ project.progress }}%</span>
+          </div>
+          <!-- Méta -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;font-size:11px;color:#64748b;flex-wrap:wrap;gap:4px;">
+            <span>Fin : {{ project.end_date|date:"d/m/Y" }}</span>
+            <span>Budget consommé : {{ project.budget_percentage }}%</span>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-gray-500" style="padding:24px 0;text-align:center;">Aucun projet en cours</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Répartition des projets -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h3 class="card-title">Répartition des projets</h3>
+        <span class="card-subtitle" style="font-size:12px;color:#6b7280;">{{ total_projects }} projet{{ total_projects|pluralize }} au total</span>
+      </div>
+    </div>
+    <div class="card-content">
+      <div class="chart-container" style="position:relative;height:260px;">
+        <canvas id="progressChart"></canvas>
+        <div id="progressEmpty" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;color:#9ca3af;font-size:14px;text-align:center;">
+          Aucun projet enregistré.<br>
+          <a href="{% url 'core:projects' %}" style="color:#3b82f6;">Créer un projet →</a>
+        </div>
+      </div>
+      <!-- Compteurs sous le donut -->
+      <div style="display:flex;justify-content:center;gap:24px;margin-top:16px;padding-top:14px;border-top:1px solid #f1f5f9;">
+        <div style="text-align:center;">
+          <p style="font-size:22px;font-weight:700;color:#3b82f6;">{{ projects_in_progress }}</p>
+          <p style="font-size:11px;color:#64748b;">En cours</p>
+        </div>
+        <div style="text-align:center;">
+          <p style="font-size:22px;font-weight:700;color:#10b981;">{{ projects_completed }}</p>
+          <p style="font-size:11px;color:#64748b;">Terminés</p>
+        </div>
+        <div style="text-align:center;">
+          <p style="font-size:22px;font-weight:700;color:#f59e0b;">{{ projects_planned }}</p>
+          <p style="font-size:11px;color:#64748b;">Planifiés</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
-<!-- Requests and Events -->
+<!-- ── Demandes + Événements ─────────────────────────────────────────────── -->
 <div class="grid grid-2">
-    <!-- Pending Requests -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">{% trans 'Demandes des directions' %}</h3>
-            <a href="{% url 'core:requests' %}" class="card-link">{% trans 'Voir tout' %} →</a>
-        </div>
-        <div class="card-content">
-            <div class="item-list">
-                {% for req in pending_reqs %}
-                <div class="request-item">
-                    <div class="request-header">
-                        <div class="request-badges">
-                            <span class="badge {% if req.priority == 'haute' %}badge-danger{% elif req.priority == 'moyenne' %}badge-warning{% else %}badge-secondary{% endif %}">
-                                {{ req.get_priority_display }}
-                            </span>
-                            <span class="request-direction">{{ req.direction.code }}</span>
-                        </div>
-                        <span class="badge badge-warning">{{ req.get_status_display }}</span>
-                    </div>
-                    <h4 class="request-title">{{ req.title }}</h4>
-                    <p class="request-description">{{ req.description }}</p>
-                    <div class="request-footer">
-                        <span>{% trans 'Par' %} {{ req.created_by }}</span>
-                        <span class="request-footer-item">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            {{ req.created_at|date:"d/m/Y" }}
-                        </span>
-                    </div>
-                </div>
-                {% empty %}
-                <p class="text-gray-500">{% trans 'Aucune demande en attente' %}</p>
-                {% endfor %}
-            </div>
-        </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Demandes des directions</h3>
+      <a href="{% url 'core:requests' %}" class="card-link">Voir tout →</a>
     </div>
-    
-    <!-- Upcoming Events -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">{% trans 'Événements à venir' %}</h3>
-            <a href="{% url 'core:calendar' %}" class="card-link">{% trans 'Voir tout' %} →</a>
-        </div>
-        <div class="card-content">
-            <div class="item-list">
-                {% for event in upcoming_events %}
-                <div class="event-item">
-                    <div class="event-date-box">
-                        <span class="event-date-month">{{ event.date|date:"M" }}</span>
-                        <span class="event-date-day">{{ event.date|date:"d" }}</span>
-                    </div>
-                    <div class="event-info">
-                        <div class="event-type-indicator">
-                            <span class="event-type-dot {{ event.event_type }}"></span>
-                            <span class="badge {% if event.event_type == 'reunion' %}badge-info{% elif event.event_type == 'evenement' %}badge-success{% else %}badge-danger{% endif %}">
-                                {{ event.get_event_type_display }}
-                            </span>
-                        </div>
-                        <h4 class="event-title">{{ event.title }}</h4>
-                        <div class="event-meta">
-                            <span class="event-meta-item">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                {{ event.time|time:"H:i" }}
-                            </span>
-                            {% if event.location %}
-                            <span class="event-meta-item">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                                {{ event.location }}
-                            </span>
-                            {% endif %}
-                            <span class="event-meta-item">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                                </svg>
-                                {{ event.participants.count }} {% trans 'participants' %}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                {% empty %}
-                <p class="text-gray-500">{% trans 'Aucun événement à venir' %}</p>
-                {% endfor %}
+    <div class="card-content">
+      <div class="item-list">
+        {% for req in pending_reqs %}
+        <div class="request-item">
+          <div class="request-header">
+            <div class="request-badges">
+              <span class="badge {% if req.priority == 'haute' %}badge-danger{% elif req.priority == 'moyenne' %}badge-warning{% else %}badge-secondary{% endif %}">{{ req.get_priority_display }}</span>
+              <span class="request-direction">{{ req.direction.code }}</span>
             </div>
+            <span class="badge badge-warning">{{ req.get_status_display }}</span>
+          </div>
+          <h4 class="request-title">{{ req.title }}</h4>
+          <p class="request-description">{{ req.description }}</p>
+          <div class="request-footer">
+            <span>Par {{ req.created_by }}</span>
+            <span class="request-footer-item">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              {{ req.created_at|date:"d/m/Y" }}
+            </span>
+          </div>
         </div>
+        {% empty %}
+        <p class="text-gray-500">Aucune demande en attente</p>
+        {% endfor %}
+      </div>
     </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Événements à venir</h3>
+      <a href="{% url 'core:calendar' %}" class="card-link">Voir tout →</a>
+    </div>
+    <div class="card-content">
+      <div class="item-list">
+        {% for event in upcoming_events %}
+        <div class="event-item">
+          <div class="event-date-box">
+            <span class="event-date-month">{{ event.date|date:"M" }}</span>
+            <span class="event-date-day">{{ event.date|date:"d" }}</span>
+          </div>
+          <div class="event-info">
+            <div class="event-type-indicator">
+              <span class="event-type-dot {{ event.event_type }}"></span>
+              <span class="badge {% if event.event_type == 'reunion' %}badge-info{% elif event.event_type == 'evenement' %}badge-success{% else %}badge-danger{% endif %}">
+                {{ event.get_event_type_display }}
+              </span>
+            </div>
+            <h4 class="event-title">{{ event.title }}</h4>
+            <div class="event-meta">
+              <span class="event-meta-item">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                {{ event.time|time:"H:i" }}
+              </span>
+              {% if event.location %}
+              <span class="event-meta-item">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                {{ event.location }}
+              </span>
+              {% endif %}
+              <span class="event-meta-item">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+                {{ event.participants.count }} participants
+              </span>
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <p class="text-gray-500">Aucun événement à venir</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
 </div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
 (function () {
-    const budgetData = JSON.parse(document.getElementById('budget-data-json').textContent || '[]');
-    const counts = JSON.parse(document.getElementById('dashboard-counts').textContent || '{}');
+  const budgetData = JSON.parse(document.getElementById('budget-data-json').textContent || '[]');
+  const counts = JSON.parse(document.getElementById('dashboard-counts').textContent || '{}');
 
-    // Budget Chart
-    const budgetCanvas = document.getElementById('budgetChart');
-    const budgetEmpty = document.getElementById('budgetEmpty');
-    const hasBudget = budgetData.some(d => (d.allocated || 0) > 0 || (d.consumed || 0) > 0);
+  // ── Budget Chart (pleine largeur) ──────────────────────────────────────
+  const budgetCanvas = document.getElementById('budgetChart');
+  const budgetEmpty  = document.getElementById('budgetEmpty');
+  const hasBudget    = budgetData.some(d => (d.allocated || 0) > 0 || (d.consumed || 0) > 0);
 
-    if (!hasBudget) {
-        budgetCanvas.style.display = 'none';
-        budgetEmpty.style.display = 'flex';
-    } else {
-        new Chart(budgetCanvas.getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: budgetData.map(d => d.direction),
-                datasets: [
-                    {
-                        label: 'Alloué',
-                        data: budgetData.map(d => d.allocated),
-                        backgroundColor: '#3b82f6',
-                        borderRadius: 6,
-                        borderSkipped: false,
-                    },
-                    {
-                        label: 'Consommé',
-                        data: budgetData.map(d => d.consumed),
-                        backgroundColor: '#10b981',
-                        borderRadius: 6,
-                        borderSkipped: false,
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'top', labels: { boxWidth: 12, font: { size: 12 } } },
-                    tooltip: {
-                        callbacks: {
-                            label: ctx => {
-                                const v = (ctx.parsed.y || 0).toLocaleString('fr-FR', { maximumFractionDigits: 2 });
-                                return ctx.dataset.label + ' : ' + v + ' M GNF';
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    x: { grid: { display: false } },
-                    y: {
-                        beginAtZero: true,
-                        title: { display: true, text: 'Millions GNF', font: { size: 11 } },
-                        ticks: { callback: v => v + ' M' }
-                    }
-                }
+  if (!hasBudget) {
+    budgetCanvas.style.display = 'none';
+    budgetEmpty.style.display  = 'flex';
+  } else {
+    new Chart(budgetCanvas.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: budgetData.map(d => d.direction),
+        datasets: [
+          {label:'Alloué',   data: budgetData.map(d => d.allocated), backgroundColor:'#3b82f6', borderRadius:5, borderSkipped:false},
+          {label:'Consommé', data: budgetData.map(d => d.consumed),  backgroundColor:'#10b981', borderRadius:5, borderSkipped:false},
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {position:'top', labels:{boxWidth:12, font:{size:12}}},
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                const v = (ctx.parsed.y || 0).toLocaleString('fr-FR', {maximumFractionDigits:2});
+                return ctx.dataset.label + ' : ' + v + ' M GNF';
+              }
             }
-        });
-    }
+          }
+        },
+        scales: {
+          x: {grid:{display:false}},
+          y: {
+            beginAtZero: true,
+            title: {display:true, text:'Millions GNF', font:{size:11}},
+            ticks: {callback: v => v + ' M'}
+          }
+        }
+      }
+    });
+  }
 
-    // Progress Chart
-    const progressCanvas = document.getElementById('progressChart');
-    const progressEmpty = document.getElementById('progressEmpty');
-    const totalProjects = (counts.in_progress || 0) + (counts.completed || 0) + (counts.planned || 0);
+  // ── Répartition donut ─────────────────────────────────────────────────
+  const progressCanvas = document.getElementById('progressChart');
+  const progressEmpty  = document.getElementById('progressEmpty');
+  const totalProjects  = (counts.in_progress || 0) + (counts.completed || 0) + (counts.planned || 0);
 
-    if (totalProjects === 0) {
-        progressCanvas.style.display = 'none';
-        progressEmpty.style.display = 'flex';
-    } else {
-        new Chart(progressCanvas.getContext('2d'), {
-            type: 'doughnut',
-            data: {
-                labels: ['En cours', 'Terminés', 'Planifiés'],
-                datasets: [{
-                    data: [counts.in_progress, counts.completed, counts.planned],
-                    backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'],
-                    borderColor: '#ffffff',
-                    borderWidth: 3,
-                    hoverOffset: 8,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '62%',
-                plugins: {
-                    legend: {
-                        position: 'right',
-                        labels: {
-                            boxWidth: 12,
-                            font: { size: 12 },
-                            generateLabels: (chart) => {
-                                const data = chart.data;
-                                return data.labels.map((label, i) => ({
-                                    text: label + ' (' + data.datasets[0].data[i] + ')',
-                                    fillStyle: data.datasets[0].backgroundColor[i],
-                                    strokeStyle: data.datasets[0].backgroundColor[i],
-                                    index: i,
-                                }));
-                            }
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: ctx => {
-                                const v = ctx.parsed || 0;
-                                const pct = totalProjects ? Math.round(v / totalProjects * 100) : 0;
-                                return ctx.label + ' : ' + v + ' (' + pct + '%)';
-                            }
-                        }
-                    }
-                }
+  if (totalProjects === 0) {
+    progressCanvas.style.display = 'none';
+    progressEmpty.style.display  = 'flex';
+  } else {
+    new Chart(progressCanvas.getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: ['En cours','Terminés','Planifiés'],
+        datasets: [{
+          data: [counts.in_progress, counts.completed, counts.planned],
+          backgroundColor: ['#3b82f6','#10b981','#f59e0b'],
+          borderColor: '#ffffff',
+          borderWidth: 3,
+          hoverOffset: 8,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '65%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              boxWidth: 12,
+              font: {size:12},
+              padding: 16,
+              generateLabels: chart => {
+                const d = chart.data;
+                return d.labels.map((label, i) => ({
+                  text: label + ' (' + d.datasets[0].data[i] + ')',
+                  fillStyle: d.datasets[0].backgroundColor[i],
+                  strokeStyle: d.datasets[0].backgroundColor[i],
+                  index: i,
+                }));
+              }
             }
-        });
-    }
+          },
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                const v   = ctx.parsed || 0;
+                const pct = totalProjects ? Math.round(v / totalProjects * 100) : 0;
+                return ctx.label + ' : ' + v + ' (' + pct + '%)';
+              }
+            }
+          }
+        }
+      }
+    });
+  }
 })();
 </script>
 {% endblock %}

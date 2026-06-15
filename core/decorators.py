@@ -13,9 +13,9 @@ def role_required(*roles):
                 return redirect('core:login')
             
             if not hasattr(request.user, 'profile'):
-                messages.error(request, "Votre profil n'est pas configuré.")
-                return redirect('core:login')
-            
+                messages.error(request, "Votre profil n'est pas configuré. Contactez un administrateur.")
+                return redirect('core:dashboard')
+
             user_role = request.user.profile.role
             if user_role not in roles and 'admin' not in roles:
                 if user_role != 'admin':
@@ -36,9 +36,9 @@ def permission_required(permission_method):
                 return redirect('core:login')
             
             if not hasattr(request.user, 'profile'):
-                messages.error(request, "Votre profil n'est pas configuré.")
-                return redirect('core:login')
-            
+                messages.error(request, "Votre profil n'est pas configuré. Contactez un administrateur.")
+                return redirect('core:dashboard')
+
             # Check if user has the required permission
             profile = request.user.profile
             has_permission = getattr(profile, permission_method, lambda: False)()

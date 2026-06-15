@@ -5,38 +5,56 @@
 {% block page_title %}{{ title }}{% endblock %}
 {% block page_subtitle %}{% if project %}{% trans 'Modifier les informations du projet' %}{% else %}{% trans 'Créer un nouveau projet' %}{% endif %}{% endblock %}
 
+{% block extra_css %}
+<style>
+.pf-wrap  { max-width: 800px; }
+.fg       { margin-bottom: 16px; }
+.fg-last  { margin-bottom: 24px; }
+.fg-grid  { gap: 16px; margin-bottom: 16px; }
+.fg-grid.last { margin-bottom: 24px; }
+.ferr     { font-size: 12px; color: var(--red-600); margin-top: 4px; }
+.fhint    { display:inline-flex; align-items:center; gap:4px; font-size:11px; margin-top:4px; }
+.fhint svg { flex-shrink:0; }
+.fhint.info { color:var(--blue-600); }
+.fhint.warn { color:var(--amber-600); }
+.fhint.help { color:var(--gray-600); }
+.fhint.ok   { color:var(--green-600); }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="card" style="max-width: 800px;">
+<div class="card pf-wrap">
     <div class="card-header">
         <h3 class="card-title">{% trans 'Informations du projet' %}</h3>
     </div>
     <div class="card-content">
         <form method="post">
             {% csrf_token %}
-            
-            <div class="form-group" style="margin-bottom: 16px;">
+
+            <div class="form-group fg">
                 <label for="id_name">{% trans 'Nom du projet' %} *</label>
                 {{ form.name }}
-                {% if form.name.errors %}<p class="text-xs" style="color: var(--red-600);">{{ form.name.errors.0 }}</p>{% endif %}
+                {% if form.name.errors %}<p class="ferr">{{ form.name.errors.0 }}</p>{% endif %}
             </div>
-            
-            <div class="form-group" style="margin-bottom: 16px;">
+
+            <div class="form-group fg">
                 <label for="id_description">{% trans 'Description' %}</label>
                 {{ form.description }}
             </div>
-            
-            <div class="grid grid-2" style="gap: 16px; margin-bottom: 16px;">
+
+            <div class="grid grid-2 fg-grid">
                 <div class="form-group">
-                    <label for="id_direction">{% trans 'Direction' %} *</label>
+                    <label for="id_direction">{% trans 'Direction' %}</label>
                     {{ form.direction }}
                 </div>
                 <div class="form-group">
-                    <label for="id_manager">{% trans 'Responsable' %} *</label>
-                    {{ form.manager }}
+                    <label for="id_manager_employee">{% trans 'Responsable du projet' %} *</label>
+                    {{ form.manager_employee }}
+                    {% if form.manager_employee.errors %}<p class="ferr">{{ form.manager_employee.errors.0 }}</p>{% endif %}
                 </div>
             </div>
-            
-            <div class="grid grid-3" style="gap: 16px; margin-bottom: 16px;">
+
+            <div class="grid grid-2 fg-grid">
                 <div class="form-group">
                     <label for="id_status">{% trans 'Statut' %}</label>
                     {{ form.status }}
@@ -46,44 +64,44 @@
                     {{ form.priority }}
                 </div>
             </div>
-            
-            <div class="grid grid-2" style="gap: 16px; margin-bottom: 16px;">
+
+            <div class="grid grid-2 fg-grid">
                 <div class="form-group">
                     <label for="id_budget">{% trans 'Budget alloué' %}</label>
                     {{ form.budget }}
                     {% if form.budget.help_text %}
-                    <p class="text-xs" style="color: var(--blue-600); margin-top: 4px;">{{ form.budget.help_text }}</p>
+                    <p class="fhint info">{{ form.budget.help_text }}</p>
                     {% endif %}
-                    <div id="budget-conversion" class="text-xs" style="color: var(--green-600); margin-top: 4px;"></div>
+                    <div id="budget-conversion" class="fhint ok"></div>
                 </div>
                 <div class="form-group">
                     <label for="id_budget_consumed">{% trans 'Budget consommé' %}</label>
                     {{ form.budget_consumed }}
                     {% if form.budget_consumed.help_text %}
-                    <p class="text-xs" style="color: var(--blue-600); margin-top: 4px;">{{ form.budget_consumed.help_text }}</p>
+                    <p class="fhint info">{{ form.budget_consumed.help_text }}</p>
                     {% endif %}
-                    <div id="consumed-conversion" class="text-xs" style="color: var(--green-600); margin-top: 4px;"></div>
+                    <div id="consumed-conversion" class="fhint ok"></div>
                 </div>
             </div>
-            
-            <div class="form-group">
+
+            <div class="form-group fg">
                 <label for="id_currency">{% trans 'Devise' %}</label>
                 {{ form.currency }}
-                <p class="text-xs" style="color: var(--gray-600); margin-top: 4px;">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12" style="display: inline-block; vertical-align: middle;">
+                <p class="fhint help">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     {% trans 'Le montant sera automatiquement converti selon le taux de change' %}
                 </p>
             </div>
-            
-            <div class="grid grid-2" style="gap: 16px; margin-bottom: 24px;">
+
+            <div class="grid grid-2 fg-grid last">
                 <div class="form-group">
                     <label for="id_start_date">{% trans 'Date de début' %} *</label>
                     {{ form.start_date }}
                     {% if form.start_date.help_text %}
-                    <p class="text-xs" style="color: var(--amber-600); margin-top: 4px;">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12" style="display: inline-block; vertical-align: middle;">
+                    <p class="fhint warn">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
                         {{ form.start_date.help_text }}
@@ -94,8 +112,8 @@
                     <label for="id_end_date">{% trans 'Date de fin' %} *</label>
                     {{ form.end_date }}
                     {% if form.end_date.help_text %}
-                    <p class="text-xs" style="color: var(--amber-600); margin-top: 4px;">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12" style="display: inline-block; vertical-align: middle;">
+                    <p class="fhint warn">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
                         {{ form.end_date.help_text }}
@@ -103,7 +121,7 @@
                     {% endif %}
                 </div>
             </div>
-            
+
             <div class="flex gap-3">
                 <button type="submit" class="btn btn-primary">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
@@ -276,17 +294,17 @@ const exchangeRates = {
 
 function convertCurrency(amount, fromCurrency, toCurrency) {
     if (fromCurrency === toCurrency) return amount;
-    
+
     // Convertir en USD d'abord
     let amountInUSD = fromCurrency === 'USD' ? amount : amount / exchangeRates[fromCurrency];
-    
+
     // Puis convertir vers la devise cible
     return toCurrency === 'USD' ? amountInUSD : amountInUSD * exchangeRates[toCurrency];
 }
 
 function formatCurrency(amount, currency) {
     const noDecimalCurrencies = ['JPY', 'KRW', 'VND', 'CLP', 'COP', 'PYG', 'UGX', 'RWF', 'BIF', 'CDF', 'MGA', 'GNF', 'XOF', 'XAF'];
-    
+
     if (noDecimalCurrencies.includes(currency)) {
         return `${Math.round(amount).toLocaleString()} ${currency}`;
     } else {
@@ -298,19 +316,19 @@ function updateConversions() {
     const currency = document.getElementById('id_currency').value;
     const budget = parseFloat(document.getElementById('id_budget').value) || 0;
     const consumed = parseFloat(document.getElementById('id_budget_consumed').value) || 0;
-    
+
     // Afficher la conversion en GNF si ce n'est pas déjà GNF
     if (currency !== 'GNF') {
         const budgetGNF = convertCurrency(budget, currency, 'GNF');
         const consumedGNF = convertCurrency(consumed, currency, 'GNF');
-        
-        document.getElementById('budget-conversion').innerHTML = 
+
+        document.getElementById('budget-conversion').innerHTML =
             `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12" style="display: inline-block; vertical-align: middle;">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
             </svg> Équivalent: ${formatCurrency(budgetGNF, 'GNF')}`;
-        
+
         if (consumed > 0) {
-            document.getElementById('consumed-conversion').innerHTML = 
+            document.getElementById('consumed-conversion').innerHTML =
                 `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12" style="display: inline-block; vertical-align: middle;">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
                 </svg> Équivalent: ${formatCurrency(consumedGNF, 'GNF')}`;
