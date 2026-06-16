@@ -15,7 +15,7 @@ from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
 from reportlab.pdfgen import canvas
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
-from .models import Direction, Project, Document, Partner, Event, Request, Employee, Budget, UserProfile, UserActivity, ProjectMember, Milestone, SubMilestone, ProjectNeed, ProjectComment, ProjectDocument, ProjectFolder, ProjectActivity
+from .models import Direction, Project, Document, Partner, Event, Request, Employee, Budget, UserProfile, UserActivity, ProjectMember, Milestone, SubMilestone, ProjectNeed, ProjectComment, ProjectDocument, ProjectFolder, ProjectActivity, Role
 
 
 def log_project_activity(project, action, description, user):
@@ -49,7 +49,7 @@ def _get_project_member_cards(project):
         project.members.filter(employee__isnull=False).values_list('employee_id', flat=True)
     )
     pm_roles = {
-        pm.employee_id: pm.get_role_display()
+        pm.employee_id: pm.project_role.name if pm.project_role else '—'
         for pm in project.members.filter(employee__isnull=False)
     }
     m_counts = dict(
@@ -105,7 +105,7 @@ def get_accessible_projects_qs(user):
     qs = Project.objects.select_related('direction')
     if profile.is_directeur_general() or user.is_staff:
         return qs
-    if profile.role == 'directeur':
+    if profile.role_slug == 'directeur':
         if profile.direction_id:
             return qs.filter(direction_id=profile.direction_id)
         return qs.none()
@@ -519,9 +519,9 @@ def resources(request):
     # Employees data : un directeur ne voit que sa direction
     employees = Employee.objects.select_related('direction').all()
     profile = request.user.profile
-    if profile.role == 'directeur' and profile.direction_id:
+    if profile.role_slug == 'directeur' and profile.direction_id:
         employees = employees.filter(direction_id=profile.direction_id)
-    elif profile.role not in ['admin', 'directeur_general'] and not profile.can_view_all_budget_directions():
+    elif profile.role_slug not in ['admin', 'directeur_general'] and not profile.can_view_all_budget_directions():
         # Autres roles : limites a leur direction si definie
         if profile.direction_id:
             employees = employees.filter(direction_id=profile.direction_id)
@@ -577,12 +577,14 @@ def documents(request):
         'signe': Document.objects.filter(status='signe').count(),
     }
     
+    from django.utils import timezone
     context = {
         'documents': docs_qs,
         'stats': stats,
         'current_status': status_filter,
         'current_type': type_filter,
         'search': search,
+        'today': timezone.now().date(),
     }
     return render(request, 'core/documents.html', context)
 
@@ -626,35 +628,28 @@ def requests_view(request):
 @login_required
 def calendar(request):
     """Vue du calendrier"""
-    import json
     import calendar as cal
 
     today = timezone.now().date()
     year = int(request.GET.get('year', today.year))
     month = int(request.GET.get('month', today.month))
-    
-    # Événements du mois
+
     events_qs = Event.objects.filter(
-        date__year=year,
-        date__month=month
-    ).prefetch_related('participants')
-    
-    # Stats pour le mois
+        date__year=year, date__month=month
+    ).prefetch_related('participants').select_related('created_by')
+
     stats = {
         'reunions': events_qs.filter(event_type='reunion').count(),
         'evenements': events_qs.filter(event_type='evenement').count(),
         'deadlines': events_qs.filter(event_type='deadline').count(),
         'total': events_qs.count(),
     }
-    
-    # Événements à venir
-    upcoming = Event.objects.filter(date__gte=today).prefetch_related('participants')[:5]
-    
-    # Construire le calendrier
+
+    upcoming = Event.objects.filter(date__gte=today).select_related('created_by').prefetch_related('participants')[:5]
+
     cal_obj = cal.Calendar(firstweekday=0)
     month_days = cal_obj.monthdayscalendar(year, month)
-    
-    # Associer les événements aux jours
+
     events_by_day = {}
     for event in events_qs:
         day = event.date.day
@@ -662,31 +657,11 @@ def calendar(request):
             events_by_day[day] = []
         events_by_day[day].append(event)
 
-    # Serialiser les events pour les vues Kanban et Gantt (JS)
-    events_json = []
-    edit_url_template = reverse('core:event_edit', args=[0]).replace('/0/', '/__ID__/')
-    for ev in events_qs:
-        events_json.append({
-            'id': ev.id,
-            'title': ev.title,
-            'type': ev.event_type,
-            'type_label': ev.get_event_type_display(),
-            'description': ev.description or '',
-            'date': ev.date.isoformat(),
-            'day': ev.date.day,
-            'time': ev.time.strftime('%H:%M'),
-            'duration': ev.duration,
-            'location': ev.location or '',
-            'participants': [p.code for p in ev.participants.all()],
-            'edit_url': edit_url_template.replace('__ID__', str(ev.id)),
-        })
-
-    months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 
+    months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
               'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
 
-    # Nombre de jours dans le mois (pour Gantt)
-    days_in_month = cal.monthrange(year, month)[1]
-    
+    can_manage = request.user.profile.can_manage_events()
+
     context = {
         'year': year,
         'month': month,
@@ -700,11 +675,23 @@ def calendar(request):
         'next_month': month + 1 if month < 12 else 1,
         'next_year': year if month < 12 else year + 1,
         'stats': stats,
-        'events_json': json.dumps(events_json),
-        'days_in_month': days_in_month,
-        'days_range': list(range(1, days_in_month + 1)),
+        'can_manage': can_manage,
     }
     return render(request, 'core/calendar.html', context)
+
+
+@login_required
+def event_detail(request, event_id):
+    """Détail d'un événement"""
+    event = get_object_or_404(Event, pk=event_id)
+    can_manage = request.user.profile.can_manage_events()
+    is_creator = event.created_by == request.user
+    can_edit = can_manage or is_creator
+    return render(request, 'core/event_detail.html', {
+        'event': event,
+        'can_edit': can_edit,
+        'can_delete': can_edit,
+    })
 
 
 @login_required
@@ -712,24 +699,26 @@ def event_create(request):
     """Créer un événement"""
     from .forms import EventForm
 
-    if not request.user.profile.has_create_events_permission():
-        messages.error(request, "Permission insuffisante pour gérer les événements.")
+    if not request.user.profile.can_manage_events():
+        messages.error(request, "Permission insuffisante pour créer des événements.")
         return redirect('core:calendar')
 
     if request.method == 'POST':
         form = EventForm(request.POST)
         if form.is_valid():
-            form.save()
+            event = form.save(commit=False)
+            event.created_by = request.user
+            event.save()
+            form.save_m2m()
             messages.success(request, "Événement créé avec succès.")
-            return redirect('core:calendar')
+            return redirect('core:event_detail', event_id=event.pk)
     else:
-        # Pré-remplir la date si fournie dans l'URL
         initial = {}
         date_str = request.GET.get('date')
         if date_str:
             initial['date'] = date_str
         form = EventForm(initial=initial)
-    
+
     return render(request, 'core/event_form.html', {'form': form, 'title': 'Nouvel événement'})
 
 
@@ -738,38 +727,44 @@ def event_edit(request, event_id):
     """Modifier un événement"""
     from .forms import EventForm
 
-    if not request.user.profile.has_create_events_permission():
-        messages.error(request, "Permission insuffisante pour gérer les événements.")
-        return redirect('core:calendar')
-
     event = get_object_or_404(Event, pk=event_id)
-    
+    can_manage = request.user.profile.can_manage_events()
+    is_creator = event.created_by == request.user
+
+    if not can_manage and not is_creator:
+        messages.error(request, "Vous ne pouvez modifier que vos propres événements.")
+        return redirect('core:event_detail', event_id=event_id)
+
     if request.method == 'POST':
         form = EventForm(request.POST, instance=event)
         if form.is_valid():
             form.save()
             messages.success(request, "Événement modifié avec succès.")
-            return redirect('core:calendar')
+            return redirect('core:event_detail', event_id=event.pk)
     else:
         form = EventForm(instance=event)
-    
-    return render(request, 'core/event_form.html', {'form': form, 'event': event, 'title': f'Modifier {event.title}'})
+
+    return render(request, 'core/event_form.html', {
+        'form': form, 'event': event, 'title': f'Modifier — {event.title}'
+    })
 
 
 @login_required
 def event_delete(request, event_id):
     """Supprimer un événement"""
-    if not request.user.profile.has_create_events_permission():
-        messages.error(request, "Permission insuffisante pour gérer les événements.")
-        return redirect('core:calendar')
-
     event = get_object_or_404(Event, pk=event_id)
-    
+    can_manage = request.user.profile.can_manage_events()
+    is_creator = event.created_by == request.user
+
+    if not can_manage and not is_creator:
+        messages.error(request, "Vous ne pouvez supprimer que vos propres événements.")
+        return redirect('core:event_detail', event_id=event_id)
+
     if request.method == 'POST':
         event.delete()
-        messages.success(request, "Événement supprimé avec succès.")
+        messages.success(request, "Événement supprimé.")
         return redirect('core:calendar')
-    
+
     return render(request, 'core/event_confirm_delete.html', {'event': event})
 
 
@@ -1178,6 +1173,9 @@ def export_reports_pdf(request):
 @login_required
 def partners(request):
     """Vue des partenaires"""
+    if not request.user.profile.can_manage_partners():
+        messages.error(request, "Vous n'avez pas la permission de consulter les partenaires.")
+        return redirect('core:dashboard')
     type_filter = request.GET.get('type', 'all')
     status_filter = request.GET.get('status', 'all')
     search = request.GET.get('search', '')
@@ -1368,7 +1366,7 @@ def users_list(request):
         'search': search,
         'current_role': role_filter,
         'current_status': status_filter,
-        'role_choices': UserProfile.ROLE_CHOICES,
+        'role_choices': [(r.slug, r.name) for r in Role.objects.all().order_by('name')],
     }
     return render(request, 'core/users/list.html', context)
 
@@ -1414,7 +1412,7 @@ def user_create(request):
             user.save()
 
             profile, _ = UserProfile.objects.get_or_create(user=user)
-            profile.role = role
+            profile.role = role  # role est déjà un objet Role (ModelChoiceField)
             profile.direction = emp.direction
             profile.employee = emp
             profile.save()
@@ -1777,7 +1775,7 @@ def project_detail(request, project_id):
             'id': emp.id,
             'name': emp.name,
             'job_role': emp.role,
-            'project_role': pm.get_role_display(),
+            'project_role': pm.project_role.name if pm.project_role else '—',
             'direction': emp.direction.code if emp.direction else '',
             'task_count': task_info['total'],
             'task_done': task_info['done'],
@@ -2925,7 +2923,7 @@ def project_member_add(request, project_id):
         'title': 'Ajouter un membre',
         'directions': directions,
         'available_employees_count': available_employees_count,
-        'role_choices': UserProfile.ROLE_CHOICES,
+        'role_choices': [(r.slug, r.name) for r in Role.objects.all().order_by('name')],
     }
     
     if request.method == 'POST':
@@ -2938,7 +2936,11 @@ def project_member_add(request, project_id):
             new_phone = request.POST.get('new_employee_phone', '').strip()
             new_email = request.POST.get('new_employee_email', '').strip()
             new_org = request.POST.get('new_employee_organization', '').strip()
-            project_role = request.POST.get('role', 'membre')
+            project_role_id = request.POST.get('project_role')
+            project_role_obj = None
+            if project_role_id:
+                from .models import ProjectRole
+                project_role_obj = ProjectRole.objects.filter(pk=project_role_id).first()
 
             errors = []
             if not new_name:
@@ -2986,16 +2988,8 @@ def project_member_add(request, project_id):
                     is_external=is_external,
                     organization=new_org if is_external else '',
                 )
-                member = ProjectMember.objects.create(project=project, employee=new_employee, role=project_role)
-                if project_role == 'custom':
-                    member.can_manage_members_perm = request.POST.get('can_manage_members_perm') == 'on'
-                    member.can_edit_project_perm = request.POST.get('can_edit_project_perm') == 'on'
-                    member.can_add_milestones_perm = request.POST.get('can_add_milestones_perm') == 'on'
-                    member.can_add_documents_perm = request.POST.get('can_add_documents_perm') == 'on'
-                    member.can_add_needs_perm = request.POST.get('can_add_needs_perm') == 'on'
-                    member.can_add_comments_perm = request.POST.get('can_add_comments_perm') == 'on'
-                    member.save()
-                log_project_activity(project, 'ajout_membre', f"Ajout du membre '{new_name}' ({project_role})", request.user)
+                member = ProjectMember.objects.create(project=project, employee=new_employee, project_role=project_role_obj)
+                log_project_activity(project, 'ajout_membre', f"Ajout du membre '{new_name}' ({project_role_obj.name if project_role_obj else 'sans rôle'})", request.user)
                 from .notifications import notify_project_member_added
                 success, msg = notify_project_member_added(member, request.user)
                 if success:
@@ -3049,7 +3043,7 @@ def project_member_add(request, project_id):
                 member = form.save(commit=False)
                 member.project = project
                 member.save()
-                log_project_activity(project, 'ajout_membre', f"Ajout du membre '{member.employee.name}' ({member.get_role_display()})", request.user)
+                log_project_activity(project, 'ajout_membre', f"Ajout du membre '{member.employee.name}' ({member.project_role.name if member.project_role else 'sans rôle'})", request.user)
                 from .notifications import notify_project_member_added
                 success, msg = notify_project_member_added(member, request.user)
                 if success:
@@ -3082,7 +3076,7 @@ def project_member_edit(request, member_id):
         form = ProjectMemberForm(project, request.POST, instance=member)
         if form.is_valid():
             form.save()
-            log_project_activity(project, 'ajout_membre', f"Modification du rôle de '{member.employee.name}' en '{member.get_role_display()}'", request.user)
+            log_project_activity(project, 'ajout_membre', f"Modification du rôle de '{member.employee.name}' en '{member.project_role.name if member.project_role else 'sans rôle'}'", request.user)
             messages.success(request, "Rôle du membre modifié avec succès.")
             return redirect('core:project_detail', project_id=project.id)
     else:
@@ -3355,9 +3349,9 @@ def _user_can_manage_employee(user, employee=None):
     profile = getattr(user, 'profile', None)
     if not profile:
         return False
-    if profile.role in ['admin', 'directeur_general']:
+    if profile.role_slug in ['admin', 'directeur_general']:
         return True
-    if profile.role == 'directeur':
+    if profile.role_slug == 'directeur':
         if employee is None:
             return profile.direction_id is not None
         return profile.direction_id is not None and employee.direction_id == profile.direction_id
@@ -3382,7 +3376,7 @@ def employee_create(request):
         if form.is_valid():
             employee = form.save(commit=False)
             # Forcer la direction si l'utilisateur est un directeur
-            if profile.role == 'directeur' and profile.direction_id:
+            if profile.role_slug == 'directeur' and profile.direction_id:
                 employee.direction_id = profile.direction_id
             employee.save()
             messages.success(request, "Employé créé avec succès.")
@@ -3410,7 +3404,7 @@ def employee_edit(request, employee_id):
         form = EmployeeForm(request.POST, instance=employee, user=request.user)
         if form.is_valid():
             obj = form.save(commit=False)
-            if profile.role == 'directeur' and profile.direction_id:
+            if profile.role_slug == 'directeur' and profile.direction_id:
                 obj.direction_id = profile.direction_id
             obj.save()
 
@@ -3544,10 +3538,11 @@ def api_budget_data(request):
     can_view_budgets = request.user.profile.can_view_budgets()
     can_view_all_budget_directions = request.user.profile.can_view_all_budget_directions()
 
-    budgets = Budget.objects.select_related('direction')
     if not can_view_budgets:
-        budgets = budgets.none()
-    elif not can_view_all_budget_directions:
+        return JsonResponse({'error': 'Permission refusée'}, status=403)
+
+    budgets = Budget.objects.select_related('direction')
+    if not can_view_all_budget_directions:
         budgets = budgets.filter(direction=request.user.profile.direction)
 
     budgets = budgets.all()

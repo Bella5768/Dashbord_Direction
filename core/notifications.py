@@ -190,7 +190,7 @@ def notify_project_member_added(member, added_by_user):
         return (False, "Pas d'email pour ce membre")
 
     added_by = added_by_user.get_full_name() or added_by_user.username
-    role_label = member.get_role_display() if member.role else 'Membre'
+    role_label = member.project_role.name if member.project_role else 'Membre'
     subject = f"[CSIG] Ajout au projet : {member.project.name}"
 
     text, html = _render_email('project_member_added.html', {

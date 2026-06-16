@@ -82,9 +82,7 @@
             <input type="radio" name="member_type" id="mt_existing" value="existing"
               {% if not member_type or member_type == 'existing' %}checked{% endif %}>
             <label for="mt_existing" class="mt-type-label">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="22" height="22">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-              </svg>
+              <i data-lucide="users" width="22" height="22" ></i>
               <span class="mt-type-title">{% trans 'Employé existant' %}</span>
               <span class="mt-type-sub">{% trans 'Déjà dans le système' %}</span>
             </label>
@@ -94,9 +92,7 @@
             <input type="radio" name="member_type" id="mt_internal" value="new_internal"
               {% if member_type == 'new_internal' %}checked{% endif %}>
             <label for="mt_internal" class="mt-type-label">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="22" height="22">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
-              </svg>
+              <i data-lucide="user-plus" width="22" height="22" ></i>
               <span class="mt-type-title">{% trans 'Nouvel employé' %}</span>
               <span class="mt-type-sub">{% trans 'Créer une fiche interne' %}</span>
             </label>
@@ -106,9 +102,7 @@
             <input type="radio" name="member_type" id="mt_external" value="new_external"
               {% if member_type == 'new_external' %}checked{% endif %}>
             <label for="mt_external" class="mt-type-label">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="22" height="22">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
+              <i data-lucide="circle-play" width="22" height="22" ></i>
               <span class="mt-type-title">{% trans 'Personne externe' %}</span>
               <span class="mt-type-sub">{% trans 'Consultant, partenaire…' %}</span>
             </label>
@@ -120,14 +114,12 @@
       <!-- ===== SECTION EMPLOYÉ EXISTANT ===== -->
       <div id="panel_existing" class="mt-panel">
         <p class="mt-panel-title">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="15" height="15" class="mt-panel-icon-int">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-          </svg>
+          <i data-lucide="search" width="15" height="15" ></i>
           {% trans 'Sélectionner un employé existant' %}
         </p>
         <div class="form-group fg-sm">
           {{ form.employee }}
-          {% if form.employee.errors %}<p class="text-xs" style="color:var(--red-600);margin-top:4px;">{{ form.employee.errors.0 }}</p>{% endif %}
+          {% if form.employee.errors %}<p class="form-error">{{ form.employee.errors.0 }}</p>{% endif %}
         </div>
         {% if available_employees_count is not None %}
         <p class="mt-panel-count">{{ available_employees_count }} {% trans 'employé(s) disponible(s) pour ce projet' %}</p>
@@ -137,31 +129,29 @@
       <!-- ===== SECTION NOUVEL EMPLOYÉ INTERNE ===== -->
       <div id="panel_internal" class="mt-panel mt-panel-int" style="display:none;">
         <p class="mt-panel-title int">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="15" height="15">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-          </svg>
+          <i data-lucide="building-2" width="15" height="15" ></i>
           {% trans 'Créer un nouvel employé interne' %}
           {% if project.direction %}<span class="badge badge-primary badge-sm" style="margin-left:6px;">{{ project.direction.code }}</span>{% endif %}
         </p>
         <p class="mt-panel-desc int">{% trans "L'employé sera rattaché à la direction du projet et stocké dans le système." %}</p>
         <div class="form-group fg-sm">
-          <label for="int_name">{% trans 'Nom complet' %} *</label>
+          <label class="form-label" for="int_name">{% trans 'Nom complet' %} <span class="required">*</span></label>
           <input type="text" id="int_name" name="new_employee_name" class="form-control"
                  value="{{ new_employee_name|default:'' }}" placeholder="{% trans 'Ex : Amadou Diallo' %}">
         </div>
         <div class="form-group fg-sm">
-          <label for="int_role">{% trans 'Poste / Fonction' %} *</label>
+          <label class="form-label" for="int_role">{% trans 'Poste / Fonction' %} <span class="required">*</span></label>
           <input type="text" id="int_role" name="new_employee_role" class="form-control"
                  value="{{ new_employee_role|default:'' }}" placeholder="{% trans 'Ex : Ingénieur, Analyste, Chef de division…' %}">
         </div>
         <div class="grid grid-2 fg-grid-sm">
           <div class="form-group">
-            <label for="int_phone">{% trans 'Téléphone' %}</label>
+            <label class="form-label" for="int_phone">{% trans 'Téléphone' %}</label>
             <input type="text" id="int_phone" name="new_employee_phone" class="form-control"
                    value="{{ new_employee_phone|default:'' }}" placeholder="621 234 567">
           </div>
           <div class="form-group">
-            <label for="int_email">{% trans 'Email' %}</label>
+            <label class="form-label" for="int_email">{% trans 'Email' %}</label>
             <input type="email" id="int_email" name="new_employee_email" class="form-control"
                    value="{{ new_employee_email|default:'' }}" placeholder="nom@organisation.gn">
           </div>
@@ -171,35 +161,33 @@
       <!-- ===== SECTION PERSONNE EXTERNE ===== -->
       <div id="panel_external" class="mt-panel mt-panel-ext" style="display:none;">
         <p class="mt-panel-title ext">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="15" height="15">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
+          <i data-lucide="circle-play" width="15" height="15" ></i>
           {% trans 'Personne externe au projet' %}
         </p>
         <p class="mt-panel-desc ext">{% trans "Consultant, prestataire, partenaire — la fiche est créée et stockée avec le marqueur « Externe »." %}</p>
         <div class="form-group fg-sm">
-          <label for="ext_name">{% trans 'Nom complet' %} *</label>
+          <label class="form-label" for="ext_name">{% trans 'Nom complet' %} <span class="required">*</span></label>
           <input type="text" id="ext_name" name="new_employee_name" class="form-control"
                  value="{{ new_employee_name|default:'' }}" placeholder="{% trans 'Ex : Marie Konaté' %}">
         </div>
         <div class="form-group fg-sm">
-          <label for="ext_org">{% trans 'Organisation / Entreprise' %}</label>
+          <label class="form-label" for="ext_org">{% trans 'Organisation / Entreprise' %}</label>
           <input type="text" id="ext_org" name="new_employee_organization" class="form-control"
                  value="{{ new_employee_organization|default:'' }}" placeholder="{% trans 'Ex : Cabinet XYZ, ONG Alpha…' %}">
         </div>
         <div class="form-group fg-sm">
-          <label for="ext_role">{% trans 'Poste / Fonction' %} *</label>
+          <label class="form-label" for="ext_role">{% trans 'Poste / Fonction' %} <span class="required">*</span></label>
           <input type="text" id="ext_role" name="new_employee_role" class="form-control"
                  value="{{ new_employee_role|default:'' }}" placeholder="{% trans 'Ex : Consultant senior, Expert technique…' %}">
         </div>
         <div class="grid grid-2 fg-grid-sm">
           <div class="form-group">
-            <label for="ext_phone">{% trans 'Téléphone' %}</label>
+            <label class="form-label" for="ext_phone">{% trans 'Téléphone' %}</label>
             <input type="text" id="ext_phone" name="new_employee_phone" class="form-control"
                    value="{{ new_employee_phone|default:'' }}" placeholder="621 234 567">
           </div>
           <div class="form-group">
-            <label for="ext_email">{% trans 'Email' %}</label>
+            <label class="form-label" for="ext_email">{% trans 'Email' %}</label>
             <input type="email" id="ext_email" name="new_employee_email" class="form-control"
                    value="{{ new_employee_email|default:'' }}" placeholder="nom@exemple.com">
           </div>
@@ -207,19 +195,17 @@
       </div>
 
       <!-- ===== RÔLE DANS LE PROJET ===== -->
-      <div class="form-group" style="margin-bottom:16px;">
-        <label for="id_role">{% trans 'Rôle dans le projet' %} *</label>
-        {{ form.role }}
-        {% if form.role.errors %}<p class="text-xs" style="color:var(--red-600);">{{ form.role.errors.0 }}</p>{% endif %}
+      <div class="form-group">
+        <label class="form-label" for="id_project_role">{% trans 'Rôle dans le projet' %} <span class="required">*</span></label>
+        {{ form.project_role }}
+        {% if form.project_role.errors %}<p class="form-error">{{ form.project_role.errors.0 }}</p>{% endif %}
       </div>
 
       <!-- ===== PERMISSIONS ===== -->
       <div id="permissions_section" class="mt-perm-section">
         <div class="mt-perm-hdr">
           <p class="mt-perm-title">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="15" height="15">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-            </svg>
+            <i data-lucide="shield-check" width="15" height="15" ></i>
             {% trans 'Permissions sur ce projet' %}
           </p>
           <span id="perm_preset_note" class="mt-perm-note"></span>
@@ -261,9 +247,7 @@
       <div id="panel_create_account" class="mt-create-account" style="display:none;">
 
         <div id="alert_external_account" class="mt-alert-amber" style="display:none;">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="flex-shrink:0;margin-top:1px;">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-          </svg>
+          <i data-lucide="triangle-alert" width="16" height="16" style="flex-shrink:0;margin-top:1px;" ></i>
           <span>{% trans "Cette personne externe doit avoir un compte pour consulter le projet." %}</span>
         </div>
 
@@ -274,13 +258,11 @@
 
         <div id="create_user_fields" class="mt-create-account-fields" style="display:none;">
           <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:#1e40af;display:flex;gap:10px;align-items:flex-start;">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="flex-shrink:0;margin-top:1px;">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-            </svg>
+            <i data-lucide="mail" width="16" height="16" style="flex-shrink:0;margin-top:1px;" ></i>
             <span>Le compte sera créé inactif. Un email d'invitation sera envoyé à la personne pour qu'elle définisse elle-même son mot de passe.</span>
           </div>
           <div class="form-group">
-            <label for="new_user_role">{% trans 'Rôle système' %}</label>
+            <label class="form-label" for="new_user_role">{% trans 'Rôle système' %}</label>
             <select id="new_user_role" name="new_user_role" class="form-control">
               {% for val, lbl in role_choices %}
               <option value="{{ val }}"
@@ -294,9 +276,7 @@
 
       <div class="flex gap-3 fg-actions">
         <button type="submit" class="btn btn-primary">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-          </svg>
+          <i data-lucide="check" width="16" height="16" ></i>
           {% trans 'Ajouter le membre' %}
         </button>
         <a href="{% url 'core:project_detail' project.id %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
