@@ -134,7 +134,10 @@
                                     <i data-lucide="pen-line" width="15" height="15"></i>
                                 </a>
                                 {% endif %}
-                                <a href="{% url 'core:document_delete' doc.id %}" class="action-btn danger" title="{% trans 'Supprimer' %}">
+                                <a href="#" class="action-btn danger" title="{% trans 'Supprimer' %}"
+                                   data-delete-url="{% url 'core:document_delete' doc.id %}"
+                                   data-delete-type="le document"
+                                   data-delete-name="{{ doc.title }}">
                                     <i data-lucide="trash-2" width="15" height="15"></i>
                                 </a>
                             </div>

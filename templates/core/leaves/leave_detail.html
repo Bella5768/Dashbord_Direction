@@ -176,7 +176,12 @@
                 </a>
                 {% endif %}
                 {% if can_cancel %}
-                <form method="post" action="{% url 'core:leave_cancel' leave.id %}" onsubmit="return confirm('Annuler cette demande ?');" style="display:inline;">
+                <form method="post" action="{% url 'core:leave_cancel' leave.id %}" style="display:inline;"
+                      data-confirm="Cette action est irréversible. La demande sera annulée définitivement."
+                      data-confirm-title="Annuler la demande"
+                      data-confirm-label="Oui, annuler"
+                      data-confirm-danger
+                      data-confirm-keyword="ANNULER">
                     {% csrf_token %}
                     <button type="submit" class="btn" style="background:rgba(0,0,0,.15);color:white;border:1px solid rgba(255,255,255,.3);">
                         <i data-lucide="x" width="15" height="15"></i>
@@ -276,7 +281,12 @@
                                 </a>
                                 <span style="color:#9ca3af;font-size:11px;">{{ doc.uploaded_at|date:"d/m/Y" }}</span>
                                 {% if can_cancel and leave.status == 'soumise' %}
-                                <form method="post" action="{% url 'core:leave_document_delete' leave.id doc.id %}" style="display:inline;" onsubmit="return confirm('Supprimer cette pièce jointe ?');">
+                                <form method="post" action="{% url 'core:leave_document_delete' leave.id doc.id %}" style="display:inline;"
+                                      data-confirm="Cette pièce jointe sera supprimée définitivement."
+                                      data-confirm-title="Supprimer la pièce jointe"
+                                      data-confirm-label="Supprimer"
+                                      data-confirm-danger
+                                      data-confirm-keyword="SUPPRIMER">
                                     {% csrf_token %}
                                     <button type="submit" class="action-btn danger" title="{% trans 'Supprimer' %}">
                                         <i data-lucide="trash-2" width="13" height="13"></i>

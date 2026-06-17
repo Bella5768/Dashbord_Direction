@@ -145,7 +145,10 @@
                                     <i data-lucide="pencil" ></i>
                                 </a>
                                 {% if not u.is_active %}
-                                <form method="post" action="{% url 'core:resend_invitation' u.id %}" style="display:inline;" onsubmit="return confirm('Renvoyer l\'invitation à {{ u.email }} ?');">
+                                <form method="post" action="{% url 'core:resend_invitation' u.id %}" style="display:inline;"
+                                      data-confirm="Renvoyer l'invitation à {{ u.email }} ?"
+                                      data-confirm-title="Renvoyer l'invitation"
+                                      data-confirm-label="Renvoyer">
                                     {% csrf_token %}
                                     <button type="submit" class="action-btn" title="Renvoyer l'invitation" style="background:none;border:none;padding:0;cursor:pointer;">
                                         <i data-lucide="mail" ></i>

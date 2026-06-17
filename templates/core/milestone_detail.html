@@ -128,7 +128,10 @@
           {% if can_edit %}
           <div class="md-actions">
             <a href="{% url 'core:milestone_edit' milestone.id %}" class="btn btn-outline btn-sm">Modifier</a>
-            <a href="{% url 'core:milestone_delete' milestone.id %}" class="btn btn-sm" style="background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;">Supprimer</a>
+            <a href="#" class="btn btn-sm" style="background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;"
+               data-delete-url="{% url 'core:milestone_delete' milestone.id %}"
+               data-delete-type="le jalon"
+               data-delete-name="{{ milestone.name }}">Supprimer</a>
           </div>
           {% endif %}
         </div>
@@ -223,7 +226,10 @@
               <a href="{% url 'core:sub_milestone_edit' sub.id %}" class="action-btn" title="Modifier">
                 <i data-lucide="pencil" width="12" height="12" ></i>
               </a>
-              <a href="{% url 'core:sub_milestone_delete' sub.id %}" class="action-btn danger" title="Supprimer">
+              <a href="#" class="action-btn danger" title="Supprimer"
+                 data-delete-url="{% url 'core:sub_milestone_delete' sub.id %}"
+                 data-delete-type="la sous-étape"
+                 data-delete-name="{{ sub.name }}">
                 <i data-lucide="trash-2" width="12" height="12" ></i>
               </a>
             </div>

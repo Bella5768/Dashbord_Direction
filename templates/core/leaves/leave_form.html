@@ -384,7 +384,12 @@ textarea.form-control, .lf-section textarea { min-height: 100px; resize: vertica
                                     <a href="{{ doc.file.url }}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;"><i data-lucide="paperclip" width="14" height="14"></i>{{ doc.label|default:doc.file.name }}</a>
                                     <span class="lf-doc-date">{{ doc.uploaded_at|date:"d/m/Y" }}</span>
                                     {% if leave.status == 'soumise' %}
-                                    <form method="post" action="{% url 'core:leave_document_delete' leave.id doc.id %}" style="display:inline;" onsubmit="return confirm('Supprimer ce document ?');">
+                                    <form method="post" action="{% url 'core:leave_document_delete' leave.id doc.id %}" style="display:inline;"
+                                          data-confirm="Ce document sera supprimé définitivement."
+                                          data-confirm-title="Supprimer le document"
+                                          data-confirm-label="Supprimer"
+                                          data-confirm-danger
+                                          data-confirm-keyword="SUPPRIMER">
                                         {% csrf_token %}
                                         <button type="submit" class="lf-doc-del" title="{% trans 'Supprimer' %}">✕</button>
                                     </form>

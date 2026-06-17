@@ -150,7 +150,10 @@
       <a href="{% url 'core:project_edit' project.id %}" class="btn btn-primary btn-sm">Modifier</a>
       {% endif %}
       {% if user.profile.is_directeur_general %}
-      <a href="{% url 'core:project_delete' project.id %}" class="btn btn-sm" style="background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;">Supprimer</a>
+      <a href="#" class="btn btn-sm" style="background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;"
+         data-delete-url="{% url 'core:project_delete' project.id %}"
+         data-delete-type="le projet"
+         data-delete-name="{{ project.name }}">Supprimer</a>
       {% endif %}
       <a href="{% url 'core:projects' %}" class="btn btn-outline btn-sm">← Retour</a>
     </div>
@@ -362,7 +365,10 @@
                 <a href="{% url 'core:milestone_edit' milestone.id %}" class="action-btn" title="Modifier">
                   <i data-lucide="pencil" width="13" height="13" ></i>
                 </a>
-                <a href="{% url 'core:milestone_delete' milestone.id %}" class="action-btn danger" title="Supprimer">
+                <a href="#" class="action-btn danger" title="Supprimer"
+                   data-delete-url="{% url 'core:milestone_delete' milestone.id %}"
+                   data-delete-type="le jalon"
+                   data-delete-name="{{ milestone.name }}">
                   <i data-lucide="trash-2" width="13" height="13" ></i>
                 </a>
               </div>
@@ -415,7 +421,10 @@
                 <a href="{% url 'core:sub_milestone_edit' sub.id %}" class="action-btn" title="Modifier">
                   <i data-lucide="pencil" width="12" height="12" ></i>
                 </a>
-                <a href="{% url 'core:sub_milestone_delete' sub.id %}" class="action-btn danger" title="Supprimer">
+                <a href="#" class="action-btn danger" title="Supprimer"
+                   data-delete-url="{% url 'core:sub_milestone_delete' sub.id %}"
+                   data-delete-type="la sous-étape"
+                   data-delete-name="{{ sub.name }}">
                   <i data-lucide="trash-2" width="12" height="12" ></i>
                 </a>
               </div>
@@ -509,7 +518,10 @@
               <a href="{% url 'core:project_member_edit' member.id %}" class="action-btn" title="Modifier le rôle">
                 <i data-lucide="pencil" width="13" height="13" ></i>
               </a>
-              <a href="{% url 'core:project_member_delete' member.id %}" class="action-btn danger" title="Retirer du projet">
+              <a href="#" class="action-btn danger" title="Retirer du projet"
+                 data-delete-url="{% url 'core:project_member_delete' member.id %}"
+                 data-delete-type="le membre"
+                 data-delete-name="{{ member.employee.name }}">
                 <i data-lucide="trash-2" width="13" height="13" ></i>
               </a>
             </div>
@@ -583,7 +595,10 @@
                 <a href="{% url 'core:project_folder_edit' folder.id %}" class="action-btn" title="Modifier">
                   <i data-lucide="pencil" width="12" height="12" ></i>
                 </a>
-                <a href="{% url 'core:project_folder_delete' folder.id %}" class="action-btn danger" title="Supprimer">
+                <a href="#" class="action-btn danger" title="Supprimer"
+                   data-delete-url="{% url 'core:project_folder_delete' folder.id %}"
+                   data-delete-type="le dossier"
+                   data-delete-name="{{ folder.name }}">
                   <i data-lucide="trash-2" width="12" height="12" ></i>
                 </a>
               </div>
@@ -623,7 +638,10 @@
                 <a href="{% url 'core:project_document_edit' doc.id %}" class="action-btn" title="Modifier">
                   <i data-lucide="pencil" width="13" height="13" ></i>
                 </a>
-                <a href="{% url 'core:project_document_delete' doc.id %}" class="action-btn danger" title="Supprimer">
+                <a href="#" class="action-btn danger" title="Supprimer"
+                   data-delete-url="{% url 'core:project_document_delete' doc.id %}"
+                   data-delete-type="le document"
+                   data-delete-name="{{ doc.title }}">
                   <i data-lucide="trash-2" width="13" height="13" ></i>
                 </a>
                 {% endif %}

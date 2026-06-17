@@ -86,7 +86,10 @@
                 <i data-lucide="copy"></i>
             </a>
             {% if not role.is_system %}
-            <a href="{% url 'core:project_role_delete' role.pk %}" class="action-btn danger" title="Supprimer">
+            <a href="#" class="action-btn danger" title="Supprimer"
+               data-delete-url="{% url 'core:project_role_delete' role.pk %}"
+               data-delete-type="le rôle"
+               data-delete-name="{{ role.name }}">
                 <i data-lucide="trash-2"></i>
             </a>
             {% endif %}

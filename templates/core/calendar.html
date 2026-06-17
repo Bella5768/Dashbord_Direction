@@ -139,7 +139,10 @@
                             <a href="{% url 'core:event_edit' event.id %}" class="action-btn" title="Modifier">
                                 <i data-lucide="pencil" width="16" height="16"></i>
                             </a>
-                            <a href="{% url 'core:event_delete' event.id %}" class="action-btn danger" title="Supprimer">
+                            <a href="#" class="action-btn danger" title="Supprimer"
+                               data-delete-url="{% url 'core:event_delete' event.id %}"
+                               data-delete-type="l'événement"
+                               data-delete-name="{{ event.title }}">
                                 <i data-lucide="trash-2" width="16" height="16"></i>
                             </a>
                             {% endif %}

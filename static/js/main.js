@@ -152,9 +152,8 @@ function showNotification(message, type = 'info') {
 
 // Confirm action
 function confirmAction(message, callback) {
-    if (confirm(message)) {
-        callback();
-    }
+    window.csigConfirm({ title: 'Confirmation', message: message, label: 'Confirmer' })
+        .then(function(ok){ if(ok) callback(); });
 }
 
 // API helper functions

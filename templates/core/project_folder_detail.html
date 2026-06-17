@@ -52,7 +52,10 @@
                             <a href="{% url 'core:project_folder_edit' sub.id %}" class="action-btn" title="Modifier">
                                 <i data-lucide="pencil" width="14" height="14" ></i>
                             </a>
-                            <a href="{% url 'core:project_folder_delete' sub.id %}" class="action-btn danger" title="Supprimer">
+                            <a href="#" class="action-btn danger" title="Supprimer"
+                               data-delete-url="{% url 'core:project_folder_delete' sub.id %}"
+                               data-delete-type="le dossier"
+                               data-delete-name="{{ sub.name }}">
                                 <i data-lucide="trash-2" width="14" height="14" ></i>
                             </a>
                         </div>
@@ -90,7 +93,10 @@
                             <a href="{% url 'core:project_document_edit' doc.id %}" class="action-btn" title="Modifier">
                                 <i data-lucide="pencil" width="14" height="14" ></i>
                             </a>
-                            <a href="{% url 'core:project_document_delete' doc.id %}" class="action-btn danger" title="Supprimer">
+                            <a href="#" class="action-btn danger" title="Supprimer"
+                               data-delete-url="{% url 'core:project_document_delete' doc.id %}"
+                               data-delete-type="le document"
+                               data-delete-name="{{ doc.title }}">
                                 <i data-lucide="trash-2" width="14" height="14" ></i>
                             </a>
                         </div>

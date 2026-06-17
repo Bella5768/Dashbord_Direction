@@ -87,7 +87,10 @@
         </a>
         {% endif %}
         {% if can_delete %}
-        <a href="{% url 'core:event_delete' event.id %}" class="btn btn-danger">
+        <a href="#" class="btn btn-danger"
+           data-delete-url="{% url 'core:event_delete' event.id %}"
+           data-delete-type="l'événement"
+           data-delete-name="{{ event.title }}">
             <i data-lucide="trash-2" width="14" height="14"></i>
             {% trans 'Supprimer' %}
         </a>
@@ -208,7 +211,9 @@
                     <i data-lucide="pencil" width="14" height="14"></i>
                     {% trans 'Modifier cet événement' %}
                 </a>
-                <a href="{% url 'core:event_delete' event.id %}" class="btn btn-outline" style="justify-content:center;color:#dc2626;border-color:#fca5a5;">
+                <a href="#" class="btn btn-outline" style="justify-content:center;color:#dc2626;border-color:#fca5a5;"
+                   data-delete-url="{% url 'core:event_delete' event.id %}"
+                   data-delete-label="cet événement">
                     <i data-lucide="trash-2" width="14" height="14"></i>
                     {% trans 'Supprimer' %}
                 </a>

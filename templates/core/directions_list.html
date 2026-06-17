@@ -64,7 +64,10 @@
                                 <a href="{% url 'core:direction_edit' direction.id %}" class="btn btn-outline btn-sm" title="Modifier">
                                     <i data-lucide="pencil" width="16" height="16" ></i>
                                 </a>
-                                <a href="{% url 'core:direction_delete' direction.id %}" class="btn btn-danger btn-sm" title="Supprimer">
+                                <a href="#" class="btn btn-danger btn-sm" title="Supprimer"
+                                   data-delete-url="{% url 'core:direction_delete' direction.id %}"
+                                   data-delete-type="la direction"
+                                   data-delete-name="{{ direction.name }}">
                                     <i data-lucide="trash-2" width="16" height="16" ></i>
                                 </a>
                             </div>

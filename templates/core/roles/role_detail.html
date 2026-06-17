@@ -133,7 +133,10 @@
                     Dupliquer ce rôle
                 </a>
                 {% if not role.is_system %}
-                <a href="{% url 'core:role_delete' role.pk %}" class="btn btn-outline" style="width:100%;justify-content:center;color:#dc2626;border-color:#fca5a5;">
+                <a href="#" class="btn btn-outline" style="width:100%;justify-content:center;color:#dc2626;border-color:#fca5a5;"
+                   data-delete-url="{% url 'core:role_delete' role.pk %}"
+                   data-delete-type="le rôle"
+                   data-delete-name="{{ role.name }}">
                     <i data-lucide="trash-2" width="14" height="14"></i>
                     Supprimer
                 </a>

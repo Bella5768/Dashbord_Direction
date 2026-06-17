@@ -157,7 +157,10 @@
                                 <a href="{% url 'core:budget_edit' budget.id %}" class="action-btn" title="{% trans 'Modifier' %}">
                                     <i data-lucide="pencil" width="16" height="16" ></i>
                                 </a>
-                                <a href="{% url 'core:budget_delete' budget.id %}" class="action-btn danger" title="{% trans 'Supprimer' %}">
+                                <a href="#" class="action-btn danger" title="{% trans 'Supprimer' %}"
+                                   data-delete-url="{% url 'core:budget_delete' budget.id %}"
+                                   data-delete-type="le budget"
+                                   data-delete-name="{{ budget.project.name|default:budget.direction.name }}">
                                     <i data-lucide="trash-2" width="16" height="16" ></i>
                                 </a>
                                 {% elif budget.project %}
