@@ -1103,15 +1103,16 @@ class LeaveRequest(models.Model):
 
     @property
     def current_step_label(self):
+        from django.utils.translation import gettext as _gt
         return {
-            'soumise': '1/3 - Avis hiérarchique',
-            'avis_favorable': '2/3 - Vérification RH',
-            'rh_conforme': '3/3 - Décision Direction',
-            'approuvee': 'Terminé - Approuvée',
-            'rejetee': 'Terminé - Rejetée',
-            'avis_defavorable': 'Terminé - Refus hiérarchique',
-            'rh_non_conforme': 'Terminé - Non conforme RH',
-            'annulee': 'Annulée',
+            'soumise':          _gt('1/3 - Avis hiérarchique'),
+            'avis_favorable':   _gt('2/3 - Vérification RH'),
+            'rh_conforme':      _gt('3/3 - Décision Direction'),
+            'approuvee':        _gt('Terminé - Approuvée'),
+            'rejetee':          _gt('Terminé - Rejetée'),
+            'avis_defavorable': _gt('Terminé - Refus hiérarchique'),
+            'rh_non_conforme':  _gt('Terminé - Non conforme RH'),
+            'annulee':          _gt('Annulée'),
         }.get(self.status, self.get_status_display())
 
 

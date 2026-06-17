@@ -1,521 +1,556 @@
-{% load static %}
-{% load i18n %}
-<!DOCTYPE html>
-<html lang="{{ LANGUAGE_CODE }}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Dashboard DG{% endblock %} - CSIG</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/jpeg" href="{% static 'logocsig.jpg' %}">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    {% block extra_css %}{% endblock %}
-    <style>
-        .toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;max-width:380px;pointer-events:none}
-        .toast{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:10px;background:white;box-shadow:0 4px 20px rgba(0,0,0,.14);border-left:4px solid #3b82f6;pointer-events:all;animation:toastIn .3s ease;transition:opacity .3s,transform .3s}
-        .toast.hiding{opacity:0;transform:translateX(20px)}
-        @keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
-        .toast-success{border-left-color:#22c55e}
-        .toast-error{border-left-color:#ef4444}
-        .toast-warning{border-left-color:#f59e0b}
-        .toast-icon{flex-shrink:0;margin-top:1px}
-        .toast-icon svg{width:18px;height:18px}
-        .toast-success .toast-icon svg{color:#22c55e}
-        .toast-error .toast-icon svg{color:#ef4444}
-        .toast-warning .toast-icon svg{color:#f59e0b}
-        .toast-info .toast-icon svg{color:#3b82f6}
-        .toast-body{flex:1;font-size:13.5px;color:#374151;line-height:1.45}
-        .toast-close{background:none;border:none;cursor:pointer;color:#9ca3af;font-size:18px;line-height:1;padding:0;margin-left:4px;align-self:flex-start}
-        .toast-close:hover{color:#374151}
-    </style>
-</head>
-<body>
-    <div class="layout">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="sidebar-logo">
-                    <img src="{% static 'logocsig.jpg' %}" alt="CSIG" style="width: 36px; height: 36px; border-radius: 8px; object-fit: cover;">
-                </div>
-                <div class="sidebar-title">
-                    <h1>CSIG</h1>
-                    <p>{% trans 'Dashboard DG' %}</p>
-                </div>
-            </div>
+{% load static %}
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dashboard DG{% endblock %} - CSIG</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/jpeg" href="{% static 'logocsig.jpg' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {% block extra_css %}{% endblock %}
+    <style>
+        .toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;max-width:380px;pointer-events:none}
+        .toast{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:10px;background:white;box-shadow:0 4px 20px rgba(0,0,0,.14);border-left:4px solid #3b82f6;pointer-events:all;animation:toastIn .3s ease;transition:opacity .3s,transform .3s}
+        .toast.hiding{opacity:0;transform:translateX(20px)}
+        @keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+        .toast-success{border-left-color:#22c55e}
+        .toast-error{border-left-color:#ef4444}
+        .toast-warning{border-left-color:#f59e0b}
+        .toast-icon{flex-shrink:0;margin-top:1px}
+        .toast-icon svg{width:18px;height:18px}
+        .toast-success .toast-icon svg{color:#22c55e}
+        .toast-error .toast-icon svg{color:#ef4444}
+        .toast-warning .toast-icon svg{color:#f59e0b}
+        .toast-info .toast-icon svg{color:#3b82f6}
+        .toast-body{flex:1;font-size:13.5px;color:#374151;line-height:1.45}
+        .toast-close{background:none;border:none;cursor:pointer;color:#9ca3af;font-size:18px;line-height:1;padding:0;margin-left:4px;align-self:flex-start}
+        .toast-close:hover{color:#374151}
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <img src="{% static 'logocsig.jpg' %}" alt="CSIG" style="width: 36px; height: 36px; border-radius: 8px; object-fit: cover;">
+                </div>
+                <div class="sidebar-title">
+                    <h1>CSIG</h1>
+                    <p>{% trans 'Dashboard DG' %}</p>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul>
+                    <!-- Tableau de bord - Visible par tous -->
+                    <li>
+                        <a href="{% url 'core:dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>
+                            <i data-lucide="layout-dashboard" ></i>
+                            {% trans 'Tableau de bord' %}
+                        </a>
+                    </li>
+                    
+                    <!-- Projets - Employés et plus -->
+                    {% if user.profile.can_manage_projects or user.profile.employee %}
+                    <li>
+                        <a href="{% url 'core:projects' %}" {% if request.resolver_match.url_name == 'projects' %}class="active"{% endif %}>
+                            <i data-lucide="folder" ></i>
+                            {% trans 'Projets' %}
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- Ressources - Directeurs et plus -->
+                    {% if user.profile.can_manage_budgets %}
+                    <li>
+                        <a href="{% url 'core:resources' %}" {% if request.resolver_match.url_name == 'resources' %}class="active"{% endif %}>
+                            <i data-lucide="credit-card" ></i>
+                            {% trans 'Ressources' %}
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- Demandes - DG et Admin seulement -->
+                    {% if user.profile.can_approve_requests %}
+                    <li>
+                        <a href="{% url 'core:requests' %}" {% if request.resolver_match.url_name == 'requests' %}class="active"{% endif %}>
+                            <i data-lucide="message-square" ></i>
+                            {% trans 'Demandes' %}
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- Mes tâches - Visible si l'utilisateur est lié à un employé -->
+                    {% if user.profile.employee %}
+                    <li>
+                        <a href="{% url 'core:my_tasks' %}" {% if request.resolver_match.url_name == 'my_tasks' %}class="active"{% endif %}>
+                            <i data-lucide="clipboard-check" ></i>
+                            {% trans 'Mes tâches' %}
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <!-- Calendrier - Visible par tous -->
+                    <li>
+                        <a href="{% url 'core:calendar' %}" {% if request.resolver_match.url_name == 'calendar' %}class="active"{% endif %}>
+                            <i data-lucide="calendar" ></i>
+                            {% trans 'Calendrier' %}
+                        </a>
+                    </li>
+
+                    <!-- Conges - Visible par tous les utilisateurs authentifies -->
+                    <li>
+                        <a href="{% url 'core:leave_list' %}" {% if 'conges' in request.path %}class="active"{% endif %}>
+                            <i data-lucide="file-text" ></i>
+                            {% trans 'Congés' %}
+                        </a>
+                    </li>
+                    
+                    <!-- Rapports - Directeur Général uniquement -->
+                    {% if user.profile.is_directeur_general or user.is_staff %}
+                    <li>
+                        <a href="{% url 'core:reports' %}" {% if request.resolver_match.url_name == 'reports' %}class="active"{% endif %}>
+                            <i data-lucide="bar-chart-2" ></i>
+                            {% trans 'Rapports' %}
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- Documents - Directeurs et plus -->
+                    {% if user.profile.is_directeur %}
+                    <li>
+                        <a href="{% url 'core:documents' %}" {% if request.resolver_match.url_name == 'documents' %}class="active"{% endif %}>
+                            <i data-lucide="file-text" ></i>
+                            {% trans 'Documents' %}
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <!-- Partenaires - Directeurs et plus -->
+                    {% if user.profile.can_manage_partners %}
+                    <li>
+                        <a href="{% url 'core:partners' %}" {% if request.resolver_match.url_name == 'partners' %}class="active"{% endif %}>
+                            <i data-lucide="users" ></i>
+                            {% trans 'Partenaires' %}
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- Gestion des utilisateurs - Admin et DG -->
+                    {% if user.profile.can_manage_users %}
+                    <li style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);">
+                        <a href="{% url 'core:users_list' %}" {% if 'users' in request.path %}class="active"{% endif %}>
+                            <i data-lucide="user-cog" ></i>
+                            {% trans 'Utilisateurs' %}
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- Gestion des directions - Admin et DG -->
+                    {% if user.profile.is_directeur_general or user.is_staff %}
+                    <li>
+                        <a href="{% url 'core:directions_list' %}" {% if 'directions' in request.path %}class="active"{% endif %}>
+                            <i data-lucide="building-2" ></i>
+                            {% trans 'Directions' %}
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- Administration - Admin seulement -->
+                    {% if user.profile.is_admin or user.is_superuser %}
+                    <li>
+                        <a href="/admin/" target="_blank">
+                            <i data-lucide="settings" ></i>
+                            {% trans 'Administration' %}
+                        </a>
+                    </li>
+                    {% endif %}
+
+                </ul>
+            </nav>
+
+            <!-- Language Switcher -->
+            <div style="padding: 8px 16px; border-top: 1px solid rgba(255,255,255,0.1);">
+                <form action="{% url 'set_language' %}" method="post" style="display: flex; gap: 6px;">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <button type="submit" name="language" value="fr"
+                        style="flex:1; padding: 6px 0; border-radius: 6px; border: 1px solid rgba(255,255,255,{% if LANGUAGE_CODE == 'fr' %}0.4{% else %}0.1{% endif %}); background: {% if LANGUAGE_CODE == 'fr' %}rgba(255,255,255,0.15){% else %}transparent{% endif %}; color: white; font-size: 12px; font-weight: {% if LANGUAGE_CODE == 'fr' %}600{% else %}400{% endif %}; cursor: pointer;">
+                        {% trans 'FR' %}
+                    </button>
+                    <button type="submit" name="language" value="en"
+                        style="flex:1; padding: 6px 0; border-radius: 6px; border: 1px solid rgba(255,255,255,{% if LANGUAGE_CODE == 'en' %}0.4{% else %}0.1{% endif %}); background: {% if LANGUAGE_CODE == 'en' %}rgba(255,255,255,0.15){% else %}transparent{% endif %}; color: white; font-size: 12px; font-weight: {% if LANGUAGE_CODE == 'en' %}600{% else %}400{% endif %}; cursor: pointer;">
+                        {% trans 'EN' %}
+                    </button>
+                </form>
+            </div>
+            <div class="sidebar-copyright" style="padding: 8px 16px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1);">
+                <p style="font-size: 11px; color: rgba(255,255,255,0.5); margin: 0;">&copy; {% now "Y" %} {% trans 'CSIG' %} - {% trans 'Tous droits réservés' %}</p>
+            </div>
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar">
+                        {% if user.is_authenticated and user.profile %}
+                            {{ user.profile.get_initials }}
+                        {% else %}
+                            DG
+                        {% endif %}
+                    </div>
+                    <div class="sidebar-user-info">
+                        {% if user.is_authenticated %}
+                            <p>{{ user.get_full_name|default:user.username }}</p>
+                            <span>{{ user.profile.get_role_display|default:"Utilisateur" }}</span>
+                        {% else %}
+                            <p>{% trans 'Non connecté' %}</p>
+                            <span>-</span>
+                        {% endif %}
+                    </div>
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'core:profile' %}" class="sidebar-logout" title="Mon profil" style="display:inline-flex;align-items:center;color:inherit;margin-right:4px;">
+                        <i data-lucide="user-round" width="18" height="18" ></i>
+                    </a>
+                    <form method="post" action="{% url 'core:logout' %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="sidebar-logout" title="{% trans 'Déconnexion' %}" style="background:none;border:none;padding:0;cursor:pointer;">
+                            <i data-lucide="log-out" width="20" height="20" ></i>
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-title">
+                    <h1>{% block page_title %}{% trans 'Tableau de bord' %}{% endblock %}</h1>
+                    <p>{% block page_subtitle %}{% endblock %}</p>
+                </div>
+                <div class="header-actions">
+                    <form class="search-box" action="{% url 'core:global_search' %}" method="get">
+                        <i data-lucide="search" ></i>
+                        <input type="text" name="q" placeholder="{% trans 'Rechercher...' %}" value="{{ request.GET.q }}">
+                    </form>
+                    <!-- Selecteur de langue -->
+                    <div style="position:relative;display:inline-block;" id="lang-switcher">
+                        <button id="lang-btn"
+                                style="display:flex;align-items:center;gap:5px;padding:5px 10px;border:1px solid #e5e7eb;border-radius:8px;background:white;cursor:pointer;font-size:13px;color:#374151;">
+                            {% if LANGUAGE_CODE == 'en' %}EN{% else %}FR{% endif %}
+                            <i data-lucide="chevron-down" width="12" height="12"></i>
+                        </button>
+                        <div id="lang-menu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:white;border:1px solid #e5e7eb;border-radius:8px;min-width:110px;box-shadow:0 4px 16px rgba(0,0,0,.1);z-index:200;">
+                            <form action="{% url 'set_language' %}" method="post" style="margin:0;">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                <button type="submit" name="language" value="fr"
+                                        style="width:100%;text-align:left;padding:8px 14px;border:none;background:{% if LANGUAGE_CODE == 'fr' %}#f0f4ff{% else %}white{% endif %};cursor:pointer;font-size:13px;border-radius:8px 8px 0 0;">
+                                    Francais
+                                </button>
+                                <button type="submit" name="language" value="en"
+                                        style="width:100%;text-align:left;padding:8px 14px;border:none;background:{% if LANGUAGE_CODE == 'en' %}#f0f4ff{% else %}white{% endif %};cursor:pointer;font-size:13px;border-radius:0 0 8px 8px;">
+                                    English
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="header-date" id="header-date"></div>
+                    <script>
+                        (function(){
+                            var d = new Date();
+                            var lang = '{{ LANGUAGE_CODE }}' === 'en' ? 'en-GB' : 'fr-FR';
+                            var opts = {weekday:'long', day:'numeric', month:'long', year:'numeric'};
+                            var txt = d.toLocaleDateString(lang, opts);
+                            txt = txt.charAt(0).toUpperCase() + txt.slice(1);
+                            document.getElementById('header-date').textContent = txt;
+                        })();
+                    </script>
+                </div>
+            </header>
+
+            <!-- Django Messages Toasts -->
+            {% if messages %}
+            <div class="toast-container" id="django-toasts">
+                {% for message in messages %}
+                {% if 'success' in message.tags %}
+                <div class="toast toast-success" role="alert">
+                    <div class="toast-icon"><i data-lucide="circle-check" ></i></div>
+                    <span class="toast-body">{{ message }}</span>
+                    <button class="toast-close" onclick="dismissToast(this.parentElement)">×</button>
+                </div>
+                {% elif 'error' in message.tags %}
+                <div class="toast toast-error" role="alert">
+                    <div class="toast-icon"><i data-lucide="circle-x" ></i></div>
+                    <span class="toast-body">{{ message }}</span>
+                    <button class="toast-close" onclick="dismissToast(this.parentElement)">×</button>
+                </div>
+                {% elif 'warning' in message.tags %}
+                <div class="toast toast-warning" role="alert">
+                    <div class="toast-icon"><i data-lucide="triangle-alert" ></i></div>
+                    <span class="toast-body">{{ message }}</span>
+                    <button class="toast-close" onclick="dismissToast(this.parentElement)">×</button>
+                </div>
+                {% else %}
+                <div class="toast toast-info" role="alert">
+                    <div class="toast-icon"><i data-lucide="info" ></i></div>
+                    <span class="toast-body">{{ message }}</span>
+                    <button class="toast-close" onclick="dismissToast(this.parentElement)">×</button>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            <script>
+                function dismissToast(el){el.classList.add('hiding');setTimeout(function(){el.remove()},300)}
+                setTimeout(function(){document.querySelectorAll('#django-toasts .toast').forEach(function(t){dismissToast(t)})},5000);
+            </script>
+            {% endif %}
+
+            <!-- Page Content -->
+            <div class="page-content">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <script src="{% static 'js/main.js' %}"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    {% block extra_js %}{% endblock %}
+    <script>
+    if(window.lucide) lucide.createIcons();
+    // Enhanced file drop
+    document.querySelectorAll('.file-drop').forEach(function(wrap) {
+        var input = wrap.querySelector('input[type=file]');
+        var nameEl = wrap.querySelector('.file-drop-name');
+        var clearBtn = wrap.querySelector('.file-drop-clear');
+        if (!input || !nameEl) return;
+
+        function setFile(name) {
+            nameEl.textContent = name;
+            wrap.classList.add('has-file');
+        }
+        function clearFile() {
+            input.value = '';
+            nameEl.textContent = '';
+            wrap.classList.remove('has-file');
+        }
+
+        input.addEventListener('change', function() {
+            if (this.files && this.files[0]) setFile(this.files[0].name);
+        });
+
+        if (clearBtn) clearBtn.addEventListener('click', function(e) {
+            e.preventDefault(); e.stopPropagation(); clearFile();
+        });
+
+        wrap.addEventListener('dragover',  function(e) { e.preventDefault(); this.classList.add('drag-over'); });
+        wrap.addEventListener('dragleave', function()  { this.classList.remove('drag-over'); });
+        wrap.addEventListener('drop', function(e) {
+            e.preventDefault(); this.classList.remove('drag-over');
+            var files = e.dataTransfer && e.dataTransfer.files;
+            if (files && files[0]) {
+                try { input.files = files; } catch(err) {}
+                setFile(files[0].name);
+            }
+        });
+    });
+    </script>
+
+    <!-- ── Confirmation Modal (global) ── -->
+    <div id="csig-modal" role="dialog" aria-modal="true"
+         style="display:none;position:fixed;inset:0;z-index:10000;align-items:center;justify-content:center;background:rgba(17,24,39,.55);backdrop-filter:blur(3px);">
+      <div style="background:white;border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.22);width:100%;max-width:440px;margin:16px;overflow:hidden;animation:csigModalIn .18s ease;">
+        <div style="padding:24px 24px 0;">
+          <div id="csig-modal-icon" style="margin-bottom:12px;"></div>
+          <h3 id="csig-modal-title" style="margin:0 0 8px;font-size:17px;font-weight:700;color:#111827;"></h3>
+          <p  id="csig-modal-msg"   style="margin:0;font-size:14px;color:#6b7280;line-height:1.5;"></p>
+        </div>
+        <div id="csig-modal-input-wrap" style="display:none;padding:16px 24px 0;">
+          <p id="csig-modal-input-hint" style="margin:0 0 8px;font-size:13px;color:#6b7280;"></p>
+          <div style="position:relative;">
+            <input id="csig-modal-input" type="text" autocomplete="off"
+                   style="width:100%;padding:9px 36px 9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px;box-sizing:border-box;font-family:inherit;outline:none;transition:border-color .2s,background .2s;">
+            <span id="csig-modal-input-icon" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:15px;display:none;"></span>
+          </div>
+          <p id="csig-modal-input-error" style="margin:5px 0 0;font-size:12px;color:#ef4444;min-height:16px;"></p>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;padding:20px 24px 24px;">
+          <button id="csig-modal-cancel" style="padding:9px 20px;border-radius:8px;border:1px solid #e5e7eb;background:white;color:#374151;font-size:14px;font-weight:500;cursor:pointer;">Annuler</button>
+          <button id="csig-modal-ok"     style="padding:9px 24px;border-radius:8px;border:none;color:white;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s;"></button>
+        </div>
+      </div>
+    </div>
+    <style>
+      @keyframes csigModalIn{from{opacity:0;transform:scale(.96) translateY(-8px)}to{opacity:1;transform:none}}
+      #csig-modal-input:focus{border-color:#1e3a5f;}
+    </style>
+    <script>
+    var CSIG_I18N = {
+      confirm:        "{% trans 'Confirmation' %}",
+      confirmDelete:  "{% trans 'Confirmer la suppression' %}",
+      wantDelete:     "{% trans 'Voulez-vous supprimer' %}",
+      irreversible:   "{% trans 'Cette action est irréversible.' %}",
+      deleteBtn:      "{% trans 'Supprimer' %}",
+      confirmBtn:     "{% trans 'Confirmer' %}",
+      typeToConfirm:  "{% trans 'Tapez' %}",
+      toConfirm:      "{% trans 'pour confirmer' %}",
+      noMatch:        "{% trans 'Le nom ne correspond pas exactement.' %}"
+    };
+    </script>
+    <script>
+    (function(){
+      var overlay   = document.getElementById('csig-modal');
+      var elTitle    = document.getElementById('csig-modal-title');
+      var elMsg      = document.getElementById('csig-modal-msg');
+      var inputWrap  = document.getElementById('csig-modal-input-wrap');
+      var inputHint  = document.getElementById('csig-modal-input-hint');
+      var input      = document.getElementById('csig-modal-input');
+      var inputIcon  = document.getElementById('csig-modal-input-icon');
+      var inputError = document.getElementById('csig-modal-input-error');
+      var okBtn      = document.getElementById('csig-modal-ok');
+      var cancelBtn  = document.getElementById('csig-modal-cancel');
+      var _resolve = null, _keyword = null;
+
+      function setOk(v){ okBtn.disabled = !v; okBtn.style.opacity = v ? '1' : '0.4'; }
+
+      function open(opts){
+        elTitle.textContent = opts.title   || CSIG_I18N.confirm;
+        elMsg.textContent   = opts.message || '';
+        okBtn.textContent   = opts.label   || CSIG_I18N.confirmBtn;
+        okBtn.style.background = opts.danger ? '#ef4444' : '#1e3a5f';
+        _keyword = opts.keyword || null;
+        if(_keyword){
+          inputHint.innerHTML = CSIG_I18N.typeToConfirm + ' <strong>' + _keyword + '</strong> ' + CSIG_I18N.toConfirm;
+          input.placeholder = _keyword;
+          input.value = '';
+          input.style.borderColor = '#e5e7eb';
+          input.style.background  = 'white';
+          inputIcon.style.display = 'none';
+          inputError.textContent  = '';
+          inputWrap.style.display = 'block';
+          setOk(false);
+          setTimeout(function(){ input.focus(); }, 60);
+        } else {
+          inputWrap.style.display = 'none';
+          setOk(true);
+        }
+        overlay.style.display = 'flex';
+        return new Promise(function(res){ _resolve = res; });
+      }
+
+      function close(val){
+        overlay.style.display = 'none';
+        input.value = '';
+        input.style.borderColor = '#e5e7eb';
+        input.style.background  = 'white';
+        inputIcon.style.display = 'none';
+        inputError.textContent  = '';
+        if(_resolve){ _resolve(val); _resolve = null; }
+      }
+
+      input.addEventListener('input', function(){
+        var val = input.value;
+        var ok  = val === (_keyword || '');
+        setOk(ok);
+        if(val.length === 0){
+          input.style.borderColor = '#e5e7eb';
+          input.style.background  = 'white';
+          inputIcon.style.display = 'none';
+          inputError.textContent  = '';
+        } else if(ok){
+          input.style.borderColor = '#16a34a';
+          input.style.background  = '#f0fdf4';
+          inputIcon.textContent   = '✓';
+          inputIcon.style.color   = '#16a34a';
+          inputIcon.style.display = 'block';
+          inputError.textContent  = '';
+        } else {
+          input.style.borderColor = '#ef4444';
+          input.style.background  = '#fff7f7';
+          inputIcon.textContent   = '✕';
+          inputIcon.style.color   = '#ef4444';
+          inputIcon.style.display = 'block';
+          inputError.textContent  = CSIG_I18N.noMatch;
+        }
+      });
+      okBtn.addEventListener('click',     function(){ if(!okBtn.disabled) close(true); });
+      cancelBtn.addEventListener('click', function(){ close(false); });
+      overlay.addEventListener('click',   function(e){ if(e.target === overlay) close(false); });
+      document.addEventListener('keydown', function(e){
+        if(overlay.style.display !== 'flex') return;
+        if(e.key === 'Escape'){ close(false); }
+        if(e.key === 'Enter' && !okBtn.disabled){ e.preventDefault(); close(true); }
+      });
+
+      window.csigConfirm = open;
+
+      /* Intercepte les liens de suppression data-delete-url → POST sans naviguer */
+      function getCsrf(){
+        var m = document.cookie.match(/csrftoken=([^;]+)/);
+        return m ? m[1] : '';
+      }
+      document.addEventListener('click', function(e){
+        var link = e.target.closest('[data-delete-url]');
+        if(!link) return;
+        e.preventDefault();
+        var url   = link.getAttribute('data-delete-url');
+        var type  = link.getAttribute('data-delete-type') || '';
+        var name  = link.getAttribute('data-delete-name') || '';
+        var msg   = (type && name)
+          ? CSIG_I18N.wantDelete + ' ' + type + ' « ' + name + ' » ?'
+          : CSIG_I18N.irreversible;
+        open({
+          title:   CSIG_I18N.confirmDelete,
+          message: msg,
+          label:   CSIG_I18N.deleteBtn,
+          danger:  true,
+          keyword: name || 'SUPPRIMER',
+        }).then(function(ok){
+          if(!ok) return;
+          var form = document.createElement('form');
+          form.method = 'post'; form.action = url; form.style.display = 'none';
+          var csrf = document.createElement('input');
+          csrf.type = 'hidden'; csrf.name = 'csrfmiddlewaretoken'; csrf.value = getCsrf();
+          form.appendChild(csrf);
+          document.body.appendChild(form);
+          form.submit();
+        });
+      });
+
+      /* Intercepte tous les formulaires avec data-confirm */
+      document.addEventListener('submit', function(e){
+        var form = e.target;
+        var msg  = form.getAttribute('data-confirm');
+        if(!msg) return;
+        e.preventDefault();
+        open({
+          title:   form.getAttribute('data-confirm-title')  || CSIG_I18N.confirm,
+          message: msg,
+          label:   form.getAttribute('data-confirm-label')  || CSIG_I18N.confirmBtn,
+          danger:  form.hasAttribute('data-confirm-danger'),
+          keyword: form.getAttribute('data-confirm-keyword') || null,
+        }).then(function(ok){
+          if(ok){ form.removeAttribute('data-confirm'); form.submit(); }
+        });
+      }, true);
+    })();
+    </script>
 
-            <nav class="sidebar-nav">
-                <ul>
-                    <!-- Tableau de bord - Visible par tous -->
-                    <li>
-                        <a href="{% url 'core:dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>
-                            <i data-lucide="layout-dashboard" ></i>
-                            {% trans 'Tableau de bord' %}
-                        </a>
-                    </li>
-                    
-                    <!-- Projets - Employés et plus -->
-                    {% if user.profile.can_manage_projects or user.profile.employee %}
-                    <li>
-                        <a href="{% url 'core:projects' %}" {% if request.resolver_match.url_name == 'projects' %}class="active"{% endif %}>
-                            <i data-lucide="folder" ></i>
-                            {% trans 'Projets' %}
-                        </a>
-                    </li>
-                    {% endif %}
-                    
-                    <!-- Ressources - Directeurs et plus -->
-                    {% if user.profile.can_manage_budgets %}
-                    <li>
-                        <a href="{% url 'core:resources' %}" {% if request.resolver_match.url_name == 'resources' %}class="active"{% endif %}>
-                            <i data-lucide="credit-card" ></i>
-                            {% trans 'Ressources' %}
-                        </a>
-                    </li>
-                    {% endif %}
-                    
-                    <!-- Demandes - DG et Admin seulement -->
-                    {% if user.profile.can_approve_requests %}
-                    <li>
-                        <a href="{% url 'core:requests' %}" {% if request.resolver_match.url_name == 'requests' %}class="active"{% endif %}>
-                            <i data-lucide="message-square" ></i>
-                            {% trans 'Demandes' %}
-                        </a>
-                    </li>
-                    {% endif %}
-                    
-                    <!-- Mes tâches - Visible si l'utilisateur est lié à un employé -->
-                    {% if user.profile.employee %}
-                    <li>
-                        <a href="{% url 'core:my_tasks' %}" {% if request.resolver_match.url_name == 'my_tasks' %}class="active"{% endif %}>
-                            <i data-lucide="clipboard-check" ></i>
-                            {% trans 'Mes tâches' %}
-                        </a>
-                    </li>
-                    {% endif %}
-
-                    <!-- Calendrier - Visible par tous -->
-                    <li>
-                        <a href="{% url 'core:calendar' %}" {% if request.resolver_match.url_name == 'calendar' %}class="active"{% endif %}>
-                            <i data-lucide="calendar" ></i>
-                            {% trans 'Calendrier' %}
-                        </a>
-                    </li>
-
-                    <!-- Conges - Visible par tous les utilisateurs authentifies -->
-                    <li>
-                        <a href="{% url 'core:leave_list' %}" {% if 'conges' in request.path %}class="active"{% endif %}>
-                            <i data-lucide="file-text" ></i>
-                            {% trans 'Congés' %}
-                        </a>
-                    </li>
-                    
-                    <!-- Rapports - Directeur Général uniquement -->
-                    {% if user.profile.is_directeur_general or user.is_staff %}
-                    <li>
-                        <a href="{% url 'core:reports' %}" {% if request.resolver_match.url_name == 'reports' %}class="active"{% endif %}>
-                            <i data-lucide="bar-chart-2" ></i>
-                            {% trans 'Rapports' %}
-                        </a>
-                    </li>
-                    {% endif %}
-                    
-                    <!-- Documents - Directeurs et plus -->
-                    {% if user.profile.is_directeur %}
-                    <li>
-                        <a href="{% url 'core:documents' %}" {% if request.resolver_match.url_name == 'documents' %}class="active"{% endif %}>
-                            <i data-lucide="file-text" ></i>
-                            {% trans 'Documents' %}
-                        </a>
-                    </li>
-                    {% endif %}
-
-                    <!-- Partenaires - Directeurs et plus -->
-                    {% if user.profile.can_manage_partners %}
-                    <li>
-                        <a href="{% url 'core:partners' %}" {% if request.resolver_match.url_name == 'partners' %}class="active"{% endif %}>
-                            <i data-lucide="users" ></i>
-                            {% trans 'Partenaires' %}
-                        </a>
-                    </li>
-                    {% endif %}
-                    
-                    <!-- Gestion des utilisateurs - Admin et DG -->
-                    {% if user.profile.can_manage_users %}
-                    <li style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);">
-                        <a href="{% url 'core:users_list' %}" {% if 'users' in request.path %}class="active"{% endif %}>
-                            <i data-lucide="user-cog" ></i>
-                            {% trans 'Utilisateurs' %}
-                        </a>
-                    </li>
-                    {% endif %}
-                    
-                    <!-- Gestion des directions - Admin et DG -->
-                    {% if user.profile.is_directeur_general or user.is_staff %}
-                    <li>
-                        <a href="{% url 'core:directions_list' %}" {% if 'directions' in request.path %}class="active"{% endif %}>
-                            <i data-lucide="building-2" ></i>
-                            {% trans 'Directions' %}
-                        </a>
-                    </li>
-                    {% endif %}
-                    
-                    <!-- Administration - Admin seulement -->
-                    {% if user.profile.is_admin or user.is_superuser %}
-                    <li>
-                        <a href="/admin/" target="_blank">
-                            <i data-lucide="settings" ></i>
-                            {% trans 'Administration' %}
-                        </a>
-                    </li>
-                    {% endif %}
-
-                </ul>
-            </nav>
-
-            <!-- Language Switcher -->
-            <div style="padding: 8px 16px; border-top: 1px solid rgba(255,255,255,0.1);">
-                <form action="{% url 'set_language' %}" method="post" style="display: flex; gap: 6px;">
-                    {% csrf_token %}
-                    <input type="hidden" name="next" value="{{ request.path }}">
-                    <button type="submit" name="language" value="fr"
-                        style="flex:1; padding: 6px 0; border-radius: 6px; border: 1px solid rgba(255,255,255,{% if LANGUAGE_CODE == 'fr' %}0.4{% else %}0.1{% endif %}); background: {% if LANGUAGE_CODE == 'fr' %}rgba(255,255,255,0.15){% else %}transparent{% endif %}; color: white; font-size: 12px; font-weight: {% if LANGUAGE_CODE == 'fr' %}600{% else %}400{% endif %}; cursor: pointer;">
-                        {% trans 'FR' %}
-                    </button>
-                    <button type="submit" name="language" value="en"
-                        style="flex:1; padding: 6px 0; border-radius: 6px; border: 1px solid rgba(255,255,255,{% if LANGUAGE_CODE == 'en' %}0.4{% else %}0.1{% endif %}); background: {% if LANGUAGE_CODE == 'en' %}rgba(255,255,255,0.15){% else %}transparent{% endif %}; color: white; font-size: 12px; font-weight: {% if LANGUAGE_CODE == 'en' %}600{% else %}400{% endif %}; cursor: pointer;">
-                        {% trans 'EN' %}
-                    </button>
-                </form>
-            </div>
-            <div class="sidebar-copyright" style="padding: 8px 16px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1);">
-                <p style="font-size: 11px; color: rgba(255,255,255,0.5); margin: 0;">&copy; {% now "Y" %} {% trans 'CSIG' %} - {% trans 'Tous droits réservés' %}</p>
-            </div>
-            <div class="sidebar-footer">
-                <div class="sidebar-user">
-                    <div class="sidebar-avatar">
-                        {% if user.is_authenticated and user.profile %}
-                            {{ user.profile.get_initials }}
-                        {% else %}
-                            DG
-                        {% endif %}
-                    </div>
-                    <div class="sidebar-user-info">
-                        {% if user.is_authenticated %}
-                            <p>{{ user.get_full_name|default:user.username }}</p>
-                            <span>{{ user.profile.get_role_display|default:"Utilisateur" }}</span>
-                        {% else %}
-                            <p>{% trans 'Non connecté' %}</p>
-                            <span>-</span>
-                        {% endif %}
-                    </div>
-                    {% if user.is_authenticated %}
-                    <a href="{% url 'core:profile' %}" class="sidebar-logout" title="Mon profil" style="display:inline-flex;align-items:center;color:inherit;margin-right:4px;">
-                        <i data-lucide="user-round" width="18" height="18" ></i>
-                    </a>
-                    <form method="post" action="{% url 'core:logout' %}" style="display:inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="sidebar-logout" title="{% trans 'Déconnexion' %}" style="background:none;border:none;padding:0;cursor:pointer;">
-                            <i data-lucide="log-out" width="20" height="20" ></i>
-                        </button>
-                    </form>
-                    {% endif %}
-                </div>
-            </div>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Header -->
-            <header class="header">
-                <div class="header-title">
-                    <h1>{% block page_title %}{% trans 'Tableau de bord' %}{% endblock %}</h1>
-                    <p>{% block page_subtitle %}{% endblock %}</p>
-                </div>
-                <div class="header-actions">
-                    <form class="search-box" action="{% url 'core:global_search' %}" method="get">
-                        <i data-lucide="search" ></i>
-                        <input type="text" name="q" placeholder="{% trans 'Rechercher...' %}" value="{{ request.GET.q }}">
-                    </form>
-                    <div class="header-date" id="header-date"></div>
-                    <script>
-                        (function(){
-                            var d = new Date();
-                            var lang = '{{ LANGUAGE_CODE }}' === 'en' ? 'en-GB' : 'fr-FR';
-                            var opts = {weekday:'long', day:'numeric', month:'long', year:'numeric'};
-                            var txt = d.toLocaleDateString(lang, opts);
-                            txt = txt.charAt(0).toUpperCase() + txt.slice(1);
-                            document.getElementById('header-date').textContent = txt;
-                        })();
-                    </script>
-                </div>
-            </header>
-
-            <!-- Django Messages Toasts -->
-            {% if messages %}
-            <div class="toast-container" id="django-toasts">
-                {% for message in messages %}
-                {% if 'success' in message.tags %}
-                <div class="toast toast-success" role="alert">
-                    <div class="toast-icon"><i data-lucide="circle-check" ></i></div>
-                    <span class="toast-body">{{ message }}</span>
-                    <button class="toast-close" onclick="dismissToast(this.parentElement)">×</button>
-                </div>
-                {% elif 'error' in message.tags %}
-                <div class="toast toast-error" role="alert">
-                    <div class="toast-icon"><i data-lucide="circle-x" ></i></div>
-                    <span class="toast-body">{{ message }}</span>
-                    <button class="toast-close" onclick="dismissToast(this.parentElement)">×</button>
-                </div>
-                {% elif 'warning' in message.tags %}
-                <div class="toast toast-warning" role="alert">
-                    <div class="toast-icon"><i data-lucide="triangle-alert" ></i></div>
-                    <span class="toast-body">{{ message }}</span>
-                    <button class="toast-close" onclick="dismissToast(this.parentElement)">×</button>
-                </div>
-                {% else %}
-                <div class="toast toast-info" role="alert">
-                    <div class="toast-icon"><i data-lucide="info" ></i></div>
-                    <span class="toast-body">{{ message }}</span>
-                    <button class="toast-close" onclick="dismissToast(this.parentElement)">×</button>
-                </div>
-                {% endif %}
-                {% endfor %}
-            </div>
-            <script>
-                function dismissToast(el){el.classList.add('hiding');setTimeout(function(){el.remove()},300)}
-                setTimeout(function(){document.querySelectorAll('#django-toasts .toast').forEach(function(t){dismissToast(t)})},5000);
-            </script>
-            {% endif %}
-
-            <!-- Page Content -->
-            <div class="page-content">
-                {% block content %}{% endblock %}
-            </div>
-        </main>
-    </div>
-
-    <script src="{% static 'js/main.js' %}"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-    {% block extra_js %}{% endblock %}
-    <script>
-    if(window.lucide) lucide.createIcons();
-    // Enhanced file drop
-    document.querySelectorAll('.file-drop').forEach(function(wrap) {
-        var input = wrap.querySelector('input[type=file]');
-        var nameEl = wrap.querySelector('.file-drop-name');
-        var clearBtn = wrap.querySelector('.file-drop-clear');
-        if (!input || !nameEl) return;
-
-        function setFile(name) {
-            nameEl.textContent = name;
-            wrap.classList.add('has-file');
-        }
-        function clearFile() {
-            input.value = '';
-            nameEl.textContent = '';
-            wrap.classList.remove('has-file');
-        }
-
-        input.addEventListener('change', function() {
-            if (this.files && this.files[0]) setFile(this.files[0].name);
-        });
-
-        if (clearBtn) clearBtn.addEventListener('click', function(e) {
-            e.preventDefault(); e.stopPropagation(); clearFile();
-        });
-
-        wrap.addEventListener('dragover',  function(e) { e.preventDefault(); this.classList.add('drag-over'); });
-        wrap.addEventListener('dragleave', function()  { this.classList.remove('drag-over'); });
-        wrap.addEventListener('drop', function(e) {
-            e.preventDefault(); this.classList.remove('drag-over');
-            var files = e.dataTransfer && e.dataTransfer.files;
-            if (files && files[0]) {
-                try { input.files = files; } catch(err) {}
-                setFile(files[0].name);
-            }
-        });
-    });
+    <script>
+    (function(){
+      var btn  = document.getElementById('lang-btn');
+      var menu = document.getElementById('lang-menu');
+      if(!btn || !menu) return;
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+      });
+      document.addEventListener('click', function(){ if(menu) menu.style.display = 'none'; });
+    })();
     </script>
-
-    <!-- ── Confirmation Modal (global) ── -->
-    <div id="csig-modal" role="dialog" aria-modal="true"
-         style="display:none;position:fixed;inset:0;z-index:10000;align-items:center;justify-content:center;background:rgba(17,24,39,.55);backdrop-filter:blur(3px);">
-      <div style="background:white;border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.22);width:100%;max-width:440px;margin:16px;overflow:hidden;animation:csigModalIn .18s ease;">
-        <div style="padding:24px 24px 0;">
-          <div id="csig-modal-icon" style="margin-bottom:12px;"></div>
-          <h3 id="csig-modal-title" style="margin:0 0 8px;font-size:17px;font-weight:700;color:#111827;"></h3>
-          <p  id="csig-modal-msg"   style="margin:0;font-size:14px;color:#6b7280;line-height:1.5;"></p>
-        </div>
-        <div id="csig-modal-input-wrap" style="display:none;padding:16px 24px 0;">
-          <p id="csig-modal-input-hint" style="margin:0 0 8px;font-size:13px;color:#6b7280;"></p>
-          <div style="position:relative;">
-            <input id="csig-modal-input" type="text" autocomplete="off"
-                   style="width:100%;padding:9px 36px 9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px;box-sizing:border-box;font-family:inherit;outline:none;transition:border-color .2s,background .2s;">
-            <span id="csig-modal-input-icon" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:15px;display:none;"></span>
-          </div>
-          <p id="csig-modal-input-error" style="margin:5px 0 0;font-size:12px;color:#ef4444;min-height:16px;"></p>
-        </div>
-        <div style="display:flex;gap:10px;justify-content:flex-end;padding:20px 24px 24px;">
-          <button id="csig-modal-cancel" style="padding:9px 20px;border-radius:8px;border:1px solid #e5e7eb;background:white;color:#374151;font-size:14px;font-weight:500;cursor:pointer;">Annuler</button>
-          <button id="csig-modal-ok"     style="padding:9px 24px;border-radius:8px;border:none;color:white;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s;"></button>
-        </div>
-      </div>
-    </div>
-    <style>
-      @keyframes csigModalIn{from{opacity:0;transform:scale(.96) translateY(-8px)}to{opacity:1;transform:none}}
-      #csig-modal-input:focus{border-color:#1e3a5f;}
-    </style>
-    <script>
-    var CSIG_I18N = {
-      confirm:        "{% trans 'Confirmation' %}",
-      confirmDelete:  "{% trans 'Confirmer la suppression' %}",
-      wantDelete:     "{% trans 'Voulez-vous supprimer' %}",
-      irreversible:   "{% trans 'Cette action est irréversible.' %}",
-      deleteBtn:      "{% trans 'Supprimer' %}",
-      confirmBtn:     "{% trans 'Confirmer' %}",
-      typeToConfirm:  "{% trans 'Tapez' %}",
-      toConfirm:      "{% trans 'pour confirmer' %}",
-      noMatch:        "{% trans 'Le nom ne correspond pas exactement.' %}"
-    };
-    </script>
-    <script>
-    (function(){
-      var overlay   = document.getElementById('csig-modal');
-      var elTitle    = document.getElementById('csig-modal-title');
-      var elMsg      = document.getElementById('csig-modal-msg');
-      var inputWrap  = document.getElementById('csig-modal-input-wrap');
-      var inputHint  = document.getElementById('csig-modal-input-hint');
-      var input      = document.getElementById('csig-modal-input');
-      var inputIcon  = document.getElementById('csig-modal-input-icon');
-      var inputError = document.getElementById('csig-modal-input-error');
-      var okBtn      = document.getElementById('csig-modal-ok');
-      var cancelBtn  = document.getElementById('csig-modal-cancel');
-      var _resolve = null, _keyword = null;
-
-      function setOk(v){ okBtn.disabled = !v; okBtn.style.opacity = v ? '1' : '0.4'; }
-
-      function open(opts){
-        elTitle.textContent = opts.title   || CSIG_I18N.confirm;
-        elMsg.textContent   = opts.message || '';
-        okBtn.textContent   = opts.label   || CSIG_I18N.confirmBtn;
-        okBtn.style.background = opts.danger ? '#ef4444' : '#1e3a5f';
-        _keyword = opts.keyword || null;
-        if(_keyword){
-          inputHint.innerHTML = CSIG_I18N.typeToConfirm + ' <strong>' + _keyword + '</strong> ' + CSIG_I18N.toConfirm;
-          input.placeholder = _keyword;
-          input.value = '';
-          input.style.borderColor = '#e5e7eb';
-          input.style.background  = 'white';
-          inputIcon.style.display = 'none';
-          inputError.textContent  = '';
-          inputWrap.style.display = 'block';
-          setOk(false);
-          setTimeout(function(){ input.focus(); }, 60);
-        } else {
-          inputWrap.style.display = 'none';
-          setOk(true);
-        }
-        overlay.style.display = 'flex';
-        return new Promise(function(res){ _resolve = res; });
-      }
-
-      function close(val){
-        overlay.style.display = 'none';
-        input.value = '';
-        input.style.borderColor = '#e5e7eb';
-        input.style.background  = 'white';
-        inputIcon.style.display = 'none';
-        inputError.textContent  = '';
-        if(_resolve){ _resolve(val); _resolve = null; }
-      }
-
-      input.addEventListener('input', function(){
-        var val = input.value;
-        var ok  = val === (_keyword || '');
-        setOk(ok);
-        if(val.length === 0){
-          input.style.borderColor = '#e5e7eb';
-          input.style.background  = 'white';
-          inputIcon.style.display = 'none';
-          inputError.textContent  = '';
-        } else if(ok){
-          input.style.borderColor = '#16a34a';
-          input.style.background  = '#f0fdf4';
-          inputIcon.textContent   = '✓';
-          inputIcon.style.color   = '#16a34a';
-          inputIcon.style.display = 'block';
-          inputError.textContent  = '';
-        } else {
-          input.style.borderColor = '#ef4444';
-          input.style.background  = '#fff7f7';
-          inputIcon.textContent   = '✕';
-          inputIcon.style.color   = '#ef4444';
-          inputIcon.style.display = 'block';
-          inputError.textContent  = CSIG_I18N.noMatch;
-        }
-      });
-      okBtn.addEventListener('click',     function(){ if(!okBtn.disabled) close(true); });
-      cancelBtn.addEventListener('click', function(){ close(false); });
-      overlay.addEventListener('click',   function(e){ if(e.target === overlay) close(false); });
-      document.addEventListener('keydown', function(e){
-        if(overlay.style.display !== 'flex') return;
-        if(e.key === 'Escape'){ close(false); }
-        if(e.key === 'Enter' && !okBtn.disabled){ e.preventDefault(); close(true); }
-      });
-
-      window.csigConfirm = open;
-
-      /* Intercepte les liens de suppression data-delete-url → POST sans naviguer */
-      function getCsrf(){
-        var m = document.cookie.match(/csrftoken=([^;]+)/);
-        return m ? m[1] : '';
-      }
-      document.addEventListener('click', function(e){
-        var link = e.target.closest('[data-delete-url]');
-        if(!link) return;
-        e.preventDefault();
-        var url   = link.getAttribute('data-delete-url');
-        var type  = link.getAttribute('data-delete-type') || '';
-        var name  = link.getAttribute('data-delete-name') || '';
-        var msg   = (type && name)
-          ? CSIG_I18N.wantDelete + ' ' + type + ' « ' + name + ' » ?'
-          : CSIG_I18N.irreversible;
-        open({
-          title:   CSIG_I18N.confirmDelete,
-          message: msg,
-          label:   CSIG_I18N.deleteBtn,
-          danger:  true,
-          keyword: name || 'SUPPRIMER',
-        }).then(function(ok){
-          if(!ok) return;
-          var form = document.createElement('form');
-          form.method = 'post'; form.action = url; form.style.display = 'none';
-          var csrf = document.createElement('input');
-          csrf.type = 'hidden'; csrf.name = 'csrfmiddlewaretoken'; csrf.value = getCsrf();
-          form.appendChild(csrf);
-          document.body.appendChild(form);
-          form.submit();
-        });
-      });
-
-      /* Intercepte tous les formulaires avec data-confirm */
-      document.addEventListener('submit', function(e){
-        var form = e.target;
-        var msg  = form.getAttribute('data-confirm');
-        if(!msg) return;
-        e.preventDefault();
-        open({
-          title:   form.getAttribute('data-confirm-title')  || CSIG_I18N.confirm,
-          message: msg,
-          label:   form.getAttribute('data-confirm-label')  || CSIG_I18N.confirmBtn,
-          danger:  form.hasAttribute('data-confirm-danger'),
-          keyword: form.getAttribute('data-confirm-keyword') || null,
-        }).then(function(ok){
-          if(ok){ form.removeAttribute('data-confirm'); form.submit(); }
-        });
-      }, true);
-    })();
-    </script>
-</body>
-</html>
+</body>
+</html>
