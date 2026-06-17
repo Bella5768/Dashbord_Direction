@@ -2,7 +2,7 @@
 {% block content %}
 <p style="margin:0 0 10px;">Bonjour <strong>{{ recipient_name }}</strong>,</p>
 <p style="margin:0 0 14px;color:#065f46;">{{ role_label }}</p>
-<p style="margin:0 0 14px;">La {{ task_type }} <strong>« {{ task_name }} »</strong> est maintenant terminée.</p>
+<p style="margin:0 0 14px;">{{ task_article_def }} {{ task_type }} <strong>« {{ task_name }} »</strong> est maintenant {{ task_pp_termine }}.</p>
 
 <table style="width:100%;border-collapse:collapse;margin:0 0 18px;font-size:14px;">
   <tr>

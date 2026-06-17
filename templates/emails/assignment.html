@@ -2,7 +2,7 @@
 {% block content %}
 <p style="margin:0 0 10px;">Bonjour <strong>{{ recipient_name }}</strong>,</p>
 <p style="margin:0 0 14px;color:{{ banner_color|default:'#1e3a5f' }};">{{ role_label }}</p>
-<p style="margin:0 0 14px;">Une nouvelle <strong>{{ task_type }}</strong> a été attribuée à <strong>{{ employee_name }}</strong>&nbsp;:</p>
+<p style="margin:0 0 14px;">{{ task_article_indef|capfirst }} <strong>{{ task_type }}</strong> a été {{ task_pp_attribue }} à <strong>{{ employee_name }}</strong>&nbsp;:</p>
 
 <table style="width:100%;border-collapse:collapse;margin:0 0 18px;font-size:14px;">
   <tr>

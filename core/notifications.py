@@ -3,6 +3,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.db.models import Q
+from django.urls import reverse
 from email.mime.image import MIMEImage
 from email.utils import formataddr
 import logging
@@ -59,6 +60,17 @@ def _render_email(template_name, context):
     text = re.sub(r'[ \t]+', ' ', strip_tags(html))
     text = re.sub(r'\n\s*\n\s*\n+', '\n\n', text).strip()
     return text, html
+
+
+def _task_gender_ctx(task_type):
+    """Retourne les variables de genre grammatical pour task_type ('jalon', 'tâche', 'sous-étape')."""
+    masculine = task_type in ('jalon',)
+    return {
+        'task_article_indef': 'un nouveau' if masculine else 'une nouvelle',
+        'task_article_def': 'Le' if masculine else 'La',
+        'task_pp_attribue': 'attribué' if masculine else 'attribuée',
+        'task_pp_termine': 'terminé' if masculine else 'terminée',
+    }
 
 
 def _is_email_configured():
@@ -138,6 +150,9 @@ def notify_password_reset(user, reset_link):
         'recipient_name': user.get_full_name() or user.username,
         'username': user.username,
         'reset_link': reset_link,
+        'banner_color': '#1e3a5f',
+        'banner_title': 'Réinitialisation du mot de passe',
+        'banner_subtitle': 'Dashboard CSIG – Direction Générale',
     })
     try:
         _send(subject, text, html, user.email)
@@ -164,7 +179,10 @@ def notify_assignment(employee, task_type, task_name, project_name, assigned_by,
         return (False, "Pas d'email pour cet employé")
 
     employee_name = employee.name
-    recipients = [(employee_name, employee.email, "Une nouvelle tâche vous est attribuée :")]
+    _gctx = _task_gender_ctx(task_type)
+    _art = _gctx['task_article_indef']
+    _pp = _gctx['task_pp_attribue']
+    recipients = [(employee_name, employee.email, f"{_art.capitalize()} {task_type} vous est {_pp} :")]
 
     if project is not None:
         manager_name, manager_email = _resolve_manager_email(project)
@@ -186,6 +204,7 @@ def notify_assignment(employee, task_type, task_name, project_name, assigned_by,
             'banner_color': '#1e3a5f',
             'banner_title': 'Nouvelle attribution',
             'banner_subtitle': 'Dashboard CSIG – Direction Générale',
+            **_gctx,
         })
         try:
             _send(subject, text, html, rec_email)
@@ -221,11 +240,14 @@ def notify_project_member_added(member, added_by_user):
     role_label = member.project_role.name if member.project_role else 'Membre'
     subject = f"[CSIG] Ajout au projet : {member.project.name}"
 
+    site_url = getattr(settings, 'SITE_URL', '').rstrip('/')
+    project_url = f"{site_url}{reverse('project_detail', args=[member.project.id])}" if site_url else ''
     text, html = _render_email('project_member_added.html', {
         'employee_name': employee.name,
         'project_name': member.project.name,
         'role_label': role_label,
         'added_by': added_by,
+        'project_url': project_url,
         'banner_color': '#1e3a5f',
         'banner_title': 'Ajout au projet',
         'banner_subtitle': 'Dashboard CSIG – Direction Générale',
@@ -279,7 +301,9 @@ def notify_task_completed(task_type, task_name, project, assigned_employee, assi
         logger.warning(f"Aucun destinataire pour notification de fin de {task_type} {task_name}")
         return (False, "Aucun destinataire avec email pour cette notification")
 
-    subject = f"[CSIG] {task_type.capitalize()} terminée : {task_name}"
+    _gctx_tc = _task_gender_ctx(task_type)
+    _pp_t = _gctx_tc['task_pp_termine']
+    subject = f"[CSIG] {task_type.capitalize()} {_pp_t} : {task_name}"
     sent_emails, errors = [], []
     for name, email, role_label in unique_recipients:
         text, html = _render_email('task_completed.html', {
@@ -290,8 +314,9 @@ def notify_task_completed(task_type, task_name, project, assigned_employee, assi
             'project_name': project_name,
             'completed_by_name': completed_by_name,
             'banner_color': '#047857',
-            'banner_title': f'{task_type.capitalize()} terminée',
+            'banner_title': f'{task_type.capitalize()} {_pp_t}',
             'banner_subtitle': 'Dashboard CSIG – Direction Générale',
+            **_gctx_tc,
         })
         try:
             _send(subject, text, html, email)
@@ -342,7 +367,9 @@ def notify_due_date_alert(employee, task_type, task_name, project_name, due_date
         subject_prefix = '[RAPPEL]'
 
     employee_name = employee.name
-    recipients = [(employee_name, employee.email, "En tant que responsable, vous devez traiter cette tâche impérativement :")]
+    _gctx_dd = _task_gender_ctx(task_type)
+    _dem = 'ce' if task_type in ('jalon',) else 'cette'
+    recipients = [(employee_name, employee.email, f"En tant que responsable, vous devez traiter {_dem} {task_type} impérativement :")]
     if project is not None:
         manager_name, manager_email = _resolve_manager_email(project)
         if manager_email and manager_email.lower() != employee.email.lower():
@@ -363,6 +390,7 @@ def notify_due_date_alert(employee, task_type, task_name, project_name, due_date
             'banner_color': banner_color,
             'banner_title': banner_text,
             'banner_subtitle': urgency_label,
+            **_gctx_dd,
         })
         try:
             _send(subject, text, html, rec_email)
@@ -485,6 +513,8 @@ def _dispatch_leave_emails(leave, step, banner_color, banner_title, banner_subti
     period = f"{leave.start_date.strftime('%d/%m/%Y')} au {leave.end_date.strftime('%d/%m/%Y')} ({leave.days_count} jour(s))"
     status_label = leave.get_status_display()
 
+    site_url = getattr(settings, 'SITE_URL', '').rstrip('/')
+    leave_url = f"{site_url}{reverse('leave_detail', args=[leave.id])}" if site_url else ''
     for name, email, role in recipients:
         text, html = _render_email('leave.html', {
             'recipient_name': name,
@@ -498,6 +528,7 @@ def _dispatch_leave_emails(leave, step, banner_color, banner_title, banner_subti
             'status_label': status_label,
             'status_color': leave.status_color,
             'step_label': leave.current_step_label,
+            'leave_url': leave_url,
             'banner_color': banner_color,
             'banner_title': banner_title,
             'banner_subtitle': banner_subtitle,
