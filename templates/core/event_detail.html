@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{{ event.title }}{% endblock %}
+{% block page_title %}{{ event.title }}{% endblock %}
+{% block page_subtitle %}{{ event.get_event_type_display }} · {{ event.date|date:"d F Y" }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.ev-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 24px; gap: 16px; flex-wrap: wrap;
+}
+.ev-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600;
+}
+.ev-badge.reunion   { background: #dbeafe; color: #1d4ed8; }
+.ev-badge.evenement { background: #dcfce7; color: #15803d; }
+.ev-badge.deadline  { background: #fee2e2; color: #dc2626; }
+
+.ev-grid { display: grid; grid-template-columns: 1fr 300px; gap: 20px; align-items: start; }
+@media (max-width: 900px) { .ev-grid { grid-template-columns: 1fr; } }
+
+.ev-meta-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 0; border-bottom: 1px solid #f1f5f9;
+    font-size: 14px; color: #374151;
+}
+.ev-meta-row:last-child { border-bottom: none; }
+.ev-meta-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: #f1f5f9; color: #64748b;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.ev-meta-label { font-size: 11px; color: #9ca3af; display: block; margin-bottom: 2px; }
+.ev-meta-value { font-weight: 500; }
+
+.ev-description {
+    background: #f8fafc; border: 1px solid #e2e8f0;
+    border-radius: 10px; padding: 16px;
+    font-size: 14px; color: #374151; line-height: 1.65;
+    white-space: pre-wrap;
+}
+
+.participant-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 20px;
+    background: #e0f2fe; color: #0369a1;
+    font-size: 12px; font-weight: 600; margin: 3px;
+}
+
+.ev-past-banner {
+    background: #fff7ed; border: 1px solid #fed7aa;
+    border-radius: 10px; padding: 10px 16px; margin-bottom: 20px;
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: #92400e;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% if event.is_past %}
+<div class="ev-past-banner">
+    <i data-lucide="clock" width="16" height="16"></i>
+    {% trans "Cet événement est passé." %}
+</div>
+{% endif %}
+
+<div class="ev-header">
+    <span class="ev-badge {{ event.event_type }}">
+        {% if event.event_type == 'reunion' %}<i data-lucide="video" width="14" height="14"></i>
+        {% elif event.event_type == 'deadline' %}<i data-lucide="triangle-alert" width="14" height="14"></i>
+        {% else %}<i data-lucide="calendar" width="14" height="14"></i>{% endif %}
+        {{ event.get_event_type_display }}
+    </span>
+    <div style="display:flex; gap:8px;">
+        <a href="{% url 'core:calendar' %}?year={{ event.date.year }}&month={{ event.date.month }}" class="btn btn-outline">
+            <i data-lucide="arrow-left" width="14" height="14"></i>
+            {% trans 'Calendrier' %}
+        </a>
+        {% if can_edit %}
+        <a href="{% url 'core:event_edit' event.id %}" class="btn btn-outline">
+            <i data-lucide="pencil" width="14" height="14"></i>
+            {% trans 'Modifier' %}
+        </a>
+        {% endif %}
+        {% if can_delete %}
+        <a href="{% url 'core:event_delete' event.id %}" class="btn btn-danger">
+            <i data-lucide="trash-2" width="14" height="14"></i>
+            {% trans 'Supprimer' %}
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="ev-grid">
+
+    <!-- Colonne principale -->
+    <div style="display:flex; flex-direction:column; gap:20px;">
+
+        <!-- Infos clés -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">{% trans 'Détails' %}</h3>
+            </div>
+            <div class="card-content">
+                <div class="ev-meta-row">
+                    <div class="ev-meta-icon"><i data-lucide="calendar" width="16" height="16"></i></div>
+                    <div>
+                        <span class="ev-meta-label">{% trans 'Date' %}</span>
+                        <span class="ev-meta-value">{{ event.date|date:"l d F Y" }}</span>
+                    </div>
+                </div>
+                <div class="ev-meta-row">
+                    <div class="ev-meta-icon"><i data-lucide="clock" width="16" height="16"></i></div>
+                    <div>
+                        <span class="ev-meta-label">{% trans 'Heure' %}</span>
+                        <span class="ev-meta-value">{{ event.time|time:"H:i" }} · {{ event.duration_display }}</span>
+                    </div>
+                </div>
+                {% if event.location %}
+                <div class="ev-meta-row">
+                    <div class="ev-meta-icon"><i data-lucide="map-pin" width="16" height="16"></i></div>
+                    <div>
+                        <span class="ev-meta-label">{% trans 'Lieu' %}</span>
+                        <span class="ev-meta-value">{{ event.location }}</span>
+                    </div>
+                </div>
+                {% endif %}
+                {% if event.created_by %}
+                <div class="ev-meta-row">
+                    <div class="ev-meta-icon"><i data-lucide="user" width="16" height="16"></i></div>
+                    <div>
+                        <span class="ev-meta-label">{% trans 'Créé par' %}</span>
+                        <span class="ev-meta-value">{{ event.created_by.get_full_name|default:event.created_by.username }}</span>
+                    </div>
+                </div>
+                {% endif %}
+                {% if event.created_at %}
+                <div class="ev-meta-row">
+                    <div class="ev-meta-icon"><i data-lucide="calendar-plus" width="16" height="16"></i></div>
+                    <div>
+                        <span class="ev-meta-label">{% trans 'Créé le' %}</span>
+                        <span class="ev-meta-value">{{ event.created_at|date:"d/m/Y à H:i" }}</span>
+                    </div>
+                </div>
+                {% endif %}
+                {% if event.updated_at and event.updated_at != event.created_at %}
+                <div class="ev-meta-row">
+                    <div class="ev-meta-icon"><i data-lucide="pencil" width="16" height="16"></i></div>
+                    <div>
+                        <span class="ev-meta-label">{% trans 'Modifié le' %}</span>
+                        <span class="ev-meta-value">{{ event.updated_at|date:"d/m/Y à H:i" }}</span>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Description -->
+        {% if event.description %}
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">{% trans 'Description' %}</h3>
+            </div>
+            <div class="card-content">
+                <p class="ev-description">{{ event.description }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <!-- Colonne latérale -->
+    <div style="display:flex; flex-direction:column; gap:20px; position:sticky; top:80px;">
+
+        <!-- Directions participantes -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title" style="display:flex;align-items:center;gap:6px;">
+                    <i data-lucide="building-2" width="16" height="16"></i>
+                    {% trans 'Directions participantes' %}
+                </h3>
+            </div>
+            <div class="card-content">
+                {% if event.participants.all %}
+                <div style="display:flex; flex-wrap:wrap; gap:4px;">
+                    {% for dir in event.participants.all %}
+                    <span class="participant-chip">
+                        <span style="width:8px;height:8px;border-radius:50%;background:{{ dir.color }};flex-shrink:0;"></span>
+                        {{ dir.code }} — {{ dir.name }}
+                    </span>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-sm text-gray-400" style="font-style:italic;">{% trans 'Aucune direction associée' %}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Actions rapides -->
+        {% if can_edit %}
+        <div class="card">
+            <div class="card-content" style="display:flex;flex-direction:column;gap:8px;">
+                <a href="{% url 'core:event_edit' event.id %}" class="btn btn-primary" style="justify-content:center;">
+                    <i data-lucide="pencil" width="14" height="14"></i>
+                    {% trans 'Modifier cet événement' %}
+                </a>
+                <a href="{% url 'core:event_delete' event.id %}" class="btn btn-outline" style="justify-content:center;color:#dc2626;border-color:#fca5a5;">
+                    <i data-lucide="trash-2" width="14" height="14"></i>
+                    {% trans 'Supprimer' %}
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}

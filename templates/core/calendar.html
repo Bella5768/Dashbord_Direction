@@ -7,184 +7,39 @@
 {% block page_subtitle %}{% trans 'Agenda partagé et événements à venir' %}{% endblock %}
 
 {% block content %}
-{{ events_json|json_script:"events-data" }}
-
-<!-- View Switcher -->
-<div class="view-switcher">
-    <button type="button" class="view-tab active" data-view="calendar">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-        {% trans 'Calendrier' %}
-    </button>
-    <button type="button" class="view-tab" data-view="kanban">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h4v14H4zM10 6h4v9h-4zM16 6h4v6h-4z" />
-        </svg>
-        {% trans 'Kanban' %}
-    </button>
-    <button type="button" class="view-tab" data-view="gantt">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h10M4 12h16M4 18h7" />
-        </svg>
-        {% trans 'Gantt' %}
-    </button>
-    <div class="view-switcher-spacer"></div>
-    <span class="view-switcher-month">{{ month_name }} {{ year }}</span>
-</div>
-
-<style>
-.view-switcher {
-    display: flex; align-items: center; gap: 6px;
-    background: white; border-radius: 10px; padding: 6px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 20px;
-    border: 1px solid #e5e7eb;
-}
-.view-tab {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 8px 14px; border-radius: 7px; border: 0;
-    background: transparent; color: #6b7280;
-    font-size: 13px; font-weight: 600; cursor: pointer;
-    transition: all .15s ease;
-}
-.view-tab:hover { background: #f3f4f6; color: #374151; }
-.view-tab.active { background: #0b2545; color: white; box-shadow: 0 1px 2px rgba(11,37,69,0.2); }
-.view-switcher-spacer { flex: 1; }
-.view-switcher-month { color: #6b7280; font-size: 13px; font-weight: 600; padding: 0 12px; }
-.view-pane { display: none; }
-.view-pane.active { display: block; }
-
-/* Kanban */
-.kanban-board {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-}
-.kanban-column {
-    background: #f9fafb; border-radius: 10px;
-    border-top: 4px solid var(--col-color, #6b7280);
-    display: flex; flex-direction: column;
-    min-height: 400px;
-}
-.kanban-column.col-reunion { --col-color: #3b82f6; }
-.kanban-column.col-evenement { --col-color: #16a34a; }
-.kanban-column.col-deadline { --col-color: #dc2626; }
-.kanban-column-header {
-    padding: 14px 16px; display: flex; align-items: center; justify-content: space-between;
-    border-bottom: 1px solid #e5e7eb;
-}
-.kanban-column-title {
-    font-size: 13px; font-weight: 700; color: #1f2937; text-transform: uppercase;
-    letter-spacing: 0.4px; display: flex; align-items: center; gap: 8px;
-}
-.kanban-column-title::before {
-    content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--col-color);
-}
-.kanban-column-count {
-    background: white; color: #374151; font-size: 12px; font-weight: 700;
-    padding: 2px 10px; border-radius: 10px; border: 1px solid #e5e7eb;
-}
-.kanban-column-body {
-    padding: 12px; display: flex; flex-direction: column; gap: 10px;
-    flex: 1; overflow-y: auto; max-height: 600px;
-}
-.kanban-card {
-    background: white; border-radius: 8px; padding: 12px 14px;
-    border-left: 3px solid var(--col-color);
-    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-    transition: all .15s ease; cursor: pointer;
-}
-.kanban-card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.08); }
-.kanban-card-title { font-size: 13px; font-weight: 700; color: #111827; margin-bottom: 6px; }
-.kanban-card-meta { display: flex; flex-wrap: wrap; gap: 6px; font-size: 11px; color: #6b7280; }
-.kanban-card-meta span { display: inline-flex; align-items: center; gap: 4px; }
-.kanban-card-date {
-    background: #f3f4f6; color: #374151; padding: 2px 8px; border-radius: 4px; font-weight: 600;
-}
-.kanban-card-desc { font-size: 12px; color: #4b5563; margin-top: 6px; line-height: 1.4; }
-.kanban-empty { color: #9ca3af; text-align: center; padding: 30px 10px; font-size: 12px; font-style: italic; }
-
-/* Gantt */
-.gantt-wrap { background: white; border-radius: 10px; border: 1px solid #e5e7eb; overflow: hidden; }
-.gantt-scroll { overflow-x: auto; }
-.gantt-grid {
-    display: grid; min-width: 100%;
-    grid-template-columns: 240px 1fr;
-}
-.gantt-header-left, .gantt-header-right {
-    background: #0b2545; color: white; font-size: 12px; font-weight: 700;
-    padding: 10px 12px; position: sticky; top: 0; z-index: 2;
-}
-.gantt-header-right { padding: 0; }
-.gantt-days {
-    display: grid; height: 100%;
-    grid-template-columns: repeat({{ days_in_month }}, minmax(28px, 1fr));
-}
-.gantt-day-head {
-    text-align: center; padding: 10px 0; font-size: 11px; font-weight: 700;
-    border-left: 1px solid rgba(255,255,255,0.15); color: white;
-}
-.gantt-day-head.weekend { background: rgba(255,255,255,0.08); }
-.gantt-row-label {
-    padding: 10px 12px; border-bottom: 1px solid #e5e7eb; font-size: 13px;
-    display: flex; align-items: center; gap: 8px; color: #1f2937; font-weight: 600;
-    background: #f9fafb;
-}
-.gantt-row-label .dot {
-    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
-}
-.gantt-row-label .dot.reunion { background: #3b82f6; }
-.gantt-row-label .dot.evenement { background: #16a34a; }
-.gantt-row-label .dot.deadline { background: #dc2626; }
-.gantt-row-track {
-    position: relative; border-bottom: 1px solid #e5e7eb;
-    display: grid;
-    grid-template-columns: repeat({{ days_in_month }}, minmax(28px, 1fr));
-    min-height: 42px;
-}
-.gantt-row-track .day-cell {
-    border-left: 1px solid #f3f4f6;
-}
-.gantt-row-track .day-cell.weekend { background: #fafafa; }
-.gantt-row-track .day-cell.today { background: rgba(11,37,69,0.06); }
-.gantt-bar {
-    position: absolute; top: 50%; transform: translateY(-50%);
-    height: 22px; border-radius: 5px; padding: 0 8px;
-    display: flex; align-items: center; gap: 6px;
-    font-size: 11px; font-weight: 700; color: white;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
-    overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
-    cursor: pointer; transition: all .15s ease;
-}
-.gantt-bar:hover { transform: translateY(-50%) scale(1.02); box-shadow: 0 3px 8px rgba(0,0,0,0.18); }
-.gantt-bar.reunion { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-.gantt-bar.evenement { background: linear-gradient(135deg, #16a34a, #15803d); }
-.gantt-bar.deadline { background: linear-gradient(135deg, #dc2626, #b91c1c); }
-.gantt-empty { padding: 40px; text-align: center; color: #9ca3af; font-style: italic; }
-</style>
 
 <!-- Stats Row -->
 <div class="stats-row">
-    <a class="stat-box blue stat-box-link" href="{% url 'core:calendar' %}">
-        <p class="stat-box-label">{% trans 'Réunions ce mois' %}</p>
-        <p class="stat-box-value">{{ stats.reunions }}</p>
+    <a class="stat-box blue" href="{% url 'core:calendar' %}">
+        <div class="stat-box-icon"><i data-lucide="video" width="20" height="20"></i></div>
+        <div class="stat-box-body">
+            <p class="stat-box-value">{{ stats.reunions }}</p>
+            <p class="stat-box-label">{% trans 'Réunions ce mois' %}</p>
+        </div>
     </a>
-    <a class="stat-box green stat-box-link" href="{% url 'core:calendar' %}#upcoming">
-        <p class="stat-box-label">{% trans 'Événements' %}</p>
-        <p class="stat-box-value">{{ stats.evenements }}</p>
+    <a class="stat-box green" href="{% url 'core:calendar' %}#upcoming">
+        <div class="stat-box-icon"><i data-lucide="calendar" width="20" height="20"></i></div>
+        <div class="stat-box-body">
+            <p class="stat-box-value">{{ stats.evenements }}</p>
+            <p class="stat-box-label">{% trans 'Événements' %}</p>
+        </div>
     </a>
-    <a class="stat-box red stat-box-link" href="{% url 'core:calendar' %}#upcoming">
-        <p class="stat-box-label">{% trans 'Deadlines' %}</p>
-        <p class="stat-box-value">{{ stats.deadlines }}</p>
+    <a class="stat-box red" href="{% url 'core:calendar' %}#upcoming">
+        <div class="stat-box-icon"><i data-lucide="triangle-alert" width="20" height="20"></i></div>
+        <div class="stat-box-body">
+            <p class="stat-box-value">{{ stats.deadlines }}</p>
+            <p class="stat-box-label">{% trans 'Deadlines' %}</p>
+        </div>
     </a>
-    <a class="stat-box amber stat-box-link" href="{% url 'core:calendar' %}">
-        <p class="stat-box-label">{% trans 'Total ce mois' %}</p>
-        <p class="stat-box-value">{{ stats.total }}</p>
+    <a class="stat-box amber" href="{% url 'core:calendar' %}">
+        <div class="stat-box-icon"><i data-lucide="calendar-days" width="20" height="20"></i></div>
+        <div class="stat-box-body">
+            <p class="stat-box-value">{{ stats.total }}</p>
+            <p class="stat-box-label">{% trans 'Total ce mois' %}</p>
+        </div>
     </a>
 </div>
 
-<!-- ============= VUE CALENDRIER ============= -->
-<div class="view-pane active" id="view-pane-calendar">
 <div class="calendar-container">
     <!-- Calendar -->
     <div>
@@ -193,22 +48,16 @@
                 <div class="calendar-header">
                     <div class="calendar-nav">
                         <a href="?year={{ prev_year }}&month={{ prev_month }}" class="calendar-nav-btn">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                            </svg>
+                            <i data-lucide="chevron-left" ></i>
                         </a>
                         <h3 class="calendar-month-title">{{ month_name }} {{ year }}</h3>
                         <a href="?year={{ next_year }}&month={{ next_month }}" class="calendar-nav-btn">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                            </svg>
+                            <i data-lucide="chevron-right" ></i>
                         </a>
                     </div>
                 </div>
                 <a href="{% url 'core:event_create' %}" class="btn btn-primary">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
+                    <i data-lucide="plus-circle" width="16" height="16" ></i>
                     {% trans 'Nouvel événement' %}
                 </a>
             </div>
@@ -236,7 +85,7 @@
                                 <div class="calendar-day-events">
                                     {% with day_events=events_by_day|get_item:day %}
                                         {% for evt in day_events %}
-                                        <div class="calendar-event-pill {{ evt.event_type }}">{{ evt.title }}</div>
+                                        <a href="{% url 'core:event_detail' evt.id %}" class="calendar-event-pill {{ evt.event_type }}" title="{{ evt.title }} · {{ evt.time|time:'H:i' }}">{{ evt.title }}</a>
                                         {% endfor %}
                                     {% endwith %}
                                 </div>
@@ -255,9 +104,7 @@
         <div class="card mb-6" id="upcoming">
             <div class="card-header">
                 <h3 class="card-title flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
+                    <i data-lucide="calendar" width="20" height="20" ></i>
                     {% trans 'Prochains événements' %}
                 </h3>
             </div>
@@ -279,24 +126,23 @@
                             <h4 class="event-title">{{ event.title }}</h4>
                             <div class="event-meta">
                                 <span class="event-meta-item">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
+                                    <i data-lucide="clock" ></i>
                                     {{ event.time|time:"H:i" }}
                                 </span>
                             </div>
                         </div>
                         <div class="flex gap-1" style="margin-left: auto;">
+                            <a href="{% url 'core:event_detail' event.id %}" class="action-btn" title="Voir">
+                                <i data-lucide="eye" width="16" height="16"></i>
+                            </a>
+                            {% if can_manage %}
                             <a href="{% url 'core:event_edit' event.id %}" class="action-btn" title="Modifier">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
+                                <i data-lucide="pencil" width="16" height="16"></i>
                             </a>
                             <a href="{% url 'core:event_delete' event.id %}" class="action-btn danger" title="Supprimer">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
+                                <i data-lucide="trash-2" width="16" height="16"></i>
                             </a>
+                            {% endif %}
                         </div>
                     </div>
                     {% empty %}
@@ -309,180 +155,33 @@
         <!-- Legend -->
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">{% trans 'Légende' %}</h3>
+                <h3 class="card-title">{% trans 'Ce mois-ci' %}</h3>
             </div>
-            <div class="card-content">
-                <div class="item-list" style="gap: 8px;">
-                    <div class="flex items-center gap-2">
-                        <span class="event-type-dot reunion"></span>
-                        <span class="text-sm text-gray-600">{% trans 'Réunion' %}</span>
+            <div class="card-content" style="display:flex;flex-direction:column;gap:8px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:8px;background:#eff6ff;border-left:3px solid #3b82f6;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <i data-lucide="video" width="14" height="14" style="color:#3b82f6;"></i>
+                        <span style="font-size:13px;font-weight:500;color:#1e3a5f;">{% trans 'Réunions' %}</span>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <span class="event-type-dot evenement"></span>
-                        <span class="text-sm text-gray-600">{% trans 'Événement' %}</span>
+                    <span style="font-size:14px;font-weight:700;color:#1d4ed8;">{{ stats.reunions }}</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:8px;background:#f0fdf4;border-left:3px solid #16a34a;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <i data-lucide="calendar" width="14" height="14" style="color:#16a34a;"></i>
+                        <span style="font-size:13px;font-weight:500;color:#14532d;">{% trans 'Événements' %}</span>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <span class="event-type-dot deadline"></span>
-                        <span class="text-sm text-gray-600">{% trans 'Deadline' %}</span>
+                    <span style="font-size:14px;font-weight:700;color:#16a34a;">{{ stats.evenements }}</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:8px;background:#fef2f2;border-left:3px solid #dc2626;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <i data-lucide="triangle-alert" width="14" height="14" style="color:#dc2626;"></i>
+                        <span style="font-size:13px;font-weight:500;color:#7f1d1d;">{% trans 'Deadlines' %}</span>
                     </div>
+                    <span style="font-size:14px;font-weight:700;color:#dc2626;">{{ stats.deadlines }}</span>
                 </div>
             </div>
         </div>
     </div>
 </div>
-</div><!-- /view-pane-calendar -->
 
-<!-- ============= VUE KANBAN ============= -->
-<div class="view-pane" id="view-pane-kanban">
-    <div class="kanban-board">
-        <div class="kanban-column col-reunion" data-type="reunion">
-            <div class="kanban-column-header">
-                <div class="kanban-column-title">{% trans 'Réunions' %}</div>
-                <span class="kanban-column-count" data-count="reunion">0</span>
-            </div>
-            <div class="kanban-column-body" data-body="reunion"></div>
-        </div>
-        <div class="kanban-column col-evenement" data-type="evenement">
-            <div class="kanban-column-header">
-                <div class="kanban-column-title">{% trans 'Événements' %}</div>
-                <span class="kanban-column-count" data-count="evenement">0</span>
-            </div>
-            <div class="kanban-column-body" data-body="evenement"></div>
-        </div>
-        <div class="kanban-column col-deadline" data-type="deadline">
-            <div class="kanban-column-header">
-                <div class="kanban-column-title">{% trans 'Deadlines' %}</div>
-                <span class="kanban-column-count" data-count="deadline">0</span>
-            </div>
-            <div class="kanban-column-body" data-body="deadline"></div>
-        </div>
-    </div>
-</div><!-- /view-pane-kanban -->
-
-<!-- ============= VUE GANTT ============= -->
-<div class="view-pane" id="view-pane-gantt">
-    <div class="gantt-wrap">
-        <div class="gantt-scroll">
-            <div class="gantt-grid">
-                <div class="gantt-header-left">{% trans 'Événement' %}</div>
-                <div class="gantt-header-right">
-                    <div class="gantt-days">
-                        {% for d in days_range %}
-                        <div class="gantt-day-head">{{ d }}</div>
-                        {% endfor %}
-                    </div>
-                </div>
-                <div id="gantt-rows" style="display: contents;"></div>
-            </div>
-        </div>
-    </div>
-</div><!-- /view-pane-gantt -->
-
-<script>
-(function() {
-    const events = JSON.parse(document.getElementById('events-data').textContent || '[]');
-    const today = new Date();
-    const todayDay = (today.getMonth() + 1 === {{ month }} && today.getFullYear() === {{ year }}) ? today.getDate() : null;
-    const daysInMonth = {{ days_in_month }};
-    const year = {{ year }};
-    const month = {{ month }};
-
-    function escapeHtml(s) {
-        return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    }
-
-    // ----- Switcher -----
-    document.querySelectorAll('.view-tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-            const view = tab.dataset.view;
-            document.querySelectorAll('.view-tab').forEach(t => t.classList.toggle('active', t === tab));
-            document.querySelectorAll('.view-pane').forEach(p => p.classList.toggle('active', p.id === 'view-pane-' + view));
-            try { localStorage.setItem('calendarView', view); } catch(e) {}
-        });
-    });
-    // Restore last view
-    try {
-        const saved = localStorage.getItem('calendarView');
-        if (saved && saved !== 'calendar') {
-            const tab = document.querySelector('.view-tab[data-view="' + saved + '"]');
-            if (tab) tab.click();
-        }
-    } catch(e) {}
-
-    // ----- Kanban -----
-    function renderKanban() {
-        const groups = {reunion: [], evenement: [], deadline: []};
-        events.forEach(e => { if (groups[e.type]) groups[e.type].push(e); });
-        Object.keys(groups).forEach(type => {
-            groups[type].sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
-            const body = document.querySelector('[data-body="' + type + '"]');
-            const counter = document.querySelector('[data-count="' + type + '"]');
-            counter.textContent = groups[type].length;
-            if (groups[type].length === 0) {
-                body.innerHTML = '<div class="kanban-empty">Aucun élément ce mois</div>';
-                return;
-            }
-            body.innerHTML = groups[type].map(ev => {
-                const dateLabel = new Date(ev.date).toLocaleDateString('fr-FR', {day: '2-digit', month: 'short'});
-                const desc = ev.description ? '<div class="kanban-card-desc">' + escapeHtml(ev.description.slice(0, 120)) + (ev.description.length > 120 ? '…' : '') + '</div>' : '';
-                const loc = ev.location ? '<span>📍 ' + escapeHtml(ev.location) + '</span>' : '';
-                return '<a class="kanban-card" href="' + ev.edit_url + '" style="text-decoration:none; color:inherit;">' +
-                    '<div class="kanban-card-title">' + escapeHtml(ev.title) + '</div>' +
-                    '<div class="kanban-card-meta">' +
-                        '<span class="kanban-card-date">' + dateLabel + '</span>' +
-                        '<span>🕐 ' + ev.time + '</span>' +
-                        '<span>⏱ ' + ev.duration + ' min</span>' +
-                        loc +
-                    '</div>' +
-                    desc +
-                '</a>';
-            }).join('');
-        });
-    }
-    renderKanban();
-
-    // ----- Gantt -----
-    function renderGantt() {
-        const container = document.getElementById('gantt-rows');
-        if (events.length === 0) {
-            container.innerHTML = '<div class="gantt-empty" style="grid-column: 1 / span 2;">Aucun événement ce mois</div>';
-            return;
-        }
-        // Header weekend marking
-        document.querySelectorAll('.gantt-day-head').forEach((el, idx) => {
-            const dow = new Date(year, month - 1, idx + 1).getDay();
-            if (dow === 0 || dow === 6) el.classList.add('weekend');
-        });
-
-        const sorted = events.slice().sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
-        const html = sorted.map(ev => {
-            const day = ev.day;
-            // Calculer la duree en jours visuels (au moins 1 jour, jusqu'a fin si > 1440 minutes)
-            const spanDays = Math.max(1, Math.ceil(ev.duration / 1440));
-            const endDay = Math.min(daysInMonth, day + spanDays - 1);
-            const left = ((day - 1) / daysInMonth) * 100;
-            const width = ((endDay - day + 1) / daysInMonth) * 100;
-
-            // Day cells
-            let cells = '';
-            for (let d = 1; d <= daysInMonth; d++) {
-                const dow = new Date(year, month - 1, d).getDay();
-                const cls = ['day-cell'];
-                if (dow === 0 || dow === 6) cls.push('weekend');
-                if (todayDay === d) cls.push('today');
-                cells += '<div class="' + cls.join(' ') + '"></div>';
-            }
-            const barLabel = ev.title + ' • ' + ev.time;
-            return '<div class="gantt-row-label"><span class="dot ' + ev.type + '"></span>' + escapeHtml(ev.title) + '</div>' +
-                   '<div class="gantt-row-track">' + cells +
-                       '<a class="gantt-bar ' + ev.type + '" href="' + ev.edit_url + '" ' +
-                          'style="left:' + left + '%; width:' + width + '%;" ' +
-                          'title="' + escapeHtml(barLabel) + '">' + escapeHtml(barLabel) + '</a>' +
-                   '</div>';
-        }).join('');
-        container.innerHTML = html;
-    }
-    renderGantt();
-})();
-</script>
 {% endblock %}

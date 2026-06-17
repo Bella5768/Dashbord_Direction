@@ -8,45 +8,6 @@
 
 {% block extra_css %}
 <style>
-/* ===== PROJECTS STATS ===== */
-.projects-stat-row {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 12px;
-    margin-bottom: 20px;
-}
-.pstat {
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-    padding: 12px 14px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    text-decoration: none;
-    color: inherit;
-    transition: box-shadow 0.15s, transform 0.15s;
-    min-width: 0;
-}
-.pstat:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.09); transform: translateY(-1px); }
-.pstat-icon {
-    width: 34px; height: 34px; border-radius: 8px;
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-}
-.pstat-icon svg { width: 16px; height: 16px; }
-.pstat-icon.gray  { background: #f1f5f9; color: #64748b; }
-.pstat-icon.blue  { background: #dbeafe; color: #1d4ed8; }
-.pstat-icon.green { background: #dcfce7; color: #16a34a; }
-.pstat-icon.amber { background: #fef3c7; color: #b45309; }
-.pstat-icon.red   { background: #fee2e2; color: #dc2626; }
-.pstat-icon.slate { background: #f1f5f9; color: #475569; }
-.pstat-label { font-size: 11px; color: #6b7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pstat-value { font-size: 20px; font-weight: 800; color: #111827; line-height: 1.1; }
-.pstat.pstat-alert { border-color: #fca5a5; background: #fff5f5; }
-.pstat.pstat-alert .pstat-value { color: #dc2626; }
-
-@media (max-width: 1200px) { .projects-stat-row { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 768px)  { .projects-stat-row { grid-template-columns: repeat(2, 1fr); } }
 
 /* ===== PROJECT CARDS GRID ===== */
 .projects-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: stretch; }
@@ -77,7 +38,7 @@
 .pc-status.s-suspendu  { background: #f3f4f6; color: #374151; }
 .pc-status.s-termine   { background: #dcfce7; color: #166534; }
 .pc-status.s-en_retard { background: #fee2e2; color: #991b1b; }
-.pc-dir { margin-left: auto; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 600; background: #e2e8f0; color: #1e3a5f; }
+.pc-dir { margin-left: auto; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
 
 .pc-body { padding: 10px 16px 14px; flex: 1; }
 .pc-name { font-size: 14px; font-weight: 700; color: #111827; margin-bottom: 4px; line-height: 1.35; }
@@ -96,7 +57,8 @@
 .pc-foot { padding: 10px 16px; border-top: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .pc-manager { font-size: 12px; color: #374151; display: flex; align-items: center; gap: 5px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pc-manager svg { width: 13px; height: 13px; flex-shrink: 0; opacity: 0.7; }
-.pc-open { font-size: 12px; font-weight: 600; color: #2563eb; text-decoration: none; flex-shrink: 0; }
+.pc-date { font-size: 11px; color: #9ca3af; display: flex; align-items: center; gap: 3px; white-space: nowrap; }
+.pc-open { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: #2563eb; text-decoration: none; flex-shrink: 0; white-space: nowrap; }
 .pc-open:hover { color: #1d4ed8; }
 
 .projects-empty { text-align: center; padding: 60px 20px; color: #8b95a8; grid-column: 1 / -1; }
@@ -110,69 +72,55 @@
 
 {% block content %}
 <!-- Stats -->
-<div class="projects-stat-row">
-    <a class="pstat" href="{% url 'core:projects' %}?status=all">
-        <div class="pstat-icon gray">
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-        </div>
-        <div>
-            <div class="pstat-label">{% trans 'Total' %}</div>
-            <div class="pstat-value">{{ stats.total }}</div>
+<div class="stats-row">
+    <a class="stat-box" href="{% url 'core:projects' %}?status=all">
+        <div class="stat-box-icon"><i data-lucide="archive" width="20" height="20"></i></div>
+        <div class="stat-box-body">
+            <p class="stat-box-value">{{ stats.total }}</p>
+            <p class="stat-box-label">{% trans 'Total' %}</p>
         </div>
     </a>
-    <a class="pstat" href="{% url 'core:projects' %}?status=en_cours">
-        <div class="pstat-icon blue">
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        </div>
-        <div>
-            <div class="pstat-label">{% trans 'En cours' %}</div>
-            <div class="pstat-value">{{ stats.en_cours }}</div>
+    <a class="stat-box blue" href="{% url 'core:projects' %}?status=en_cours">
+        <div class="stat-box-icon"><i data-lucide="circle-play" width="20" height="20"></i></div>
+        <div class="stat-box-body">
+            <p class="stat-box-value">{{ stats.en_cours }}</p>
+            <p class="stat-box-label">{% trans 'En cours' %}</p>
         </div>
     </a>
-    <a class="pstat" href="{% url 'core:projects' %}?status=termine">
-        <div class="pstat-icon green">
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        </div>
-        <div>
-            <div class="pstat-label">{% trans 'Terminés' %}</div>
-            <div class="pstat-value">{{ stats.termine }}</div>
+    <a class="stat-box green" href="{% url 'core:projects' %}?status=termine">
+        <div class="stat-box-icon"><i data-lucide="circle-check" width="20" height="20"></i></div>
+        <div class="stat-box-body">
+            <p class="stat-box-value">{{ stats.termine }}</p>
+            <p class="stat-box-label">{% trans 'Terminés' %}</p>
         </div>
     </a>
-    <a class="pstat" href="{% url 'core:projects' %}?status=planifie">
-        <div class="pstat-icon amber">
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        </div>
-        <div>
-            <div class="pstat-label">{% trans 'Planifiés' %}</div>
-            <div class="pstat-value">{{ stats.planifie }}</div>
+    <a class="stat-box amber" href="{% url 'core:projects' %}?status=planifie">
+        <div class="stat-box-icon"><i data-lucide="clock" width="20" height="20"></i></div>
+        <div class="stat-box-body">
+            <p class="stat-box-value">{{ stats.planifie }}</p>
+            <p class="stat-box-label">{% trans 'Planifiés' %}</p>
         </div>
     </a>
-    <a class="pstat {% if stats.en_retard %}pstat-alert{% endif %}" href="{% url 'core:projects' %}?status=en_retard">
-        <div class="pstat-icon red">
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        </div>
-        <div>
-            <div class="pstat-label">{% trans 'En retard' %}</div>
-            <div class="pstat-value">{{ stats.en_retard|default:0 }}</div>
+    <a class="stat-box red" href="{% url 'core:projects' %}?status=en_retard">
+        <div class="stat-box-icon"><i data-lucide="circle-x" width="20" height="20"></i></div>
+        <div class="stat-box-body">
+            <p class="stat-box-value">{{ stats.en_retard|default:0 }}</p>
+            <p class="stat-box-label">{% trans 'En retard' %}</p>
         </div>
     </a>
-    <a class="pstat" href="{% url 'core:projects' %}?status=suspendu">
-        <div class="pstat-icon slate">
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        </div>
-        <div>
-            <div class="pstat-label">{% trans 'Suspendus' %}</div>
-            <div class="pstat-value">{{ stats.suspendu|default:0 }}</div>
+    <a class="stat-box" href="{% url 'core:projects' %}?status=suspendu">
+        <div class="stat-box-icon"><i data-lucide="circle-pause" width="20" height="20"></i></div>
+        <div class="stat-box-body">
+            <p class="stat-box-value">{{ stats.suspendu|default:0 }}</p>
+            <p class="stat-box-label">{% trans 'Suspendus' %}</p>
         </div>
     </a>
 </div>
 
 <!-- Filters -->
-<form method="get" class="filters-bar" style="flex-wrap:wrap;margin-bottom:20px;">
+<form method="get" class="filters-bar">
     <div class="search-box">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
+        <i data-lucide="search" width="16" height="16"></i>
         <input type="text" name="search" placeholder="{% trans 'Rechercher un projet...' %}" value="{{ search }}" class="form-control">
     </div>
     <select name="status" class="form-control" onchange="this.form.submit()">
@@ -186,13 +134,11 @@
     <select name="direction" class="form-control" onchange="this.form.submit()">
         <option value="all" {% if current_direction == 'all' %}selected{% endif %}>{% trans 'Toutes directions' %}</option>
         {% for dir in directions %}
-        <option value="{{ dir.code }}" {% if current_direction == dir.code %}selected{% endif %}>{{ dir.code }}</option>
+        <option value="{{ dir.code }}" {% if current_direction == dir.code %}selected{% endif %}>{{ dir.code }} — {{ dir.name }}</option>
         {% endfor %}
     </select>
-    <a href="{% url 'core:project_create' %}" class="btn btn-primary" style="white-space:nowrap;">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-        </svg>
+    <a href="{% url 'core:project_create' %}" class="btn btn-primary" style="margin-left:auto;">
+        <i data-lucide="plus-circle" width="16" height="16"></i>
         {% trans 'Nouveau projet' %}
     </a>
 </form>
@@ -206,7 +152,11 @@
             <span class="pc-status s-{{ project.computed_status }}">
                 {% if project.computed_status == 'en_retard' %}{% trans 'En retard' %}{% else %}{{ project.get_status_display }}{% endif %}
             </span>
-            {% if project.direction %}<span class="pc-dir">{{ project.direction.code }}</span>{% endif %}
+            {% if project.direction %}
+            <span class="pc-dir" style="background:{{ project.direction.color|default:'#3b82f6' }}1a; color:{{ project.direction.color|default:'#1d4ed8' }};">
+                {{ project.direction.code }}
+            </span>
+            {% endif %}
         </div>
 
         <div class="pc-body">
@@ -225,17 +175,25 @@
 
         <div class="pc-foot">
             <span class="pc-manager">
-                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                {{ project.manager }}
+                <i data-lucide="user" width="13" height="13"></i>
+                {{ project.manager|default:"—" }}
             </span>
-            <a href="{% url 'core:project_detail' project.id %}" class="pc-open" onclick="event.stopPropagation()">{% trans 'Ouvrir' %} →</a>
+            <div style="display:flex; align-items:center; gap:10px;">
+                {% if project.end_date %}
+                <span class="pc-date">
+                    <i data-lucide="calendar" width="11" height="11"></i>
+                    {{ project.end_date|date:"d/m/Y" }}
+                </span>
+                {% endif %}
+                <a href="{% url 'core:project_detail' project.id %}" class="pc-open" onclick="event.stopPropagation()">
+                    {% trans 'Ouvrir' %} <i data-lucide="arrow-right" width="12" height="12"></i>
+                </a>
+            </div>
         </div>
     </div>
     {% empty %}
     <div class="projects-empty">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
+        <i data-lucide="folder-open" width="48" height="48"></i>
         <p>{% trans 'Aucun projet trouvé' %}</p>
     </div>
     {% endfor %}

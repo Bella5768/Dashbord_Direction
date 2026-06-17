@@ -36,8 +36,6 @@
 .mp-badges { display:flex; gap:4px; flex-wrap:wrap; margin-top:6px; }
 
 /* Form helpers */
-.fg           { margin-bottom:16px; }
-.fg-last      { margin-bottom:24px; }
 .fg-sublabel  { font-weight:400; color:var(--gray-400); font-size:12px; }
 .fg-check-label { display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:400; }
 .fg-actions   { border-top:1px solid var(--gray-100); padding-top:20px; }
@@ -87,31 +85,29 @@
 
           <!-- Jalon parent -->
           <div class="sf-parent">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-            </svg>
+            <i data-lucide="clipboard" width="14" height="14" ></i>
             <span><strong>{% trans 'Jalon parent' %} :</strong> {{ milestone.name }}</span>
           </div>
 
           <!-- Nom -->
-          <div class="form-group fg">
-            <label for="id_name">{% trans 'Nom de la sous-étape' %} *</label>
+          <div class="form-group">
+            <label class="form-label" for="id_name">{% trans 'Nom de la sous-étape' %} <span class="required">*</span></label>
             <input type="text" name="name" id="id_name" class="form-control"
                    value="{{ form.name.value|default:'' }}" required
                    placeholder="{% trans 'Ex : Rédiger le cahier des charges' %}">
-            {% if form.name.errors %}<p class="text-xs" style="color:var(--red-600);margin-top:4px;">{{ form.name.errors.0 }}</p>{% endif %}
+            {% if form.name.errors %}<p class="form-error">{{ form.name.errors.0 }}</p>{% endif %}
           </div>
 
           <!-- Date -->
-          <div class="form-group fg">
-            <label for="id_due_date">{% trans 'Date limite' %}</label>
+          <div class="form-group">
+            <label class="form-label" for="id_due_date">{% trans 'Date limite' %}</label>
             <input type="date" name="due_date" id="id_due_date" class="form-control"
                    value="{{ form.due_date.value|date:'Y-m-d'|default:'' }}">
           </div>
 
           <!-- Besoin -->
-          <div class="form-group fg">
-            <label for="id_need">
+          <div class="form-group">
+            <label class="form-label" for="id_need">
               {% trans 'Besoin' %}
               <span class="fg-sublabel">({% trans "optionnel" %})</span>
             </label>
@@ -120,7 +116,7 @@
           </div>
 
           <!-- Complété -->
-          <div class="form-group fg-last">
+          <div class="form-group">
             <label class="fg-check-label">
               <input type="checkbox" name="completed" {% if form.completed.value %}checked{% endif %}>
               <span>{% trans 'Marquer comme complétée' %}</span>
@@ -130,9 +126,7 @@
           <!-- Actions -->
           <div class="flex gap-3 fg-actions">
             <button type="submit" class="btn btn-primary">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-              </svg>
+              <i data-lucide="check" width="16" height="16" ></i>
               {% if sub_milestone %}{% trans 'Enregistrer' %}{% else %}{% trans 'Créer la sous-étape' %}{% endif %}
             </button>
             <a href="{% url 'core:project_detail' project.id %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
@@ -152,16 +146,12 @@
       <div class="card-content">
 
         <div class="mp-search-wrap">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-          </svg>
+          <i data-lucide="search" width="16" height="16" ></i>
           <input type="text" id="mp-search" class="form-control" placeholder="{% trans 'Rechercher un membre...' %}" autocomplete="off">
         </div>
 
         <div class="mp-none" id="mp-none" onclick="mpToggle('', this)">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
-          </svg>
+          <i data-lucide="ban" width="14" height="14" ></i>
           {% trans 'Aucun responsable' %}
         </div>
 
@@ -195,9 +185,7 @@
         {% if other_employees %}
         <details class="mp-details">
           <summary class="mp-details-summary">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
+            <i data-lucide="chevron-down" width="12" height="12" ></i>
             {% trans 'Autres employés' %} ({{ other_employees|length }})
           </summary>
           <div class="mp-grid">

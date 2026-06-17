@@ -14,54 +14,78 @@
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             
-            <div class="form-group" style="margin-bottom: 16px;">
-                <label for="id_name">{% trans 'Nom' %} *</label>
+            <div class="form-group">
+                <label class="form-label" for="id_name">{% trans 'Nom' %} <span class="required">*</span></label>
                 {{ form.name }}
+                {% if form.name.errors %}<p class="form-error">{{ form.name.errors.0 }}</p>{% endif %}
             </div>
-            
-            <div class="grid grid-2" style="gap: 16px; margin-bottom: 16px;">
+
+            <div class="grid grid-2" style="gap: 16px;">
                 <div class="form-group">
-                    <label for="id_partner_type">{% trans 'Type' %} *</label>
+                    <label class="form-label" for="id_partner_type">{% trans 'Type' %} <span class="required">*</span></label>
                     {{ form.partner_type }}
+                    {% if form.partner_type.errors %}<p class="form-error">{{ form.partner_type.errors.0 }}</p>{% endif %}
                 </div>
                 <div class="form-group">
-                    <label for="id_status">{% trans 'Statut' %}</label>
+                    <label class="form-label" for="id_status">{% trans 'Statut' %}</label>
                     {{ form.status }}
+                    {% if form.status.errors %}<p class="form-error">{{ form.status.errors.0 }}</p>{% endif %}
                 </div>
             </div>
-            
-            <div class="grid grid-2" style="gap: 16px; margin-bottom: 16px;">
+
+            <div class="grid grid-2" style="gap: 16px;">
                 <div class="form-group">
-                    <label for="id_contact_person">{% trans 'Personne de contact' %} *</label>
+                    <label class="form-label" for="id_contact_person">{% trans 'Personne de contact' %} <span class="required">*</span></label>
                     {{ form.contact_person }}
+                    {% if form.contact_person.errors %}<p class="form-error">{{ form.contact_person.errors.0 }}</p>{% endif %}
                 </div>
                 <div class="form-group">
-                    <label for="id_email">Email *</label>
+                    <label class="form-label" for="id_email">Email <span class="required">*</span></label>
                     {{ form.email }}
+                    {% if form.email.errors %}<p class="form-error">{{ form.email.errors.0 }}</p>{% endif %}
                 </div>
             </div>
-            
-            <div class="grid grid-2" style="gap: 16px; margin-bottom: 16px;">
+
+            <div class="grid grid-2" style="gap: 16px;">
                 <div class="form-group">
-                    <label for="id_phone">{% trans 'Téléphone' %} *</label>
+                    <label class="form-label" for="id_phone">{% trans 'Téléphone' %} <span class="required">*</span></label>
                     {{ form.phone }}
+                    {% if form.phone.errors %}<p class="form-error">{{ form.phone.errors.0 }}</p>{% endif %}
                 </div>
                 <div class="form-group">
-                    <label for="id_start_date">{% trans 'Date de début' %}</label>
+                    <label class="form-label" for="id_start_date">{% trans 'Date de début' %}</label>
                     {{ form.start_date }}
+                    {% if form.start_date.errors %}<p class="form-error">{{ form.start_date.errors.0 }}</p>{% endif %}
                 </div>
             </div>
-            
-            <div class="form-group" style="margin-bottom: 24px;">
-                <label for="id_logo">{% trans 'Logo' %}</label>
-                {{ form.logo }}
+
+            <div class="form-group">
+                <label class="form-label" for="id_logo">{% trans 'Logo' %}</label>
+                {% if partner and partner.logo %}
+                <div class="file-drop-current">
+                    <i data-lucide="image" width="14" height="14"></i>
+                    <span>{% trans 'Logo actuel' %} : <a href="{{ partner.logo.url }}" target="_blank">{% trans 'voir' %}</a></span>
+                </div>
+                {% endif %}
+                <div class="file-drop">
+                    {{ form.logo }}
+                    <div class="file-drop-zone">
+                        <i data-lucide="image" width="36" height="36"></i>
+                        <p class="file-drop-title">{% trans 'Cliquez ou glissez une image' %}</p>
+                        <p class="file-drop-sub">PNG, JPG, SVG…</p>
+                    </div>
+                    <div class="file-drop-selected">
+                        <i data-lucide="image" width="16" height="16"></i>
+                        <span class="file-drop-name"></span>
+                        <button type="button" class="file-drop-clear">✕</button>
+                    </div>
+                </div>
+                {% if form.logo.errors %}<p class="form-error">{{ form.logo.errors.0 }}</p>{% endif %}
             </div>
             
             <div class="flex gap-3">
                 <button type="submit" class="btn btn-primary">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
+                    <i data-lucide="check" width="16" height="16" ></i>
                     {% if partner %}{% trans 'Enregistrer' %}{% else %}{% trans 'Ajouter' %}{% endif %}
                 </button>
                 <a href="{% url 'core:partners' %}" class="btn btn-outline">{% trans 'Annuler' %}</a>

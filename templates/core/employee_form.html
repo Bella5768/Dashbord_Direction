@@ -19,7 +19,7 @@
             <div class="form-group" id="org_row" style="display:none;">
                 <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
                 {{ field }}
-                {% if field.errors %}<div class="form-error">{{ field.errors.0 }}</div>{% endif %}
+                {% if field.errors %}<p class="form-error">{{ field.errors.0 }}</p>{% endif %}
             </div>
             {% elif field.name == 'is_external' %}
             <div class="form-group">
@@ -27,32 +27,33 @@
                     {{ field }}
                     <span class="form-label" style="margin:0;">{{ field.label }}</span>
                 </label>
-                {% if field.errors %}<div class="form-error">{{ field.errors.0 }}</div>{% endif %}
-                {% if field.help_text %}<small class="form-help">{{ field.help_text }}</small>{% endif %}
+                {% if field.errors %}<p class="form-error">{{ field.errors.0 }}</p>{% endif %}
+                {% if field.help_text %}<span class="form-help">{{ field.help_text }}</span>{% endif %}
             </div>
             {% elif field.name == 'email' %}
             <div class="form-group" id="email_row">
                 <label for="{{ field.id_for_label }}" class="form-label">
-                    {{ field.label }} <span id="email_required_star" style="color:#dc2626;">*</span>
+                    {{ field.label }} <span id="email_required_star" class="required">*</span>
                 </label>
                 {{ field }}
-                {% if field.errors %}<div class="form-error">{{ field.errors.0 }}</div>{% endif %}
-                <small id="email_hint" class="form-help" style="display:none;">
+                {% if field.errors %}<p class="form-error">{{ field.errors.0 }}</p>{% endif %}
+                <span id="email_hint" class="form-help" style="display:none;">
                     Optionnel pour une personne externe — mais nécessaire pour créer un compte.
-                </small>
+                </span>
             </div>
             {% else %}
             <div class="form-group">
                 <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
                 {{ field }}
-                {% if field.errors %}<div class="form-error">{{ field.errors.0 }}</div>{% endif %}
-                {% if field.help_text %}<small class="form-help">{{ field.help_text }}</small>{% endif %}
+                {% if field.errors %}<p class="form-error">{{ field.errors.0 }}</p>{% endif %}
+                {% if field.help_text %}<span class="form-help">{{ field.help_text }}</span>{% endif %}
             </div>
             {% endif %}
             {% endfor %}
 
             <div class="flex gap-3 mt-6">
                 <button type="submit" class="btn btn-primary">
+                    <i data-lucide="check" width="16" height="16"></i>
                     {% if employee %}{% trans 'Modifier' %}{% else %}{% trans 'Créer' %}{% endif %}
                 </button>
                 <a href="{% url 'core:resources' %}?tab=rh" class="btn btn-outline">{% trans 'Annuler' %}</a>

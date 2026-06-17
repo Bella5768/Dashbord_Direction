@@ -209,7 +209,7 @@ textarea.form-control, .lf-section textarea { min-height: 100px; resize: vertica
 }
 .lf-dropzone:hover { border-color: #1c3550; background: #f1f5f9; }
 .lf-dropzone.is-drag { border-color: #3b82f6; background: #eff6ff; }
-.lf-dz-icon { font-size: 32px; margin-bottom: 6px; }
+.lf-dz-icon { margin-bottom: 6px; display:flex; justify-content:center; color: #64748b; }
 .lf-dz-title { font-weight: 600; color: #0f172a; font-size: 14px; }
 .lf-dz-sub { font-size: 12px; color: #64748b; margin-top: 4px; }
 .lf-dz-files {
@@ -250,17 +250,17 @@ textarea.form-control, .lf-section textarea { min-height: 100px; resize: vertica
 <div class="lf-wrap">
 
     <div class="lf-hero">
-        <h2 style="position:relative; z-index:2;">📝 {{ title }}</h2>
+        <h2 style="position:relative; z-index:2;display:flex;align-items:center;gap:8px;"><i data-lucide="file-text" width="24" height="24"></i>{{ title }}</h2>
         <p style="position:relative; z-index:2;">{% trans "Remplissez ce formulaire pour soumettre votre demande. Elle suivra le circuit officiel : Hiérarchie → RH → Direction." %}</p>
         <div class="lf-steps">
-            <span class="pill">1️⃣ {% trans 'Avis hiérarchique' %}</span>
-            <span class="pill">2️⃣ {% trans 'Vérification RH' %}</span>
-            <span class="pill">3️⃣ {% trans 'Décision Direction' %}</span>
+            <span class="pill">1 {% trans 'Avis hiérarchique' %}</span>
+            <span class="pill">2 {% trans 'Vérification RH' %}</span>
+            <span class="pill">3 {% trans 'Décision Direction' %}</span>
         </div>
     </div>
 
     {% if form.non_field_errors %}
-        <div class="lf-alert">⚠ {{ form.non_field_errors }}</div>
+        <div class="lf-alert"><i data-lucide="triangle-alert" width="16" height="16" style="vertical-align:middle;margin-right:4px;"></i>{{ form.non_field_errors }}</div>
     {% endif %}
 
     <form method="post" enctype="multipart/form-data">
@@ -365,7 +365,7 @@ textarea.form-control, .lf-section textarea { min-height: 100px; resize: vertica
                         <div class="lf-group">
                             <label class="lf-label">{{ form.extra_documents.label }}</label>
                             <label class="lf-dropzone" for="id_extra_documents">
-                                <div class="lf-dz-icon">📎</div>
+                                <div class="lf-dz-icon"><i data-lucide="upload" width="32" height="32"></i></div>
                                 <div class="lf-dz-title">{% trans 'Cliquez pour ajouter ou glissez vos fichiers' %}</div>
                                 <div class="lf-dz-sub">{% trans 'Certificat médical, acte de naissance, convocation, ordre de mission… (PDF, image, Word)' %}</div>
                                 <div class="lf-dz-files" id="lf-dz-files"></div>
@@ -381,7 +381,7 @@ textarea.form-control, .lf-section textarea { min-height: 100px; resize: vertica
                             <ul class="lf-doc-list">
                                 {% for doc in leave.documents.all %}
                                 <li>
-                                    <a href="{{ doc.file.url }}" target="_blank">📎 {{ doc.label|default:doc.file.name }}</a>
+                                    <a href="{{ doc.file.url }}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;"><i data-lucide="paperclip" width="14" height="14"></i>{{ doc.label|default:doc.file.name }}</a>
                                     <span class="lf-doc-date">{{ doc.uploaded_at|date:"d/m/Y" }}</span>
                                     {% if leave.status == 'soumise' %}
                                     <form method="post" action="{% url 'core:leave_document_delete' leave.id doc.id %}" style="display:inline;" onsubmit="return confirm('Supprimer ce document ?');">
@@ -400,29 +400,29 @@ textarea.form-control, .lf-section textarea { min-height: 100px; resize: vertica
                 <!-- Actions -->
                 <div class="lf-actions">
                     <div class="left">
-                        <p class="ttl">✅ {% trans 'Prêt à soumettre votre demande ?' %}</p>
+                        <p class="ttl" style="display:flex;align-items:center;gap:6px;"><i data-lucide="check-circle" width="16" height="16" style="color:#16a34a;flex-shrink:0;"></i>{% trans 'Prêt à soumettre votre demande ?' %}</p>
                         <p class="sub">{% trans 'Elle sera transmise immédiatement à votre hiérarchie pour validation.' %}</p>
                     </div>
                     <div class="actions">
                         <a href="{% url 'core:leave_list' %}" class="btn-cancel">{% trans 'Annuler' %}</a>
-                        <button type="submit" class="btn-submit-lg">📨 {% trans 'Soumettre la demande' %}</button>
+                        <button type="submit" class="btn-submit-lg" style="display:inline-flex;align-items:center;gap:8px;"><i data-lucide="send" width="16" height="16"></i>{% trans 'Soumettre la demande' %}</button>
                     </div>
                 </div>
             </div>
 
             <aside class="lf-aside">
                 <div class="lf-info-card">
-                    <h4>📌 {% trans 'À savoir' %}</h4>
+                    <h4 style="display:flex;align-items:center;gap:6px;"><i data-lucide="info" width="16" height="16"></i>{% trans 'À savoir' %}</h4>
                     <ul class="lf-info-list">
-                        <li><span class="ico">📅</span><div><strong>{% trans 'Congé annuel' %}</strong> : {% trans 'à demander au moins 15 jours avant le départ.' %}</div></li>
-                        <li><span class="ico">🏥</span><div><strong>{% trans 'Maladie / maternité / formation' %}</strong> : {% trans 'un justificatif est obligatoire.' %}</div></li>
-                        <li><span class="ico">⏱</span><div><strong>{% trans 'Délai de traitement' %}</strong> : {% trans '48h hiérarchie, 72h RH, 3j Direction.' %}</div></li>
-                        <li><span class="ico">📧</span><div>{% trans "Vous serez notifié par email à chaque étape." %}</div></li>
+                        <li><span class="ico"><i data-lucide="calendar" width="14" height="14"></i></span><div><strong>{% trans 'Congé annuel' %}</strong> : {% trans 'à demander au moins 15 jours avant le départ.' %}</div></li>
+                        <li><span class="ico"><i data-lucide="heart-pulse" width="14" height="14"></i></span><div><strong>{% trans 'Maladie / maternité / formation' %}</strong> : {% trans 'un justificatif est obligatoire.' %}</div></li>
+                        <li><span class="ico"><i data-lucide="timer" width="14" height="14"></i></span><div><strong>{% trans 'Délai de traitement' %}</strong> : {% trans '48h hiérarchie, 72h RH, 3j Direction.' %}</div></li>
+                        <li><span class="ico"><i data-lucide="mail" width="14" height="14"></i></span><div>{% trans "Vous serez notifié par email à chaque étape." %}</div></li>
                     </ul>
                 </div>
 
                 <div class="lf-tip">
-                    💡 <strong>{% trans 'Conseil' %}</strong> — {% trans 'Pensez à désigner un suppléant pour faciliter la continuité du service. Une note de passation bien rédigée accélère la validation.' %}
+                    <i data-lucide="lightbulb" width="14" height="14" style="vertical-align:middle;margin-right:4px;flex-shrink:0;"></i><strong>{% trans 'Conseil' %}</strong> — {% trans 'Pensez à désigner un suppléant pour faciliter la continuité du service. Une note de passation bien rédigée accélère la validation.' %}
                 </div>
             </aside>
 
@@ -444,7 +444,7 @@ textarea.form-control, .lf-section textarea { min-height: 100px; resize: vertica
         for (var i = 0; i < files.length; i++) {
             var chip = document.createElement('span');
             chip.className = 'chip';
-            chip.textContent = '📄 ' + files[i].name + ' (' + Math.round(files[i].size / 1024) + ' Ko)';
+            chip.textContent = files[i].name + ' (' + Math.round(files[i].size / 1024) + ' Ko)';
             preview.appendChild(chip);
         }
     }

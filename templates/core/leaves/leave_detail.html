@@ -5,165 +5,98 @@
 {% block page_title %}{% trans 'Demande de congé' %} #{{ leave.id }}{% endblock %}
 {% block page_subtitle %}{{ leave.employee.name }} - {{ leave.get_leave_type_display }}{% endblock %}
 
-{% block content %}
+{% block extra_css %}
 <style>
-.leave-detail-wrap { display: grid; grid-template-columns: 1fr; gap: 20px; }
-
-/* Status banner - entierement colore selon le statut */
+/* ── Status banner ── */
 .status-banner {
     position: relative;
-    background: linear-gradient(135deg, {{ leave.status_color }} 0%, {{ leave.status_color }}dd 100%);
-    border-radius: 16px;
-    padding: 26px 30px;
-    box-shadow: 0 10px 25px -10px {{ leave.status_color }}99;
-    border: 1px solid {{ leave.status_color }};
+    background: linear-gradient(135deg, {{ leave.status_color }} 0%, {{ leave.status_color }}cc 100%);
+    border-radius: 12px;
+    padding: 22px 28px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 20px -8px {{ leave.status_color }}99;
     overflow: hidden;
     color: white;
 }
 .status-banner::after {
     content: '';
-    position: absolute; right: -60px; top: -60px;
-    width: 240px; height: 240px;
-    background: radial-gradient(circle, rgba(255,255,255,0.22), transparent 70%);
-    border-radius: 50%;
-    pointer-events: none;
-}
-.status-banner::before {
-    content: '';
-    position: absolute; left: -40px; bottom: -40px;
-    width: 180px; height: 180px;
-    background: radial-gradient(circle, rgba(0,0,0,0.10), transparent 70%);
-    border-radius: 50%;
-    pointer-events: none;
+    position: absolute; right: -50px; top: -50px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(255,255,255,.18), transparent 70%);
+    border-radius: 50%; pointer-events: none;
 }
 .status-banner-inner {
     display: flex; align-items: center; justify-content: space-between;
     gap: 16px; flex-wrap: wrap; position: relative; z-index: 1;
 }
-.status-info .label-tiny {
-    font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px;
-    color: rgba(255,255,255,0.75); font-weight: 600;
-}
-.status-info h2 { margin: 8px 0 6px; font-size: 24px; font-weight: 700; color: white; line-height: 1.2; }
-.status-info .step-text { color: rgba(255,255,255,0.9); font-size: 14px; margin: 0; }
 .status-pill-lg {
-    display: inline-flex; align-items: center; gap: 10px;
-    padding: 9px 18px; border-radius: 999px;
-    background: rgba(255,255,255,0.18);
-    color: white;
-    font-weight: 700; font-size: 14px;
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255,255,255,0.3);
-    box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 7px 16px; border-radius: 999px;
+    background: rgba(255,255,255,.18);
+    color: white; font-weight: 700; font-size: 15px;
+    border: 1px solid rgba(255,255,255,.3);
+    margin: 8px 0 4px;
 }
 .status-pill-lg::before {
-    content: ''; width: 10px; height: 10px; border-radius: 50%;
+    content: ''; width: 9px; height: 9px; border-radius: 50%;
     background: white;
-    box-shadow: 0 0 0 4px rgba(255,255,255,0.35);
+    box-shadow: 0 0 0 4px rgba(255,255,255,.3);
     animation: pulse-dot 2s ease-in-out infinite;
 }
 @keyframes pulse-dot {
-    0%, 100% { box-shadow: 0 0 0 4px rgba(255,255,255,0.35); }
-    50%      { box-shadow: 0 0 0 7px rgba(255,255,255,0.15); }
+    0%,100% { box-shadow: 0 0 0 4px rgba(255,255,255,.3); }
+    50%      { box-shadow: 0 0 0 7px rgba(255,255,255,.12); }
 }
-.status-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-.btn-pill {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 9px 16px; border-radius: 8px;
-    font-size: 13px; font-weight: 600;
-    border: 1px solid rgba(255,255,255,0.4);
-    background: rgba(255,255,255,0.95); color: #334155;
-    cursor: pointer; transition: all .15s ease;
-}
-.btn-pill:hover { background: white; transform: translateY(-1px); }
-.btn-pill.danger { color: white; border-color: rgba(255,255,255,0.5); background: rgba(0,0,0,0.2); }
-.btn-pill.danger:hover { background: rgba(0,0,0,0.3); }
+.banner-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: .75; font-weight: 600; }
+.banner-step  { font-size: 13px; opacity: .9; display: flex; align-items: center; gap: 4px; }
 
-/* Two columns */
-.detail-columns { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; }
-@media (max-width: 980px) { .detail-columns { grid-template-columns: 1fr; } }
-
-/* Cards */
-.detail-card {
-    background: white;
-    border-radius: 14px;
-    border: 1px solid #eef2f7;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    overflow: hidden;
-}
-.detail-card-header {
-    display: flex; align-items: center; gap: 10px;
-    padding: 16px 20px;
-    border-bottom: 1px solid #eef2f7;
-    background: linear-gradient(180deg, #f8fafc, #ffffff);
-}
-.detail-card-header .icon {
-    width: 32px; height: 32px; border-radius: 8px;
-    background: #e8eef5; color: #1c3550;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 14px;
-}
-.detail-card-header h3 { margin: 0; font-size: 15px; font-weight: 600; color: #0f172a; }
-.detail-card-body { padding: 20px; }
-
-/* Detail rows */
-.detail-row {
-    display: grid;
-    grid-template-columns: 160px 1fr;
-    gap: 12px;
-    padding: 10px 0;
-    border-bottom: 1px dashed #f1f5f9;
-    font-size: 14px;
-}
-.detail-row:last-child { border-bottom: none; }
-.detail-row .lbl { color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; align-self: center; }
-.detail-row .val { color: #0f172a; }
-
+/* ── Period visual block ── */
 .period-block {
-    display: flex; align-items: center; gap: 14px;
-    background: linear-gradient(135deg, #f0f9ff, #e8eef5);
-    border: 1px solid #d1dde9;
-    border-radius: 12px;
+    display: flex; align-items: center; gap: 12px;
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 10px;
     padding: 16px;
     margin-bottom: 16px;
 }
 .period-date { text-align: center; flex: 1; }
-.period-date .d-day  { font-size: 24px; font-weight: 700; color: #1c3550; line-height: 1; }
-.period-date .d-mon  { font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; font-weight: 600; }
-.period-arrow { font-size: 20px; color: #94a3b8; }
+.period-date .d-day { font-size: 22px; font-weight: 700; color: #1c3550; line-height: 1; }
+.period-date .d-mon { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: .8px; margin-top: 3px; font-weight: 600; }
+.period-arrow { font-size: 18px; color: #94a3b8; }
 .period-days {
-    text-align: center; padding: 10px 16px;
-    background: white; border-radius: 10px;
-    border: 1px solid #e2e8f0; min-width: 90px;
+    text-align: center; padding: 10px 14px;
+    background: white; border-radius: 8px;
+    border: 1px solid #e2e8f0; min-width: 80px;
 }
-.period-days .nb { font-size: 22px; font-weight: 700; color: #1c3550; line-height: 1; }
-.period-days .lab { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; font-weight: 600; }
+.period-days .nb  { font-size: 20px; font-weight: 700; color: #1c3550; line-height: 1; }
+.period-days .lab { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: .5px; margin-top: 3px; font-weight: 600; }
 
-.btn-doc {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 8px 14px;
-    background: #f1f5f9;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 13px; font-weight: 500; color: #334155;
-    transition: all .15s ease;
+/* ── Detail rows ── */
+.detail-row {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px dashed #f1f5f9;
+    font-size: 13px;
 }
-.btn-doc:hover { background: #e8eef5; border-color: #1c3550; color: #1c3550; }
+.detail-row:last-child { border-bottom: none; }
+.detail-row .lbl { color: #9ca3af; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; font-weight: 600; align-self: center; }
+.detail-row .val { color: #111827; }
 
-/* Timeline */
+/* ── Timeline ── */
 .timeline { position: relative; }
 .timeline::before {
     content: '';
     position: absolute; left: 19px; top: 8px; bottom: 8px;
     width: 2px; background: #e2e8f0;
 }
-.tl-step { position: relative; padding-left: 56px; padding-bottom: 22px; }
+.tl-step { position: relative; padding-left: 52px; padding-bottom: 20px; }
 .tl-step:last-child { padding-bottom: 0; }
-.tl-step .tl-dot {
+.tl-dot {
     position: absolute; left: 8px; top: 0;
     width: 24px; height: 24px; border-radius: 50%;
-    background: white;
-    border: 3px solid #e2e8f0;
+    background: white; border: 3px solid #e2e8f0;
     display: flex; align-items: center; justify-content: center;
     font-weight: 700; font-size: 11px; color: #94a3b8;
     z-index: 1;
@@ -171,115 +104,105 @@
 .tl-step.done .tl-dot { background: #16a34a; border-color: #bbf7d0; color: white; }
 .tl-step.fail .tl-dot { background: #ef4444; border-color: #fecaca; color: white; }
 .tl-step.curr .tl-dot { background: #f59e0b; border-color: #fde68a; color: white; box-shadow: 0 0 0 4px #fef3c7; }
-.tl-step .tl-title { font-size: 14px; font-weight: 600; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.tl-step .tl-title .deadline { font-size: 11px; color: #94a3b8; font-weight: 500; padding: 2px 8px; background: #f1f5f9; border-radius: 4px; }
-.tl-step .tl-meta { font-size: 12px; color: #64748b; margin: 4px 0 0; }
-.tl-step .tl-comment {
-    margin-top: 8px;
-    padding: 10px 12px;
-    background: #f8fafc;
-    border-left: 3px solid #cbd5e1;
-    border-radius: 6px;
-    font-size: 13px;
-    color: #475569;
-    font-style: italic;
+.tl-title { font-size: 13px; font-weight: 600; color: #111827; margin: 0 0 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tl-deadline { font-size: 11px; color: #94a3b8; font-weight: 500; padding: 2px 7px; background: #f1f5f9; border-radius: 4px; }
+.tl-meta  { font-size: 12px; color: #6b7280; margin: 0; }
+.tl-comment {
+    margin-top: 8px; padding: 9px 11px;
+    background: #f8fafc; border-left: 3px solid #cbd5e1;
+    border-radius: 6px; font-size: 12px; color: #475569; font-style: italic;
 }
 .decision-badge {
     display: inline-flex; align-items: center; gap: 4px;
-    padding: 3px 9px; border-radius: 4px;
-    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px;
+    padding: 2px 8px; border-radius: 4px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .3px;
 }
-.decision-badge.ok  { background: #dcfce7; color: #15803d; }
-.decision-badge.no  { background: #fee2e2; color: #b91c1c; }
-.decision-badge.wait{ background: #f1f5f9; color: #64748b; }
+.decision-badge.ok   { background: #dcfce7; color: #15803d; }
+.decision-badge.no   { background: #fee2e2; color: #b91c1c; }
+.decision-badge.wait { background: #f1f5f9; color: #6b7280; }
 
-/* Action panel */
+/* ── Action panel ── */
 .action-panel {
-    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-    border: 1px solid #fde68a;
-    border-radius: 14px;
+    border-radius: 10px;
     padding: 20px;
     margin-top: 20px;
+    border: 1px solid #fde68a;
+    background: #fffbeb;
 }
-.action-panel.hr  { background: linear-gradient(135deg, #eef2ff, #e0e7ff); border-color: #c7d2fe; }
-.action-panel.dg  { background: linear-gradient(135deg, #f0f9ff, #dbeafe); border-color: #bfdbfe; }
-.action-panel-title { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-.action-panel-title h4 { margin: 0; font-size: 16px; color: #0f172a; font-weight: 700; }
-.action-panel-title .badge-step {
-    padding: 3px 10px; border-radius: 999px;
+.action-panel.hr { background: #eef2ff; border-color: #c7d2fe; }
+.action-panel.dg { background: #f0f9ff; border-color: #bae6fd; }
+
+.action-panel-title {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 12px;
+}
+.action-panel-title h4 { margin: 0; font-size: 15px; color: #111827; font-weight: 700; }
+.badge-step {
+    padding: 2px 9px; border-radius: 999px;
     background: white; font-size: 11px; font-weight: 700;
-    color: #b45309; text-transform: uppercase; letter-spacing: 0.5px;
+    color: #b45309; text-transform: uppercase; letter-spacing: .4px;
+    border: 1px solid #fde68a;
 }
-.action-panel.hr .action-panel-title .badge-step { color: #4338ca; }
-.action-panel.dg .action-panel-title .badge-step { color: #1d4ed8; }
-.action-panel p.helper { margin: 0 0 14px; font-size: 13px; color: #475569; }
+.action-panel.hr .badge-step { color: #4338ca; border-color: #c7d2fe; }
+.action-panel.dg .badge-step { color: #1d4ed8; border-color: #bae6fd; }
+
+.action-panel p.helper { margin: 0 0 14px; font-size: 13px; color: #6b7280; }
 .action-panel .form-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 14px; align-items: end; }
 @media (max-width: 700px) { .action-panel .form-grid { grid-template-columns: 1fr; } }
-.action-panel label { display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-.action-panel select, .action-panel textarea {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 14px;
-    background: white;
-    transition: all .15s ease;
-}
-.action-panel select:focus, .action-panel textarea:focus {
-    outline: none; border-color: #1c3550; box-shadow: 0 0 0 3px rgba(28,53,80,0.1);
-}
-.action-panel textarea { min-height: 80px; resize: vertical; }
-.btn-submit {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 11px 22px; border-radius: 8px;
-    background: linear-gradient(135deg, #1c3550, #2a4a6f);
-    color: white; font-weight: 600; font-size: 14px;
-    border: none; cursor: pointer;
-    box-shadow: 0 4px 12px -2px rgba(28,53,80,0.4);
-    transition: transform .15s ease, box-shadow .15s ease;
-    margin-top: 14px;
-}
-.btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 18px -2px rgba(28,53,80,0.5); }
+.action-panel label.form-label { display: block; font-size: 11px; font-weight: 600; color: #374151; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px; }
+
+/* Two-column layout */
+.detail-columns { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; }
+@media (max-width: 980px) { .detail-columns { grid-template-columns: 1fr; } }
 </style>
+{% endblock %}
 
-<div class="leave-detail-wrap">
+{% block content %}
+<div style="display:flex; flex-direction:column; gap:20px;">
 
-    {# ============ Status banner ============ #}
+    {# ── Status banner ── #}
     <div class="status-banner">
         <div class="status-banner-inner">
-            <div class="status-info">
-                <div class="label-tiny">{% trans 'Statut actuel' %}</div>
-                <h2>
-                    <span class="status-pill-lg">{{ leave.get_status_display }}</span>
-                </h2>
-                <p class="step-text">📍 {{ leave.current_step_label }}</p>
+            <div>
+                <div class="banner-label">{% trans 'Statut actuel' %}</div>
+                <div class="status-pill-lg">{{ leave.get_status_display }}</div>
+                <p class="banner-step"><i data-lucide="map-pin" width="13" height="13"></i>{{ leave.current_step_label }}</p>
             </div>
-            <div class="status-actions">
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
                 {% if leave.status == 'approuvee' %}
-                <a href="{% url 'core:leave_pdf_download' leave.id %}" class="btn-pill" style="background:white; color:#16a34a; font-weight:700;" target="_blank">
-                    📄 {% trans 'Télécharger l\'attestation officielle' %}
+                <a href="{% url 'core:leave_pdf_download' leave.id %}" class="btn" style="background:white;color:#16a34a;font-weight:700;border:none;" target="_blank">
+                    <i data-lucide="file-down" width="15" height="15"></i>
+                    {% trans 'Télécharger l\'attestation' %}
                 </a>
                 {% endif %}
                 {% if can_cancel %}
-                <form method="post" action="{% url 'core:leave_cancel' leave.id %}" onsubmit="return confirm('Annuler cette demande ?');">
+                <form method="post" action="{% url 'core:leave_cancel' leave.id %}" onsubmit="return confirm('Annuler cette demande ?');" style="display:inline;">
                     {% csrf_token %}
-                    <button type="submit" class="btn-pill danger">✕ {% trans 'Annuler ma demande' %}</button>
+                    <button type="submit" class="btn" style="background:rgba(0,0,0,.15);color:white;border:1px solid rgba(255,255,255,.3);">
+                        <i data-lucide="x" width="15" height="15"></i>
+                        {% trans 'Annuler ma demande' %}
+                    </button>
                 </form>
                 {% endif %}
-                <a href="{% url 'core:leave_list' %}" class="btn-pill">← {% trans 'Retour à la liste' %}</a>
+                <a href="{% url 'core:leave_list' %}" class="btn" style="background:rgba(255,255,255,.15);color:white;border:1px solid rgba(255,255,255,.3);">
+                    <i data-lucide="arrow-left" width="15" height="15"></i>
+                    {% trans 'Retour' %}
+                </a>
             </div>
         </div>
     </div>
 
     <div class="detail-columns">
 
-        {# ============ Détails ============ #}
-        <div class="detail-card">
-            <div class="detail-card-header">
-                <div class="icon">📋</div>
-                <h3>{% trans 'Détails de la demande' %}</h3>
+        {# ── Détails ── #}
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i data-lucide="clipboard-list" width="16" height="16" style="color:#6b7280;"></i>
+                    {% trans 'Détails de la demande' %}
+                </h3>
             </div>
-            <div class="detail-card-body">
+            <div class="card-content">
 
                 <div class="period-block">
                     <div class="period-date">
@@ -299,7 +222,7 @@
 
                 <div class="detail-row">
                     <div class="lbl">{% trans 'Demandeur' %}</div>
-                    <div class="val"><strong>{{ leave.employee.name }}</strong>{% if leave.employee.role %} · <span style="color:#64748b;">{{ leave.employee.role }}</span>{% endif %}</div>
+                    <div class="val"><strong>{{ leave.employee.name }}</strong>{% if leave.employee.role %} · <span style="color:#6b7280;">{{ leave.employee.role }}</span>{% endif %}</div>
                 </div>
                 <div class="detail-row">
                     <div class="lbl">{% trans 'Direction' %}</div>
@@ -308,7 +231,7 @@
                 <div class="detail-row">
                     <div class="lbl">{% trans 'Type de congé' %}</div>
                     <div class="val">
-                        <span style="display:inline-block; padding:4px 10px; border-radius:6px; background:#e8eef5; color:#1c3550; font-weight:500; font-size:13px;">
+                        <span style="display:inline-block;padding:3px 10px;border-radius:6px;background:#f1f5f9;color:#374151;font-weight:500;font-size:12px;">
                             {{ leave.get_leave_type_display }}
                         </span>
                     </div>
@@ -320,7 +243,7 @@
                 {% if leave.replacement %}
                 <div class="detail-row">
                     <div class="lbl">{% trans 'Suppléant' %}</div>
-                    <div class="val">👤 {{ leave.replacement }}</div>
+                    <div class="val" style="display:flex;align-items:center;gap:4px;"><i data-lucide="user" width="13" height="13"></i>{{ leave.replacement }}</div>
                 </div>
                 {% endif %}
                 {% if leave.handover_note %}
@@ -331,23 +254,33 @@
                 {% endif %}
                 {% if leave.justification %}
                 <div class="detail-row">
-                    <div class="lbl">{% trans 'Justificatif principal' %}</div>
-                    <div class="val"><a href="{{ leave.justification.url }}" target="_blank" class="btn-doc">📎 {% trans 'Télécharger' %}</a></div>
+                    <div class="lbl">{% trans 'Justificatif' %}</div>
+                    <div class="val">
+                        <a href="{{ leave.justification.url }}" target="_blank" class="btn btn-outline btn-sm">
+                            <i data-lucide="paperclip" width="13" height="13"></i>
+                            {% trans 'Télécharger' %}
+                        </a>
+                    </div>
                 </div>
                 {% endif %}
                 {% if documents %}
                 <div class="detail-row">
-                    <div class="lbl">{% trans 'Pièces jointes' %} <span style="color:#1c3550; background:#e8eef5; padding:1px 7px; border-radius:10px; font-size:11px;">{{ documents|length }}</span></div>
+                    <div class="lbl">{% trans 'Pièces jointes' %} <span class="badge badge-secondary" style="margin-left:4px;">{{ documents|length }}</span></div>
                     <div class="val">
-                        <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:6px;">
+                        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px;">
                             {% for doc in documents %}
-                            <li style="display:flex; align-items:center; gap:10px; padding:8px 10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">
-                                <a href="{{ doc.file.url }}" target="_blank" class="btn-doc" style="flex:1; padding:4px 8px;">📎 {{ doc.label|default:doc.file.name|truncatechars:50 }}</a>
-                                <span style="color:#94a3b8; font-size:11px;">{{ doc.uploaded_at|date:"d/m/Y" }}</span>
+                            <li style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;">
+                                <a href="{{ doc.file.url }}" target="_blank" class="btn btn-outline btn-sm" style="flex:1;justify-content:flex-start;">
+                                    <i data-lucide="paperclip" width="13" height="13"></i>
+                                    {{ doc.label|default:doc.file.name|truncatechars:45 }}
+                                </a>
+                                <span style="color:#9ca3af;font-size:11px;">{{ doc.uploaded_at|date:"d/m/Y" }}</span>
                                 {% if can_cancel and leave.status == 'soumise' %}
                                 <form method="post" action="{% url 'core:leave_document_delete' leave.id doc.id %}" style="display:inline;" onsubmit="return confirm('Supprimer cette pièce jointe ?');">
                                     {% csrf_token %}
-                                    <button type="submit" title="{% trans 'Supprimer' %}" style="border:none; background:#fef2f2; color:#b91c1c; width:24px; height:24px; border-radius:50%; cursor:pointer; font-weight:700;">✕</button>
+                                    <button type="submit" class="action-btn danger" title="{% trans 'Supprimer' %}">
+                                        <i data-lucide="trash-2" width="13" height="13"></i>
+                                    </button>
                                 </form>
                                 {% endif %}
                             </li>
@@ -358,24 +291,29 @@
                 {% endif %}
                 <div class="detail-row">
                     <div class="lbl">{% trans 'Soumise le' %}</div>
-                    <div class="val">🕐 {{ leave.created_at|date:"d/m/Y à H:i" }}</div>
+                    <div class="val" style="display:flex;align-items:center;gap:4px;color:#6b7280;">
+                        <i data-lucide="clock" width="13" height="13"></i>
+                        {{ leave.created_at|date:"d/m/Y à H:i" }}
+                    </div>
                 </div>
             </div>
         </div>
 
-        {# ============ Timeline ============ #}
-        <div class="detail-card">
-            <div class="detail-card-header">
-                <div class="icon">🔁</div>
-                <h3>{% trans 'Circuit de validation' %}</h3>
+        {# ── Timeline ── #}
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i data-lucide="refresh-cw" width="16" height="16" style="color:#6b7280;"></i>
+                    {% trans 'Circuit de validation' %}
+                </h3>
             </div>
-            <div class="detail-card-body">
+            <div class="card-content">
                 <div class="timeline">
 
                     {% if can_see_manager_step %}
                     <div class="tl-step {% if leave.manager_decision == 'favorable' %}done{% elif leave.manager_decision == 'defavorable' %}fail{% elif leave.status == 'soumise' %}curr{% endif %}">
                         <div class="tl-dot">{% if leave.manager_decision == 'favorable' %}✓{% elif leave.manager_decision == 'defavorable' %}✕{% else %}1{% endif %}</div>
-                        <p class="tl-title">{% trans 'Avis hiérarchique' %} <span class="deadline">⏱ 48h max</span></p>
+                        <p class="tl-title">{% trans 'Avis hiérarchique' %} <span class="tl-deadline"><i data-lucide="timer" width="10" height="10" style="vertical-align:middle;"></i> 48h max</span></p>
                         {% if leave.manager_decision %}
                             <p class="tl-meta">
                                 <span class="decision-badge {% if leave.manager_decision == 'favorable' %}ok{% else %}no{% endif %}">{{ leave.get_manager_decision_display }}</span>
@@ -392,7 +330,7 @@
                     {% if can_see_hr_step %}
                     <div class="tl-step {% if leave.hr_decision == 'conforme' %}done{% elif leave.hr_decision == 'non_conforme' %}fail{% elif leave.status == 'avis_favorable' %}curr{% endif %}">
                         <div class="tl-dot">{% if leave.hr_decision == 'conforme' %}✓{% elif leave.hr_decision == 'non_conforme' %}✕{% else %}2{% endif %}</div>
-                        <p class="tl-title">{% trans 'Vérification RH' %} <span class="deadline">⏱ 72h max</span></p>
+                        <p class="tl-title">{% trans 'Vérification RH' %} <span class="tl-deadline"><i data-lucide="timer" width="10" height="10" style="vertical-align:middle;"></i> 72h max</span></p>
                         {% if leave.hr_decision %}
                             <p class="tl-meta">
                                 <span class="decision-badge {% if leave.hr_decision == 'conforme' %}ok{% else %}no{% endif %}">{{ leave.get_hr_decision_display }}</span>
@@ -409,7 +347,7 @@
                     {% if can_see_final_step %}
                     <div class="tl-step {% if leave.final_decision == 'approuve' %}done{% elif leave.final_decision == 'rejete' %}fail{% elif leave.status == 'rh_conforme' %}curr{% endif %}">
                         <div class="tl-dot">{% if leave.final_decision == 'approuve' %}✓{% elif leave.final_decision == 'rejete' %}✕{% else %}3{% endif %}</div>
-                        <p class="tl-title">{% trans 'Décision Direction / Coordination' %} <span class="deadline">⏱ 3j max</span></p>
+                        <p class="tl-title">{% trans 'Décision Direction / Coordination' %} <span class="tl-deadline"><i data-lucide="timer" width="10" height="10" style="vertical-align:middle;"></i> 3j max</span></p>
                         {% if leave.final_decision %}
                             <p class="tl-meta">
                                 <span class="decision-badge {% if leave.final_decision == 'approuve' %}ok{% else %}no{% endif %}">{{ leave.get_final_decision_display }}</span>
@@ -424,18 +362,21 @@
                     {% endif %}
 
                     {% if not can_see_manager_step and not can_see_hr_step and not can_see_final_step %}
-                    <p class="tl-meta" style="text-align:center; padding:24px 0;">🔒 {% trans 'Le détail des étapes de validation est confidentiel.' %}</p>
+                    <p class="tl-meta" style="text-align:center;padding:24px 0;display:flex;align-items:center;justify-content:center;gap:4px;">
+                        <i data-lucide="lock" width="13" height="13"></i>
+                        {% trans 'Le détail des étapes de validation est confidentiel.' %}
+                    </p>
                     {% endif %}
                 </div>
             </div>
         </div>
     </div>
 
-    {# ============ Action panels ============ #}
+    {# ── Action panels ── #}
     {% if can_act_manager %}
     <div class="action-panel">
         <div class="action-panel-title">
-            <span style="font-size:24px;">📝</span>
+            <i data-lucide="pen-line" width="22" height="22" style="color:#b45309;"></i>
             <h4>{% trans 'Action requise : avis hiérarchique' %}</h4>
             <span class="badge-step">{% trans 'Étape 1/3' %}</span>
         </div>
@@ -444,15 +385,18 @@
             {% csrf_token %}
             <div class="form-grid">
                 <div>
-                    <label>{{ manager_form.manager_decision.label }}</label>
+                    <label class="form-label">{{ manager_form.manager_decision.label }}</label>
                     {{ manager_form.manager_decision }}
                 </div>
                 <div>
-                    <label>{{ manager_form.manager_comment.label }}</label>
+                    <label class="form-label">{{ manager_form.manager_comment.label }}</label>
                     {{ manager_form.manager_comment }}
                 </div>
             </div>
-            <button type="submit" class="btn-submit">✓ {% trans 'Enregistrer mon avis' %}</button>
+            <button type="submit" class="btn btn-primary" style="margin-top:14px;">
+                <i data-lucide="check" width="16" height="16"></i>
+                {% trans 'Enregistrer mon avis' %}
+            </button>
         </form>
     </div>
     {% endif %}
@@ -460,7 +404,7 @@
     {% if can_act_hr %}
     <div class="action-panel hr">
         <div class="action-panel-title">
-            <span style="font-size:24px;">🔎</span>
+            <i data-lucide="search" width="22" height="22" style="color:#4338ca;"></i>
             <h4>{% trans 'Action requise : vérification RH' %}</h4>
             <span class="badge-step">{% trans 'Étape 2/3' %}</span>
         </div>
@@ -469,15 +413,18 @@
             {% csrf_token %}
             <div class="form-grid">
                 <div>
-                    <label>{{ hr_form.hr_decision.label }}</label>
+                    <label class="form-label">{{ hr_form.hr_decision.label }}</label>
                     {{ hr_form.hr_decision }}
                 </div>
                 <div>
-                    <label>{{ hr_form.hr_comment.label }}</label>
+                    <label class="form-label">{{ hr_form.hr_comment.label }}</label>
                     {{ hr_form.hr_comment }}
                 </div>
             </div>
-            <button type="submit" class="btn-submit">✓ {% trans 'Valider la vérification RH' %}</button>
+            <button type="submit" class="btn btn-primary" style="margin-top:14px;">
+                <i data-lucide="check" width="16" height="16"></i>
+                {% trans 'Valider la vérification RH' %}
+            </button>
         </form>
     </div>
     {% endif %}
@@ -485,7 +432,7 @@
     {% if can_act_final %}
     <div class="action-panel dg">
         <div class="action-panel-title">
-            <span style="font-size:24px;">⚖️</span>
+            <i data-lucide="scale" width="22" height="22" style="color:#1d4ed8;"></i>
             <h4>{% trans 'Action requise : décision finale' %}</h4>
             <span class="badge-step">{% trans 'Étape 3/3' %}</span>
         </div>
@@ -494,19 +441,21 @@
             {% csrf_token %}
             <div class="form-grid">
                 <div>
-                    <label>{{ final_form.final_decision.label }}</label>
+                    <label class="form-label">{{ final_form.final_decision.label }}</label>
                     {{ final_form.final_decision }}
                 </div>
                 <div>
-                    <label>{{ final_form.final_comment.label }}</label>
+                    <label class="form-label">{{ final_form.final_comment.label }}</label>
                     {{ final_form.final_comment }}
                 </div>
             </div>
-            <button type="submit" class="btn-submit">✓ {% trans 'Enregistrer la décision finale' %}</button>
+            <button type="submit" class="btn btn-primary" style="margin-top:14px;">
+                <i data-lucide="check" width="16" height="16"></i>
+                {% trans 'Enregistrer la décision finale' %}
+            </button>
         </form>
     </div>
     {% endif %}
 
 </div>
-
 {% endblock %}

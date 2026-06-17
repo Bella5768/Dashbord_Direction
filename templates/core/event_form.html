@@ -40,61 +40,63 @@
         <form method="post">
             {% csrf_token %}
             
-            <div class="form-group" style="margin-bottom: 16px;">
-                <label for="id_title">{% trans 'Titre' %} *</label>
+            <div class="form-group">
+                <label class="form-label" for="id_title">{% trans 'Titre' %} <span class="required">*</span></label>
                 {{ form.title }}
-                {% if form.title.errors %}<p class="text-xs" style="color: var(--red-600);">{{ form.title.errors.0 }}</p>{% endif %}
+                {% if form.title.errors %}<p class="form-error">{{ form.title.errors.0 }}</p>{% endif %}
             </div>
-            
-            <div class="form-group" style="margin-bottom: 16px;">
-                <label for="id_event_type">{% trans 'Type' %} *</label>
+
+            <div class="form-group">
+                <label class="form-label" for="id_event_type">{% trans 'Type' %} <span class="required">*</span></label>
                 {{ form.event_type }}
-                {% if form.event_type.errors %}<p class="text-xs" style="color: var(--red-600);">{{ form.event_type.errors.0 }}</p>{% endif %}
+                {% if form.event_type.errors %}<p class="form-error">{{ form.event_type.errors.0 }}</p>{% endif %}
             </div>
-            
-            <div class="grid grid-2" style="gap: 16px; margin-bottom: 16px;">
+
+            <div class="grid grid-2" style="gap: 16px;">
                 <div class="form-group">
-                    <label for="id_date">{% trans 'Date' %} *</label>
+                    <label class="form-label" for="id_date">{% trans 'Date' %} <span class="required">*</span></label>
                     {{ form.date }}
-                    {% if form.date.errors %}<p class="text-xs" style="color: var(--red-600);">{{ form.date.errors.0 }}</p>{% endif %}
+                    {% if form.date.errors %}<p class="form-error">{{ form.date.errors.0 }}</p>{% endif %}
                 </div>
                 <div class="form-group">
-                    <label for="id_time">{% trans 'Heure' %} *</label>
+                    <label class="form-label" for="id_time">{% trans 'Heure' %} <span class="required">*</span></label>
                     {{ form.time }}
-                    {% if form.time.errors %}<p class="text-xs" style="color: var(--red-600);">{{ form.time.errors.0 }}</p>{% endif %}
+                    {% if form.time.errors %}<p class="form-error">{{ form.time.errors.0 }}</p>{% endif %}
                 </div>
             </div>
-            
-            <div class="grid grid-2" style="gap: 16px; margin-bottom: 16px;">
+
+            <div class="grid grid-2" style="gap: 16px;">
                 <div class="form-group">
-                    <label for="id_duration">{% trans 'Durée (minutes)' %}</label>
+                    <label class="form-label" for="id_duration">{% trans 'Durée (minutes)' %}</label>
                     {{ form.duration }}
                 </div>
                 <div class="form-group">
-                    <label for="id_location">{% trans 'Lieu' %}</label>
+                    <label class="form-label" for="id_location">{% trans 'Lieu' %}</label>
                     {{ form.location }}
                 </div>
             </div>
-            
-            <div class="form-group" style="margin-bottom: 16px;">
-                <label for="id_description">{% trans 'Description' %}</label>
+
+            <div class="form-group">
+                <label class="form-label" for="id_description">{% trans 'Description' %}</label>
                 {{ form.description }}
             </div>
-            
-            <div class="form-group" style="margin-bottom: 24px;">
-                <label for="id_participants">{% trans 'Directions participantes' %}</label>
+
+            <div class="form-group">
+                <label class="form-label" for="id_participants">{% trans 'Directions participantes' %}</label>
                 {{ form.participants }}
-                <p class="text-xs text-gray-500" style="margin-top: 4px;">{% trans 'Cliquez pour sélectionner ou désélectionner des directions' %}</p>
+                <span class="form-help">{% trans 'Cliquez pour sélectionner ou désélectionner des directions' %}</span>
             </div>
             
             <div class="flex gap-3">
                 <button type="submit" class="btn btn-primary">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
+                    <i data-lucide="check" width="16" height="16" ></i>
                     {% if event %}{% trans 'Enregistrer' %}{% else %}{% trans "Créer l'événement" %}{% endif %}
                 </button>
+                {% if event %}
+                <a href="{% url 'core:event_detail' event.id %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
+                {% else %}
                 <a href="{% url 'core:calendar' %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
+                {% endif %}
             </div>
         </form>
     </div>

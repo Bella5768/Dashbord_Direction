@@ -8,30 +8,40 @@
 {% block content %}
 <!-- Stats -->
 <div class="stats-row">
-    <a class="stat-box stat-box-link" href="{% url 'core:documents' %}?status=all">
-        <p class="stat-box-label">{% trans 'Total documents' %}</p>
-        <p class="stat-box-value">{{ stats.total }}</p>
+    <a class="stat-box" href="{% url 'core:documents' %}?status=all">
+        <div class="stat-box-icon"><i data-lucide="file-text" width="20" height="20"></i></div>
+        <div class="stat-box-body">
+            <p class="stat-box-value">{{ stats.total }}</p>
+            <p class="stat-box-label">{% trans 'Total documents' %}</p>
+        </div>
     </a>
-    <a class="stat-box red stat-box-link" href="{% url 'core:documents' %}?status=a_signer">
-        <p class="stat-box-label">{% trans 'À signer' %}</p>
-        <p class="stat-box-value">{{ stats.a_signer }}</p>
+    <a class="stat-box red" href="{% url 'core:documents' %}?status=a_signer">
+        <div class="stat-box-icon"><i data-lucide="pen-line" width="20" height="20"></i></div>
+        <div class="stat-box-body">
+            <p class="stat-box-value">{{ stats.a_signer }}</p>
+            <p class="stat-box-label">{% trans 'À signer' %}</p>
+        </div>
     </a>
-    <a class="stat-box amber stat-box-link" href="{% url 'core:documents' %}?status=a_valider">
-        <p class="stat-box-label">{% trans 'À valider' %}</p>
-        <p class="stat-box-value">{{ stats.a_valider }}</p>
+    <a class="stat-box amber" href="{% url 'core:documents' %}?status=a_valider">
+        <div class="stat-box-icon"><i data-lucide="clock" width="20" height="20"></i></div>
+        <div class="stat-box-body">
+            <p class="stat-box-value">{{ stats.a_valider }}</p>
+            <p class="stat-box-label">{% trans 'À valider' %}</p>
+        </div>
     </a>
-    <a class="stat-box green stat-box-link" href="{% url 'core:documents' %}?status=signe">
-        <p class="stat-box-label">{% trans 'Signés' %}</p>
-        <p class="stat-box-value">{{ stats.signe }}</p>
+    <a class="stat-box green" href="{% url 'core:documents' %}?status=signe">
+        <div class="stat-box-icon"><i data-lucide="file-check" width="20" height="20"></i></div>
+        <div class="stat-box-body">
+            <p class="stat-box-value">{{ stats.signe }}</p>
+            <p class="stat-box-label">{% trans 'Signés' %}</p>
+        </div>
     </a>
 </div>
 
 <!-- Filters -->
 <form method="get" class="filters-bar">
     <div class="search-box">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
+        <i data-lucide="search" ></i>
         <input type="text" name="search" placeholder="{% trans 'Rechercher un document...' %}" value="{{ search }}" class="form-control">
     </div>
     <select name="status" class="form-control" onchange="this.form.submit()">
@@ -48,9 +58,7 @@
         <option value="note" {% if current_type == 'note' %}selected{% endif %}>{% trans 'Note' %}</option>
     </select>
     <a href="{% url 'core:document_create' %}" class="btn btn-primary">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-        </svg>
+        <i data-lucide="plus-circle" width="16" height="16" ></i>
         {% trans 'Nouveau document' %}
     </a>
 </form>
@@ -77,34 +85,34 @@
                         <td>
                             <div class="flex items-center gap-3">
                                 <div class="document-icon {% if doc.status == 'a_signer' %}sign{% elif doc.status == 'a_valider' %}validate{% else %}signed{% endif %}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
+                                    <i data-lucide="file-text" width="18" height="18"></i>
                                 </div>
                                 <div>
                                     <p class="font-medium">{{ doc.title }}</p>
-                                    <p class="text-xs text-gray-500">Par {{ doc.created_by }}</p>
+                                    <p class="text-xs text-gray-500">{% trans 'Par' %} {{ doc.created_by }}</p>
                                 </div>
                             </div>
                         </td>
                         <td>
-                            <span class="badge {% if doc.doc_type == 'contrat' %}badge-purple{% elif doc.doc_type == 'budget' %}badge-info{% elif doc.doc_type == 'rapport' %}badge-success{% else %}badge-secondary{% endif %}" style="{% if doc.doc_type == 'contrat' %}background-color: #f3e8ff; color: #7c3aed;{% endif %}">
+                            <span class="badge {% if doc.doc_type == 'contrat' %}badge-purple{% elif doc.doc_type == 'budget' %}badge-info{% elif doc.doc_type == 'rapport' %}badge-success{% else %}badge-secondary{% endif %}">
                                 {{ doc.get_doc_type_display }}
                             </span>
                         </td>
-                        <td>{{ doc.direction.code }}</td>
+                        <td>
+                            <span class="badge badge-secondary">{{ doc.direction.code }}</span>
+                        </td>
                         <td>
                             <span class="badge {% if doc.priority == 'haute' %}badge-danger{% elif doc.priority == 'moyenne' %}badge-warning{% else %}badge-secondary{% endif %}">
                                 {{ doc.get_priority_display }}
                             </span>
                         </td>
                         <td>
-                            <div class="flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16" style="color: #9ca3af;">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <span>{{ doc.due_date|date:"d/m/Y" }}</span>
-                            </div>
+                            {% if doc.due_date %}
+                            <span class="flex items-center gap-1 {% if doc.due_date < today and doc.status != 'signe' %}text-red-600{% else %}text-gray-500{% endif %}" style="font-size:13px;">
+                                <i data-lucide="calendar" width="13" height="13"></i>
+                                {{ doc.due_date|date:"d/m/Y" }}
+                            </span>
+                            {% else %}<span class="text-gray-300">—</span>{% endif %}
                         </td>
                         <td>
                             <span class="badge {% if doc.status == 'a_signer' %}badge-danger{% elif doc.status == 'a_valider' %}badge-warning{% else %}badge-success{% endif %}">
@@ -112,37 +120,30 @@
                             </span>
                         </td>
                         <td>
-                            <div class="flex items-center justify-center gap-2">
-                                <a href="{% url 'core:document_edit' doc.id %}" class="action-btn" title="Modifier">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                    </svg>
+                            <div class="flex items-center justify-center gap-1">
+                                <a href="{% url 'core:document_edit' doc.id %}" class="action-btn" title="{% trans 'Modifier' %}">
+                                    <i data-lucide="pencil" width="15" height="15"></i>
                                 </a>
                                 {% if doc.status == 'a_valider' %}
-                                <a href="{% url 'core:document_validate' doc.id %}" class="action-btn success" title="Valider">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
+                                <a href="{% url 'core:document_validate' doc.id %}" class="action-btn success" title="{% trans 'Valider' %}">
+                                    <i data-lucide="circle-check" width="15" height="15"></i>
                                 </a>
                                 {% endif %}
                                 {% if doc.status == 'a_signer' %}
-                                <a href="{% url 'core:document_sign' doc.id %}" class="action-btn success" title="Signer">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                    </svg>
+                                <a href="{% url 'core:document_sign' doc.id %}" class="action-btn success" title="{% trans 'Signer' %}">
+                                    <i data-lucide="pen-line" width="15" height="15"></i>
                                 </a>
                                 {% endif %}
-                                <a href="{% url 'core:document_delete' doc.id %}" class="action-btn danger" title="Supprimer">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
+                                <a href="{% url 'core:document_delete' doc.id %}" class="action-btn danger" title="{% trans 'Supprimer' %}">
+                                    <i data-lucide="trash-2" width="15" height="15"></i>
                                 </a>
                             </div>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 48px;">
+                        <td colspan="7" style="text-align:center; padding:48px;">
+                            <i data-lucide="file-text" width="40" height="40" style="color:#d1d5db; margin-bottom:12px;"></i>
                             <p class="text-gray-500">{% trans 'Aucun document trouvé' %}</p>
                         </td>
                     </tr>

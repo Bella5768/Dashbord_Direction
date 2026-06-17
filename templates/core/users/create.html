@@ -15,9 +15,7 @@
 
     <!-- Info flow -->
     <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:14px 16px;margin-bottom:24px;display:flex;gap:12px;align-items:flex-start;">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#1e40af" width="20" height="20" style="flex-shrink:0;margin-top:1px;">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-      </svg>
+      <i data-lucide="info" width="20" height="20" stroke="#1e40af" style="flex-shrink:0;margin-top:1px;" ></i>
       <div style="font-size:13px;color:#1e40af;line-height:1.5;">
         <strong>Flow d'invitation</strong> : le compte est créé inactif. L'employé reçoit un email avec un lien sécurisé pour définir lui-même son mot de passe (lien valable 3 jours).
       </div>
@@ -27,10 +25,8 @@
       {% csrf_token %}
 
       <!-- Sélection employé -->
-      <div class="form-group" style="margin-bottom:20px;">
-        <label for="id_employee" style="font-weight:600;font-size:13px;color:#374151;display:block;margin-bottom:6px;">
-          Employé <span style="color:#dc2626;">*</span>
-        </label>
+      <div class="form-group">
+        <label class="form-label" for="id_employee">Employé <span class="required">*</span></label>
         <select name="employee" id="id_employee" class="form-control" required onchange="onEmployeeChange(this)">
           <option value="">-- Sélectionner un employé --</option>
           {% for emp in form.employee.field.queryset %}
@@ -41,13 +37,11 @@
           </option>
           {% endfor %}
         </select>
-        {% if form.employee.errors %}
-        <p style="font-size:12px;color:#dc2626;margin-top:4px;">{{ form.employee.errors.0 }}</p>
-        {% endif %}
-        <p style="font-size:11px;color:#6b7280;margin-top:4px;">
+        {% if form.employee.errors %}<p class="form-error">{{ form.employee.errors.0 }}</p>{% endif %}
+        <span class="form-help">
           Seuls les employés sans compte sont disponibles.
           <a href="{% url 'core:resources' %}?tab=rh" style="color:#1e3a5f;">Gérer les fiches employés</a>
-        </p>
+        </span>
       </div>
 
       <!-- Prévisualisation (se remplit via JS) -->
@@ -76,26 +70,20 @@
       </div>
 
       <!-- Rôle -->
-      <div class="form-group" style="margin-bottom:28px;">
-        <label for="id_role" style="font-weight:600;font-size:13px;color:#374151;display:block;margin-bottom:6px;">
-          Rôle <span style="color:#dc2626;">*</span>
-        </label>
+      <div class="form-group">
+        <label class="form-label" for="id_role">Rôle <span class="required">*</span></label>
         <select name="role" id="id_role" class="form-control">
           {% for value, label in form.role.field.choices %}
           <option value="{{ value }}" {% if form.role.value == value %}selected{% endif %}>{{ label }}</option>
           {% endfor %}
         </select>
-        {% if form.role.errors %}
-        <p style="font-size:12px;color:#dc2626;margin-top:4px;">{{ form.role.errors.0 }}</p>
-        {% endif %}
-        <p style="font-size:11px;color:#6b7280;margin-top:4px;">Les permissions détaillées pourront être configurées après la création.</p>
+        {% if form.role.errors %}<p class="form-error">{{ form.role.errors.0 }}</p>{% endif %}
+        <span class="form-help">Les permissions détaillées pourront être configurées après la création.</span>
       </div>
 
       <div class="flex gap-3">
         <button type="submit" id="submitBtn" class="btn btn-primary" disabled>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-          </svg>
+          <i data-lucide="mail" width="16" height="16" ></i>
           Créer et envoyer l'invitation
         </button>
         <a href="{% url 'core:users_list' %}" class="btn btn-outline">Annuler</a>

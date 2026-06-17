@@ -7,18 +7,11 @@
 
 {% block extra_css %}
 <style>
-.pf-wrap  { max-width: 800px; }
-.fg       { margin-bottom: 16px; }
-.fg-last  { margin-bottom: 24px; }
-.fg-grid  { gap: 16px; margin-bottom: 16px; }
-.fg-grid.last { margin-bottom: 24px; }
-.ferr     { font-size: 12px; color: var(--red-600); margin-top: 4px; }
-.fhint    { display:inline-flex; align-items:center; gap:4px; font-size:11px; margin-top:4px; }
-.fhint svg { flex-shrink:0; }
-.fhint.info { color:var(--blue-600); }
-.fhint.warn { color:var(--amber-600); }
-.fhint.help { color:var(--gray-600); }
-.fhint.ok   { color:var(--green-600); }
+.pf-wrap { max-width: 800px; }
+.fhint   { display:inline-flex; align-items:center; gap:4px; font-size:11px; margin-top:4px; }
+.fhint.info { color:#2563eb; }
+.fhint.warn { color:#d97706; }
+.fhint.ok   { color:#16a34a; }
 </style>
 {% endblock %}
 
@@ -31,91 +24,80 @@
         <form method="post">
             {% csrf_token %}
 
-            <div class="form-group fg">
-                <label for="id_name">{% trans 'Nom du projet' %} *</label>
+            <div class="form-group">
+                <label class="form-label" for="id_name">{% trans 'Nom du projet' %} <span class="required">*</span></label>
                 {{ form.name }}
-                {% if form.name.errors %}<p class="ferr">{{ form.name.errors.0 }}</p>{% endif %}
+                {% if form.name.errors %}<p class="form-error">{{ form.name.errors.0 }}</p>{% endif %}
             </div>
 
-            <div class="form-group fg">
-                <label for="id_description">{% trans 'Description' %}</label>
+            <div class="form-group">
+                <label class="form-label" for="id_description">{% trans 'Description' %}</label>
                 {{ form.description }}
             </div>
 
-            <div class="grid grid-2 fg-grid">
+            <div class="grid grid-2" style="gap: 16px;">
                 <div class="form-group">
-                    <label for="id_direction">{% trans 'Direction' %}</label>
+                    <label class="form-label" for="id_direction">{% trans 'Direction' %}</label>
                     {{ form.direction }}
                 </div>
                 <div class="form-group">
-                    <label for="id_manager_employee">{% trans 'Responsable du projet' %} *</label>
+                    <label class="form-label" for="id_manager_employee">{% trans 'Responsable du projet' %} <span class="required">*</span></label>
                     {{ form.manager_employee }}
-                    {% if form.manager_employee.errors %}<p class="ferr">{{ form.manager_employee.errors.0 }}</p>{% endif %}
+                    {% if form.manager_employee.errors %}<p class="form-error">{{ form.manager_employee.errors.0 }}</p>{% endif %}
                 </div>
             </div>
 
-            <div class="grid grid-2 fg-grid">
+            <div class="grid grid-2" style="gap: 16px;">
                 <div class="form-group">
-                    <label for="id_status">{% trans 'Statut' %}</label>
+                    <label class="form-label" for="id_status">{% trans 'Statut' %}</label>
                     {{ form.status }}
                 </div>
                 <div class="form-group">
-                    <label for="id_priority">{% trans 'Priorité' %}</label>
+                    <label class="form-label" for="id_priority">{% trans 'Priorité' %}</label>
                     {{ form.priority }}
                 </div>
             </div>
 
-            <div class="grid grid-2 fg-grid">
+            <div class="grid grid-2" style="gap: 16px;">
                 <div class="form-group">
-                    <label for="id_budget">{% trans 'Budget alloué' %}</label>
+                    <label class="form-label" for="id_budget">{% trans 'Budget alloué' %}</label>
                     {{ form.budget }}
-                    {% if form.budget.help_text %}
-                    <p class="fhint info">{{ form.budget.help_text }}</p>
-                    {% endif %}
+                    {% if form.budget.help_text %}<p class="fhint info">{{ form.budget.help_text }}</p>{% endif %}
                     <div id="budget-conversion" class="fhint ok"></div>
                 </div>
                 <div class="form-group">
-                    <label for="id_budget_consumed">{% trans 'Budget consommé' %}</label>
+                    <label class="form-label" for="id_budget_consumed">{% trans 'Budget consommé' %}</label>
                     {{ form.budget_consumed }}
-                    {% if form.budget_consumed.help_text %}
-                    <p class="fhint info">{{ form.budget_consumed.help_text }}</p>
-                    {% endif %}
+                    {% if form.budget_consumed.help_text %}<p class="fhint info">{{ form.budget_consumed.help_text }}</p>{% endif %}
                     <div id="consumed-conversion" class="fhint ok"></div>
                 </div>
             </div>
 
-            <div class="form-group fg">
-                <label for="id_currency">{% trans 'Devise' %}</label>
+            <div class="form-group">
+                <label class="form-label" for="id_currency">{% trans 'Devise' %}</label>
                 {{ form.currency }}
-                <p class="fhint help">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                <span class="form-help">
                     {% trans 'Le montant sera automatiquement converti selon le taux de change' %}
-                </p>
+                </span>
             </div>
 
-            <div class="grid grid-2 fg-grid last">
+            <div class="grid grid-2" style="gap: 16px;">
                 <div class="form-group">
-                    <label for="id_start_date">{% trans 'Date de début' %} *</label>
+                    <label class="form-label" for="id_start_date">{% trans 'Date de début' %} <span class="required">*</span></label>
                     {{ form.start_date }}
                     {% if form.start_date.help_text %}
                     <p class="fhint warn">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
+                        <i data-lucide="triangle-alert" width="12" height="12"></i>
                         {{ form.start_date.help_text }}
                     </p>
                     {% endif %}
                 </div>
                 <div class="form-group">
-                    <label for="id_end_date">{% trans 'Date de fin' %} *</label>
+                    <label class="form-label" for="id_end_date">{% trans 'Date de fin' %} <span class="required">*</span></label>
                     {{ form.end_date }}
                     {% if form.end_date.help_text %}
                     <p class="fhint warn">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
+                        <i data-lucide="triangle-alert" width="12" height="12"></i>
                         {{ form.end_date.help_text }}
                     </p>
                     {% endif %}
@@ -124,9 +106,7 @@
 
             <div class="flex gap-3">
                 <button type="submit" class="btn btn-primary">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
+                    <i data-lucide="check" width="16" height="16" ></i>
                     {% if project %}{% trans 'Enregistrer' %}{% else %}{% trans 'Créer le projet' %}{% endif %}
                 </button>
                 <a href="{% url 'core:projects' %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
@@ -323,15 +303,11 @@ function updateConversions() {
         const consumedGNF = convertCurrency(consumed, currency, 'GNF');
 
         document.getElementById('budget-conversion').innerHTML =
-            `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12" style="display: inline-block; vertical-align: middle;">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-            </svg> Équivalent: ${formatCurrency(budgetGNF, 'GNF')}`;
+            `<i data-lucide="arrow-up-down" width="12" height="12" style="display: inline-block; vertical-align: middle;" ></i> Équivalent: ${formatCurrency(budgetGNF, 'GNF')}`;
 
         if (consumed > 0) {
             document.getElementById('consumed-conversion').innerHTML =
-                `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12" style="display: inline-block; vertical-align: middle;">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-                </svg> Équivalent: ${formatCurrency(consumedGNF, 'GNF')}`;
+                `<i data-lucide="arrow-up-down" width="12" height="12" style="display: inline-block; vertical-align: middle;" ></i> Équivalent: ${formatCurrency(consumedGNF, 'GNF')}`;
         } else {
             document.getElementById('consumed-conversion').innerHTML = '';
         }

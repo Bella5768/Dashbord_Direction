@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}Rôle : {{ role.name }}{% endblock %}
+{% block page_title %}{{ role.name }}{% endblock %}
+{% block page_subtitle %}{{ role.description|default:"Détail du rôle et des permissions associées" }}{% endblock %}
+
+{% block content %}
+
+<!-- Stats + actions -->
+<div class="flex justify-between items-center mb-6">
+    <div class="stats-row">
+        <div class="stat-box indigo">
+            <div class="stat-box-icon"><i data-lucide="key-round" width="20" height="20"></i></div>
+            <div class="stat-box-body">
+                <p class="stat-box-value">{{ role.permissions.count }}</p>
+                <p class="stat-box-label">Permissions</p>
+            </div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-box-icon"><i data-lucide="users" width="20" height="20"></i></div>
+            <div class="stat-box-body">
+                <p class="stat-box-value">{{ user_count }}</p>
+                <p class="stat-box-label">Utilisateurs</p>
+            </div>
+        </div>
+    </div>
+    <div style="display:flex;gap:8px;">
+        <a href="{% url 'core:roles_list' %}" class="btn btn-outline">
+            <i data-lucide="arrow-left" width="14" height="14"></i>
+            Retour
+        </a>
+        <a href="{% url 'core:role_duplicate' role.pk %}" class="btn btn-outline">
+            <i data-lucide="copy" width="14" height="14"></i>
+            Dupliquer
+        </a>
+        <a href="{% url 'core:role_edit' role.pk %}" class="btn btn-primary">
+            <i data-lucide="pencil" width="14" height="14"></i>
+            Modifier
+        </a>
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 260px;gap:20px;align-items:start;">
+
+    <!-- Matrice des permissions -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Permissions accordées</h3>
+        </div>
+        <div class="card-content">
+            {% for subject, perms in subjects.items %}
+            <div style="margin-bottom:20px;">
+                <div style="font-weight:600;font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">
+                    {% if subject == 'all' %}Tout (super-admin)
+                    {% elif subject == 'Project' %}Projets
+                    {% elif subject == 'Milestone' %}Jalons / Tâches
+                    {% elif subject == 'Budget' %}Budgets
+                    {% elif subject == 'User' %}Utilisateurs
+                    {% elif subject == 'Employee' %}Employés
+                    {% elif subject == 'LeaveRequest' %}Congés
+                    {% elif subject == 'Partner' %}Partenaires
+                    {% elif subject == 'Document' %}Documents
+                    {% elif subject == 'Request' %}Demandes
+                    {% elif subject == 'Event' %}Événements
+                    {% elif subject == 'Direction' %}Directions
+                    {% elif subject == 'Role' %}Rôles
+                    {% elif subject == 'Report' %}Rapports
+                    {% else %}{{ subject }}{% endif %}
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                    {% for perm in perms %}
+                    {% if perm.pk in role_perm_ids %}
+                    <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;font-size:11px;color:#15803d;font-weight:500;">
+                        <i data-lucide="check" width="11" height="11"></i>
+                        {{ perm.get_action_display }}
+                        {% if perm.condition %}
+                        <span style="color:#86efac;font-size:10px;">· {{ perm.get_condition_display }}</span>
+                        {% endif %}
+                    </span>
+                    {% else %}
+                    <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;font-size:11px;color:#d1d5db;">
+                        {{ perm.get_action_display }}
+                        {% if perm.condition %}
+                        <span style="font-size:10px;">· {{ perm.get_condition_display }}</span>
+                        {% endif %}
+                    </span>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Colonne latérale -->
+    <div style="position:sticky;top:80px;">
+        <!-- Infos du rôle -->
+        <div class="card mb-4">
+            <div class="card-header"><h3 class="card-title">Informations</h3></div>
+            <div class="card-content">
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    <div>
+                        <p class="text-xs text-gray-500" style="margin-bottom:2px;">Identifiant</p>
+                        <code style="font-size:12px;background:#f3f4f6;padding:3px 8px;border-radius:4px;display:inline-block;">{{ role.slug }}</code>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500" style="margin-bottom:4px;">Statut</p>
+                        {% if role.is_system %}
+                        <span class="badge badge-info">Rôle système</span>
+                        {% else %}
+                        <span class="badge badge-secondary">Rôle personnalisé</span>
+                        {% endif %}
+                    </div>
+                    {% if user_count %}
+                    <div>
+                        <p class="text-xs text-gray-500" style="margin-bottom:4px;">Assigné à</p>
+                        <p class="font-medium text-sm">{{ user_count }} utilisateur{{ user_count|pluralize }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions rapides -->
+        <div class="card">
+            <div class="card-content" style="display:flex;flex-direction:column;gap:8px;">
+                <a href="{% url 'core:role_edit' role.pk %}" class="btn btn-primary" style="width:100%;justify-content:center;">
+                    <i data-lucide="pencil" width="14" height="14"></i>
+                    Modifier les permissions
+                </a>
+                <a href="{% url 'core:role_duplicate' role.pk %}" class="btn btn-outline" style="width:100%;justify-content:center;">
+                    <i data-lucide="copy" width="14" height="14"></i>
+                    Dupliquer ce rôle
+                </a>
+                {% if not role.is_system %}
+                <a href="{% url 'core:role_delete' role.pk %}" class="btn btn-outline" style="width:100%;justify-content:center;color:#dc2626;border-color:#fca5a5;">
+                    <i data-lucide="trash-2" width="14" height="14"></i>
+                    Supprimer
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

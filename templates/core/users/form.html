@@ -19,9 +19,9 @@
                 <!-- Username -->
                 <div class="grid grid-2" style="gap:16px;margin-bottom:16px;">
                     <div class="form-group">
-                        <label for="id_username">{% trans "Nom d'utilisateur" %} *</label>
+                        <label class="form-label" for="id_username">{% trans "Nom d'utilisateur" %} <span class="required">*</span></label>
                         <input type="text" name="username" id="id_username" class="form-control" value="{{ form.username.value|default:'' }}" required>
-                        {% if form.username.errors %}<p class="text-xs" style="color:var(--red-600);margin-top:4px;">{{ form.username.errors.0 }}</p>{% endif %}
+                        {% if form.username.errors %}<p class="form-error">{{ form.username.errors.0 }}</p>{% endif %}
                     </div>
                 </div>
 
@@ -60,38 +60,40 @@
                 <!-- Pas de fiche liée : champs éditables manuellement -->
                 <div class="grid grid-2" style="gap:16px;margin-bottom:16px;">
                     <div class="form-group">
-                        <label>{% trans 'Prénom' %}</label>
+                        <label class="form-label">{% trans 'Prénom' %}</label>
                         <input type="text" name="first_name" class="form-control" value="{{ form.first_name.value|default:'' }}">
                     </div>
                     <div class="form-group">
-                        <label>{% trans 'Nom' %}</label>
+                        <label class="form-label">{% trans 'Nom' %}</label>
                         <input type="text" name="last_name" class="form-control" value="{{ form.last_name.value|default:'' }}">
                     </div>
                 </div>
                 <div class="grid grid-2" style="gap:16px;margin-bottom:16px;">
                     <div class="form-group">
-                        <label>Email</label>
+                        <label class="form-label">Email</label>
                         <input type="email" name="email" class="form-control" value="{{ form.email.value|default:'' }}">
-                        {% if form.email.errors %}<p class="text-xs" style="color:var(--red-600);margin-top:4px;">{{ form.email.errors.0 }}</p>{% endif %}
+                        {% if form.email.errors %}<p class="form-error">{{ form.email.errors.0 }}</p>{% endif %}
                     </div>
                 </div>
                 {% endif %}
                 
                 
                 <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
-                <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">{% trans 'Rôle et permissions' %}</h4>
-                
+                <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">{% trans 'Rôle et direction' %}</h4>
+
                 <div class="grid grid-2" style="gap: 16px; margin-bottom: 24px;">
                     <div class="form-group">
-                        <label for="id_role">{% trans 'Rôle' %} *</label>
-                        <select name="role" id="id_role" class="form-control" required>
-                            {% for value, label in form.role.field.choices %}
-                            <option value="{{ value }}" {% if form.role.value == value %}selected{% endif %}>{{ label }}</option>
+                        <label class="form-label" for="id_role">{% trans 'Rôle' %}</label>
+                        <select name="role" id="id_role" class="form-control">
+                            <option value="">-- Sans rôle --</option>
+                            {% for role_obj in form.role.field.queryset %}
+                            <option value="{{ role_obj.pk }}" {% if form.role.value|stringformat:"s" == role_obj.pk|stringformat:"s" %}selected{% endif %}>{{ role_obj.name }}</option>
                             {% endfor %}
                         </select>
+                        <span class="form-help">Les permissions sont définies par le rôle. <a href="{% url 'core:roles_list' %}">Gérer les rôles →</a></span>
                     </div>
                     <div class="form-group">
-                        <label for="id_direction">Direction</label>
+                        <label class="form-label" for="id_direction">Direction</label>
                         <select name="direction" id="id_direction" class="form-control">
                             <option value="">-- {% trans 'Aucune direction' %} --</option>
                             {% for dir in form.direction.field.queryset %}
@@ -104,7 +106,7 @@
                 <!-- Fiche employé (mode édition) -->
                 <div class="grid grid-2" style="gap: 16px; margin-bottom: 24px;">
                     <div class="form-group">
-                        <label for="id_employee">{% trans 'Fiche employé' %}</label>
+                        <label class="form-label" for="id_employee">{% trans 'Fiche employé' %}</label>
                         <select name="employee" id="id_employee" class="form-control">
                             <option value="">-- {% trans 'Aucun employé lié' %} --</option>
                             {% for emp in form.employee.field.queryset %}
@@ -113,26 +115,22 @@
                             </option>
                             {% endfor %}
                         </select>
-                        {% if form.employee.errors %}
-                        <p class="text-xs" style="color:var(--red-600);margin-top:4px;">{{ form.employee.errors.0 }}</p>
-                        {% endif %}
+                        {% if form.employee.errors %}<p class="form-error">{{ form.employee.errors.0 }}</p>{% endif %}
                     </div>
                     <div></div>
                 </div>
 
                 <div class="grid grid-2" style="gap: 16px; margin-bottom: 24px;">
                     <div class="form-group">
-                        <label for="id_phone">{% trans 'Téléphone' %}</label>
+                        <label class="form-label" for="id_phone">{% trans 'Téléphone' %}</label>
                         <input type="text" name="phone" id="id_phone" class="form-control" value="{{ form.phone.value|default:'' }}">
                     </div>
                     {% if user_obj %}
                     <div class="form-group">
-                        <label style="display: block; margin-bottom: 8px;">{% trans 'Statut du compte' %}</label>
+                        <label class="form-label">{% trans 'Statut du compte' %}</label>
                         {% if not user_obj.is_active and not user_obj.has_usable_password %}
                         <div style="background:#fef9c3;border:1px solid #fde047;border-radius:6px;padding:10px 12px;font-size:12px;color:#854d0e;display:flex;gap:8px;align-items:flex-start;">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="15" height="15" style="flex-shrink:0;margin-top:1px;">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-                            </svg>
+                            <i data-lucide="triangle-alert" width="15" height="15" style="flex-shrink:0;margin-top:1px;" ></i>
                             <span>Invitation en attente — le compte s'activera automatiquement quand l'employé définira son mot de passe.</span>
                         </div>
                         {% else %}
@@ -145,95 +143,13 @@
                     {% endif %}
                 </div>
                 
-                <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
-                <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">{% trans 'Permissions détaillées' %}</h4>
-                <p id="role_preset_note" style="display:none;font-size:11px;color:var(--primary-600);margin-bottom:16px;padding:6px 10px;background:var(--primary-50);border-radius:4px;border-left:3px solid var(--primary-400);"></p>
-                
-                <div class="grid grid-2" style="gap: 24px; margin-bottom: 24px;">
-                    <!-- Permissions Projets -->
-                    <div class="form-group" style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                        <label style="display: block; margin-bottom: 12px; font-weight: 600; color: #1e40af;">{% trans 'Projets' %}</label>
-                        <label class="remember-me" style="cursor: pointer; display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
-                            <input type="checkbox" name="can_create_project" {% if form.can_create_project.value %}checked{% endif %}>
-                            <span>{% trans 'Peut créer des projets' %}</span>
-                        </label>
-                        <label class="remember-me" style="cursor: pointer; display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
-                            <input type="checkbox" name="can_edit_projects" {% if form.can_edit_projects.value %}checked{% endif %}>
-                            <span>{% trans 'Peut modifier les projets' %}</span>
-                        </label>
-                        <label class="remember-me" style="cursor: pointer; display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
-                            <input type="checkbox" name="can_add_milestones" {% if form.can_add_milestones.value %}checked{% endif %}>
-                            <span>{% trans 'Peut ajouter des jalons' %}</span>
-                        </label>
-                        <label class="remember-me" style="cursor: pointer; display: flex; gap: 8px; align-items: center;">
-                            <input type="checkbox" name="can_add_members" {% if form.can_add_members.value %}checked{% endif %}>
-                            <span>{% trans 'Peut ajouter des membres' %}</span>
-                        </label>
-                    </div>
-                    
-                    <!-- Permissions Budgets -->
-                    <div class="form-group" style="background: #f0fdf4; padding: 16px; border-radius: 8px; border: 1px solid #bbf7d0;">
-                        <label style="display: block; margin-bottom: 12px; font-weight: 600; color: #15803d;">{% trans 'Budgets' %}</label>
-                        <label class="remember-me" style="cursor: pointer; display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
-                            <input type="checkbox" name="budget_view" {% if form.budget_view.value %}checked{% endif %}>
-                            <span>{% trans 'Peut voir les budgets' %}</span>
-                        </label>
-                        <label class="remember-me" style="cursor: pointer; display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
-                            <input type="checkbox" name="budget_manage" {% if form.budget_manage.value %}checked{% endif %}>
-                            <span>{% trans 'Peut gérer les budgets' %}</span>
-                        </label>
-                        <label class="remember-me" style="cursor: pointer; display: flex; gap: 8px; align-items: center;">
-                            <input type="checkbox" name="budget_view_all_directions" {% if form.budget_view_all_directions.value %}checked{% endif %}>
-                            <span>{% trans 'Peut voir toutes les directions' %}</span>
-                        </label>
-                    </div>
-                </div>
-                
-                <div class="grid grid-2" style="gap: 24px; margin-bottom: 24px;">
-                    <!-- Permissions Utilisateurs & Demandes -->
-                    <div class="form-group" style="background: #fef2f2; padding: 16px; border-radius: 8px; border: 1px solid #fecaca;">
-                        <label style="display: block; margin-bottom: 12px; font-weight: 600; color: #b91c1c;">{% trans 'Administration' %}</label>
-                        <label class="remember-me" style="cursor: pointer; display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
-                            <input type="checkbox" name="can_manage_users" {% if form.can_manage_users.value %}checked{% endif %}>
-                            <span>{% trans 'Peut gérer les utilisateurs' %}</span>
-                        </label>
-                        <label class="remember-me" style="cursor: pointer; display: flex; gap: 8px; align-items: center;">
-                            <input type="checkbox" name="can_approve_requests" {% if form.can_approve_requests.value %}checked{% endif %}>
-                            <span>{% trans 'Peut approuver les demandes' %}</span>
-                        </label>
-                    </div>
-
-                    <!-- Permissions Événements -->
-                    <div class="form-group" style="background: #fffbeb; padding: 16px; border-radius: 8px; border: 1px solid #fde68a;">
-                        <label style="display: block; margin-bottom: 12px; font-weight: 600; color: #b45309;">{% trans 'Événements' %}</label>
-                        <label class="remember-me" style="cursor: pointer; display: flex; gap: 8px; align-items: center;">
-                            <input type="checkbox" name="can_create_events" {% if form.can_create_events.value %}checked{% endif %}>
-                            <span>{% trans 'Peut créer des événements' %}</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="grid grid-2" style="gap: 24px; margin-bottom: 24px;">
-                    <!-- Permissions Congés / RH -->
-                    <div class="form-group" style="background:var(--primary-50, #eff6ff);padding:16px;border-radius:8px;border:1px solid var(--primary-100, #dbeafe);">
-                        <label style="display:block;margin-bottom:12px;font-weight:600;color:var(--primary-700, #1d4ed8);">{% trans 'Congés / RH' %}</label>
-                        <label style="cursor:pointer;display:flex;gap:8px;align-items:center;margin-bottom:8px;">
-                            <input type="checkbox" name="is_hr_manager" {% if form.is_hr_manager.value %}checked{% endif %}>
-                            <span>{% trans 'Gestionnaire RH (vérifie les demandes)' %}</span>
-                        </label>
-                        <label style="cursor:pointer;display:flex;gap:8px;align-items:center;">
-                            <input type="checkbox" name="can_approve_leaves" {% if form.can_approve_leaves.value %}checked{% endif %}>
-                            <span>{% trans 'Peut donner l\'avis hiérarchique (congés)' %}</span>
-                        </label>
-                    </div>
-                    <div></div>
+                <div style="background:var(--primary-50,#eff6ff);border:1px solid var(--primary-100,#dbeafe);border-radius:6px;padding:12px 16px;margin-bottom:8px;font-size:12px;color:var(--primary-700,#1d4ed8);">
+                    Les permissions sont gérées par le rôle attribué. Pour modifier les permissions d'un rôle, rendez-vous sur <a href="{% url 'core:roles_list' %}" style="font-weight:600;">Gestion des rôles</a>.
                 </div>
                 
                 <div class="flex gap-3" style="margin-top: 32px;">
                     <button type="submit" class="btn btn-primary">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
+                        <i data-lucide="check" width="16" height="16" ></i>
                         {% if user_obj %}{% trans 'Enregistrer les modifications' %}{% else %}{% trans "Créer l'utilisateur" %}{% endif %}
                     </button>
                     <a href="{% url 'core:users_list' %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
@@ -246,35 +162,21 @@
     <div>
         <!-- Role Info -->
         <div class="card mb-6">
-            <div class="card-header">
-                <h3 class="card-title">{% trans 'Niveaux de permissions' %}</h3>
+            <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+                <h3 class="card-title">{% trans 'Rôles disponibles' %}</h3>
+                <a href="{% url 'core:roles_list' %}" class="card-link" style="font-size:11px;">Gérer →</a>
             </div>
             <div class="card-content">
-                <div class="item-list" style="gap: 12px;">
-                    <div style="padding: 12px; background: #fef2f2; border-radius: 8px; border-left: 4px solid #ef4444;">
-                        <p class="font-medium text-sm" style="color: #b91c1c;">{% trans 'Administrateur' %}</p>
-                        <p class="text-xs text-gray-500">{% trans 'Accès total à toutes les fonctionnalités' %}</p>
+                <div class="item-list" style="gap:8px;">
+                    {% for role_obj in form.role.field.queryset %}
+                    <div style="padding:10px 12px;background:#f8fafc;border-radius:6px;border-left:3px solid #6366f1;">
+                        <p class="font-medium text-sm">{{ role_obj.name }}</p>
+                        {% if role_obj.description %}
+                        <p class="text-xs text-gray-500">{{ role_obj.description|truncatechars:60 }}</p>
+                        {% endif %}
+                        <p class="text-xs" style="color:#9ca3af;margin-top:2px;">{{ role_obj.permissions.count }} permission(s)</p>
                     </div>
-                    <div style="padding: 12px; background: #fffbeb; border-radius: 8px; border-left: 4px solid #f59e0b;">
-                        <p class="font-medium text-sm" style="color: #b45309;">{% trans 'Directeur Général' %}</p>
-                        <p class="text-xs text-gray-500">{% trans 'Gestion complète, approbation demandes' %}</p>
-                    </div>
-                    <div style="padding: 12px; background: #e8eef5; border-radius: 8px; border-left: 4px solid #2a4a6f;">
-                        <p class="font-medium text-sm" style="color: #1c3550;">{% trans 'Directeur' %}</p>
-                        <p class="text-xs text-gray-500">{% trans 'Projets, budgets, documents, partenaires' %}</p>
-                    </div>
-                    <div style="padding: 12px; background: #f0fdf4; border-radius: 8px; border-left: 4px solid #22c55e;">
-                        <p class="font-medium text-sm" style="color: #15803d;">{% trans 'Chef de Projet' %}</p>
-                        <p class="text-xs text-gray-500">{% trans 'Projets, rapports' %}</p>
-                    </div>
-                    <div style="padding: 12px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #94a3b8;">
-                        <p class="font-medium text-sm" style="color: #475569;">{% trans 'Employé' %}</p>
-                        <p class="text-xs text-gray-500">{% trans 'Tableau de bord, calendrier' %}</p>
-                    </div>
-                    <div style="padding: 12px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #cbd5e1;">
-                        <p class="font-medium text-sm" style="color: #64748b;">{% trans 'Visiteur' %}</p>
-                        <p class="text-xs text-gray-500">{% trans 'Tableau de bord uniquement' %}</p>
-                    </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
@@ -311,213 +213,4 @@
         {% endif %}
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-{% if not user_obj %}
-<script>
-(function() {
-  // ---- Utility: slugify a full name into prenom.nom ----
-  function slugify(str) {
-    return str
-      .normalize('NFD').replace(/[̀-ͯ]/g, '')
-      .toLowerCase()
-      .replace(/[^a-z0-9\s]/g, '')
-      .trim()
-      .split(/\s+/)
-      .filter(function(p) { return p.length > 0; })
-      .join('.');
-  }
-
-  var empModeRadios   = document.querySelectorAll('input[name="employee_mode"]');
-  var panelExisting   = document.getElementById('emp_panel_existing');
-  var panelNew        = document.getElementById('emp_panel_new');
-  var newEmpName      = document.getElementById('new_emp_name');
-  var isExternalChk   = document.getElementById('new_emp_is_external');
-  var orgRow          = document.getElementById('new_emp_org_row');
-  var usernameInput   = document.getElementById('id_username');
-  var firstNameInput  = document.getElementById('id_first_name');
-  var lastNameInput   = document.getElementById('id_last_name');
-  var employeeSelect  = document.getElementById('id_employee');
-
-  var identityFields   = document.getElementById('identity_fields');
-  var identitySummary  = document.getElementById('emp_identity_summary');
-  var summaryName      = document.getElementById('emp_summary_name');
-  var summaryEmail     = document.getElementById('emp_summary_email');
-  var summaryPhone     = document.getElementById('emp_summary_phone');
-
-  function showIdentityFromEmployee(emp) {
-    // Remplir les champs cachés
-    firstNameInput.value = emp.first_name || '';
-    lastNameInput.value  = emp.last_name  || '';
-    document.getElementById('id_email').value = emp.email || '';
-    // Résumé visuel
-    summaryName.textContent  = (emp.first_name + ' ' + emp.last_name).trim();
-    summaryEmail.textContent = emp.email || '';
-    summaryPhone.textContent = emp.phone || '';
-    identityFields.style.display  = 'none';
-    identitySummary.style.display = '';
-    // Remplir direction + rôle
-    var dirEl  = document.getElementById('id_direction');
-    var roleEl = document.getElementById('id_role');
-    var phoneEl = document.querySelector('input[name="phone"]');
-    if (dirEl  && emp.direction) dirEl.value  = emp.direction;
-    if (roleEl && emp.role)      roleEl.value = emp.role;
-    if (phoneEl && emp.phone)    phoneEl.value = emp.phone;
-  }
-
-  function showIdentityFields() {
-    identityFields.style.display  = '';
-    identitySummary.style.display = 'none';
-    firstNameInput.value = document.getElementById('id_first_name_vis') ? document.getElementById('id_first_name_vis').value : '';
-    lastNameInput.value  = document.getElementById('id_last_name_vis')  ? document.getElementById('id_last_name_vis').value  : '';
-    document.getElementById('id_email').value = document.getElementById('id_email_vis') ? document.getElementById('id_email_vis').value : '';
-  }
-
-  // Données employés pour auto-remplissage
-  {% if employees_data_json %}
-  var employeesData = {{ employees_data_json|safe }};
-  if (employeeSelect) {
-    employeeSelect.addEventListener('change', function() {
-      var emp = employeesData[this.value];
-      if (emp) {
-        showIdentityFromEmployee(emp);
-        usernameManuallyEdited = false;
-        suggestFromFirstLast();
-      } else {
-        showIdentityFields();
-      }
-    });
-    // Init : si un employé est déjà sélectionné (pré-remplissage ?employee_id=)
-    if (employeeSelect.value && employeesData[employeeSelect.value]) {
-      showIdentityFromEmployee(employeesData[employeeSelect.value]);
-    }
-  }
-  {% endif %}
-
-  // Track manual edits
-  var usernameManuallyEdited = usernameInput && usernameInput.value.length > 0;
-  if (usernameInput) {
-    usernameInput.addEventListener('input', function() {
-      usernameManuallyEdited = true;
-    });
-  }
-
-  function getCurrentMode() {
-    var checked = document.querySelector('input[name="employee_mode"]:checked');
-    return checked ? checked.value : 'existing';
-  }
-
-  // Auto-suggest username
-  function suggestFromName(nameStr) {
-    if (!usernameInput || usernameManuallyEdited) return;
-    var parts = nameStr.trim().split(/\s+/).filter(function(p) { return p.length > 0; });
-    if (parts.length === 0) return;
-    var suggested = parts.length === 1
-      ? slugify(parts[0])
-      : slugify(parts[0]) + '.' + slugify(parts.slice(1).join(' '));
-    if (suggested) usernameInput.value = suggested;
-  }
-
-  function suggestFromFirstLast() {
-    if (!usernameInput || usernameManuallyEdited) return;
-    var fn = (document.getElementById('id_first_name') || {}).value || '';
-    var ln = (document.getElementById('id_last_name')  || {}).value || '';
-    var combined = (fn.trim() + (ln.trim() ? ' ' + ln.trim() : '')).trim();
-    if (combined) suggestFromName(combined);
-  }
-
-  // Show/hide panels based on mode
-  function switchMode(mode) {
-    if (panelExisting) panelExisting.style.display = (mode === 'existing') ? '' : 'none';
-    if (panelNew)      panelNew.style.display      = (mode === 'new')      ? '' : 'none';
-    // Reset username suggestion when switching
-    if (!usernameManuallyEdited && usernameInput) {
-      usernameInput.value = '';
-      usernameManuallyEdited = false;
-    }
-  }
-
-  empModeRadios.forEach(function(r) {
-    r.addEventListener('change', function() {
-      usernameManuallyEdited = false;
-      if (usernameInput) usernameInput.value = '';
-      switchMode(this.value);
-    });
-  });
-
-  // Toggle organisation field
-  if (isExternalChk) {
-    isExternalChk.addEventListener('change', function() {
-      orgRow.style.display = this.checked ? '' : 'none';
-    });
-    // Init
-    orgRow.style.display = isExternalChk.checked ? '' : 'none';
-  }
-
-  // Init panels
-  switchMode(getCurrentMode());
-
-  // If employee_mode was posted as 'new' (after a validation error), show org row if needed
-  {% if request.POST.new_emp_is_external %}
-  if (orgRow) orgRow.style.display = '';
-  {% endif %}
-
-  // ===== PRESETS PERMISSIONS PAR RÔLE =====
-  // Légende : true = coché par défaut, false = décoché
-  // Les permissions déjà impliquées par le rôle (via méthode Python) sont marquées en note.
-  var ROLE_PRESETS = {
-    'admin':            { budget_view:true, budget_manage:true, budget_view_all_directions:true, can_create_project:true, can_edit_projects:true, can_add_milestones:true, can_add_members:true, can_manage_users:true, can_approve_requests:true, can_create_events:true, is_hr_manager:true, can_approve_leaves:true },
-    'directeur_general':{ budget_view:false,budget_manage:false,budget_view_all_directions:true, can_create_project:false,can_edit_projects:true, can_add_milestones:true, can_add_members:true, can_manage_users:false,can_approve_requests:false,can_create_events:false,is_hr_manager:false,can_approve_leaves:true  },
-    'directeur':        { budget_view:false,budget_manage:false,budget_view_all_directions:false,can_create_project:false,can_edit_projects:true, can_add_milestones:true, can_add_members:true, can_manage_users:false,can_approve_requests:false,can_create_events:false,is_hr_manager:false,can_approve_leaves:true  },
-    'chef_projet':      { budget_view:true, budget_manage:false,budget_view_all_directions:false,can_create_project:true, can_edit_projects:true, can_add_milestones:true, can_add_members:true, can_manage_users:false,can_approve_requests:false,can_create_events:true, is_hr_manager:false,can_approve_leaves:false },
-    'employe':          { budget_view:false,budget_manage:false,budget_view_all_directions:false,can_create_project:false,can_edit_projects:false,can_add_milestones:true, can_add_members:false,can_manage_users:false,can_approve_requests:false,can_create_events:false,is_hr_manager:false,can_approve_leaves:false },
-    'visiteur':         { budget_view:false,budget_manage:false,budget_view_all_directions:false,can_create_project:false,can_edit_projects:false,can_add_milestones:false,can_add_members:false,can_manage_users:false,can_approve_requests:false,can_create_events:false,is_hr_manager:false,can_approve_leaves:false }
-  };
-
-  // Noms des champs implicites par rôle (griser la checkbox + tooltip)
-  var ROLE_IMPLIED = {
-    'admin':             ['budget_view','budget_manage','budget_view_all_directions','can_create_project','can_edit_projects','can_approve_requests','can_create_events'],
-    'directeur_general': ['budget_view','budget_manage','can_create_project','can_approve_requests','can_create_events'],
-    'directeur':         ['budget_view','budget_manage','can_create_project','can_create_events'],
-    'chef_projet':       [],
-    'employe':           [],
-    'visiteur':          []
-  };
-
-  var roleSelect = document.getElementById('id_role');
-
-  function applyRolePreset(role) {
-    var preset  = ROLE_PRESETS[role]  || {};
-    var implied = ROLE_IMPLIED[role] || [];
-    Object.keys(preset).forEach(function(name) {
-      var chk = document.querySelector('input[type=checkbox][name="' + name + '"]');
-      if (!chk) return;
-      chk.checked  = preset[name];
-      var isImplied = implied.indexOf(name) !== -1;
-      chk.disabled = isImplied;
-      var wrap = chk.closest('label') || chk.parentElement;
-      if (wrap) {
-        wrap.style.opacity = isImplied ? '0.5' : '1';
-        wrap.title = isImplied ? 'Accordé automatiquement par le rôle ' + role : '';
-      }
-    });
-    // Afficher une note
-    var note = document.getElementById('role_preset_note');
-    if (note && role) {
-      note.style.display = '';
-      note.textContent   = 'Permissions par défaut du rôle appliquées. Les cases grisées sont accordées automatiquement par le rôle.';
-    }
-  }
-
-  if (roleSelect) {
-    roleSelect.addEventListener('change', function() { applyRolePreset(this.value); });
-    // Init : appliquer le preset si valeur déjà sélectionnée et pas de permissions POST existantes
-    {% if not user_obj %}
-    applyRolePreset(roleSelect.value);
-    {% endif %}
-  }
-})();
-</script>
-{% endif %}
 {% endblock %}

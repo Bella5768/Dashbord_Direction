@@ -169,27 +169,27 @@
     </div>
     <div class="pdetail-meta">
       <span class="pdetail-mi">
-        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+        <i data-lucide="user" ></i>
         <span class="pdetail-ml">Responsable</span>
         <span class="pdetail-mv">{% if project.manager_employee %}<a href="{% url 'core:employee_edit' project.manager_employee.id %}" style="color:#1e3a5f;text-decoration:none;">{{ project.manager_employee.name }}</a>{% else %}{{ project.manager }}{% endif %}</span>
       </span>
       {% if project.start_date %}
       <span class="pdetail-mi">
-        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        <i data-lucide="calendar" ></i>
         <span class="pdetail-ml">Début</span>
         <span class="pdetail-mv">{{ project.start_date|date:"d/m/Y" }}</span>
       </span>
       {% endif %}
       {% if project.end_date %}
       <span class="pdetail-mi">
-        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        <i data-lucide="calendar" ></i>
         <span class="pdetail-ml">Fin</span>
         <span class="pdetail-mv">{{ project.end_date|date:"d/m/Y" }}</span>
       </span>
       {% endif %}
       {% if project.budget %}
       <span class="pdetail-mi">
-        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <i data-lucide="circle-dollar-sign" ></i>
         <span class="pdetail-ml">Budget</span>
         <span class="pdetail-mv">{{ project.budget|number_format }} {{ project.currency }}</span>
       </span>
@@ -201,27 +201,27 @@
 <!-- Onglets -->
 <div class="pd-tabs">
   <button class="pd-tab" data-tab="jalons">
-    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+    <i data-lucide="clipboard" ></i>
     Jalons <span class="pd-tab-count">{{ milestones|length }}</span>
   </button>
   <button class="pd-tab" data-tab="equipe">
-    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+    <i data-lucide="users" ></i>
     Équipe <span class="pd-tab-count">{{ members|length }}</span>
   </button>
   <button class="pd-tab" data-tab="documents">
-    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+    <i data-lucide="folder" ></i>
     Documents <span class="pd-tab-count">{{ documents|length }}</span>
   </button>
   <button class="pd-tab" data-tab="besoins">
-    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <i data-lucide="circle-check" ></i>
     Besoins <span class="pd-tab-count">{{ needs|length }}</span>
   </button>
   <button class="pd-tab" data-tab="commentaires">
-    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+    <i data-lucide="message-circle" ></i>
     Commentaires <span class="pd-tab-count">{{ comments|length }}</span>
   </button>
   <button class="pd-tab" data-tab="activite">
-    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <i data-lucide="clock" ></i>
     Activité
   </button>
 </div>
@@ -237,26 +237,26 @@
       {% if milestones %}
       <div id="jalons-view-switcher" class="jv-switcher">
         <button id="jv-btn-list" class="jv-btn jv-active" onclick="setJalonView('list')">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+          <i data-lucide="list" ></i>
           Liste
         </button>
         <button id="jv-btn-kanban" class="jv-btn" onclick="setJalonView('kanban')">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
+          <i data-lucide="bar-chart" ></i>
           Kanban
         </button>
         <button id="jv-btn-gantt" class="jv-btn" onclick="setJalonView('gantt')">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 6h10M6 12h12M4 18h8"/></svg>
+          <i data-lucide="align-left" ></i>
           Gantt
         </button>
         <button id="jv-btn-calendrier" class="jv-btn" onclick="setJalonView('calendrier')">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          <i data-lucide="calendar" ></i>
           Calendrier
         </button>
       </div>
       {% endif %}
       {% if can_add_milestones %}
       <a href="{% url 'core:milestone_create' project.id %}" class="btn btn-primary btn-sm" style="display:flex;align-items:center;gap:6px;">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+        <i data-lucide="plus-circle" width="15" height="15" ></i>
         Ajouter un jalon
       </a>
       {% endif %}
@@ -292,7 +292,7 @@
                 <div class="mrow-title-row">
                   <a href="{% url 'core:milestone_detail' milestone.id %}" class="mrow-name{% if milestone.completed %} done{% endif %}">
                     {{ milestone.name }}
-                    <svg class="milestone-link-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12" style="opacity:0;transition:opacity .15s;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                    <i data-lucide="external-link" width="12" height="12" style="opacity:0;transition:opacity .15s;flex-shrink:0;" ></i>
                   </a>
                   {% if is_my_milestone %}<span class="mrow-badge mine">Votre tâche</span>{% endif %}
                   <span id="mstatus-{{milestone.id}}" class="mrow-sbadge s-{{ milestone.status }}">{% if milestone.status == 'a_faire' %}À faire{% elif milestone.status == 'en_cours' %}En cours{% elif milestone.status == 'bloque' %}Bloqué{% elif milestone.status == 'en_revision' %}En révision{% elif milestone.status == 'termine' %}Terminé{% endif %}</span>
@@ -300,7 +300,7 @@
                 <div class="mrow-meta">
                   {% if milestone.assigned_to.exists %}
                   <span id="maz-{{ milestone.id }}" class="mrow-mi">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    <i data-lucide="user" ></i>
                     {% for emp in milestone.assigned_to.all %}{{ emp.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
                   </span>
                   {% else %}
@@ -310,14 +310,14 @@
                   <button class="qa-trigger" data-qa-type="milestone" data-qa-id="{{ milestone.id }}"
                           data-qa-emp-ids="{% for emp in milestone.assigned_to.all %}{{ emp.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
                           onclick="event.stopPropagation();qaOpen('milestone','{{ milestone.id }}',this.closest('[data-milestone-row]'),'{{ milestone.name|escapejs }}')">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="10" height="10"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    <i data-lucide="user" width="10" height="10" ></i>
                     Assigner
                   </button>
                   {% endif %}
                   {% if milestone.due_date %}
                   {% with overdue=milestone.due_date|is_overdue %}
                   <span class="mrow-mi{% if not milestone.completed and overdue %} overdue{% endif %}">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <i data-lucide="calendar" ></i>
                     {{ milestone.due_date|date:"d/m/Y" }}{% if not milestone.completed and overdue %} — En retard{% endif %}
                   </span>
                   {% endwith %}
@@ -327,7 +327,7 @@
                   {% endif %}
                   {% if milestone.completed and milestone.completed_at %}
                   <span class="mrow-mi success">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <i data-lucide="check" ></i>
                     {{ milestone.completed_at|date:"d/m/Y" }}
                   </span>
                   {% endif %}
@@ -360,10 +360,10 @@
                 </form>
                 <a href="{% url 'core:sub_milestone_create' milestone.id %}" class="action-btn" title="Ajouter une sous-étape" style="font-weight:700;font-size:15px;color:#3b82f6;text-decoration:none;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;">+</a>
                 <a href="{% url 'core:milestone_edit' milestone.id %}" class="action-btn" title="Modifier">
-                  <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                  <i data-lucide="pencil" width="13" height="13" ></i>
                 </a>
                 <a href="{% url 'core:milestone_delete' milestone.id %}" class="action-btn danger" title="Supprimer">
-                  <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m2 0H7m3 0V5a2 2 0 012-2h0a2 2 0 012 2v2"/></svg>
+                  <i data-lucide="trash-2" width="13" height="13" ></i>
                 </a>
               </div>
               {% endif %}
@@ -400,7 +400,7 @@
                 <button class="qa-trigger" data-qa-type="sub_milestone" data-qa-id="{{ sub.id }}"
                         data-qa-emp-ids="{% for emp in sub.assigned_to.all %}{{ emp.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
                         onclick="event.stopPropagation();qaOpen('sub_milestone','{{ sub.id }}',this.closest('[data-milestone-row]'),'{{ sub.name|escapejs }}')">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="10" height="10"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                  <i data-lucide="user" width="10" height="10" ></i>
                   Assigner
                 </button>
                 {% endif %}
@@ -413,10 +413,10 @@
               {% if can_add_milestones %}
               <div class="msub-acts">
                 <a href="{% url 'core:sub_milestone_edit' sub.id %}" class="action-btn" title="Modifier">
-                  <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                  <i data-lucide="pencil" width="12" height="12" ></i>
                 </a>
                 <a href="{% url 'core:sub_milestone_delete' sub.id %}" class="action-btn danger" title="Supprimer">
-                  <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                  <i data-lucide="trash-2" width="12" height="12" ></i>
                 </a>
               </div>
               {% endif %}
@@ -434,7 +434,7 @@
       </div>
       {% else %}
       <div style="text-align:center;padding:48px 24px;">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="40" height="40" style="color:#d1d5db;margin:0 auto 12px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        <i data-lucide="clipboard" width="40" height="40" style="color:#d1d5db;margin:0 auto 12px;" ></i>
         <p class="text-gray-500" style="margin-bottom:16px;">Aucun jalon défini pour ce projet.</p>
         {% if can_add_milestones %}
         <a href="{% url 'core:milestone_create' project.id %}" class="btn btn-primary btn-sm">Ajouter le premier jalon</a>
@@ -465,7 +465,7 @@
       </div>
       {% if can_manage_members %}
       <a href="{% url 'core:project_member_add' project.id %}" class="btn btn-primary btn-sm" style="display:flex;align-items:center;gap:6px;">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+        <i data-lucide="plus-circle" width="15" height="15" ></i>
         Ajouter un membre
       </a>
       {% endif %}
@@ -501,16 +501,16 @@
             </div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;margin-left:10px;">
-            <span class="badge {% if member.role == 'responsable' %}badge-info{% elif member.role == 'observateur' or member.role == 'ressource_externe_observateur' %}badge-secondary{% else %}badge-success{% endif %}" style="font-size:11px;">
-              {{ member.get_role_display }}
+            <span class="badge {% if member.project_role.slug == 'responsable' %}badge-info{% elif member.project_role.slug == 'observateur' or member.project_role.slug == 'ressource_externe_observateur' %}badge-secondary{% else %}badge-success{% endif %}" style="font-size:11px;">
+              {{ member.project_role.name|default:"—" }}
             </span>
             {% if can_manage_members %}
             <div class="flex gap-1">
               <a href="{% url 'core:project_member_edit' member.id %}" class="action-btn" title="Modifier le rôle">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                <i data-lucide="pencil" width="13" height="13" ></i>
               </a>
               <a href="{% url 'core:project_member_delete' member.id %}" class="action-btn danger" title="Retirer du projet">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                <i data-lucide="trash-2" width="13" height="13" ></i>
               </a>
             </div>
             {% endif %}
@@ -520,7 +520,7 @@
       </div>
       {% else %}
       <div style="text-align:center;padding:48px 24px;">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="40" height="40" style="color:#d1d5db;margin:0 auto 12px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        <i data-lucide="users" width="40" height="40" style="color:#d1d5db;margin:0 auto 12px;" ></i>
         <p class="text-gray-500" style="margin-bottom:16px;">Aucun membre dans ce projet.</p>
         {% if can_manage_members %}
         <a href="{% url 'core:project_member_add' project.id %}" class="btn btn-primary btn-sm">Ajouter le premier membre</a>
@@ -542,11 +542,11 @@
       {% if can_add_documents %}
       <div class="flex gap-2">
         <a href="{% url 'core:project_folder_create' project.id %}" class="btn btn-outline btn-sm" style="display:flex;align-items:center;gap:5px;">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+          <i data-lucide="folder" width="14" height="14" ></i>
           Dossier
         </a>
         <a href="{% url 'core:project_document_create' project.id %}" class="btn btn-primary btn-sm" style="display:flex;align-items:center;gap:5px;">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+          <i data-lucide="plus-circle" width="14" height="14" ></i>
           Document
         </a>
       </div>
@@ -560,7 +560,7 @@
         <!-- Dossiers -->
         <div>
           <h4 class="text-sm font-semibold" style="color:#374151;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="15" height="15" style="color:#3b82f6;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+            <i data-lucide="folder" width="15" height="15" style="color:#3b82f6;" ></i>
             Dossiers ({{ folders|length }})
           </h4>
           {% if folders %}
@@ -568,23 +568,23 @@
             {% for folder in folders %}
             <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">
               <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="16" height="16" style="color:#fbbf24;flex-shrink:0;"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>
+                <i data-lucide="folder-open" width="16" height="16" style="color:#fbbf24;flex-shrink:0;" ></i>
                 <a href="{% url 'core:project_folder_detail' folder.id %}" class="text-sm font-medium" style="color:#1e3a5f;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ folder.name }}</a>
                 {% if folder.parent %}<span class="text-xs text-gray-400" style="white-space:nowrap;">/ {{ folder.parent.name }}</span>{% endif %}
               </div>
               {% if can_add_documents %}
               <div class="flex gap-1" style="flex-shrink:0;margin-left:6px;">
                 <a href="{% url 'core:project_folder_create' project.id %}?parent={{ folder.id }}" class="action-btn" title="Sous-dossier">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m-6-6h12"/></svg>
+                  <i data-lucide="plus-circle" width="12" height="12" ></i>
                 </a>
                 <a href="{% url 'core:project_document_create' project.id %}?folder={{ folder.id }}" class="action-btn" title="Ajouter document">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                  <i data-lucide="file-text" width="12" height="12" ></i>
                 </a>
                 <a href="{% url 'core:project_folder_edit' folder.id %}" class="action-btn" title="Modifier">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                  <i data-lucide="pencil" width="12" height="12" ></i>
                 </a>
                 <a href="{% url 'core:project_folder_delete' folder.id %}" class="action-btn danger" title="Supprimer">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                  <i data-lucide="trash-2" width="12" height="12" ></i>
                 </a>
               </div>
               {% endif %}
@@ -599,7 +599,7 @@
         <!-- Documents -->
         <div>
           <h4 class="text-sm font-semibold" style="color:#374151;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="15" height="15" style="color:#6b7280;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <i data-lucide="file-text" width="15" height="15" style="color:#6b7280;" ></i>
             Documents ({{ docs|length }})
           </h4>
           {% if docs %}
@@ -607,7 +607,7 @@
             {% for doc in docs %}
             <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">
               <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="15" height="15" style="color:#64748b;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <i data-lucide="file-text" width="15" height="15" style="color:#64748b;flex-shrink:0;" ></i>
                 <div style="min-width:0;">
                   <div class="text-sm font-medium" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ doc.title }}</div>
                   <div class="text-xs text-gray-400">{% if doc.folder %}{{ doc.folder.name }} • {% endif %}{{ doc.uploaded_by }} • {{ doc.uploaded_at|date:"d/m/Y" }}</div>
@@ -616,15 +616,15 @@
               <div class="flex gap-1" style="flex-shrink:0;margin-left:6px;">
                 {% if doc.file %}
                 <a href="{% url 'core:project_document_download' doc.id %}" class="action-btn" title="Télécharger">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                  <i data-lucide="download" width="13" height="13" ></i>
                 </a>
                 {% endif %}
                 {% if can_add_documents %}
                 <a href="{% url 'core:project_document_edit' doc.id %}" class="action-btn" title="Modifier">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                  <i data-lucide="pencil" width="13" height="13" ></i>
                 </a>
                 <a href="{% url 'core:project_document_delete' doc.id %}" class="action-btn danger" title="Supprimer">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                  <i data-lucide="trash-2" width="13" height="13" ></i>
                 </a>
                 {% endif %}
               </div>
@@ -639,7 +639,7 @@
       </div>
       {% else %}
       <div style="text-align:center;padding:48px 24px;">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="40" height="40" style="color:#d1d5db;margin:0 auto 12px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+        <i data-lucide="folder" width="40" height="40" style="color:#d1d5db;margin:0 auto 12px;" ></i>
         <p class="text-gray-500" style="margin-bottom:16px;">Aucun dossier ni document.</p>
         {% if can_add_documents %}
         <div class="flex gap-2" style="justify-content:center;">
@@ -788,7 +788,7 @@
         <p class="text-sm text-gray-500">20 dernières actions</p>
       </div>
       <a href="{% url 'core:export_project_activities' project.id %}" class="btn btn-outline btn-sm" style="display:flex;align-items:center;gap:6px;">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        <i data-lucide="download" width="14" height="14" ></i>
         Exporter PDF
       </a>
     </div>
@@ -891,11 +891,11 @@
   </div>
   <div class="qa-body">
     <div class="qa-search-wrap">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <i data-lucide="search" width="15" height="15" ></i>
       <input type="text" class="qa-search" id="qa-search" placeholder="Rechercher un membre..." autocomplete="off">
     </div>
     <div class="qa-none" id="qa-none-opt" onclick="qaPickMember('')">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+      <i data-lucide="ban" width="14" height="14" ></i>
       Aucun responsable
     </div>
     <p class="qa-section">Membres du projet</p>
@@ -993,7 +993,7 @@
         var span = document.getElementById(spanId);
         if (span) {
           if (data.assigned_names.length) {
-            span.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg> ' + data.assigned_names.join(', ');
+            span.innerHTML = '<i data-lucide="user" width="11" height="11" ></i> ' + data.assigned_names.join(', ');
             span.style.cssText = 'font-size:10px;color:var(--gray-500);display:inline-flex;align-items:center;gap:3px;';
           } else {
             span.textContent = 'Non assigné';

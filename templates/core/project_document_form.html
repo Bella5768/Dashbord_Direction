@@ -14,34 +14,50 @@
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             
-            <div class="form-group" style="margin-bottom: 16px;">
-                <label for="id_title">{% trans 'Titre du document' %} *</label>
+            <div class="form-group">
+                <label class="form-label" for="id_title">{% trans 'Titre du document' %} <span class="required">*</span></label>
                 {{ form.title }}
-                {% if form.title.errors %}<p class="text-xs" style="color: var(--red-600);">{{ form.title.errors.0 }}</p>{% endif %}
+                {% if form.title.errors %}<p class="form-error">{{ form.title.errors.0 }}</p>{% endif %}
             </div>
-            
-            <div class="form-group" style="margin-bottom: 16px;">
-                <label for="id_description">{% trans 'Description' %}</label>
+
+            <div class="form-group">
+                <label class="form-label" for="id_description">{% trans 'Description' %}</label>
                 {{ form.description }}
             </div>
-            
-            <div class="form-group" style="margin-bottom: 16px;">
-                <label for="id_folder">{% trans 'Dossier' %}</label>
+
+            <div class="form-group">
+                <label class="form-label" for="id_folder">{% trans 'Dossier' %}</label>
                 {{ form.folder }}
-                <small class="text-gray-500">{% trans 'Choisissez un dossier pour organiser ce document.' %}</small>
+                <span class="form-help">{% trans 'Choisissez un dossier pour organiser ce document.' %}</span>
             </div>
-            
-            <div class="form-group" style="margin-bottom: 24px;">
-                <label for="id_file">{% trans 'Fichier' %} *</label>
-                {{ form.file }}
-                {% if form.file.errors %}<p class="text-xs" style="color: var(--red-600);">{{ form.file.errors.0 }}</p>{% endif %}
+
+            <div class="form-group">
+                <label class="form-label" for="id_file">{% trans 'Fichier' %} <span class="required">*</span></label>
+                {% if doc and doc.file %}
+                <div class="file-drop-current">
+                    <i data-lucide="file" width="14" height="14"></i>
+                    <span>{% trans 'Fichier actuel' %} : <a href="{{ doc.file.url }}" target="_blank">{{ doc.file.name|slice:"9:" }}</a></span>
+                </div>
+                {% endif %}
+                <div class="file-drop">
+                    {{ form.file }}
+                    <div class="file-drop-zone">
+                        <i data-lucide="upload-cloud" width="36" height="36"></i>
+                        <p class="file-drop-title">{% trans 'Cliquez ou glissez un fichier' %}</p>
+                        <p class="file-drop-sub">PDF, Word, Excel, images…</p>
+                    </div>
+                    <div class="file-drop-selected">
+                        <i data-lucide="file-check" width="16" height="16"></i>
+                        <span class="file-drop-name"></span>
+                        <button type="button" class="file-drop-clear">✕</button>
+                    </div>
+                </div>
+                {% if form.file.errors %}<p class="form-error">{{ form.file.errors.0 }}</p>{% endif %}
             </div>
             
             <div class="flex gap-3">
                 <button type="submit" class="btn btn-primary">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
+                    <i data-lucide="check" width="16" height="16" ></i>
                     {% if doc %}{% trans 'Enregistrer' %}{% else %}{% trans 'Ajouter le document' %}{% endif %}
                 </button>
                 <a href="{% url 'core:project_detail' project.id %}" class="btn btn-outline">{% trans 'Annuler' %}</a>

@@ -14,23 +14,21 @@
         <form method="post">
             {% csrf_token %}
             
-            <div class="form-group" style="margin-bottom: 16px;">
-                <label for="id_name">{% trans 'Nom du dossier' %} *</label>
+            <div class="form-group">
+                <label class="form-label" for="id_name">{% trans 'Nom du dossier' %} <span class="required">*</span></label>
                 {{ form.name }}
-                {% if form.name.errors %}<p class="text-xs" style="color: var(--red-600);">{{ form.name.errors.0 }}</p>{% endif %}
+                {% if form.name.errors %}<p class="form-error">{{ form.name.errors.0 }}</p>{% endif %}
             </div>
-            
-            <div class="form-group" style="margin-bottom: 24px;">
-                <label for="id_parent">{% trans 'Dossier parent' %}</label>
+
+            <div class="form-group">
+                <label class="form-label" for="id_parent">{% trans 'Dossier parent' %}</label>
                 {{ form.parent }}
-                <small class="text-gray-500">{% trans 'Laissez vide pour un dossier à la racine.' %}</small>
+                <span class="form-help">{% trans 'Laissez vide pour un dossier à la racine.' %}</span>
             </div>
             
             <div class="flex gap-3">
                 <button type="submit" class="btn btn-primary">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
+                    <i data-lucide="check" width="16" height="16" ></i>
                     {% if folder %}{% trans 'Enregistrer' %}{% else %}{% trans 'Créer le dossier' %}{% endif %}
                 </button>
                 <a href="{% url 'core:project_detail' project.id %}" class="btn btn-outline">{% trans 'Annuler' %}</a>

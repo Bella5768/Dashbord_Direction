@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}Mon profil{% endblock %}
+{% block page_title %}Mon profil{% endblock %}
+{% block page_subtitle %}Gérez vos informations personnelles et vos accès{% endblock %}
+
+{% block content %}
+{% with u=request.user prof=request.user.profile %}
+{% with fd=form_data|default:None %}
+<div style="max-width:700px;margin:0 auto;display:flex;flex-direction:column;gap:24px;">
+
+  <!-- ── Carte identité ── -->
+  <div class="card">
+    <div class="card-content" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+
+      <!-- Avatar initiales -->
+      <div style="width:72px;height:72px;border-radius:50%;background:#1e3a5f;color:white;font-size:24px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;letter-spacing:1px;">
+        {{ prof.get_initials }}
+      </div>
+
+      <div style="flex:1;min-width:0;">
+        <h2 style="margin:0 0 4px;font-size:20px;font-weight:700;color:#111827;">
+          {{ u.get_full_name|default:u.username }}
+        </h2>
+        <p style="margin:0 0 8px;font-size:13px;color:#6b7280;">
+          @{{ u.username }}
+          {% if prof.role %}&nbsp;·&nbsp;<span style="font-weight:600;color:#1e3a5f;">{{ prof.role.name }}</span>{% endif %}
+          {% if prof.direction %}&nbsp;·&nbsp;{{ prof.direction.name }}{% endif %}
+        </p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:{% if u.is_active %}#16a34a{% else %}#dc2626{% endif %};">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+            {% if u.is_active %}Compte actif{% else %}Compte inactif{% endif %}
+          </span>
+          {% if u.last_login %}
+          <span style="font-size:12px;color:#9ca3af;">Dernière connexion : {{ u.last_login|date:"d/m/Y à H:i" }}</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <a href="{% url 'core:password_change' %}"
+         style="display:inline-flex;align-items:center;gap:7px;padding:9px 16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-weight:600;color:#374151;text-decoration:none;white-space:nowrap;">
+        <i data-lucide="key-round" width="15" height="15"></i>
+        Changer le mot de passe
+      </a>
+    </div>
+  </div>
+
+  <!-- ── Formulaire édition ── -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Informations personnelles</h3>
+    </div>
+    <div class="card-content">
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px 24px;">
+
+          <!-- Prénom -->
+          <div class="form-group">
+            <label class="form-label" for="first_name">Prénom <span style="color:#dc2626;">*</span></label>
+            <input type="text" name="first_name" id="first_name"
+                   class="form-control {% if errors.first_name %}border-red{% endif %}"
+                   value="{{ fd.first_name|default:u.first_name }}"
+                   placeholder="Votre prénom">
+            {% if errors.first_name %}
+            <p style="font-size:12px;color:#dc2626;margin-top:4px;">{{ errors.first_name }}</p>
+            {% endif %}
+          </div>
+
+          <!-- Nom -->
+          <div class="form-group">
+            <label class="form-label" for="last_name">Nom <span style="color:#dc2626;">*</span></label>
+            <input type="text" name="last_name" id="last_name"
+                   class="form-control {% if errors.last_name %}border-red{% endif %}"
+                   value="{{ fd.last_name|default:u.last_name }}"
+                   placeholder="Votre nom">
+            {% if errors.last_name %}
+            <p style="font-size:12px;color:#dc2626;margin-top:4px;">{{ errors.last_name }}</p>
+            {% endif %}
+          </div>
+
+          <!-- Email -->
+          <div class="form-group" style="grid-column:1/-1;">
+            <label class="form-label" for="email">Adresse email <span style="color:#dc2626;">*</span></label>
+            <input type="email" name="email" id="email"
+                   class="form-control {% if errors.email %}border-red{% endif %}"
+                   value="{{ fd.email|default:u.email }}"
+                   placeholder="prenom.nom@csig.edu.gn">
+            {% if errors.email %}
+            <p style="font-size:12px;color:#dc2626;margin-top:4px;">{{ errors.email }}</p>
+            {% else %}
+            <p style="font-size:12px;color:#6b7280;margin-top:4px;">Cet email est utilisé pour recevoir les notifications et les liens d'invitation.</p>
+            {% endif %}
+          </div>
+
+          <!-- Téléphone -->
+          <div class="form-group" style="grid-column:1/-1;">
+            <label class="form-label" for="phone">Téléphone</label>
+            <input type="text" name="phone" id="phone"
+                   class="form-control"
+                   value="{{ fd.phone|default:prof.phone }}"
+                   placeholder="+224 6xx xx xx xx">
+            <p style="font-size:12px;color:#6b7280;margin-top:4px;">Optionnel.</p>
+          </div>
+
+        </div>
+
+        <!-- Champs lecture seule -->
+        <div style="margin-top:8px;padding-top:18px;border-top:1px solid #f3f4f6;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <p style="font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;margin:0 0 4px;">Identifiant</p>
+            <p style="font-size:14px;color:#374151;font-weight:600;margin:0;">{{ u.username }}</p>
+          </div>
+          <div>
+            <p style="font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;margin:0 0 4px;">Rôle</p>
+            <p style="font-size:14px;color:#374151;font-weight:600;margin:0;">{{ prof.role.name|default:"—" }}</p>
+          </div>
+          {% if prof.direction %}
+          <div>
+            <p style="font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;margin:0 0 4px;">Direction</p>
+            <p style="font-size:14px;color:#374151;font-weight:600;margin:0;">{{ prof.direction.name }}</p>
+          </div>
+          {% endif %}
+          {% if prof.employee_identifier %}
+          <div>
+            <p style="font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;margin:0 0 4px;">ID Employé</p>
+            <p style="font-size:14px;color:#374151;font-weight:600;margin:0;">{{ prof.employee_identifier }}</p>
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="flex gap-3" style="margin-top:24px;">
+          <button type="submit" class="btn btn-primary">
+            <i data-lucide="save" width="16" height="16"></i>
+            Enregistrer les modifications
+          </button>
+          <a href="{% url 'core:dashboard' %}" class="btn btn-outline">Annuler</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endwith %}
+{% endwith %}
+
+<style>
+  .border-red { border-color: #dc2626 !important; }
+</style>
+{% endblock %}

@@ -48,9 +48,17 @@
 .mt-perm-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
 .mt-perm-title { font-size:13px; font-weight:600; color:var(--gray-700); margin:0; display:flex; align-items:center; gap:6px; }
 .mt-perm-title svg { flex-shrink:0; }
-.mt-perm-note { font-size:11px; color:var(--primary-600); }
-.mt-perm-label { display:flex; align-items:center; gap:8px; padding:8px; background:white; border-radius:6px; cursor:pointer; font-size:13px; }
-.mt-custom-hint { font-size:11px; color:var(--primary-600); margin-top:10px; }
+.mt-perm-note { font-size:11px; font-weight:600; padding:2px 8px; border-radius:99px; }
+.mt-perm-note.preset { background:#dbeafe; color:#1e40af; }
+.mt-perm-note.custom  { background:#fef3c7; color:#92400e; }
+
+/* État coché (inclus dans le rôle) */
+.mt-perm-label { display:flex; align-items:center; gap:8px; padding:8px 10px; background:white; border:1px solid var(--gray-200); border-radius:6px; font-size:13px; transition:background .15s, border-color .15s; cursor:pointer; }
+.mt-perm-label.perm-on  { background:#f0fdf4; border-color:#bbf7d0; color:#15803d; }
+.mt-perm-label.perm-off { background:white;   border-color:var(--gray-200); color:var(--gray-400); }
+.mt-perm-label.perm-free { cursor:pointer; color:var(--gray-700); }
+.mt-perm-label input[type=checkbox] { accent-color:var(--primary-500); width:15px; height:15px; flex-shrink:0; }
+.mt-custom-hint { font-size:11px; color:#92400e; background:#fef3c7; border:1px solid #fde68a; border-radius:5px; padding:6px 10px; margin-top:10px; }
 
 /* Create account */
 .mt-create-account { background:var(--gray-50); border:1px solid var(--gray-200); border-radius:var(--radius-sm); padding:16px; margin-bottom:16px; }
@@ -202,44 +210,42 @@
       </div>
 
       <!-- ===== PERMISSIONS ===== -->
-      <div id="permissions_section" class="mt-perm-section">
+      <div id="permissions_section" class="mt-perm-section" style="display:none;">
         <div class="mt-perm-hdr">
           <p class="mt-perm-title">
             <i data-lucide="shield-check" width="15" height="15" ></i>
-            {% trans 'Permissions sur ce projet' %}
+            <span id="perm_section_title">{% trans 'Permissions du rôle' %}</span>
           </p>
-          <span id="perm_preset_note" class="mt-perm-note"></span>
+          <span id="perm_preset_note" class="mt-perm-note preset"></span>
         </div>
         <div class="grid grid-2" style="gap:8px;">
-          {% with post=request.POST %}
           <label id="lbl_can_manage_members_perm" class="mt-perm-label">
-            <input type="checkbox" name="can_manage_members_perm" {% if post.can_manage_members_perm %}checked{% endif %}>
+            <input type="checkbox" name="can_manage_members_perm">
             {% trans 'Gérer les membres' %}
           </label>
           <label id="lbl_can_edit_project_perm" class="mt-perm-label">
-            <input type="checkbox" name="can_edit_project_perm" {% if post.can_edit_project_perm %}checked{% endif %}>
+            <input type="checkbox" name="can_edit_project_perm">
             {% trans 'Modifier le projet' %}
           </label>
           <label id="lbl_can_add_milestones_perm" class="mt-perm-label">
-            <input type="checkbox" name="can_add_milestones_perm" {% if post.can_add_milestones_perm %}checked{% endif %}>
+            <input type="checkbox" name="can_add_milestones_perm">
             {% trans 'Ajouter des jalons' %}
           </label>
           <label id="lbl_can_add_documents_perm" class="mt-perm-label">
-            <input type="checkbox" name="can_add_documents_perm" {% if post.can_add_documents_perm %}checked{% endif %}>
+            <input type="checkbox" name="can_add_documents_perm">
             {% trans 'Ajouter des documents' %}
           </label>
           <label id="lbl_can_add_needs_perm" class="mt-perm-label">
-            <input type="checkbox" name="can_add_needs_perm" {% if post.can_add_needs_perm %}checked{% endif %}>
+            <input type="checkbox" name="can_add_needs_perm">
             {% trans 'Ajouter des besoins' %}
           </label>
           <label id="lbl_can_add_comments_perm" class="mt-perm-label">
-            <input type="checkbox" name="can_add_comments_perm" {% if post.can_add_comments_perm %}checked{% endif %}>
+            <input type="checkbox" name="can_add_comments_perm">
             {% trans 'Ajouter des commentaires' %}
           </label>
-          {% endwith %}
         </div>
         <p id="custom_perm_hint" class="mt-custom-hint" style="display:none;">
-          {% trans 'Rôle Personnalisé — cochez uniquement les permissions souhaitées.' %}
+          {% trans 'Rôle personnalisé — cochez les permissions souhaitées pour ce membre.' %}
         </p>
       </div>
 
@@ -371,47 +377,81 @@
   var checked = document.querySelector('input[name="member_type"]:checked');
   if (checked) switchPanel(checked.value);
 
-  // ===== PRESETS PERMISSIONS PAR RÔLE PROJET =====
-  var PROJECT_ROLE_PRESETS = {
-    'responsable':               { can_manage_members_perm:true,  can_edit_project_perm:true,  can_add_milestones_perm:true,  can_add_documents_perm:true,  can_add_needs_perm:true,  can_add_comments_perm:true  },
-    'membre':                    { can_manage_members_perm:false, can_edit_project_perm:false, can_add_milestones_perm:true,  can_add_documents_perm:true,  can_add_needs_perm:true,  can_add_comments_perm:true  },
-    'observateur':               { can_manage_members_perm:false, can_edit_project_perm:false, can_add_milestones_perm:false, can_add_documents_perm:false, can_add_needs_perm:false, can_add_comments_perm:false },
-    'ressource_externe_observateur': { can_manage_members_perm:false, can_edit_project_perm:false, can_add_milestones_perm:false, can_add_documents_perm:false, can_add_needs_perm:false, can_add_comments_perm:true  },
-    'ressource_externe_edit':    { can_manage_members_perm:false, can_edit_project_perm:false, can_add_milestones_perm:true,  can_add_documents_perm:true,  can_add_needs_perm:true,  can_add_comments_perm:true  },
-    'custom':                    null  // libre
+  // ===== PERMISSIONS PAR RÔLE PROJET =====
+  var PROJECT_ROLES_META = {{ project_roles_meta_json|safe }};
+
+  var projRoleSelect = document.getElementById('id_project_role');
+  var permSection    = document.getElementById('permissions_section');
+  var customHint     = document.getElementById('custom_perm_hint');
+  var permPresetNote = document.getElementById('perm_preset_note');
+
+  // Correspondance nom de champ → clé dans PROJECT_ROLES_META
+  var PERM_MAP = {
+    'can_manage_members_perm': 'can_manage_members',
+    'can_edit_project_perm':   'can_edit_project',
+    'can_add_milestones_perm': 'can_add_milestones',
+    'can_add_documents_perm':  'can_add_documents',
+    'can_add_needs_perm':      'can_add_needs',
+    'can_add_comments_perm':   'can_add_comments',
   };
 
-  var projRoleSelect  = document.getElementById('id_role');
-  var permPresetNote  = document.getElementById('perm_preset_note');
-  var customHint      = document.getElementById('custom_perm_hint');
+  var permSectionTitle = document.getElementById('perm_section_title');
 
-  function applyProjectRolePreset(role) {
-    var preset = PROJECT_ROLE_PRESETS[role];
-    var isCustom = (role === 'custom');
-    if (customHint) customHint.style.display = isCustom ? '' : 'none';
+  function applyProjectRolePermissions(roleId) {
+    var meta = PROJECT_ROLES_META[roleId];
 
-    Object.keys(PROJECT_ROLE_PRESETS['responsable']).forEach(function(name) {
-      var chk  = document.querySelector('input[name="' + name + '"]');
-      var lbl  = document.getElementById('lbl_' + name);
+    if (!roleId || !meta) {
+      permSection.style.display = 'none';
+      return;
+    }
+
+    permSection.style.display = '';
+
+    var isSystem = meta.is_system;
+
+    // Titre + badge
+    if (permSectionTitle) {
+      permSectionTitle.textContent = isSystem
+        ? 'Ce rôle donne accès à'
+        : 'Définir les permissions';
+    }
+    if (permPresetNote) {
+      permPresetNote.className = 'mt-perm-note ' + (isSystem ? 'preset' : 'custom');
+      permPresetNote.textContent = isSystem ? 'Prédéfinies' : 'Personnalisé';
+    }
+    if (customHint) customHint.style.display = isSystem ? 'none' : '';
+
+    Object.keys(PERM_MAP).forEach(function(fieldName) {
+      var metaKey = PERM_MAP[fieldName];
+      var chk = document.querySelector('input[name="' + fieldName + '"]');
+      var lbl = document.getElementById('lbl_' + fieldName);
       if (!chk) return;
-      if (preset !== null) {
-        chk.checked  = preset[name];
-        chk.disabled = !isCustom;
-        if (lbl) lbl.style.opacity = isCustom ? '1' : (preset[name] ? '1' : '0.45');
+
+      if (isSystem) {
+        var hasPerm = !!meta[metaKey];
+        chk.checked  = hasPerm;
+        chk.disabled = true;
+        if (lbl) {
+          lbl.className = 'mt-perm-label ' + (hasPerm ? 'perm-on' : 'perm-off');
+          lbl.style.opacity = '';
+          lbl.title = hasPerm ? 'Inclus dans ce rôle' : 'Non inclus dans ce rôle';
+        }
       } else {
         chk.disabled = false;
-        if (lbl) lbl.style.opacity = '1';
+        if (lbl) {
+          lbl.className = 'mt-perm-label perm-free';
+          lbl.style.opacity = '';
+          lbl.title = '';
+        }
       }
     });
-
-    if (permPresetNote) {
-      permPresetNote.textContent = isCustom ? 'Permissions libres' : 'Pré-remplies par le rôle';
-    }
   }
 
   if (projRoleSelect) {
-    projRoleSelect.addEventListener('change', function() { applyProjectRolePreset(this.value); });
-    applyProjectRolePreset(projRoleSelect.value);
+    projRoleSelect.addEventListener('change', function() {
+      applyProjectRolePermissions(this.value);
+    });
+    applyProjectRolePermissions(projRoleSelect.value);
   }
 })();
 </script>

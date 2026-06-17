@@ -18,9 +18,7 @@
         <p class="stat-card-subtitle">{{ total_projects }} projet{{ total_projects|pluralize }} au total</p>
       </div>
       <div class="stat-card-icon blue">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
-        </svg>
+        <i data-lucide="folder" ></i>
       </div>
     </div>
   </a>
@@ -33,9 +31,7 @@
         <p class="stat-card-subtitle">{{ total_consumed|number_format }} GNF</p>
       </div>
       <div class="stat-card-icon amber">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
-        </svg>
+        <i data-lucide="credit-card" ></i>
       </div>
     </div>
   </a>
@@ -48,9 +44,7 @@
         <p class="stat-card-subtitle">Collaborations en cours</p>
       </div>
       <div class="stat-card-icon green">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-        </svg>
+        <i data-lucide="users" ></i>
       </div>
     </div>
   </a>
@@ -191,9 +185,7 @@
           <div class="request-footer">
             <span>Par {{ req.created_by }}</span>
             <span class="request-footer-item">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
+              <i data-lucide="clock" ></i>
               {{ req.created_at|date:"d/m/Y" }}
             </span>
           </div>
@@ -228,23 +220,17 @@
             <h4 class="event-title">{{ event.title }}</h4>
             <div class="event-meta">
               <span class="event-meta-item">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
+                <i data-lucide="clock" ></i>
                 {{ event.time|time:"H:i" }}
               </span>
               {% if event.location %}
               <span class="event-meta-item">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
+                <i data-lucide="map-pin" ></i>
                 {{ event.location }}
               </span>
               {% endif %}
               <span class="event-meta-item">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                </svg>
+                <i data-lucide="user-cog" ></i>
                 {{ event.participants.count }} participants
               </span>
             </div>

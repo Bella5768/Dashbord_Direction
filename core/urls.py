@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from . import views_leave
+from . import views_roles
 
 app_name = 'core'
 
@@ -8,7 +9,9 @@ urlpatterns = [
     # Authentication
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
-    path('mot-de-passe-oublie/', views.password_reset_info, name='password_reset_info'),
+    path('mot-de-passe-oublie/', views.password_reset_request, name='password_reset_info'),
+    path('reinitialiser/<uidb64>/<token>/', views.password_reset_confirm, name='password_reset_confirm'),
+    path('mon-compte/', views.profile, name='profile'),
     path('mon-compte/mot-de-passe/', views.password_change, name='password_change'),
     
     # Main pages
@@ -21,6 +24,7 @@ urlpatterns = [
     
     # Event CRUD
     path('evenements/nouveau/', views.event_create, name='event_create'),
+    path('evenements/<int:event_id>/', views.event_detail, name='event_detail'),
     path('evenements/<int:event_id>/modifier/', views.event_edit, name='event_edit'),
     path('evenements/<int:event_id>/supprimer/', views.event_delete, name='event_delete'),
     
@@ -43,6 +47,7 @@ urlpatterns = [
     path('utilisateurs/', views.users_list, name='users_list'),
     path('utilisateurs/nouveau/', views.user_create, name='user_create'),
     path('utilisateurs/activer/<uidb64>/<token>/', views.account_activate, name='account_activate'),
+    path('utilisateurs/nouveau-lien/', views.request_new_activation, name='request_new_activation'),
     path('utilisateurs/<int:user_id>/modifier/', views.user_edit, name='user_edit'),
     path('utilisateurs/<int:user_id>/supprimer/', views.user_delete, name='user_delete'),
     path('utilisateurs/<int:user_id>/toggle/', views.user_toggle_status, name='user_toggle_status'),
@@ -117,6 +122,20 @@ urlpatterns = [
     path('employes/<int:employee_id>/modifier/', views.employee_edit, name='employee_edit'),
     path('employes/<int:employee_id>/supprimer/', views.employee_delete, name='employee_delete'),
     
+    # Rôles RBAC
+    path('roles/', views_roles.roles_list, name='roles_list'),
+    path('roles/nouveau/', views_roles.role_create, name='role_create'),
+    path('roles/<int:role_id>/', views_roles.role_detail, name='role_detail'),
+    path('roles/<int:role_id>/modifier/', views_roles.role_edit, name='role_edit'),
+    path('roles/<int:role_id>/dupliquer/', views_roles.role_duplicate, name='role_duplicate'),
+    path('roles/<int:role_id>/supprimer/', views_roles.role_delete, name='role_delete'),
+    # Rôles projet
+    path('roles-projet/', views_roles.project_roles_list, name='project_roles_list'),
+    path('roles-projet/nouveau/', views_roles.project_role_create, name='project_role_create'),
+    path('roles-projet/<int:role_id>/modifier/', views_roles.project_role_edit, name='project_role_edit'),
+    path('roles-projet/<int:role_id>/dupliquer/', views_roles.project_role_duplicate, name='project_role_duplicate'),
+    path('roles-projet/<int:role_id>/supprimer/', views_roles.project_role_delete, name='project_role_delete'),
+
     # Direction CRUD
     path('directions/', views.directions_list, name='directions_list'),
     path('directions/nouveau/', views.direction_create, name='direction_create'),

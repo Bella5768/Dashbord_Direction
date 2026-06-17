@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Supprimer le rôle{% endblock %}
+{% block page_title %}Supprimer un rôle{% endblock %}
+{% block page_subtitle %}Cette action est irréversible{% endblock %}
+
+{% block content %}
+<div style="max-width:480px;margin:0 auto;">
+    <div class="card">
+        <div class="card-content" style="padding:32px;text-align:center;">
+            <!-- Icône d'alerte -->
+            <div style="width:56px;height:56px;background:#fef2f2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+                <i data-lucide="triangle-alert" width="28" height="28" stroke="#ef4444"></i>
+            </div>
+
+            <h3 style="font-size:18px;font-weight:600;color:#111827;margin-bottom:8px;">
+                Supprimer « {{ role.name }} » ?
+            </h3>
+            <p class="text-gray-500 text-sm" style="margin-bottom:8px;line-height:1.6;">
+                Ce rôle sera supprimé <strong>définitivement</strong>.
+            </p>
+            <p class="text-sm" style="color:#ef4444;margin-bottom:28px;">
+                Les utilisateurs qui l'ont seront sans rôle.
+            </p>
+
+            <!-- Résumé du rôle -->
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 16px;text-align:left;margin-bottom:24px;">
+                <div class="flex justify-between text-sm" style="margin-bottom:6px;">
+                    <span class="text-gray-500">Identifiant</span>
+                    <code style="font-size:11px;">{{ role.slug }}</code>
+                </div>
+                <div class="flex justify-between text-sm" style="margin-bottom:6px;">
+                    <span class="text-gray-500">Permissions</span>
+                    <span class="font-medium">{{ role.permissions.count }}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">Utilisateurs assignés</span>
+                    <span class="font-medium">{{ role.users.count }}</span>
+                </div>
+            </div>
+
+            <div style="display:flex;gap:10px;justify-content:center;">
+                {% if is_project %}
+                <a href="{% url 'core:project_roles_list' %}" class="btn btn-outline" style="flex:1;justify-content:center;">Annuler</a>
+                {% else %}
+                <a href="{% url 'core:roles_list' %}" class="btn btn-outline" style="flex:1;justify-content:center;">Annuler</a>
+                {% endif %}
+                <form method="post" style="flex:1;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger" style="width:100%;justify-content:center;">
+                        <i data-lucide="trash-2" width="14" height="14"></i>
+                        Supprimer définitivement
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

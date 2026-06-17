@@ -8,117 +8,208 @@
 
 {% block extra_css %}
 <style>
-/* ── KPI gradient cards ── */
-.rpt-kpi { border-radius:12px; padding:20px; color:#fff; position:relative; overflow:hidden; }
-.rpt-kpi::after { content:''; position:absolute; top:-10px; right:-10px; width:70px; height:70px; background:rgba(255,255,255,.1); border-radius:50%; pointer-events:none; }
-.rpt-kpi.lg { padding:24px; }
-.rpt-kpi.lg::before { content:''; position:absolute; bottom:-20px; right:20px; width:50px; height:50px; background:rgba(255,255,255,.05); border-radius:50%; pointer-events:none; }
-.rpt-kpi.blue   { background:linear-gradient(135deg,#2563eb,#1d4ed8); }
-.rpt-kpi.green  { background:linear-gradient(135deg,#16a34a,#15803d); }
-.rpt-kpi.blue2  { background:linear-gradient(135deg,#3b82f6,#2563eb); }
-.rpt-kpi.red    { background:linear-gradient(135deg,#dc2626,#b91c1c); }
-.rpt-kpi.purple { background:linear-gradient(135deg,#7c3aed,#6d28d9); }
-.rpt-kpi.amber  { background:linear-gradient(135deg,#d97706,#b45309); }
-.rpt-kpi-val { font-size:28px; font-weight:700; margin-bottom:4px; }
-.rpt-kpi-val.lg { font-size:24px; }
-.rpt-kpi-lbl { font-size:13px; opacity:.85; margin:0 0 8px; }
+/* ── KPI cards (design cohérent avec le reste de l'app) ── */
+.rpt-kpi {
+    background: white;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    border-left: 4px solid #94a3b8;
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.rpt-kpi.blue   { border-left-color: #3b82f6; }
+.rpt-kpi.green  { border-left-color: #22c55e; }
+.rpt-kpi.red    { border-left-color: #ef4444; }
+.rpt-kpi.purple { border-left-color: #8b5cf6; }
+.rpt-kpi.amber  { border-left-color: #f59e0b; }
+.rpt-kpi.cyan   { border-left-color: #06b6d4; }
 
-/* ── Project / Performance rows ── */
-.rpt-list { display:flex; flex-direction:column; gap:12px; }
-.rpt-prow { background:#fff; border-radius:12px; border:1px solid #d1d5db; border-left:5px solid #94a3b8; padding:20px; transition:box-shadow .2s, transform .2s; cursor:pointer; }
-.rpt-prow:hover { box-shadow:0 4px 12px rgba(0,0,0,.08); transform:translateY(-1px); }
-.rpt-prow.s-termine   { border-left-color:#16a34a; }
-.rpt-prow.s-en_cours  { border-left-color:#3b82f6; }
-.rpt-prow.s-en_retard { border-left-color:#dc2626; }
-.rpt-prow.s-suspendu  { border-left-color:#d97706; }
-.rpt-pgrid-5  { display:grid; grid-template-columns:2fr 1fr 1.2fr 1.5fr 1fr; align-items:center; gap:16px; }
-.rpt-pgrid-5p { display:grid; grid-template-columns:2fr 1fr 1fr 2fr 1fr; align-items:center; gap:16px; }
-.rpt-pname { font-weight:600; font-size:15px; color:#1e293b; margin-bottom:4px; }
-.rpt-psub  { font-size:12px; color:#64748b; display:flex; align-items:center; gap:6px; }
-.rpt-dir { display:inline-block; padding:4px 14px; border-radius:20px; font-size:12px; font-weight:600; background:#dbeafe; color:#1e40af; }
+.rpt-kpi-icon {
+    width: 40px; height: 40px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.rpt-kpi.blue   .rpt-kpi-icon { background: #dbeafe; color: #1d4ed8; }
+.rpt-kpi.green  .rpt-kpi-icon { background: #dcfce7; color: #15803d; }
+.rpt-kpi.red    .rpt-kpi-icon { background: #fee2e2; color: #b91c1c; }
+.rpt-kpi.purple .rpt-kpi-icon { background: #ede9fe; color: #6d28d9; }
+.rpt-kpi.amber  .rpt-kpi-icon { background: #fef3c7; color: #b45309; }
+.rpt-kpi.cyan   .rpt-kpi-icon { background: #cffafe; color: #0e7490; }
+
+.rpt-kpi-val { font-size: 22px; font-weight: 700; color: #111827; margin: 0; line-height: 1.2; }
+.rpt-kpi-lbl { font-size: 12px; color: #6b7280; margin: 2px 0 0; }
+
+/* ── Project rows ── */
+.rpt-list { display: flex; flex-direction: column; gap: 10px; }
+.rpt-prow {
+    background: white;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    border-left: 4px solid #94a3b8;
+    padding: 16px 20px;
+    transition: box-shadow .15s, transform .15s;
+    cursor: pointer;
+}
+.rpt-prow:hover { box-shadow: 0 4px 16px rgba(0,0,0,.07); transform: translateY(-1px); }
+.rpt-prow.s-termine   { border-left-color: #22c55e; }
+.rpt-prow.s-en_cours  { border-left-color: #3b82f6; }
+.rpt-prow.s-en_retard { border-left-color: #ef4444; }
+.rpt-prow.s-suspendu  { border-left-color: #f59e0b; }
+.rpt-prow.s-planifie  { border-left-color: #94a3b8; }
+
+.rpt-pgrid { display: grid; align-items: center; gap: 16px; }
+.rpt-pgrid.cols-5 { grid-template-columns: 2.5fr 100px 1.2fr 1.4fr 80px; }
+.rpt-pgrid.cols-4 { grid-template-columns: 2.5fr 100px 2fr 80px; }
+@media (max-width: 900px) {
+    .rpt-pgrid.cols-5,
+    .rpt-pgrid.cols-4 { grid-template-columns: 1fr 1fr; }
+    .rpt-pgrid > *:last-child { grid-column: 1 / -1; }
+}
+
+.rpt-pname { font-weight: 600; font-size: 14px; color: #111827; margin: 0 0 3px; }
+.rpt-psub  { font-size: 12px; color: #6b7280; display: flex; align-items: center; gap: 4px; margin: 0; }
+
+/* Direction badge — couleur dynamique */
+.rpt-dir-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .3px;
+    white-space: nowrap;
+}
 
 /* ── Progress ── */
-.rpt-prog-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; }
-.rpt-prog-lbl { font-size:12px; color:#475569; }
-.rpt-prog-bar { background:#e5e7eb; border-radius:10px; overflow:hidden; }
-.rpt-prog-bar.sm { height:6px; }
-.rpt-prog-bar.md { height:8px; }
-.rpt-prog-fill { height:100%; border-radius:10px; transition:width .5s; }
-.rpt-pval.high { font-size:13px; font-weight:700; color:#16a34a; }
-.rpt-pval.mid  { font-size:13px; font-weight:700; color:#2563eb; }
-.rpt-pval.low  { font-size:13px; font-weight:700; color:#d97706; }
-.rpt-pval.crit { font-size:13px; font-weight:700; color:#dc2626; }
-.rpt-bar-high { background:linear-gradient(90deg,#16a34a,#22c55e); }
-.rpt-bar-mid  { background:linear-gradient(90deg,#2563eb,#3b82f6); }
-.rpt-bar-low  { background:linear-gradient(90deg,#d97706,#f59e0b); }
-.rpt-bar-crit { background:linear-gradient(90deg,#dc2626,#ef4444); }
+.rpt-prog-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
+.rpt-prog-lbl { font-size: 11px; color: #6b7280; }
+.rpt-prog-bar { background: #f1f5f9; border-radius: 10px; overflow: hidden; }
+.rpt-prog-bar.sm { height: 6px; }
+.rpt-prog-bar.md { height: 8px; }
+.rpt-prog-fill { height: 100%; border-radius: 10px; transition: width .5s; }
+.rpt-pval { font-size: 13px; font-weight: 700; }
+.rpt-pval.high { color: #16a34a; }
+.rpt-pval.mid  { color: #2563eb; }
+.rpt-pval.low  { color: #d97706; }
+.rpt-pval.crit { color: #dc2626; }
+.rpt-bar-high { background: linear-gradient(90deg, #16a34a, #22c55e); }
+.rpt-bar-mid  { background: linear-gradient(90deg, #2563eb, #3b82f6); }
+.rpt-bar-low  { background: linear-gradient(90deg, #d97706, #f59e0b); }
+.rpt-bar-crit { background: linear-gradient(90deg, #dc2626, #ef4444); }
 
-/* ── Budget circle ── */
-.rpt-bcirc { display:inline-flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:50%; border:3px solid; font-size:13px; font-weight:700; }
-.rpt-bcirc.alert { border-color:#fecaca; background:#fef2f2; color:#dc2626; }
-.rpt-bcirc.warn  { border-color:#fde68a; background:#fffbeb; color:#d97706; }
-.rpt-bcirc.ok    { border-color:#bbf7d0; background:#f0fdf4; color:#16a34a; }
+/* ── Budget indicator ── */
+.rpt-bcirc {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 48px; height: 48px; border-radius: 50%;
+    border: 2.5px solid; font-size: 12px; font-weight: 700;
+}
+.rpt-bcirc.alert { border-color: #fca5a5; background: #fef2f2; color: #dc2626; }
+.rpt-bcirc.warn  { border-color: #fcd34d; background: #fffbeb; color: #d97706; }
+.rpt-bcirc.ok    { border-color: #86efac; background: #f0fdf4; color: #16a34a; }
 
 /* ── Budget amounts ── */
-.rpt-b-main { font-size:14px; font-weight:600; color:#1e293b; text-align:right; }
-.rpt-b-consumed { font-size:12px; text-align:right; }
-.rpt-b-consumed.ok    { color:#16a34a; }
-.rpt-b-consumed.warn  { color:#d97706; }
-.rpt-b-consumed.alert { color:#dc2626; }
+.rpt-b-main     { font-size: 13px; font-weight: 600; color: #1e293b; text-align: right; margin: 0 0 2px; }
+.rpt-b-consumed { font-size: 11px; text-align: right; margin: 0; }
+.rpt-b-consumed.ok    { color: #16a34a; }
+.rpt-b-consumed.warn  { color: #d97706; }
+.rpt-b-consumed.alert { color: #dc2626; }
 
 /* ── Budget table rate ── */
-.rpt-rate.ok    { color:#16a34a; font-weight:600; }
-.rpt-rate.warn  { color:#d97706; font-weight:600; }
-.rpt-rate.alert { color:#dc2626; font-weight:600; }
+.rpt-rate { font-size: 13px; font-weight: 600; }
+.rpt-rate.ok    { color: #16a34a; }
+.rpt-rate.warn  { color: #d97706; }
+.rpt-rate.alert { color: #dc2626; }
 
 /* ── Empty state ── */
-.rpt-empty { text-align:center; padding:60px 20px; background:#fff; border-radius:12px; border:1px solid #d1d5db; }
-.rpt-empty svg { display:block; margin:0 auto 16px; }
-.rpt-empty p { color:#6b7280; font-size:15px; }
+.rpt-empty {
+    text-align: center; padding: 60px 20px;
+    background: white; border-radius: 10px;
+    border: 1px dashed #e5e7eb;
+}
+.rpt-empty p { color: #6b7280; font-size: 14px; margin: 12px 0 0; }
+
+/* ── Section headers ── */
+.rpt-section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+}
+.rpt-section-title {
+    font-size: 14px; font-weight: 600; color: #374151; margin: 0;
+    display: flex; align-items: center; gap: 6px;
+}
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Controls -->
+
+<!-- Controls bar -->
 <div class="flex justify-between items-center mb-6">
-    <div class="tabs" style="margin-bottom:0;">
-        <button class="tab-btn active" onclick="switchTab('global', this)">{% trans 'Vue globale' %}</button>
-        <button class="tab-btn" onclick="switchTab('projets', this)">{% trans 'Projets' %}</button>
-        <button class="tab-btn" onclick="switchTab('budget', this)">{% trans 'Budget' %}</button>
-        <button class="tab-btn" onclick="switchTab('performance', this)">{% trans 'Performance' %}</button>
+    <div class="tabs" style="margin-bottom: 0;">
+        <button class="tab-btn active" onclick="switchTab('global', this)">
+            <i data-lucide="layout-dashboard" width="14" height="14"></i>
+            {% trans 'Vue globale' %}
+        </button>
+        <button class="tab-btn" onclick="switchTab('projets', this)">
+            <i data-lucide="folder" width="14" height="14"></i>
+            {% trans 'Projets' %}
+        </button>
+        <button class="tab-btn" onclick="switchTab('budget', this)">
+            <i data-lucide="credit-card" width="14" height="14"></i>
+            {% trans 'Budget' %}
+        </button>
+        <button class="tab-btn" onclick="switchTab('performance', this)">
+            <i data-lucide="trending-up" width="14" height="14"></i>
+            {% trans 'Performance' %}
+        </button>
     </div>
-    <div>
-        <a href="{% url 'core:export_reports_pdf' %}" class="btn btn-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            {% trans 'Exporter PDF' %}
-        </a>
-    </div>
+    <a href="{% url 'core:export_reports_pdf' %}" class="btn btn-primary">
+        <i data-lucide="download" width="16" height="16"></i>
+        {% trans 'Exporter PDF' %}
+    </a>
 </div>
 
 <!-- ==================== TAB: VUE GLOBALE ==================== -->
 <div id="tab-global" class="tab-content">
-    <div class="grid grid-5 mb-6">
-        <a class="stat-box stat-box-link" href="{% url 'core:projects' %}?status=all" style="text-align:center;">
-            <p class="stat-box-value" style="color:#2563eb;">{{ total_projects }}</p>
-            <p class="stat-box-label">{% trans 'Projets totaux' %}</p>
+
+    <div class="stats-row mb-6">
+        <a class="stat-box blue" href="{% url 'core:projects' %}?status=all">
+            <div class="stat-box-icon"><i data-lucide="folder" width="20" height="20"></i></div>
+            <div class="stat-box-body">
+                <p class="stat-box-value">{{ total_projects }}</p>
+                <p class="stat-box-label">{% trans 'Projets totaux' %}</p>
+            </div>
         </a>
-        <a class="stat-box stat-box-link" href="{% url 'core:projects' %}?status=termine" style="text-align:center;">
-            <p class="stat-box-value" style="color:#16a34a;">{{ projects_completed }}</p>
-            <p class="stat-box-label">{% trans 'Projets terminés' %}</p>
+        <a class="stat-box green" href="{% url 'core:projects' %}?status=termine">
+            <div class="stat-box-icon"><i data-lucide="circle-check" width="20" height="20"></i></div>
+            <div class="stat-box-body">
+                <p class="stat-box-value">{{ projects_completed }}</p>
+                <p class="stat-box-label">{% trans 'Terminés' %}</p>
+            </div>
         </a>
-        <a class="stat-box stat-box-link" href="{% url 'core:resources' %}?tab=budget" style="text-align:center;">
-            <p class="stat-box-value" style="color:#2563eb;">{{ budget_rate }}%</p>
-            <p class="stat-box-label">{% trans 'Budget consommé' %}</p>
+        <a class="stat-box amber" href="{% url 'core:resources' %}?tab=budget">
+            <div class="stat-box-icon"><i data-lucide="percent" width="20" height="20"></i></div>
+            <div class="stat-box-body">
+                <p class="stat-box-value">{{ budget_rate }}%</p>
+                <p class="stat-box-label">{% trans 'Budget consommé' %}</p>
+            </div>
         </a>
-        <a class="stat-box stat-box-link" href="{% url 'core:partners' %}?status=actif&type=all" style="text-align:center;">
-            <p class="stat-box-value" style="color:#7c3aed;">{{ active_partners }}</p>
-            <p class="stat-box-label">{% trans 'Partenaires actifs' %}</p>
+        <a class="stat-box purple" href="{% url 'core:partners' %}?status=actif&type=all">
+            <div class="stat-box-icon"><i data-lucide="handshake" width="20" height="20"></i></div>
+            <div class="stat-box-body">
+                <p class="stat-box-value">{{ active_partners }}</p>
+                <p class="stat-box-label">{% trans 'Partenaires actifs' %}</p>
+            </div>
         </a>
-        <a class="stat-box stat-box-link" href="{% url 'core:requests' %}" style="text-align:center;">
-            <p class="stat-box-value" style="color:#d97706;">{{ pending_requests }}</p>
-            <p class="stat-box-label">{% trans 'Demandes en attente' %}</p>
+        <a class="stat-box red" href="{% url 'core:requests' %}">
+            <div class="stat-box-icon"><i data-lucide="clock" width="20" height="20"></i></div>
+            <div class="stat-box-body">
+                <p class="stat-box-value">{{ pending_requests }}</p>
+                <p class="stat-box-label">{% trans 'Demandes en attente' %}</p>
+            </div>
         </a>
     </div>
 
@@ -135,7 +226,7 @@
         </div>
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">{% trans 'Répartition des projets par statut' %}</h3>
+                <h3 class="card-title">{% trans 'Répartition par statut' %}</h3>
             </div>
             <div class="card-content">
                 <div class="chart-container">
@@ -148,64 +239,90 @@
 
 <!-- ==================== TAB: PROJETS ==================== -->
 <div id="tab-projets" class="tab-content" style="display:none;">
+
     <div class="grid grid-4 mb-6">
         <div class="rpt-kpi blue">
-            <p class="rpt-kpi-val">{{ total_projects }}</p>
-            <p class="rpt-kpi-lbl">{% trans 'Total projets' %}</p>
+            <div class="rpt-kpi-icon"><i data-lucide="folder" width="18" height="18"></i></div>
+            <div>
+                <p class="rpt-kpi-val">{{ total_projects }}</p>
+                <p class="rpt-kpi-lbl">{% trans 'Total projets' %}</p>
+            </div>
         </div>
         <div class="rpt-kpi green">
-            <p class="rpt-kpi-val">{{ projects_completed }}</p>
-            <p class="rpt-kpi-lbl">{% trans 'Terminés' %}</p>
+            <div class="rpt-kpi-icon"><i data-lucide="circle-check" width="18" height="18"></i></div>
+            <div>
+                <p class="rpt-kpi-val">{{ projects_completed }}</p>
+                <p class="rpt-kpi-lbl">{% trans 'Terminés' %}</p>
+            </div>
         </div>
-        <div class="rpt-kpi blue2">
-            <p class="rpt-kpi-val">{{ projects_en_cours }}</p>
-            <p class="rpt-kpi-lbl">{% trans 'En cours' %}</p>
+        <div class="rpt-kpi cyan">
+            <div class="rpt-kpi-icon"><i data-lucide="loader" width="18" height="18"></i></div>
+            <div>
+                <p class="rpt-kpi-val">{{ projects_en_cours }}</p>
+                <p class="rpt-kpi-lbl">{% trans 'En cours' %}</p>
+            </div>
         </div>
         <div class="rpt-kpi red">
-            <p class="rpt-kpi-val">{{ projects_en_retard }}</p>
-            <p class="rpt-kpi-lbl">{% trans 'En retard' %}</p>
+            <div class="rpt-kpi-icon"><i data-lucide="triangle-alert" width="18" height="18"></i></div>
+            <div>
+                <p class="rpt-kpi-val">{{ projects_en_retard }}</p>
+                <p class="rpt-kpi-lbl">{% trans 'En retard' %}</p>
+            </div>
         </div>
     </div>
 
     <div class="rpt-list">
         {% for project in all_projects %}
         <div class="rpt-prow s-{{ project.status }}" onclick="window.location.href='{% url 'core:project_detail' project.id %}'">
-            <div class="rpt-pgrid-5">
+            <div class="rpt-pgrid cols-5">
+                <!-- Nom + responsable -->
                 <div>
                     <p class="rpt-pname">{{ project.name }}</p>
-                    <div class="rpt-psub">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                        {{ project.manager|default:"-" }}
-                    </div>
+                    <p class="rpt-psub">
+                        <i data-lucide="user" width="12" height="12"></i>
+                        {{ project.manager|default:"—" }}
+                    </p>
                 </div>
-                <div style="text-align:center;">
-                    <span class="rpt-dir">{{ project.direction.code }}</span>
+                <!-- Direction -->
+                <div>
+                    <span class="rpt-dir-badge"
+                          style="background: {{ project.direction.color|default:'#3b82f6' }}1a; color: {{ project.direction.color|default:'#1d4ed8' }};">
+                        {{ project.direction.code }}
+                    </span>
                 </div>
+                <!-- Statut + progression -->
                 <div>
                     <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-                        <span class="badge {% if project.status == 'en_cours' %}badge-info{% elif project.status == 'termine' %}badge-success{% elif project.status == 'en_retard' %}badge-danger{% elif project.status == 'suspendu' %}badge-warning{% else %}badge-secondary{% endif %}" style="font-size:11px;">{{ project.get_status_display }}</span>
+                        <span class="badge {% if project.status == 'en_cours' %}badge-info{% elif project.status == 'termine' %}badge-success{% elif project.status == 'en_retard' %}badge-danger{% elif project.status == 'suspendu' %}badge-warning{% else %}badge-secondary{% endif %}">
+                            {{ project.get_status_display }}
+                        </span>
+                    </div>
+                    <div class="rpt-prog-row">
+                        <span class="rpt-prog-lbl">{% trans 'Avancement' %}</span>
                         <span class="rpt-pval {% if project.progress >= 80 %}high{% elif project.progress >= 50 %}mid{% elif project.progress >= 25 %}low{% else %}crit{% endif %}">{{ project.progress }}%</span>
                     </div>
                     <div class="rpt-prog-bar sm">
                         <div class="rpt-prog-fill {% if project.progress >= 80 %}rpt-bar-high{% elif project.progress >= 50 %}rpt-bar-mid{% elif project.progress >= 25 %}rpt-bar-low{% else %}rpt-bar-crit{% endif %}" style="width:{{ project.progress }}%;"></div>
                     </div>
                 </div>
+                <!-- Budget -->
                 <div>
                     <p class="rpt-b-main">{{ project.budget|number_format }} {{ project.currency }}</p>
-                    <p class="rpt-b-consumed {% if project.budget_percentage > 80 %}alert{% elif project.budget_percentage > 60 %}warn{% else %}ok{% endif %}">{% trans 'Consommé' %}: {{ project.budget_consumed|number_format }} {{ project.currency }}</p>
+                    <p class="rpt-b-consumed {% if project.budget_percentage > 80 %}alert{% elif project.budget_percentage > 60 %}warn{% else %}ok{% endif %}">
+                        {% trans 'Consommé' %} : {{ project.budget_consumed|number_format }} {{ project.currency }}
+                    </p>
                 </div>
+                <!-- % budget circle -->
                 <div style="text-align:center;">
-                    <span class="rpt-bcirc {% if project.budget_percentage > 80 %}alert{% elif project.budget_percentage > 60 %}warn{% else %}ok{% endif %}">{{ project.budget_percentage }}%</span>
+                    <span class="rpt-bcirc {% if project.budget_percentage > 80 %}alert{% elif project.budget_percentage > 60 %}warn{% else %}ok{% endif %}">
+                        {{ project.budget_percentage }}%
+                    </span>
                 </div>
             </div>
         </div>
         {% empty %}
         <div class="rpt-empty">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#9ca3af" width="48" height="48">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+            <i data-lucide="folder-open" width="44" height="44" style="color:#d1d5db; display:block; margin:0 auto;"></i>
             <p>{% trans 'Aucun projet trouvé' %}</p>
         </div>
         {% endfor %}
@@ -214,18 +331,28 @@
 
 <!-- ==================== TAB: BUDGET ==================== -->
 <div id="tab-budget" class="tab-content" style="display:none;">
+
     <div class="grid grid-3 mb-6">
-        <div class="rpt-kpi blue lg">
-            <p class="rpt-kpi-lbl">{% trans 'Budget total alloué' %}</p>
-            <p class="rpt-kpi-val lg">{{ total_budget|number_format }} GNF</p>
+        <div class="rpt-kpi blue">
+            <div class="rpt-kpi-icon"><i data-lucide="wallet" width="18" height="18"></i></div>
+            <div>
+                <p class="rpt-kpi-val" style="font-size:17px;">{{ total_budget|number_format }}</p>
+                <p class="rpt-kpi-lbl">{% trans 'Budget alloué (GNF)' %}</p>
+            </div>
         </div>
-        <div class="rpt-kpi green lg">
-            <p class="rpt-kpi-lbl">{% trans 'Budget total consommé' %}</p>
-            <p class="rpt-kpi-val lg">{{ total_consumed|number_format }} GNF</p>
+        <div class="rpt-kpi green">
+            <div class="rpt-kpi-icon"><i data-lucide="trending-down" width="18" height="18"></i></div>
+            <div>
+                <p class="rpt-kpi-val" style="font-size:17px;">{{ total_consumed|number_format }}</p>
+                <p class="rpt-kpi-lbl">{% trans 'Consommé (GNF)' %}</p>
+            </div>
         </div>
-        <div class="rpt-kpi {% if budget_rate > 80 %}red{% elif budget_rate > 60 %}amber{% else %}purple{% endif %} lg">
-            <p class="rpt-kpi-lbl">{% trans 'Taux de consommation' %}</p>
-            <p class="rpt-kpi-val lg">{{ budget_rate }}%</p>
+        <div class="rpt-kpi {% if budget_rate > 80 %}red{% elif budget_rate > 60 %}amber{% else %}purple{% endif %}">
+            <div class="rpt-kpi-icon"><i data-lucide="percent" width="18" height="18"></i></div>
+            <div>
+                <p class="rpt-kpi-val">{{ budget_rate }}%</p>
+                <p class="rpt-kpi-lbl">{% trans 'Taux de consommation' %}</p>
+            </div>
         </div>
     </div>
 
@@ -242,7 +369,7 @@
         </div>
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">{% trans 'Consommation budgétaire' %}</h3>
+                <h3 class="card-title">{% trans 'Consommation par direction' %}</h3>
             </div>
             <div class="card-content">
                 <div class="chart-container">
@@ -265,7 +392,7 @@
                             <th style="text-align:right;">{% trans 'Budget alloué' %}</th>
                             <th style="text-align:right;">{% trans 'Consommé' %}</th>
                             <th style="text-align:center;">{% trans 'Taux' %}</th>
-                            <th style="text-align:center;">{% trans 'Progression' %}</th>
+                            <th style="min-width:140px;">{% trans 'Progression' %}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -281,8 +408,8 @@
                                 <span class="rpt-rate {% if item.rate > 80 %}alert{% elif item.rate > 60 %}warn{% else %}ok{% endif %}">{{ item.rate }}%</span>
                             </td>
                             <td>
-                                <div class="progress" style="min-width:100px;">
-                                    <div class="progress-bar {% if item.rate > 80 %}red{% elif item.rate > 60 %}amber{% else %}green{% endif %}" style="width:{{ item.rate }}%"></div>
+                                <div class="rpt-prog-bar sm" style="min-width:100px;">
+                                    <div class="rpt-prog-fill {% if item.rate > 80 %}rpt-bar-crit{% elif item.rate > 60 %}rpt-bar-low{% else %}rpt-bar-high{% endif %}" style="width:{{ item.rate }}%;"></div>
                                 </div>
                             </td>
                         </tr>
@@ -302,193 +429,186 @@
 
 <!-- ==================== TAB: PERFORMANCE ==================== -->
 <div id="tab-performance" class="tab-content" style="display:none;">
+
     <div class="grid grid-4 mb-6">
         <div class="rpt-kpi purple">
-            <p class="rpt-kpi-val">{{ avg_progress }}%</p>
-            <p class="rpt-kpi-lbl">{% trans 'Progression moyenne' %}</p>
+            <div class="rpt-kpi-icon"><i data-lucide="activity" width="18" height="18"></i></div>
+            <div>
+                <p class="rpt-kpi-val">{{ avg_progress }}%</p>
+                <p class="rpt-kpi-lbl">{% trans 'Progression moyenne' %}</p>
+            </div>
         </div>
         <div class="rpt-kpi green">
-            <p class="rpt-kpi-val">{{ projects_completed }}</p>
-            <p class="rpt-kpi-lbl">{% trans 'Projets terminés' %}</p>
+            <div class="rpt-kpi-icon"><i data-lucide="circle-check" width="18" height="18"></i></div>
+            <div>
+                <p class="rpt-kpi-val">{{ projects_completed }}</p>
+                <p class="rpt-kpi-lbl">{% trans 'Terminés' %}</p>
+            </div>
         </div>
-        <div class="rpt-kpi blue2">
-            <p class="rpt-kpi-val">{{ projects_en_cours }}</p>
-            <p class="rpt-kpi-lbl">{% trans 'Projets en cours' %}</p>
+        <div class="rpt-kpi cyan">
+            <div class="rpt-kpi-icon"><i data-lucide="loader" width="18" height="18"></i></div>
+            <div>
+                <p class="rpt-kpi-val">{{ projects_en_cours }}</p>
+                <p class="rpt-kpi-lbl">{% trans 'En cours' %}</p>
+            </div>
         </div>
         <div class="rpt-kpi red">
-            <p class="rpt-kpi-val">{{ projects_en_retard }}</p>
-            <p class="rpt-kpi-lbl">{% trans 'Projets en retard' %}</p>
+            <div class="rpt-kpi-icon"><i data-lucide="triangle-alert" width="18" height="18"></i></div>
+            <div>
+                <p class="rpt-kpi-val">{{ projects_en_retard }}</p>
+                <p class="rpt-kpi-lbl">{% trans 'En retard' %}</p>
+            </div>
         </div>
     </div>
 
     <div class="rpt-list">
         {% for project in all_projects %}
-        <div class="rpt-prow" onclick="window.location.href='{% url 'core:project_detail' project.id %}'">
-            <div class="rpt-pgrid-5p">
+        <div class="rpt-prow s-{{ project.status }}" onclick="window.location.href='{% url 'core:project_detail' project.id %}'">
+            <div class="rpt-pgrid cols-4">
+                <!-- Nom + responsable -->
                 <div>
                     <p class="rpt-pname">{{ project.name }}</p>
-                    <span class="rpt-psub">{{ project.manager|default:"-" }}</span>
+                    <p class="rpt-psub">
+                        <i data-lucide="user" width="12" height="12"></i>
+                        {{ project.manager|default:"—" }}
+                        <span style="margin-left:6px;">
+                            <span class="badge {% if project.status == 'en_cours' %}badge-info{% elif project.status == 'termine' %}badge-success{% elif project.status == 'en_retard' %}badge-danger{% elif project.status == 'suspendu' %}badge-warning{% else %}badge-secondary{% endif %}">
+                                {{ project.get_status_display }}
+                            </span>
+                        </span>
+                    </p>
                 </div>
-                <div style="text-align:center;">
-                    <span class="rpt-dir">{{ project.direction.code }}</span>
+                <!-- Direction -->
+                <div>
+                    <span class="rpt-dir-badge"
+                          style="background: {{ project.direction.color|default:'#3b82f6' }}1a; color: {{ project.direction.color|default:'#1d4ed8' }};">
+                        {{ project.direction.code }}
+                    </span>
                 </div>
-                <div style="text-align:center;">
-                    <span class="badge {% if project.status == 'en_cours' %}badge-info{% elif project.status == 'termine' %}badge-success{% elif project.status == 'en_retard' %}badge-danger{% elif project.status == 'suspendu' %}badge-warning{% else %}badge-secondary{% endif %}" style="font-size:11px;">{{ project.get_status_display }}</span>
-                </div>
+                <!-- Progression -->
                 <div>
                     <div class="rpt-prog-row">
-                        <span class="rpt-prog-lbl">{% trans 'Progression' %}</span>
+                        <span class="rpt-prog-lbl">{% trans 'Avancement' %}</span>
                         <span class="rpt-pval {% if project.progress >= 80 %}high{% elif project.progress >= 50 %}mid{% elif project.progress >= 25 %}low{% else %}crit{% endif %}">{{ project.progress }}%</span>
                     </div>
                     <div class="rpt-prog-bar md">
                         <div class="rpt-prog-fill {% if project.progress >= 80 %}rpt-bar-high{% elif project.progress >= 50 %}rpt-bar-mid{% elif project.progress >= 25 %}rpt-bar-low{% else %}rpt-bar-crit{% endif %}" style="width:{{ project.progress }}%;"></div>
                     </div>
                 </div>
+                <!-- Budget % -->
                 <div style="text-align:center;">
-                    <span class="rpt-bcirc {% if project.budget_percentage > 80 %}alert{% elif project.budget_percentage > 60 %}warn{% else %}ok{% endif %}">{{ project.budget_percentage }}%</span>
+                    <span class="rpt-bcirc {% if project.budget_percentage > 80 %}alert{% elif project.budget_percentage > 60 %}warn{% else %}ok{% endif %}">
+                        {{ project.budget_percentage }}%
+                    </span>
                 </div>
             </div>
         </div>
         {% empty %}
         <div class="rpt-empty">
+            <i data-lucide="folder-open" width="44" height="44" style="color:#d1d5db; display:block; margin:0 auto;"></i>
             <p>{% trans 'Aucun projet trouvé' %}</p>
         </div>
         {% endfor %}
     </div>
 </div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// Tab switching
 function switchTab(tabName, btn) {
     document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
     document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
     document.getElementById('tab-' + tabName).style.display = 'block';
     btn.classList.add('active');
-
-    // Redessiner les graphiques si nécessaire
-    if (tabName === 'budget') {
-        initBudgetCharts();
-    }
+    if (tabName === 'budget') initBudgetCharts();
 }
 
-// Projects by Direction Chart
-const directionCtx = document.getElementById('projectsByDirectionChart').getContext('2d');
-new Chart(directionCtx, {
+const CHART_COLORS = ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899','#64748b'];
+const CHART_OPTS = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 12 } } } }
+};
+
+// Projets par direction (bar)
+new Chart(document.getElementById('projectsByDirectionChart'), {
     type: 'bar',
     data: {
-        labels: [{% for item in projects_by_direction %}'{{ item.direction }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+        labels: [{% for item in projects_by_direction %}'{{ item.direction }}'{% if not forloop.last %},{% endif %}{% endfor %}],
         datasets: [
             {
                 label: '{% trans "En cours" %}',
-                data: [{% for item in projects_by_direction %}{{ item.en_cours }}{% if not forloop.last %}, {% endif %}{% endfor %}],
-                backgroundColor: '#3b82f6',
-                borderRadius: 4,
+                data: [{% for item in projects_by_direction %}{{ item.en_cours }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                backgroundColor: '#3b82f6', borderRadius: 4,
             },
             {
                 label: '{% trans "Terminés" %}',
-                data: [{% for item in projects_by_direction %}{{ item.termine }}{% if not forloop.last %}, {% endif %}{% endfor %}],
-                backgroundColor: '#10b981',
-                borderRadius: 4,
+                data: [{% for item in projects_by_direction %}{{ item.termine }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                backgroundColor: '#10b981', borderRadius: 4,
             }
         ]
     },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'top' } }
-    }
+    options: { ...CHART_OPTS, scales: { x: { grid: { display: false } }, y: { ticks: { stepSize: 1 } } } }
 });
 
-// Projects by Status Chart
-const statusCtx = document.getElementById('projectsByStatusChart').getContext('2d');
-new Chart(statusCtx, {
+// Projets par statut (doughnut)
+new Chart(document.getElementById('projectsByStatusChart'), {
     type: 'doughnut',
     data: {
-        labels: [{% for item in projects_by_status %}'{{ item.name }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+        labels: [{% for item in projects_by_status %}'{{ item.name }}'{% if not forloop.last %},{% endif %}{% endfor %}],
         datasets: [{
-            data: [{% for item in projects_by_status %}{{ item.value }}{% if not forloop.last %}, {% endif %}{% endfor %}],
-            backgroundColor: ['#3b82f6', '#10b981', '#6b7280'],
-            borderWidth: 0,
+            data: [{% for item in projects_by_status %}{{ item.value }}{% if not forloop.last %},{% endif %}{% endfor %}],
+            backgroundColor: CHART_COLORS, borderWidth: 0, hoverOffset: 4,
         }]
     },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'right' } }
-    }
+    options: { ...CHART_OPTS, plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 12 } } } }, cutout: '65%' }
 });
 
-// Budget Charts (initialisés au clic sur l'onglet)
+// Budget charts (lazy init)
 let budgetChartsInit = false;
 function initBudgetCharts() {
     if (budgetChartsInit) return;
     budgetChartsInit = true;
 
-    const budgetDirCtx = document.getElementById('budgetByDirectionChart').getContext('2d');
-    new Chart(budgetDirCtx, {
+    const fmtY = v => v >= 1e9 ? (v/1e9).toFixed(1)+' Mrd' : v >= 1e6 ? (v/1e6).toFixed(1)+' M' : v >= 1e3 ? (v/1e3).toFixed(0)+' K' : v;
+
+    new Chart(document.getElementById('budgetByDirectionChart'), {
         type: 'bar',
         data: {
-            labels: [{% for item in budget_by_direction %}'{{ item.direction }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+            labels: [{% for item in budget_by_direction %}'{{ item.direction }}'{% if not forloop.last %},{% endif %}{% endfor %}],
             datasets: [
                 {
-                    label: '{% trans "Alloué" %} (GNF)',
-                    data: [{% for item in budget_by_direction %}{{ item.allocated }}{% if not forloop.last %}, {% endif %}{% endfor %}],
-                    backgroundColor: '#3b82f6',
-                    borderRadius: 4,
+                    label: '{% trans "Alloué" %}',
+                    data: [{% for item in budget_by_direction %}{{ item.allocated }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                    backgroundColor: '#3b82f6', borderRadius: 4,
                 },
                 {
-                    label: '{% trans "Consommé" %} (GNF)',
-                    data: [{% for item in budget_by_direction %}{{ item.consumed }}{% if not forloop.last %}, {% endif %}{% endfor %}],
-                    backgroundColor: '#10b981',
-                    borderRadius: 4,
+                    label: '{% trans "Consommé" %}',
+                    data: [{% for item in budget_by_direction %}{{ item.consumed }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                    backgroundColor: '#10b981', borderRadius: 4,
                 }
             ]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { position: 'top' } },
-            scales: {
-                y: {
-                    ticks: {
-                        callback: function(value) {
-                            if (value >= 1000000000) return (value / 1000000000).toFixed(1) + ' Mrd';
-                            if (value >= 1000000) return (value / 1000000).toFixed(1) + ' M';
-                            if (value >= 1000) return (value / 1000).toFixed(0) + ' K';
-                            return value;
-                        }
-                    }
-                }
-            }
-        }
+        options: { ...CHART_OPTS, scales: { x: { grid: { display: false } }, y: { ticks: { callback: fmtY } } } }
     });
 
-    const consumCtx = document.getElementById('budgetConsumptionChart').getContext('2d');
-    new Chart(consumCtx, {
+    new Chart(document.getElementById('budgetConsumptionChart'), {
         type: 'doughnut',
         data: {
-            labels: [{% for item in budget_by_direction %}'{{ item.direction }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+            labels: [{% for item in budget_by_direction %}'{{ item.direction }}'{% if not forloop.last %},{% endif %}{% endfor %}],
             datasets: [{
-                data: [{% for item in budget_by_direction %}{{ item.rate }}{% if not forloop.last %}, {% endif %}{% endfor %}],
-                backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#6b7280'],
-                borderWidth: 0,
+                data: [{% for item in budget_by_direction %}{{ item.rate }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                backgroundColor: CHART_COLORS, borderWidth: 0, hoverOffset: 4,
             }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
+            ...CHART_OPTS,
             plugins: {
-                legend: { position: 'right' },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return context.label + ': ' + context.raw + '% consommé';
-                        }
-                    }
-                }
-            }
+                legend: { position: 'right', labels: { boxWidth: 12, font: { size: 12 } } },
+                tooltip: { callbacks: { label: ctx => ctx.label + ' : ' + ctx.raw + '% consommé' } }
+            },
+            cutout: '65%'
         }
     });
 }

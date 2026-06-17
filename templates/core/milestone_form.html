@@ -117,8 +117,6 @@
 #id_status { display: none !important; }
 
 /* Form groups */
-.fg       { margin-bottom: 16px; }
-.fg-last  { margin-bottom: 24px; }
 .fg-sublabel { font-weight:400; color:var(--gray-400); font-size:12px; }
 .fg-check-label { display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:400; }
 .fg-actions { border-top:1px solid var(--gray-100); padding-top:20px; }
@@ -164,15 +162,15 @@
           {% endif %}
 
           <!-- Nom -->
-          <div class="form-group fg">
-            <label for="id_name">{% trans 'Nom du jalon' %} *</label>
+          <div class="form-group">
+            <label class="form-label" for="id_name">{% trans 'Nom du jalon' %} <span class="required">*</span></label>
             {{ form.name }}
-            {% if form.name.errors %}<p class="text-xs" style="color:var(--red-600);margin-top:4px;">{{ form.name.errors.0 }}</p>{% endif %}
+            {% if form.name.errors %}<p class="form-error">{{ form.name.errors.0 }}</p>{% endif %}
           </div>
 
           <!-- Statut -->
-          <div class="form-group fg">
-            <label>{% trans 'Statut' %}</label>
+          <div class="form-group">
+            <label class="form-label">{% trans 'Statut' %}</label>
             <div class="sp-group" id="sp-group">
               <div class="sp-pill {% if form.status.value == 'a_faire' or not form.status.value %}active{% endif %}" data-v="a_faire">{% trans 'À faire' %}</div>
               <div class="sp-pill {% if form.status.value == 'en_cours' %}active{% endif %}" data-v="en_cours">{% trans 'En cours' %}</div>
@@ -183,14 +181,14 @@
           </div>
 
           <!-- Date -->
-          <div class="form-group fg">
-            <label for="id_due_date">{% trans 'Date limite' %}</label>
+          <div class="form-group">
+            <label class="form-label" for="id_due_date">{% trans 'Date limite' %}</label>
             {{ form.due_date }}
           </div>
 
           <!-- Progression -->
-          <div class="form-group fg">
-            <label>
+          <div class="form-group">
+            <label class="form-label">
               {% trans 'Progression' %}
               <span class="fg-sublabel">({% trans "si aucune sous-étape" %})</span>
             </label>
@@ -204,8 +202,8 @@
           </div>
 
           <!-- Besoin -->
-          <div class="form-group fg">
-            <label for="id_need">
+          <div class="form-group">
+            <label class="form-label" for="id_need">
               {% trans 'Besoin' %}
               <span class="fg-sublabel">({% trans "optionnel" %})</span>
             </label>
@@ -213,7 +211,7 @@
           </div>
 
           <!-- Complété -->
-          <div class="form-group fg-last">
+          <div class="form-group">
             <label class="fg-check-label">
               {{ form.completed }}
               <span>{% trans 'Marquer comme complété' %}</span>
@@ -223,9 +221,7 @@
           <!-- Actions -->
           <div class="flex gap-3 fg-actions">
             <button type="submit" class="btn btn-primary">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-              </svg>
+              <i data-lucide="check" width="16" height="16" ></i>
               {% if milestone %}{% trans 'Enregistrer' %}{% else %}{% trans 'Créer le jalon' %}{% endif %}
             </button>
             <a href="{% url 'core:project_detail' project.id %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
@@ -246,17 +242,13 @@
 
         <!-- Recherche -->
         <div class="mp-search-wrap">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-          </svg>
+          <i data-lucide="search" width="16" height="16" ></i>
           <input type="text" id="mp-search" class="form-control" placeholder="{% trans 'Rechercher un membre...' %}" autocomplete="off">
         </div>
 
         <!-- Aucun responsable -->
         <div class="mp-none" id="mp-none" onclick="mpToggle('', this)">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="14" height="14">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
-          </svg>
+          <i data-lucide="ban" width="14" height="14" ></i>
           {% trans 'Aucun responsable' %}
         </div>
 
@@ -290,9 +282,7 @@
         {% if other_employees %}
         <details class="mp-details">
           <summary class="mp-details-summary">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
+            <i data-lucide="chevron-down" width="12" height="12" ></i>
             {% trans 'Autres employés' %} ({{ other_employees|length }})
           </summary>
           <div class="mp-grid">

@@ -9,18 +9,14 @@
 {% block content %}
 {% if not query %}
 <div class="card" style="text-align: center; padding: 60px 20px;">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 64px; height: 64px; color: #9ca3af; margin: 0 auto 16px;">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-    </svg>
+    <i data-lucide="search" style="width: 64px; height: 64px; color: #9ca3af; margin: 0 auto 16px;" ></i>
     <h3 style="color: #6b7280; margin-bottom: 8px;">{% trans 'Recherche globale' %}</h3>
     <p style="color: #9ca3af;">{% trans 'Tapez un mot-clé dans la barre de recherche pour trouver des projets, partenaires, employés, demandes ou documents.' %}</p>
 </div>
 
 {% elif total == 0 %}
 <div class="card" style="text-align: center; padding: 60px 20px;">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 64px; height: 64px; color: #9ca3af; margin: 0 auto 16px;">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
+    <i data-lucide="circle-play" style="width: 64px; height: 64px; color: #9ca3af; margin: 0 auto 16px;" ></i>
     <h3 style="color: #6b7280; margin-bottom: 8px;">{% trans 'Aucun résultat' %}</h3>
     <p style="color: #9ca3af;">{% trans 'Aucun résultat trouvé pour' %} "<strong>{{ query }}</strong>". {% trans "Essayez avec d'autres mots-clés." %}</p>
 </div>
@@ -32,9 +28,7 @@
 <div class="card mb-6">
     <div class="card-header">
         <h3 class="card-title">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 20px; height: 20px; display: inline; vertical-align: middle; margin-right: 8px;">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
+            <i data-lucide="clipboard" style="width: 20px; height: 20px; display: inline; vertical-align: middle; margin-right: 8px;" ></i>
             {% trans 'Projets' %} ({{ results.projects|length }})
         </h3>
         <a href="{% url 'core:projects' %}?search={{ query }}" class="btn btn-outline btn-sm">{% trans 'Voir tout' %}</a>
@@ -84,9 +78,7 @@
 <div class="card mb-6">
     <div class="card-header">
         <h3 class="card-title">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 20px; height: 20px; display: inline; vertical-align: middle; margin-right: 8px;">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
+            <i data-lucide="users" style="width: 20px; height: 20px; display: inline; vertical-align: middle; margin-right: 8px;" ></i>
             {% trans 'Partenaires' %} ({{ results.partners|length }})
         </h3>
         <a href="{% url 'core:partners' %}?search={{ query }}" class="btn btn-outline btn-sm">{% trans 'Voir tout' %}</a>
@@ -127,9 +119,7 @@
 <div class="card mb-6">
     <div class="card-header">
         <h3 class="card-title">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 20px; height: 20px; display: inline; vertical-align: middle; margin-right: 8px;">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
+            <i data-lucide="user" style="width: 20px; height: 20px; display: inline; vertical-align: middle; margin-right: 8px;" ></i>
             {% trans 'Employés' %} ({{ results.employees|length }})
         </h3>
         <a href="{% url 'core:resources' %}?tab=employees" class="btn btn-outline btn-sm">{% trans 'Voir tout' %}</a>
@@ -166,9 +156,7 @@
 <div class="card mb-6">
     <div class="card-header">
         <h3 class="card-title">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 20px; height: 20px; display: inline; vertical-align: middle; margin-right: 8px;">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+            <i data-lucide="file-text" style="width: 20px; height: 20px; display: inline; vertical-align: middle; margin-right: 8px;" ></i>
             {% trans 'Demandes' %} ({{ results.requests|length }})
         </h3>
         <a href="{% url 'core:requests' %}?search={{ query }}" class="btn btn-outline btn-sm">{% trans 'Voir tout' %}</a>
@@ -207,9 +195,7 @@
 <div class="card mb-6">
     <div class="card-header">
         <h3 class="card-title">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 20px; height: 20px; display: inline; vertical-align: middle; margin-right: 8px;">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-            </svg>
+            <i data-lucide="file" style="width: 20px; height: 20px; display: inline; vertical-align: middle; margin-right: 8px;" ></i>
             {% trans 'Documents' %} ({{ results.documents|length }})
         </h3>
     </div>

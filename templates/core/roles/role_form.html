@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if editing %}Modifier{% else %}Nouveau{% endif %} rôle{% if is_project %} projet{% endif %}{% endblock %}
+{% block page_title %}{% if editing %}Modifier : {{ role.name }}{% else %}Nouveau rôle{% if is_project %} projet{% endif %}{% endif %}{% endblock %}
+{% block page_subtitle %}Définir les permissions associées à ce rôle{% endblock %}
+
+{% block content %}
+<form method="post">
+{% csrf_token %}
+
+<div style="display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start;">
+
+    <!-- Colonne principale -->
+    <div>
+        <!-- Informations de base -->
+        <div class="card mb-4">
+            <div class="card-header"><h3 class="card-title">Informations du rôle</h3></div>
+            <div class="card-content">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+                    <div>
+                        <label class="form-label">Nom <span class="required">*</span></label>
+                        <input type="text" name="name" id="role-name" class="form-control"
+                               value="{{ role.name|default:'' }}" required
+                               placeholder="Ex: Chef de projet externe">
+                    </div>
+                    <div>
+                        <label class="form-label">Identifiant (slug)
+                            {% if not editing %}<span class="required">*</span>{% endif %}
+                        </label>
+                        {% if editing %}
+                        <input type="text" class="form-control" value="{{ role.slug }}"
+                               readonly style="background:#f3f4f6;cursor:not-allowed;color:#6b7280;">
+                        {% else %}
+                        <input type="text" name="slug" id="role-slug" class="form-control"
+                               value="{{ role.slug|default:'' }}" required
+                               placeholder="ex: chef-projet-externe"
+                               style="font-family:monospace;">
+                        <span class="form-help">Lettres minuscules, chiffres et tirets. Non modifiable après création.</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div>
+                    <label class="form-label">Description</label>
+                    <textarea name="description" class="form-control" rows="2"
+                              placeholder="Décrivez le rôle et son périmètre...">{{ role.description|default:'' }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Matrice des permissions -->
+        <div class="card">
+            <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+                <h3 class="card-title">Permissions</h3>
+                <div style="display:flex;gap:6px;">
+                    <button type="button" onclick="selectAll()" class="btn btn-sm btn-outline">Tout cocher</button>
+                    <button type="button" onclick="clearAll()" class="btn btn-sm btn-outline">Tout effacer</button>
+                </div>
+            </div>
+            <div class="card-content">
+                {% for subject, perms in subjects.items %}
+                {% with module_count=perms|length %}
+                <div style="margin-bottom:20px;">
+                    <!-- En-tête du module -->
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid
+                        {% if subject == 'all' %}#fee2e2{% elif subject == 'Project' %}#dbeafe{% elif subject == 'Milestone' %}#d1fae5{% elif subject == 'Budget' %}#d1fae5{% elif subject == 'User' %}#ede9fe{% elif subject == 'Employee' %}#e0e7ff{% elif subject == 'LeaveRequest' %}#fef3c7{% elif subject == 'Partner' %}#ccfbf1{% elif subject == 'Document' %}#e2e8f0{% elif subject == 'Request' %}#ffedd5{% elif subject == 'Event' %}#cffafe{% elif subject == 'Direction' %}#f1f5f9{% elif subject == 'Role' %}#fce7f3{% else %}#f3f4f6{% endif %};">
+                        <span style="font-weight:600;font-size:13px;color:#374151;">
+                            {% if subject == 'all' %}Tout (super-admin)
+                            {% elif subject == 'Project' %}Projets
+                            {% elif subject == 'Milestone' %}Jalons / Tâches
+                            {% elif subject == 'Budget' %}Budgets
+                            {% elif subject == 'User' %}Utilisateurs
+                            {% elif subject == 'Employee' %}Employés
+                            {% elif subject == 'LeaveRequest' %}Congés
+                            {% elif subject == 'Partner' %}Partenaires
+                            {% elif subject == 'Document' %}Documents
+                            {% elif subject == 'Request' %}Demandes
+                            {% elif subject == 'Event' %}Événements
+                            {% elif subject == 'Direction' %}Directions
+                            {% elif subject == 'Role' %}Rôles
+                            {% elif subject == 'Report' %}Rapports
+                            {% else %}{{ subject }}{% endif %}
+                        </span>
+                        <button type="button" onclick="toggleModule(this)" class="btn btn-sm btn-outline"
+                                style="font-size:10px;padding:2px 8px;">Tout module</button>
+                    </div>
+                    <!-- Checkboxes -->
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                        {% for perm in perms %}
+                        <label class="perm-label" style="display:flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid #e5e7eb;border-radius:6px;cursor:pointer;background:#fff;user-select:none;transition:border-color .12s,background .12s;">
+                            <input type="checkbox" name="permissions" value="{{ perm.pk }}"
+                                   {% if perm.pk in role_perm_ids %}checked{% endif %}
+                                   style="width:14px;height:14px;accent-color:#6366f1;cursor:pointer;flex-shrink:0;">
+                            <span style="font-size:12px;color:#374151;line-height:1.3;">
+                                <strong>{{ perm.get_action_display }}</strong>
+                                {% if perm.condition %}
+                                <br><span style="color:#9ca3af;font-size:10px;">{{ perm.get_condition_display }}</span>
+                                {% endif %}
+                            </span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endwith %}
+                {% empty %}
+                <p class="text-gray-500" style="text-align:center;padding:24px;">Aucune permission définie dans le système.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Colonne latérale : résumé + actions -->
+    <div style="position:sticky;top:80px;">
+        <!-- Résumé de sélection -->
+        <div class="card mb-4">
+            <div class="card-header"><h3 class="card-title">Récapitulatif</h3></div>
+            <div class="card-content">
+                <div style="text-align:center;padding:8px 0 16px;">
+                    <p style="font-size:32px;font-weight:700;color:#6366f1;margin:0;" id="perm-count">0</p>
+                    <p class="text-sm text-gray-500">permission{{ '' }} sélectionnée{{ '' }}</p>
+                </div>
+                {% if editing and role.users.count %}
+                <div style="padding:8px 10px;background:#fef9c3;border-radius:6px;border:1px solid #fde047;font-size:11px;color:#854d0e;">
+                    <strong>{{ role.users.count }}</strong> utilisateur{{ role.users.count|pluralize }} aura ces permissions.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Boutons -->
+        <div class="card">
+            <div class="card-content" style="display:flex;flex-direction:column;gap:8px;">
+                <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
+                    <i data-lucide="save" width="16" height="16"></i>
+                    {% if editing %}Enregistrer{% else %}Créer le rôle{% endif %}
+                </button>
+                {% if is_project %}
+                <a href="{% url 'core:project_roles_list' %}" class="btn btn-outline" style="width:100%;justify-content:center;">Annuler</a>
+                {% else %}
+                <a href="{% url 'core:roles_list' %}" class="btn btn-outline" style="width:100%;justify-content:center;">Annuler</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Aide -->
+        <div style="padding:12px;margin-top:12px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;">
+            <p style="font-size:11px;font-weight:600;color:#374151;margin-bottom:6px;">À savoir</p>
+            <ul style="font-size:11px;color:#6b7280;padding-left:14px;margin:0;line-height:1.7;">
+                <li><strong>Gérer (tout)</strong> inclut lire, créer, modifier et supprimer.</li>
+                <li>Les conditions <em>restreignent</em> une permission à un sous-ensemble.</li>
+                <li>Les rôles système ne peuvent pas être supprimés.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+</form>
+
+<script>
+// Auto-slug depuis le nom (création uniquement)
+{% if not editing %}
+document.getElementById('role-name').addEventListener('input', function() {
+    const slug = this.value.toLowerCase()
+        .normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+    document.getElementById('role-slug').value = slug;
+});
+{% endif %}
+
+// Compteur de permissions sélectionnées
+function updateCount() {
+    const n = document.querySelectorAll('input[name="permissions"]:checked').length;
+    document.getElementById('perm-count').textContent = n;
+}
+document.querySelectorAll('input[name="permissions"]').forEach(cb => {
+    cb.addEventListener('change', updateCount);
+});
+updateCount();
+
+// Styles hover pour les labels
+document.querySelectorAll('.perm-label').forEach(lbl => {
+    const cb = lbl.querySelector('input');
+    function refresh() {
+        lbl.style.borderColor = cb.checked ? '#6366f1' : '#e5e7eb';
+        lbl.style.background  = cb.checked ? '#f0f0ff' : '#fff';
+    }
+    refresh();
+    cb.addEventListener('change', refresh);
+});
+
+// Tout cocher / effacer global
+function selectAll() {
+    document.querySelectorAll('input[name="permissions"]').forEach(cb => { cb.checked = true; cb.dispatchEvent(new Event('change')); });
+}
+function clearAll() {
+    document.querySelectorAll('input[name="permissions"]').forEach(cb => { cb.checked = false; cb.dispatchEvent(new Event('change')); });
+}
+
+// Tout cocher / effacer par module
+function toggleModule(btn) {
+    const group = btn.closest('div[style]').nextElementSibling;
+    const boxes = group.querySelectorAll('input[name="permissions"]');
+    const allChecked = Array.from(boxes).every(cb => cb.checked);
+    boxes.forEach(cb => { cb.checked = !allChecked; cb.dispatchEvent(new Event('change')); });
+}
+</script>
+{% endblock %}

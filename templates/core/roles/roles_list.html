@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}Rôles & Permissions{% endblock %}
+{% block page_title %}Rôles & Permissions{% endblock %}
+{% block page_subtitle %}Gérer les rôles globaux et leurs permissions{% endblock %}
+
+{% block content %}
+
+<!-- Stats + actions -->
+<div class="flex justify-between items-center mb-6">
+    <div class="stats-row">
+        <div class="stat-box indigo">
+            <div class="stat-box-icon"><i data-lucide="shield-check" width="20" height="20"></i></div>
+            <div class="stat-box-body">
+                <p class="stat-box-value">{{ roles|length }}</p>
+                <p class="stat-box-label">Rôles globaux</p>
+            </div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-box-icon"><i data-lucide="key-round" width="20" height="20"></i></div>
+            <div class="stat-box-body">
+                <p class="stat-box-value">{{ permission_count }}</p>
+                <p class="stat-box-label">Permissions</p>
+            </div>
+        </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+        <a href="{% url 'core:project_roles_list' %}" class="btn btn-outline">
+            <i data-lucide="folder" width="16" height="16"></i>
+            Rôles projet
+        </a>
+        <a href="{% url 'core:role_create' %}" class="btn btn-primary">
+            <i data-lucide="plus" width="16" height="16"></i>
+            Nouveau rôle
+        </a>
+    </div>
+</div>
+
+<!-- Grille de cartes -->
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;">
+    {% for role in roles %}
+    <div class="card" style="display:flex;flex-direction:column;border-top:3px solid {% if role.slug == 'admin' %}#ef4444{% elif role.slug == 'directeur_general' %}#f59e0b{% elif role.slug == 'directeur' %}#3b82f6{% elif role.slug == 'chef_projet' %}#10b981{% elif role.slug == 'employe' %}#6366f1{% else %}#94a3b8{% endif %};">
+        <div class="card-content" style="flex:1;padding:16px 20px 12px;">
+            <!-- En-tête de la carte -->
+            <div class="flex justify-between items-center" style="margin-bottom:10px;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <div style="width:32px;height:32px;border-radius:6px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <i data-lucide="shield-check" width="16" height="16" stroke="#6b7280"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium" style="font-size:15px;margin:0;">{{ role.name }}</p>
+                        <code style="font-size:10px;color:#9ca3af;">{{ role.slug }}</code>
+                    </div>
+                </div>
+                <div style="display:flex;gap:4px;flex-shrink:0;">
+                    {% if role.is_system %}
+                    <span class="badge badge-info" style="font-size:10px;">Système</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Description -->
+            {% if role.description %}
+            <p class="text-sm text-gray-500" style="margin-bottom:12px;line-height:1.5;">{{ role.description|truncatechars:80 }}</p>
+            {% endif %}
+
+            <!-- Métriques -->
+            <div style="display:flex;gap:12px;margin-bottom:14px;">
+                <div style="display:flex;align-items:center;gap:5px;">
+                    <i data-lucide="shield-check" width="13" height="13" stroke="#6366f1" style="flex-shrink:0;"></i>
+                    <span class="text-xs text-gray-500"><strong style="color:#374151;">{{ role.permissions.count }}</strong> permission{{ role.permissions.count|pluralize }}</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:5px;">
+                    <i data-lucide="users" width="13" height="13" stroke="#6366f1" style="flex-shrink:0;"></i>
+                    <span class="text-xs text-gray-500"><strong style="color:#374151;">{{ role.users.count }}</strong> utilisateur{{ role.users.count|pluralize }}</span>
+                </div>
+            </div>
+
+            <!-- Aperçu des permissions -->
+            <div style="display:flex;flex-wrap:wrap;gap:4px;min-height:24px;">
+                {% for perm in role.permissions.all|slice:":6" %}
+                <span style="display:inline-flex;align-items:center;padding:2px 7px;background:#f0f0ff;border-radius:4px;font-size:10px;color:#4f46e5;font-weight:500;">
+                    {{ perm.get_action_display }}{% if perm.condition %}<span style="color:#9ca3af;margin-left:2px;">· {{ perm.get_condition_display|truncatechars:12 }}</span>{% endif %}
+                </span>
+                {% endfor %}
+                {% if role.permissions.count > 6 %}
+                <span style="display:inline-flex;align-items:center;padding:2px 7px;background:#f3f4f6;border-radius:4px;font-size:10px;color:#6b7280;">
+                    +{{ role.permissions.count|add:"-6" }} autres
+                </span>
+                {% endif %}
+                {% if role.permissions.count == 0 %}
+                <span class="text-xs text-gray-400" style="font-style:italic;">Aucune permission</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div style="padding:10px 20px;border-top:1px solid #f1f5f9;display:flex;justify-content:flex-end;gap:4px;background:#fafafa;border-radius:0 0 8px 8px;">
+            <a href="{% url 'core:role_detail' role.pk %}" class="action-btn" title="Voir le détail">
+                <i data-lucide="eye"></i>
+            </a>
+            <a href="{% url 'core:role_edit' role.pk %}" class="action-btn" title="Modifier">
+                <i data-lucide="pencil"></i>
+            </a>
+            <a href="{% url 'core:role_duplicate' role.pk %}" class="action-btn" title="Dupliquer">
+                <i data-lucide="copy"></i>
+            </a>
+            {% if not role.is_system %}
+            <a href="{% url 'core:role_delete' role.pk %}" class="action-btn danger" title="Supprimer">
+                <i data-lucide="trash-2"></i>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="card" style="grid-column:1/-1;text-align:center;padding:48px;">
+        <i data-lucide="shield" width="48" height="48" stroke="#d1d5db" style="margin:0 auto 16px;display:block;"></i>
+        <p class="text-gray-500" style="margin-bottom:16px;">Aucun rôle défini.</p>
+        <a href="{% url 'core:role_create' %}" class="btn btn-primary">Créer le premier rôle</a>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}
