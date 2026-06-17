@@ -1,4 +1,5 @@
 from functools import wraps
+from django.utils.translation import gettext as _
 from django.shortcuts import redirect
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
@@ -13,13 +14,13 @@ def role_required(*roles):
                 return redirect('core:login')
             
             if not hasattr(request.user, 'profile'):
-                messages.error(request, "Votre profil n'est pas configuré. Contactez un administrateur.")
+                messages.error(request, _("Votre profil n'est pas configuré. Contactez un administrateur."))
                 return redirect('core:dashboard')
 
             user_role = request.user.profile.role
             if user_role not in roles and 'admin' not in roles:
                 if user_role != 'admin':
-                    messages.error(request, "Vous n'avez pas les permissions nécessaires.")
+                    messages.error(request, _("Vous n'avez pas les permissions nécessaires."))
                     return redirect('core:dashboard')
             
             return view_func(request, *args, **kwargs)
@@ -36,7 +37,7 @@ def permission_required(permission_method):
                 return redirect('core:login')
             
             if not hasattr(request.user, 'profile'):
-                messages.error(request, "Votre profil n'est pas configuré. Contactez un administrateur.")
+                messages.error(request, _("Votre profil n'est pas configuré. Contactez un administrateur."))
                 return redirect('core:dashboard')
 
             # Check if user has the required permission
@@ -44,7 +45,7 @@ def permission_required(permission_method):
             has_permission = getattr(profile, permission_method, lambda: False)()
             
             if not has_permission and not profile.is_admin():
-                messages.error(request, "Vous n'avez pas les permissions nécessaires pour cette action.")
+                messages.error(request, _("Vous n'avez pas les permissions nécessaires pour cette action."))
                 return redirect('core:dashboard')
             
             return view_func(request, *args, **kwargs)

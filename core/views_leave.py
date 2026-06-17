@@ -1,4 +1,5 @@
 """Vues pour la gestion des demandes de conge CSIG."""
+from django.utils.translation import gettext as _
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
@@ -245,7 +246,7 @@ def leave_create(request):
                 notifications.notify_leave_submitted(leave)
             except Exception:
                 pass
-            messages.success(request, "Demande de congé soumise. Elle suit maintenant le circuit de validation.")
+            messages.success(request, _("Demande de congé soumise. Elle suit maintenant le circuit de validation."))
             return redirect('core:leave_detail', leave_id=leave.id)
     else:
         form = LeaveRequestForm(user=request.user)
@@ -263,7 +264,7 @@ def leave_edit(request, leave_id):
     if not _user_is_owner(request.user, leave):
         return HttpResponseForbidden()
     if leave.status != 'soumise':
-        messages.error(request, "Cette demande ne peut plus être modifiée.")
+        messages.error(request, _("Cette demande ne peut plus être modifiée."))
         return redirect('core:leave_detail', leave_id=leave.id)
 
     if request.method == 'POST':
@@ -271,7 +272,7 @@ def leave_edit(request, leave_id):
         if form.is_valid():
             form.save()
             form.save_extra_documents(leave)
-            messages.success(request, "Demande mise à jour.")
+            messages.success(request, _("Demande mise à jour."))
             return redirect('core:leave_detail', leave_id=leave.id)
     else:
         form = LeaveRequestForm(instance=leave, user=request.user)
@@ -291,7 +292,7 @@ def leave_cancel(request, leave_id):
     if request.method == 'POST':
         leave.status = 'annulee'
         leave.save(update_fields=['status', 'updated_at'])
-        messages.info(request, "Demande annulée.")
+        messages.info(request, _("Demande annulée."))
     return redirect('core:leave_list')
 
 
@@ -309,7 +310,7 @@ def leave_document_delete(request, leave_id, doc_id):
         except Exception:
             pass
         doc.delete()
-        messages.success(request, "Pièce jointe supprimée.")
+        messages.success(request, _("Pièce jointe supprimée."))
     return redirect('core:leave_detail', leave_id=leave.id)
 
 
@@ -324,7 +325,7 @@ def leave_decide_manager(request, leave_id):
     if not (profile and profile.can_give_manager_approval(leave)):
         return HttpResponseForbidden()
     if leave.status != 'soumise':
-        messages.error(request, "Cette demande n'est plus en attente d'avis hiérarchique.")
+        messages.error(request, _("Cette demande n'est plus en attente d'avis hiérarchique."))
         return redirect('core:leave_detail', leave_id=leave.id)
 
     if request.method == 'POST':
@@ -342,7 +343,7 @@ def leave_decide_manager(request, leave_id):
                 notifications.notify_leave_manager_decided(obj)
             except Exception:
                 pass
-            messages.success(request, "Avis hiérarchique enregistré.")
+            messages.success(request, _("Avis hiérarchique enregistré."))
             return redirect('core:leave_detail', leave_id=obj.id)
     return redirect('core:leave_detail', leave_id=leave.id)
 
@@ -354,7 +355,7 @@ def leave_decide_hr(request, leave_id):
     if not (profile and profile.can_give_hr_check()):
         return HttpResponseForbidden()
     if leave.status != 'avis_favorable':
-        messages.error(request, "Cette demande n'est pas au stade de la vérification RH.")
+        messages.error(request, _("Cette demande n'est pas au stade de la vérification RH."))
         return redirect('core:leave_detail', leave_id=leave.id)
 
     if request.method == 'POST':
@@ -372,7 +373,7 @@ def leave_decide_hr(request, leave_id):
                 notifications.notify_leave_hr_decided(obj)
             except Exception:
                 pass
-            messages.success(request, "Vérification RH enregistrée.")
+            messages.success(request, _("Vérification RH enregistrée."))
             return redirect('core:leave_detail', leave_id=obj.id)
     return redirect('core:leave_detail', leave_id=leave.id)
 
@@ -384,7 +385,7 @@ def leave_decide_final(request, leave_id):
     if not (profile and profile.can_give_final_approval()):
         return HttpResponseForbidden()
     if leave.status != 'rh_conforme':
-        messages.error(request, "Cette demande n'est pas prête pour la décision finale.")
+        messages.error(request, _("Cette demande n'est pas prête pour la décision finale."))
         return redirect('core:leave_detail', leave_id=leave.id)
 
     if request.method == 'POST':
@@ -407,7 +408,7 @@ def leave_decide_final(request, leave_id):
                 notifications.notify_leave_final_decided(obj, pdf_bytes)
             except Exception:
                 pass
-            messages.success(request, "Décision finale enregistrée et notifiée.")
+            messages.success(request, _("Décision finale enregistrée et notifiée."))
             return redirect('core:leave_detail', leave_id=obj.id)
     return redirect('core:leave_detail', leave_id=leave.id)
 
@@ -424,7 +425,7 @@ def leave_pdf_download(request, leave_id):
     if not _user_can_view_leave(request.user, leave):
         return HttpResponseForbidden("Vous n'avez pas accès à cette demande.")
     if leave.status != 'approuvee':
-        messages.error(request, "L'attestation n'est disponible que pour les demandes approuvées.")
+        messages.error(request, _("L'attestation n'est disponible que pour les demandes approuvées."))
         return redirect('core:leave_detail', leave_id=leave.id)
 
     from .pdf_generator import generate_leave_approval_pdf

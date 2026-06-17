@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
@@ -10,45 +11,45 @@ from django.dispatch import receiver
 
 class Permission(models.Model):
     ACTION_CHOICES = [
-        ('read',    'Lire'),
-        ('create',  'Créer'),
-        ('update',  'Modifier'),
-        ('delete',  'Supprimer'),
-        ('manage',  'Gérer (tout)'),
-        ('approve', 'Approuver'),
-        ('export',  'Exporter'),
+        ('read', _('Lire')),
+        ('create', _('Créer')),
+        ('update', _('Modifier')),
+        ('delete', _('Supprimer')),
+        ('manage', _('Gérer (tout)')),
+        ('approve', _('Approuver')),
+        ('export', _('Exporter')),
     ]
     SUBJECT_CHOICES = [
-        ('all',           'Tout'),
-        ('Project',       'Projets'),
-        ('Milestone',     'Jalons / Tâches'),
-        ('Comment',       'Commentaires projet'),
-        ('ProjectMember', 'Membres de projet'),
-        ('Budget',        'Budgets'),
-        ('User',          'Utilisateurs'),
-        ('Employee',      'Employés'),
-        ('LeaveRequest',  'Demandes de congé'),
-        ('Partner',       'Partenaires'),
-        ('Document',      'Documents'),
-        ('Request',       'Demandes / Besoins projet'),
-        ('Event',         'Événements'),
-        ('Direction',     'Directions'),
-        ('Role',          'Rôles'),
-        ('Report',        'Rapports'),
+        ('all', _('Tout')),
+        ('Project', _('Projets')),
+        ('Milestone', _('Jalons / Tâches')),
+        ('Comment', _('Commentaires projet')),
+        ('ProjectMember', _('Membres de projet')),
+        ('Budget', _('Budgets')),
+        ('User', _('Utilisateurs')),
+        ('Employee', _('Employés')),
+        ('LeaveRequest', _('Demandes de congé')),
+        ('Partner', _('Partenaires')),
+        ('Document', _('Documents')),
+        ('Request', _('Demandes / Besoins projet')),
+        ('Event', _('Événements')),
+        ('Direction', _('Directions')),
+        ('Role', _('Rôles')),
+        ('Report', _('Rapports')),
     ]
     CONDITION_CHOICES = [
-        ('',                   'Aucune (accès global)'),
-        ('same_direction',     'Même direction'),
-        ('is_project_manager', 'Est manager du projet'),
-        ('is_project_member',  'Est membre du projet'),
-        ('is_owner',           'Est propriétaire'),
-        ('hr_pipeline',        'Pipeline RH (après avis hiérarchique)'),
+        ('', _('Aucune (accès global)')),
+        ('same_direction', _('Même direction')),
+        ('is_project_manager', _('Est manager du projet')),
+        ('is_project_member', _('Est membre du projet')),
+        ('is_owner', _('Est propriétaire')),
+        ('hr_pipeline', _('Pipeline RH (après avis hiérarchique)')),
     ]
 
-    action      = models.CharField(max_length=20, choices=ACTION_CHOICES, verbose_name="Action")
-    subject     = models.CharField(max_length=30, choices=SUBJECT_CHOICES, verbose_name="Sujet")
-    condition   = models.CharField(max_length=30, choices=CONDITION_CHOICES, blank=True, default='', verbose_name="Condition")
-    description = models.CharField(max_length=200, blank=True, verbose_name="Description")
+    action      = models.CharField(max_length=20, choices=ACTION_CHOICES, verbose_name=_("Action"))
+    subject     = models.CharField(max_length=30, choices=SUBJECT_CHOICES, verbose_name=_("Sujet"))
+    condition   = models.CharField(max_length=30, choices=CONDITION_CHOICES, blank=True, default='', verbose_name=_("Condition"))
+    description = models.CharField(max_length=200, blank=True, verbose_name=_("Description"))
 
     class Meta:
         unique_together = ['action', 'subject', 'condition']
@@ -62,11 +63,11 @@ class Permission(models.Model):
 
 
 class Role(models.Model):
-    name        = models.CharField(max_length=100, verbose_name="Nom")
-    slug        = models.SlugField(max_length=50, unique=True, verbose_name="Identifiant")
-    description = models.TextField(blank=True, verbose_name="Description")
-    permissions = models.ManyToManyField(Permission, blank=True, related_name='roles', verbose_name="Permissions")
-    is_system   = models.BooleanField(default=False, verbose_name="Rôle système (non supprimable)")
+    name        = models.CharField(max_length=100, verbose_name=_("Nom"))
+    slug        = models.SlugField(max_length=50, unique=True, verbose_name=_("Identifiant"))
+    description = models.TextField(blank=True, verbose_name=_("Description"))
+    permissions = models.ManyToManyField(Permission, blank=True, related_name='roles', verbose_name=_("Permissions"))
+    is_system   = models.BooleanField(default=False, verbose_name=_("Rôle système (non supprimable)"))
     created_at  = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -79,11 +80,11 @@ class Role(models.Model):
 
 
 class ProjectRole(models.Model):
-    name        = models.CharField(max_length=100, verbose_name="Nom")
-    slug        = models.SlugField(max_length=50, unique=True, verbose_name="Identifiant")
-    description = models.TextField(blank=True, verbose_name="Description")
-    permissions = models.ManyToManyField(Permission, blank=True, related_name='project_roles', verbose_name="Permissions projet")
-    is_system   = models.BooleanField(default=False, verbose_name="Rôle système (non supprimable)")
+    name        = models.CharField(max_length=100, verbose_name=_("Nom"))
+    slug        = models.SlugField(max_length=50, unique=True, verbose_name=_("Identifiant"))
+    description = models.TextField(blank=True, verbose_name=_("Description"))
+    permissions = models.ManyToManyField(Permission, blank=True, related_name='project_roles', verbose_name=_("Permissions projet"))
+    is_system   = models.BooleanField(default=False, verbose_name=_("Rôle système (non supprimable)"))
     created_at  = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -101,13 +102,13 @@ class ProjectRole(models.Model):
 
 class UserProfile(models.Model):
     user                = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    role                = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True, related_name='users', verbose_name="Rôle")
-    direction           = models.ForeignKey('Direction', on_delete=models.SET_NULL, null=True, blank=True, related_name='users', verbose_name="Direction")
-    employee            = models.OneToOneField('Employee', on_delete=models.SET_NULL, null=True, blank=True, related_name='user_profile', verbose_name="Employé")
-    employee_identifier = models.CharField(max_length=50, null=True, blank=True, verbose_name="ID Employé")
-    phone               = models.CharField(max_length=20, blank=True, verbose_name="Téléphone")
-    avatar              = models.ImageField(upload_to='avatars/', null=True, blank=True, verbose_name="Photo")
-    is_active_profile   = models.BooleanField(default=True, verbose_name="Profil actif")
+    role                = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True, related_name='users', verbose_name=_("Rôle"))
+    direction           = models.ForeignKey('Direction', on_delete=models.SET_NULL, null=True, blank=True, related_name='users', verbose_name=_("Direction"))
+    employee            = models.OneToOneField('Employee', on_delete=models.SET_NULL, null=True, blank=True, related_name='user_profile', verbose_name=_("Employé"))
+    employee_identifier = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("ID Employé"))
+    phone               = models.CharField(max_length=20, blank=True, verbose_name=_("Téléphone"))
+    avatar              = models.ImageField(upload_to='avatars/', null=True, blank=True, verbose_name=_("Photo"))
+    is_active_profile   = models.BooleanField(default=True, verbose_name=_("Profil actif"))
     created_at          = models.DateTimeField(auto_now_add=True)
     updated_at          = models.DateTimeField(auto_now=True)
 
@@ -164,10 +165,10 @@ class UserProfile(models.Model):
 
     # Budget
     def can_view_budgets(self):
-        return self.can('read', 'Budget') or self.can('manage', 'Budget')
+        return self.can('read', _('Budget')) or self.can('manage', _('Budget'))
 
     def can_manage_budgets(self):
-        return self.can('manage', 'Budget')
+        return self.can('manage', _('Budget'))
 
     def can_view_all_budget_directions(self):
         from .ability import Ability
@@ -176,52 +177,52 @@ class UserProfile(models.Model):
             action  = rule.get('action')       if isinstance(rule, dict) else rule.action
             subject = rule.get('subject')      if isinstance(rule, dict) else rule.subject
             cond    = rule.get('condition','') if isinstance(rule, dict) else rule.condition
-            if action in ('read', 'manage') and subject in ('Budget', 'all') and not cond:
+            if action in ('read', _('manage')) and subject in ('Budget', _('all')) and not cond:
                 return True
         return False
 
     # Utilisateurs
     def has_manage_users_permission(self):
-        return self.can('manage', 'User')
+        return self.can('manage', _('User'))
 
     def can_manage_users(self):
-        return self.can('manage', 'User')
+        return self.can('manage', _('User'))
 
     # Demandes
     def has_approve_requests_permission(self):
-        return self.can('approve', 'Request')
+        return self.can('approve', _('Request'))
 
     def can_approve_requests(self):
-        return self.can('approve', 'Request')
+        return self.can('approve', _('Request'))
 
     # Événements
     def has_create_events_permission(self):
-        return self.can('manage', 'Event')
+        return self.can('manage', _('Event'))
 
     def can_manage_events(self):
-        return self.can('manage', 'Event')
+        return self.can('manage', _('Event'))
 
     def can_read_events(self):
-        return self.can('read', 'Event') or self.can('manage', 'Event')
+        return self.can('read', _('Event')) or self.can('manage', _('Event'))
 
     # Rapports
     def can_view_reports(self):
-        return self.can('read', 'Report')
+        return self.can('read', _('Report'))
 
     # Partenaires
     def can_manage_partners(self):
-        return self.can('manage', 'Partner') or self.can('read', 'Partner')
+        return self.can('manage', _('Partner')) or self.can('read', _('Partner'))
 
     # Documents
     def can_approve_documents(self):
-        return self.can('approve', 'Document')
+        return self.can('approve', _('Document'))
 
     # Projets — globaux
     def can_create_projects(self):
-        return self.can('create', 'Project')
+        return self.can('create', _('Project'))
 
     def can_manage_projects(self):
-        return self.can('read', 'Project') or self.can('manage', 'Project')
+        return self.can('read', _('Project')) or self.can('manage', _('Project'))
 
     # Projets — niveau instance
     def can_view_project(self, project):
@@ -274,7 +275,7 @@ class UserProfile(models.Model):
 
     # Congés
     def can_give_final_approval(self):
-        return self.can('manage', 'LeaveRequest')
+        return self.can('manage', _('LeaveRequest'))
 
     def is_hr(self):
         from .ability import Ability
@@ -283,7 +284,7 @@ class UserProfile(models.Model):
             action  = rule.get('action')       if isinstance(rule, dict) else rule.action
             subject = rule.get('subject')      if isinstance(rule, dict) else rule.subject
             cond    = rule.get('condition','') if isinstance(rule, dict) else rule.condition
-            if action in ('approve', 'manage') and subject in ('LeaveRequest', 'all') and cond == 'hr_pipeline':
+            if action in ('approve', _('manage')) and subject in ('LeaveRequest', _('all')) and cond == 'hr_pipeline':
                 return True
         return False
 
@@ -300,13 +301,13 @@ class UserProfile(models.Model):
         for rule in ab.rules:
             action  = rule.get('action')       if isinstance(rule, dict) else rule.action
             subject = rule.get('subject')      if isinstance(rule, dict) else rule.subject
-            if action in ('approve', 'manage') and subject in ('LeaveRequest', 'all'):
+            if action in ('approve', _('manage')) and subject in ('LeaveRequest', _('all')):
                 return True
         return False
 
     # Calendrier
     def can_view_calendar(self):
-        return self.can('read', 'Event')
+        return self.can('read', _('Event'))
 
 
 @receiver(post_save, sender=User)
@@ -322,9 +323,9 @@ def save_user_profile(sender, instance, **kwargs):
 
 
 class Direction(models.Model):
-    name = models.CharField(max_length=200, verbose_name="Nom")
-    code = models.CharField(max_length=10, unique=True, verbose_name="Code")
-    color = models.CharField(max_length=7, default="#3b82f6", verbose_name="Couleur")
+    name = models.CharField(max_length=200, verbose_name=_("Nom"))
+    code = models.CharField(max_length=10, unique=True, verbose_name=_("Code"))
+    color = models.CharField(max_length=7, default="#3b82f6", verbose_name=_("Couleur"))
     
     class Meta:
         verbose_name = "Direction"
@@ -337,33 +338,33 @@ class Direction(models.Model):
 
 class Project(models.Model):
     STATUS_CHOICES = [
-        ('planifie', 'Planifié'),
-        ('en_cours', 'En cours'),
-        ('suspendu', 'Suspendu'),
-        ('termine', 'Terminé'),
-        ('en_retard', 'En retard'),
+        ('planifie', _('Planifié')),
+        ('en_cours', _('En cours')),
+        ('suspendu', _('Suspendu')),
+        ('termine', _('Terminé')),
+        ('en_retard', _('En retard')),
     ]
     PRIORITY_CHOICES = [
-        ('basse', 'Basse'),
-        ('moyenne', 'Moyenne'),
-        ('haute', 'Haute'),
+        ('basse', _('Basse')),
+        ('moyenne', _('Moyenne')),
+        ('haute', _('Haute')),
     ]
     
-    name = models.CharField(max_length=200, verbose_name="Nom du projet")
-    description = models.TextField(blank=True, verbose_name="Description")
-    direction = models.ForeignKey(Direction, on_delete=models.SET_NULL, null=True, blank=True, related_name='projects', verbose_name="Direction")
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='planifie', verbose_name="Statut")
-    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='moyenne', verbose_name="Priorité")
-    progress = models.IntegerField(default=0, verbose_name="Progression (%)")
-    budget = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name="Budget alloué")
-    budget_consumed = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name="Budget consommé")
-    currency = models.CharField(max_length=3, default='GNF', verbose_name="Devise")
-    start_date = models.DateField(verbose_name="Date de début")
-    end_date = models.DateField(verbose_name="Date de fin")
-    original_start_date = models.DateField(null=True, blank=True, editable=False, verbose_name="Date de début originale")
-    original_end_date = models.DateField(null=True, blank=True, editable=False, verbose_name="Date de fin originale")
-    manager = models.CharField(max_length=100, verbose_name="Responsable")
-    manager_employee = models.ForeignKey('Employee', on_delete=models.SET_NULL, null=True, blank=True, related_name='managed_projects', verbose_name="Responsable (lié)")
+    name = models.CharField(max_length=200, verbose_name=_("Nom du projet"))
+    description = models.TextField(blank=True, verbose_name=_("Description"))
+    direction = models.ForeignKey(Direction, on_delete=models.SET_NULL, null=True, blank=True, related_name='projects', verbose_name=_("Direction"))
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='planifie', verbose_name=_("Statut"))
+    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='moyenne', verbose_name=_("Priorité"))
+    progress = models.IntegerField(default=0, verbose_name=_("Progression (%)"))
+    budget = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name=_("Budget alloué"))
+    budget_consumed = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name=_("Budget consommé"))
+    currency = models.CharField(max_length=3, default='GNF', verbose_name=_("Devise"))
+    start_date = models.DateField(verbose_name=_("Date de début"))
+    end_date = models.DateField(verbose_name=_("Date de fin"))
+    original_start_date = models.DateField(null=True, blank=True, editable=False, verbose_name=_("Date de début originale"))
+    original_end_date = models.DateField(null=True, blank=True, editable=False, verbose_name=_("Date de fin originale"))
+    manager = models.CharField(max_length=100, verbose_name=_("Responsable"))
+    manager_employee = models.ForeignKey('Employee', on_delete=models.SET_NULL, null=True, blank=True, related_name='managed_projects', verbose_name=_("Responsable (lié)"))
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -433,9 +434,9 @@ class Project(models.Model):
 class ProjectMember(models.Model):
     """Membres d'un projet — le rôle et ses permissions sont portés par ProjectRole."""
 
-    project      = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='members', verbose_name="Projet")
-    employee     = models.ForeignKey('Employee', on_delete=models.CASCADE, related_name='project_memberships', verbose_name="Employé")
-    project_role = models.ForeignKey(ProjectRole, on_delete=models.SET_NULL, null=True, blank=True, related_name='memberships', verbose_name="Rôle projet")
+    project      = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='members', verbose_name=_("Projet"))
+    employee     = models.ForeignKey('Employee', on_delete=models.CASCADE, related_name='project_memberships', verbose_name=_("Employé"))
+    project_role = models.ForeignKey(ProjectRole, on_delete=models.SET_NULL, null=True, blank=True, related_name='memberships', verbose_name=_("Rôle projet"))
     joined_at    = models.DateTimeField(auto_now_add=True, verbose_name="Date d'ajout")
 
     class Meta:
@@ -457,28 +458,28 @@ class ProjectMember(models.Model):
         return self.project_role.permissions.filter(action=action, subject=subject).exists()
 
     def can_manage_members(self):
-        return self._has_perm('manage', 'ProjectMember')
+        return self._has_perm('manage', _('ProjectMember'))
 
     def can_edit_project(self):
-        return self._has_perm('update', 'Project')
+        return self._has_perm('update', _('Project'))
 
     def can_add_milestones(self):
-        return self._has_perm('create', 'Milestone')
+        return self._has_perm('create', _('Milestone'))
 
     def can_update_milestones(self):
-        return self._has_perm('update', 'Milestone')
+        return self._has_perm('update', _('Milestone'))
 
     def can_add_documents(self):
-        return self._has_perm('create', 'Document')
+        return self._has_perm('create', _('Document'))
 
     def can_update_documents(self):
-        return self._has_perm('update', 'Document')
+        return self._has_perm('update', _('Document'))
 
     def can_add_needs(self):
-        return self._has_perm('create', 'Request')
+        return self._has_perm('create', _('Request'))
 
     def can_add_comments(self):
-        return self._has_perm('create', 'Comment')
+        return self._has_perm('create', _('Comment'))
 
     def can_perform_actions(self):
         return any([
@@ -493,24 +494,24 @@ class ProjectMember(models.Model):
 
 class Milestone(models.Model):
     TASK_STATUS_CHOICES = [
-        ('a_faire', 'À faire'),
-        ('en_cours', 'En cours'),
-        ('bloque', 'Bloqué'),
-        ('en_revision', 'En révision'),
-        ('termine', 'Terminé'),
+        ('a_faire', _('À faire')),
+        ('en_cours', _('En cours')),
+        ('bloque', _('Bloqué')),
+        ('en_revision', _('En révision')),
+        ('termine', _('Terminé')),
     ]
 
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='milestones', verbose_name="Projet")
-    name = models.CharField(max_length=200, verbose_name="Nom du jalon")
-    assigned_to = models.ManyToManyField('Employee', blank=True, related_name='assigned_milestones', verbose_name="Responsables")
-    assigned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_milestones_created', verbose_name="Attribué par")
-    due_date = models.DateField(null=True, blank=True, verbose_name="Date de la tâche")
-    status = models.CharField(max_length=20, choices=TASK_STATUS_CHOICES, default='a_faire', verbose_name="Statut")
-    completed = models.BooleanField(default=False, verbose_name="Complété")
-    completed_at = models.DateTimeField(null=True, blank=True, verbose_name="Terminé le")
-    need = models.TextField(blank=True, default='', verbose_name="Besoin")
-    manual_progress = models.IntegerField(default=0, verbose_name="Progression manuelle (%)")
-    order = models.IntegerField(default=0, verbose_name="Ordre")
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='milestones', verbose_name=_("Projet"))
+    name = models.CharField(max_length=200, verbose_name=_("Nom du jalon"))
+    assigned_to = models.ManyToManyField('Employee', blank=True, related_name='assigned_milestones', verbose_name=_("Responsables"))
+    assigned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_milestones_created', verbose_name=_("Attribué par"))
+    due_date = models.DateField(null=True, blank=True, verbose_name=_("Date de la tâche"))
+    status = models.CharField(max_length=20, choices=TASK_STATUS_CHOICES, default='a_faire', verbose_name=_("Statut"))
+    completed = models.BooleanField(default=False, verbose_name=_("Complété"))
+    completed_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Terminé le"))
+    need = models.TextField(blank=True, default='', verbose_name=_("Besoin"))
+    manual_progress = models.IntegerField(default=0, verbose_name=_("Progression manuelle (%)"))
+    order = models.IntegerField(default=0, verbose_name=_("Ordre"))
     
     class Meta:
         verbose_name = "Jalon"
@@ -560,15 +561,15 @@ class Milestone(models.Model):
 
 class SubMilestone(models.Model):
     """Sous-étapes d'un jalon"""
-    milestone = models.ForeignKey(Milestone, on_delete=models.CASCADE, related_name='sub_milestones', verbose_name="Jalon parent")
-    name = models.CharField(max_length=200, verbose_name="Nom de la sous-étape")
-    assigned_to = models.ManyToManyField('Employee', blank=True, related_name='assigned_sub_milestones', verbose_name="Responsables")
-    assigned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_sub_milestones_created', verbose_name="Attribué par")
-    due_date = models.DateField(null=True, blank=True, verbose_name="Date de la sous-tâche")
-    completed = models.BooleanField(default=False, verbose_name="Complétée")
-    completed_at = models.DateTimeField(null=True, blank=True, verbose_name="Terminée le")
-    need = models.TextField(blank=True, default='', verbose_name="Besoin")
-    order = models.IntegerField(default=0, verbose_name="Ordre")
+    milestone = models.ForeignKey(Milestone, on_delete=models.CASCADE, related_name='sub_milestones', verbose_name=_("Jalon parent"))
+    name = models.CharField(max_length=200, verbose_name=_("Nom de la sous-étape"))
+    assigned_to = models.ManyToManyField('Employee', blank=True, related_name='assigned_sub_milestones', verbose_name=_("Responsables"))
+    assigned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_sub_milestones_created', verbose_name=_("Attribué par"))
+    due_date = models.DateField(null=True, blank=True, verbose_name=_("Date de la sous-tâche"))
+    completed = models.BooleanField(default=False, verbose_name=_("Complétée"))
+    completed_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Terminée le"))
+    need = models.TextField(blank=True, default='', verbose_name=_("Besoin"))
+    order = models.IntegerField(default=0, verbose_name=_("Ordre"))
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
@@ -590,26 +591,26 @@ class SubMilestone(models.Model):
 
 class ProjectNeed(models.Model):
     PRIORITY_CHOICES = [
-        ('basse', 'Basse'),
-        ('moyenne', 'Moyenne'),
-        ('haute', 'Haute'),
+        ('basse', _('Basse')),
+        ('moyenne', _('Moyenne')),
+        ('haute', _('Haute')),
     ]
     NEED_STATUS_CHOICES = [
-        ('ouvert', 'Ouvert'),
-        ('en_cours', 'En cours'),
-        ('resolu', 'Résolu'),
-        ('rejete', 'Rejeté'),
+        ('ouvert', _('Ouvert')),
+        ('en_cours', _('En cours')),
+        ('resolu', _('Résolu')),
+        ('rejete', _('Rejeté')),
     ]
 
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='needs', verbose_name="Projet")
-    title = models.CharField(max_length=200, verbose_name="Titre")
-    description = models.TextField(blank=True, verbose_name="Description")
-    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='moyenne', verbose_name="Priorité")
-    status = models.CharField(max_length=20, choices=NEED_STATUS_CHOICES, default='ouvert', verbose_name="Statut")
-    created_by = models.CharField(max_length=100, verbose_name="Créé par")
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='needs', verbose_name=_("Projet"))
+    title = models.CharField(max_length=200, verbose_name=_("Titre"))
+    description = models.TextField(blank=True, verbose_name=_("Description"))
+    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='moyenne', verbose_name=_("Priorité"))
+    status = models.CharField(max_length=20, choices=NEED_STATUS_CHOICES, default='ouvert', verbose_name=_("Statut"))
+    created_by = models.CharField(max_length=100, verbose_name=_("Créé par"))
     created_at = models.DateTimeField(auto_now_add=True)
-    resolved_by = models.CharField(max_length=100, blank=True, verbose_name="Traité par")
-    resolved_at = models.DateTimeField(null=True, blank=True, verbose_name="Traité le")
+    resolved_by = models.CharField(max_length=100, blank=True, verbose_name=_("Traité par"))
+    resolved_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Traité le"))
 
     class Meta:
         verbose_name = "Besoin de projet"
@@ -621,13 +622,13 @@ class ProjectNeed(models.Model):
 
     @property
     def is_open(self):
-        return self.status in ('ouvert', 'en_cours')
+        return self.status in ('ouvert', _('en_cours'))
 
 
 class ProjectComment(models.Model):
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='comments', verbose_name="Projet")
-    message = models.TextField(verbose_name="Commentaire")
-    created_by = models.CharField(max_length=100, verbose_name="Créé par")
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='comments', verbose_name=_("Projet"))
+    message = models.TextField(verbose_name=_("Commentaire"))
+    created_by = models.CharField(max_length=100, verbose_name=_("Créé par"))
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -642,34 +643,34 @@ class ProjectComment(models.Model):
 class ProjectActivity(models.Model):
     """Journal d'activité pour suivre toutes les modifications sur un projet"""
     ACTION_CHOICES = [
-        ('creation', 'Création'),
-        ('modification', 'Modification'),
-        ('suppression', 'Suppression'),
-        ('ajout_membre', 'Ajout de membre'),
-        ('retrait_membre', 'Retrait de membre'),
-        ('ajout_jalon', 'Ajout de jalon'),
-        ('modif_jalon', 'Modification de jalon'),
-        ('suppr_jalon', 'Suppression de jalon'),
-        ('ajout_sous_etape', 'Ajout de sous-étape'),
-        ('modif_sous_etape', 'Modification de sous-étape'),
-        ('suppr_sous_etape', 'Suppression de sous-étape'),
-        ('toggle_jalon',      'Changement statut jalon'),
-        ('modif_statut_jalon','Modification statut jalon'),
-        ('toggle_sous_etape', 'Changement statut sous-étape'),
-        ('ajout_document', 'Ajout de document'),
-        ('suppr_document', 'Suppression de document'),
-        ('ajout_dossier', 'Ajout de dossier'),
-        ('suppr_dossier', 'Suppression de dossier'),
-        ('ajout_besoin', 'Ajout de besoin'),
-        ('ajout_commentaire', 'Ajout de commentaire'),
-        ('changement_statut', 'Changement de statut'),
-        ('changement_progression', 'Changement de progression'),
+        ('creation', _('Création')),
+        ('modification', _('Modification')),
+        ('suppression', _('Suppression')),
+        ('ajout_membre', _('Ajout de membre')),
+        ('retrait_membre', _('Retrait de membre')),
+        ('ajout_jalon', _('Ajout de jalon')),
+        ('modif_jalon', _('Modification de jalon')),
+        ('suppr_jalon', _('Suppression de jalon')),
+        ('ajout_sous_etape', _('Ajout de sous-étape')),
+        ('modif_sous_etape', _('Modification de sous-étape')),
+        ('suppr_sous_etape', _('Suppression de sous-étape')),
+        ('toggle_jalon', _('Changement statut jalon')),
+        ('modif_statut_jalon', _('Modification statut jalon')),
+        ('toggle_sous_etape', _('Changement statut sous-étape')),
+        ('ajout_document', _('Ajout de document')),
+        ('suppr_document', _('Suppression de document')),
+        ('ajout_dossier', _('Ajout de dossier')),
+        ('suppr_dossier', _('Suppression de dossier')),
+        ('ajout_besoin', _('Ajout de besoin')),
+        ('ajout_commentaire', _('Ajout de commentaire')),
+        ('changement_statut', _('Changement de statut')),
+        ('changement_progression', _('Changement de progression')),
     ]
     
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='activities', verbose_name="Projet")
-    action = models.CharField(max_length=30, choices=ACTION_CHOICES, verbose_name="Action")
-    description = models.TextField(verbose_name="Description")
-    user = models.CharField(max_length=100, verbose_name="Utilisateur")
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='activities', verbose_name=_("Projet"))
+    action = models.CharField(max_length=30, choices=ACTION_CHOICES, verbose_name=_("Action"))
+    description = models.TextField(verbose_name=_("Description"))
+    user = models.CharField(max_length=100, verbose_name=_("Utilisateur"))
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
@@ -707,9 +708,9 @@ def update_project_progress_on_sub_milestone_delete(sender, instance, **kwargs):
 
 class ProjectFolder(models.Model):
     """Dossier pour organiser les documents d'un projet"""
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='folders', verbose_name="Projet")
-    name = models.CharField(max_length=200, verbose_name="Nom du dossier")
-    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='subfolders', verbose_name="Dossier parent")
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='folders', verbose_name=_("Projet"))
+    name = models.CharField(max_length=200, verbose_name=_("Nom du dossier"))
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='subfolders', verbose_name=_("Dossier parent"))
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
@@ -730,12 +731,12 @@ class ProjectFolder(models.Model):
 
 class ProjectDocument(models.Model):
     """Document lié à un projet et stocké dans un dossier"""
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='project_documents', verbose_name="Projet")
-    folder = models.ForeignKey(ProjectFolder, on_delete=models.SET_NULL, null=True, blank=True, related_name='documents', verbose_name="Dossier")
-    title = models.CharField(max_length=200, verbose_name="Titre")
-    description = models.TextField(blank=True, verbose_name="Description")
-    file = models.FileField(upload_to='project_documents/', verbose_name="Fichier")
-    uploaded_by = models.CharField(max_length=100, verbose_name="Uploadé par")
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='project_documents', verbose_name=_("Projet"))
+    folder = models.ForeignKey(ProjectFolder, on_delete=models.SET_NULL, null=True, blank=True, related_name='documents', verbose_name=_("Dossier"))
+    title = models.CharField(max_length=200, verbose_name=_("Titre"))
+    description = models.TextField(blank=True, verbose_name=_("Description"))
+    file = models.FileField(upload_to='project_documents/', verbose_name=_("Fichier"))
+    uploaded_by = models.CharField(max_length=100, verbose_name=_("Uploadé par"))
     uploaded_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
@@ -749,32 +750,32 @@ class ProjectDocument(models.Model):
 
 class Document(models.Model):
     TYPE_CHOICES = [
-        ('contrat', 'Contrat'),
-        ('budget', 'Budget'),
-        ('rapport', 'Rapport'),
-        ('note', 'Note'),
+        ('contrat', _('Contrat')),
+        ('budget', _('Budget')),
+        ('rapport', _('Rapport')),
+        ('note', _('Note')),
     ]
     STATUS_CHOICES = [
-        ('a_signer', 'À signer'),
-        ('a_valider', 'À valider'),
-        ('signe', 'Signé'),
+        ('a_signer', _('À signer')),
+        ('a_valider', _('À valider')),
+        ('signe', _('Signé')),
     ]
     PRIORITY_CHOICES = [
-        ('basse', 'Basse'),
-        ('moyenne', 'Moyenne'),
-        ('haute', 'Haute'),
+        ('basse', _('Basse')),
+        ('moyenne', _('Moyenne')),
+        ('haute', _('Haute')),
     ]
     
-    title = models.CharField(max_length=200, verbose_name="Titre")
-    doc_type = models.CharField(max_length=20, choices=TYPE_CHOICES, verbose_name="Type")
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='a_valider', verbose_name="Statut")
-    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='moyenne', verbose_name="Priorité")
-    direction = models.ForeignKey(Direction, on_delete=models.CASCADE, related_name='documents', verbose_name="Direction")
-    created_by = models.CharField(max_length=100, verbose_name="Créé par")
-    created_at = models.DateField(auto_now_add=True, verbose_name="Date de création")
-    due_date = models.DateField(verbose_name="Date limite")
-    signed_at = models.DateField(null=True, blank=True, verbose_name="Date de signature")
-    file = models.FileField(upload_to='documents/', null=True, blank=True, verbose_name="Fichier")
+    title = models.CharField(max_length=200, verbose_name=_("Titre"))
+    doc_type = models.CharField(max_length=20, choices=TYPE_CHOICES, verbose_name=_("Type"))
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='a_valider', verbose_name=_("Statut"))
+    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='moyenne', verbose_name=_("Priorité"))
+    direction = models.ForeignKey(Direction, on_delete=models.CASCADE, related_name='documents', verbose_name=_("Direction"))
+    created_by = models.CharField(max_length=100, verbose_name=_("Créé par"))
+    created_at = models.DateField(auto_now_add=True, verbose_name=_("Date de création"))
+    due_date = models.DateField(verbose_name=_("Date limite"))
+    signed_at = models.DateField(null=True, blank=True, verbose_name=_("Date de signature"))
+    file = models.FileField(upload_to='documents/', null=True, blank=True, verbose_name=_("Fichier"))
     
     class Meta:
         verbose_name = "Document"
@@ -787,25 +788,25 @@ class Document(models.Model):
 
 class Partner(models.Model):
     TYPE_CHOICES = [
-        ('entreprise', 'Entreprise'),
-        ('universite', 'Université'),
-        ('institution', 'Institution'),
-        ('ong', 'ONG'),
+        ('entreprise', _('Entreprise')),
+        ('universite', _('Université')),
+        ('institution', _('Institution')),
+        ('ong', _('ONG')),
     ]
     STATUS_CHOICES = [
-        ('actif', 'Actif'),
-        ('en_discussion', 'En discussion'),
-        ('inactif', 'Inactif'),
+        ('actif', _('Actif')),
+        ('en_discussion', _('En discussion')),
+        ('inactif', _('Inactif')),
     ]
     
-    name = models.CharField(max_length=200, verbose_name="Nom")
-    partner_type = models.CharField(max_length=20, choices=TYPE_CHOICES, verbose_name="Type")
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='en_discussion', verbose_name="Statut")
-    contact_person = models.CharField(max_length=100, verbose_name="Personne de contact")
-    email = models.EmailField(verbose_name="Email")
-    phone = models.CharField(max_length=20, verbose_name="Téléphone")
-    start_date = models.DateField(null=True, blank=True, verbose_name="Date de début")
-    logo = models.ImageField(upload_to='partners/', null=True, blank=True, verbose_name="Logo")
+    name = models.CharField(max_length=200, verbose_name=_("Nom"))
+    partner_type = models.CharField(max_length=20, choices=TYPE_CHOICES, verbose_name=_("Type"))
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='en_discussion', verbose_name=_("Statut"))
+    contact_person = models.CharField(max_length=100, verbose_name=_("Personne de contact"))
+    email = models.EmailField(verbose_name=_("Email"))
+    phone = models.CharField(max_length=20, verbose_name=_("Téléphone"))
+    start_date = models.DateField(null=True, blank=True, verbose_name=_("Date de début"))
+    logo = models.ImageField(upload_to='partners/', null=True, blank=True, verbose_name=_("Logo"))
     
     class Meta:
         verbose_name = "Partenaire"
@@ -818,22 +819,22 @@ class Partner(models.Model):
 
 class Event(models.Model):
     TYPE_CHOICES = [
-        ('reunion', 'Réunion'),
-        ('evenement', 'Événement'),
-        ('deadline', 'Deadline'),
+        ('reunion', _('Réunion')),
+        ('evenement', _('Événement')),
+        ('deadline', _('Deadline')),
     ]
     
-    title = models.CharField(max_length=200, verbose_name="Titre")
-    event_type = models.CharField(max_length=20, choices=TYPE_CHOICES, verbose_name="Type")
-    description = models.TextField(blank=True, verbose_name="Description")
-    date = models.DateField(verbose_name="Date")
-    time = models.TimeField(verbose_name="Heure")
-    duration = models.IntegerField(default=60, verbose_name="Durée (minutes)")
-    location = models.CharField(max_length=200, blank=True, verbose_name="Lieu")
-    participants = models.ManyToManyField(Direction, related_name='events', verbose_name="Participants", blank=True)
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_events', verbose_name="Créé par")
-    created_at = models.DateTimeField(null=True, blank=True, auto_now_add=True, verbose_name="Créé le")
-    updated_at = models.DateTimeField(null=True, blank=True, auto_now=True, verbose_name="Modifié le")
+    title = models.CharField(max_length=200, verbose_name=_("Titre"))
+    event_type = models.CharField(max_length=20, choices=TYPE_CHOICES, verbose_name=_("Type"))
+    description = models.TextField(blank=True, verbose_name=_("Description"))
+    date = models.DateField(verbose_name=_("Date"))
+    time = models.TimeField(verbose_name=_("Heure"))
+    duration = models.IntegerField(default=60, verbose_name=_("Durée (minutes)"))
+    location = models.CharField(max_length=200, blank=True, verbose_name=_("Lieu"))
+    participants = models.ManyToManyField(Direction, related_name='events', verbose_name=_("Participants"), blank=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_events', verbose_name=_("Créé par"))
+    created_at = models.DateTimeField(null=True, blank=True, auto_now_add=True, verbose_name=_("Créé le"))
+    updated_at = models.DateTimeField(null=True, blank=True, auto_now=True, verbose_name=_("Modifié le"))
 
     class Meta:
         verbose_name = "Événement"
@@ -862,23 +863,23 @@ class Event(models.Model):
 
 class Request(models.Model):
     STATUS_CHOICES = [
-        ('en_attente', 'En attente'),
-        ('approuve', 'Approuvé'),
-        ('rejete', 'Rejeté'),
+        ('en_attente', _('En attente')),
+        ('approuve', _('Approuvé')),
+        ('rejete', _('Rejeté')),
     ]
     PRIORITY_CHOICES = [
-        ('basse', 'Basse'),
-        ('moyenne', 'Moyenne'),
-        ('haute', 'Haute'),
+        ('basse', _('Basse')),
+        ('moyenne', _('Moyenne')),
+        ('haute', _('Haute')),
     ]
     
-    title = models.CharField(max_length=200, verbose_name="Titre")
-    description = models.TextField(verbose_name="Description")
-    direction = models.ForeignKey(Direction, on_delete=models.CASCADE, related_name='requests', verbose_name="Direction")
-    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='moyenne', verbose_name="Priorité")
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='en_attente', verbose_name="Statut")
-    created_by = models.CharField(max_length=100, verbose_name="Créé par")
-    created_at = models.DateField(auto_now_add=True, verbose_name="Date de création")
+    title = models.CharField(max_length=200, verbose_name=_("Titre"))
+    description = models.TextField(verbose_name=_("Description"))
+    direction = models.ForeignKey(Direction, on_delete=models.CASCADE, related_name='requests', verbose_name=_("Direction"))
+    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='moyenne', verbose_name=_("Priorité"))
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='en_attente', verbose_name=_("Statut"))
+    created_by = models.CharField(max_length=100, verbose_name=_("Créé par"))
+    created_at = models.DateField(auto_now_add=True, verbose_name=_("Date de création"))
     approved_at = models.DateField(null=True, blank=True, verbose_name="Date d'approbation")
     
     class Meta:
@@ -891,15 +892,15 @@ class Request(models.Model):
 
 
 class Employee(models.Model):
-    name = models.CharField(max_length=100, verbose_name="Nom")
-    direction = models.ForeignKey(Direction, on_delete=models.SET_NULL, null=True, blank=True, related_name='employees', verbose_name="Direction")
-    role = models.CharField(max_length=100, verbose_name="Rôle / Fonction")
-    phone = models.CharField(max_length=20, blank=True, verbose_name="Téléphone")
-    email = models.EmailField(blank=True, verbose_name="Email")
-    workload = models.IntegerField(default=0, verbose_name="Charge de travail (%)")
-    skills = models.TextField(blank=True, verbose_name="Compétences")
-    is_external = models.BooleanField(default=False, verbose_name="Personne externe")
-    organization = models.CharField(max_length=150, blank=True, verbose_name="Organisation / Entreprise")
+    name = models.CharField(max_length=100, verbose_name=_("Nom"))
+    direction = models.ForeignKey(Direction, on_delete=models.SET_NULL, null=True, blank=True, related_name='employees', verbose_name=_("Direction"))
+    role = models.CharField(max_length=100, verbose_name=_("Rôle / Fonction"))
+    phone = models.CharField(max_length=20, blank=True, verbose_name=_("Téléphone"))
+    email = models.EmailField(blank=True, verbose_name=_("Email"))
+    workload = models.IntegerField(default=0, verbose_name=_("Charge de travail (%)"))
+    skills = models.TextField(blank=True, verbose_name=_("Compétences"))
+    is_external = models.BooleanField(default=False, verbose_name=_("Personne externe"))
+    organization = models.CharField(max_length=150, blank=True, verbose_name=_("Organisation / Entreprise"))
     
     class Meta:
         verbose_name = "Employé"
@@ -918,20 +919,20 @@ class Employee(models.Model):
 class UserActivity(models.Model):
     """Log des activités utilisateur"""
     ACTION_CHOICES = [
-        ('login', 'Connexion'),
-        ('logout', 'Déconnexion'),
-        ('create', 'Création'),
-        ('update', 'Modification'),
-        ('delete', 'Suppression'),
-        ('view', 'Consultation'),
+        ('login', _('Connexion')),
+        ('logout', _('Déconnexion')),
+        ('create', _('Création')),
+        ('update', _('Modification')),
+        ('delete', _('Suppression')),
+        ('view', _('Consultation')),
     ]
     
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activities', verbose_name="Utilisateur")
-    action = models.CharField(max_length=20, choices=ACTION_CHOICES, verbose_name="Action")
-    description = models.TextField(blank=True, verbose_name="Description")
-    ip_address = models.GenericIPAddressField(null=True, blank=True, verbose_name="Adresse IP")
-    user_agent = models.TextField(blank=True, verbose_name="Navigateur")
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Date")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activities', verbose_name=_("Utilisateur"))
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES, verbose_name=_("Action"))
+    description = models.TextField(blank=True, verbose_name=_("Description"))
+    ip_address = models.GenericIPAddressField(null=True, blank=True, verbose_name=_("Adresse IP"))
+    user_agent = models.TextField(blank=True, verbose_name=_("Navigateur"))
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Date"))
     
     class Meta:
         verbose_name = "Activité utilisateur"
@@ -943,11 +944,11 @@ class UserActivity(models.Model):
 
 
 class Budget(models.Model):
-    direction = models.ForeignKey(Direction, on_delete=models.SET_NULL, null=True, blank=True, related_name='budgets', verbose_name="Direction")
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, null=True, blank=True, related_name='budget_lines', verbose_name="Projet")
-    allocated = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name="Budget alloué")
-    consumed = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name="Budget consommé")
-    currency = models.CharField(max_length=3, default='GNF', verbose_name="Devise")
+    direction = models.ForeignKey(Direction, on_delete=models.SET_NULL, null=True, blank=True, related_name='budgets', verbose_name=_("Direction"))
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, null=True, blank=True, related_name='budget_lines', verbose_name=_("Projet"))
+    allocated = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name=_("Budget alloué"))
+    consumed = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name=_("Budget consommé"))
+    currency = models.CharField(max_length=3, default='GNF', verbose_name=_("Devise"))
     
     class Meta:
         verbose_name = "Budget"
@@ -979,83 +980,83 @@ class LeaveRequest(models.Model):
     """Demande de conge - workflow CSIG (Employe -> Hierarchie -> RH -> Direction)."""
 
     TYPE_CHOICES = [
-        ('annuel', 'Congé annuel'),
-        ('maladie', 'Congé maladie'),
-        ('maternite', 'Congé maternité / paternité'),
-        ('exceptionnelle', 'Permission exceptionnelle'),
-        ('sans_solde', 'Congé sans solde'),
-        ('formation', 'Formation / Mission'),
+        ('annuel', _('Congé annuel')),
+        ('maladie', _('Congé maladie')),
+        ('maternite', _('Congé maternité / paternité')),
+        ('exceptionnelle', _('Permission exceptionnelle')),
+        ('sans_solde', _('Congé sans solde')),
+        ('formation', _('Formation / Mission')),
     ]
 
     STATUS_CHOICES = [
-        ('soumise', 'Soumise - en attente avis hiérarchique'),
-        ('avis_favorable', 'Avis hiérarchique favorable - en attente RH'),
-        ('avis_defavorable', 'Avis hiérarchique défavorable'),
-        ('rh_conforme', 'Vérifiée RH - en attente décision finale'),
-        ('rh_non_conforme', 'Non conforme RH'),
-        ('approuvee', 'Approuvée'),
-        ('rejetee', 'Rejetée'),
-        ('annulee', 'Annulée par le demandeur'),
+        ('soumise', _('Soumise - en attente avis hiérarchique')),
+        ('avis_favorable', _('Avis hiérarchique favorable - en attente RH')),
+        ('avis_defavorable', _('Avis hiérarchique défavorable')),
+        ('rh_conforme', _('Vérifiée RH - en attente décision finale')),
+        ('rh_non_conforme', _('Non conforme RH')),
+        ('approuvee', _('Approuvée')),
+        ('rejetee', _('Rejetée')),
+        ('annulee', _('Annulée par le demandeur')),
     ]
 
     DECISION_CHOICES = [
-        ('', 'En attente'),
-        ('favorable', 'Favorable'),
-        ('defavorable', 'Défavorable'),
+        ('', _('En attente')),
+        ('favorable', _('Favorable')),
+        ('defavorable', _('Défavorable')),
     ]
 
     HR_DECISION_CHOICES = [
-        ('', 'En attente'),
-        ('conforme', 'Conforme'),
-        ('non_conforme', 'Non conforme'),
+        ('', _('En attente')),
+        ('conforme', _('Conforme')),
+        ('non_conforme', _('Non conforme')),
     ]
 
     FINAL_DECISION_CHOICES = [
-        ('', 'En attente'),
-        ('approuve', 'Approuvée'),
-        ('rejete', 'Rejetée'),
+        ('', _('En attente')),
+        ('approuve', _('Approuvée')),
+        ('rejete', _('Rejetée')),
     ]
 
     # Demandeur
-    employee = models.ForeignKey(Employee, on_delete=models.PROTECT, related_name='leave_requests', verbose_name="Employé")
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='leave_requests', verbose_name="Utilisateur")
-    direction = models.ForeignKey(Direction, on_delete=models.PROTECT, related_name='leave_requests', verbose_name="Direction / Service")
+    employee = models.ForeignKey(Employee, on_delete=models.PROTECT, related_name='leave_requests', verbose_name=_("Employé"))
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='leave_requests', verbose_name=_("Utilisateur"))
+    direction = models.ForeignKey(Direction, on_delete=models.PROTECT, related_name='leave_requests', verbose_name=_("Direction / Service"))
 
     # Demande
-    leave_type = models.CharField(max_length=20, choices=TYPE_CHOICES, verbose_name="Type de congé")
-    start_date = models.DateField(verbose_name="Date de début")
-    end_date = models.DateField(verbose_name="Date de fin")
-    days_count = models.PositiveIntegerField(default=0, verbose_name="Nombre de jours")
-    reason = models.TextField(verbose_name="Motif")
-    replacement = models.CharField(max_length=200, blank=True, verbose_name="Suppléant / agent intérimaire")
-    handover_note = models.TextField(blank=True, verbose_name="Note de passation")
+    leave_type = models.CharField(max_length=20, choices=TYPE_CHOICES, verbose_name=_("Type de congé"))
+    start_date = models.DateField(verbose_name=_("Date de début"))
+    end_date = models.DateField(verbose_name=_("Date de fin"))
+    days_count = models.PositiveIntegerField(default=0, verbose_name=_("Nombre de jours"))
+    reason = models.TextField(verbose_name=_("Motif"))
+    replacement = models.CharField(max_length=200, blank=True, verbose_name=_("Suppléant / agent intérimaire"))
+    handover_note = models.TextField(blank=True, verbose_name=_("Note de passation"))
 
     # Justificatif principal
-    justification = models.FileField(upload_to='leaves/', null=True, blank=True, verbose_name="Justificatif")
+    justification = models.FileField(upload_to='leaves/', null=True, blank=True, verbose_name=_("Justificatif"))
 
     # Statut global
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='soumise', verbose_name="Statut")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='soumise', verbose_name=_("Statut"))
 
     # Etape 1 : superieur hierarchique (48h)
-    manager_decision = models.CharField(max_length=15, choices=DECISION_CHOICES, blank=True, default='', verbose_name="Avis hiérarchique")
-    manager_comment = models.TextField(blank=True, verbose_name="Observations hiérarchie")
-    manager_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='leaves_managed', verbose_name="Validé par (hiérarchie)")
-    manager_decision_at = models.DateTimeField(null=True, blank=True, verbose_name="Date avis hiérarchique")
+    manager_decision = models.CharField(max_length=15, choices=DECISION_CHOICES, blank=True, default='', verbose_name=_("Avis hiérarchique"))
+    manager_comment = models.TextField(blank=True, verbose_name=_("Observations hiérarchie"))
+    manager_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='leaves_managed', verbose_name=_("Validé par (hiérarchie)"))
+    manager_decision_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Date avis hiérarchique"))
 
     # Etape 2 : RH (72h)
-    hr_decision = models.CharField(max_length=15, choices=HR_DECISION_CHOICES, blank=True, default='', verbose_name="Vérification RH")
-    hr_comment = models.TextField(blank=True, verbose_name="Observations RH")
-    hr_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='leaves_hr', verbose_name="Vérifié par (RH)")
-    hr_decision_at = models.DateTimeField(null=True, blank=True, verbose_name="Date vérification RH")
+    hr_decision = models.CharField(max_length=15, choices=HR_DECISION_CHOICES, blank=True, default='', verbose_name=_("Vérification RH"))
+    hr_comment = models.TextField(blank=True, verbose_name=_("Observations RH"))
+    hr_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='leaves_hr', verbose_name=_("Vérifié par (RH)"))
+    hr_decision_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Date vérification RH"))
 
     # Etape 3 : Direction Generale / Coordination (decision finale)
-    final_decision = models.CharField(max_length=15, choices=FINAL_DECISION_CHOICES, blank=True, default='', verbose_name="Décision finale")
-    final_comment = models.TextField(blank=True, verbose_name="Observations Direction")
-    final_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='leaves_final', verbose_name="Décidé par (Direction)")
-    final_decision_at = models.DateTimeField(null=True, blank=True, verbose_name="Date décision finale")
+    final_decision = models.CharField(max_length=15, choices=FINAL_DECISION_CHOICES, blank=True, default='', verbose_name=_("Décision finale"))
+    final_comment = models.TextField(blank=True, verbose_name=_("Observations Direction"))
+    final_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='leaves_final', verbose_name=_("Décidé par (Direction)"))
+    final_decision_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Date décision finale"))
 
     # Meta
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Soumise le")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Soumise le"))
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -1116,9 +1117,9 @@ class LeaveRequest(models.Model):
 
 class LeaveDocument(models.Model):
     """Piece jointe supplementaire pour une demande de conge."""
-    leave_request = models.ForeignKey(LeaveRequest, on_delete=models.CASCADE, related_name='documents', verbose_name="Demande")
-    file = models.FileField(upload_to='leaves/docs/', verbose_name="Fichier")
-    label = models.CharField(max_length=200, blank=True, verbose_name="Libellé")
+    leave_request = models.ForeignKey(LeaveRequest, on_delete=models.CASCADE, related_name='documents', verbose_name=_("Demande"))
+    file = models.FileField(upload_to='leaves/docs/', verbose_name=_("Fichier"))
+    label = models.CharField(max_length=200, blank=True, verbose_name=_("Libellé"))
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

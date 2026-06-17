@@ -1,4 +1,5 @@
 """Vues RBAC : gestion des rôles globaux et des rôles projet."""
+from django.utils.translation import gettext as _
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -10,7 +11,7 @@ from .models import Permission, Role, ProjectRole
 def _require_role_admin(request):
     """Retourne None si l'utilisateur peut gérer les rôles, ou une réponse redirect."""
     if not request.user.profile.can('manage', 'Role'):
-        messages.error(request, "Vous n'avez pas la permission de gérer les rôles.")
+        messages.error(request, _("Vous n'avez pas la permission de gérer les rôles."))
         return redirect('core:dashboard')
     return None
 
@@ -82,9 +83,9 @@ def role_create(request):
         perm_ids = request.POST.getlist('permissions')
 
         if not name or not slug:
-            messages.error(request, "Le nom et l'identifiant sont obligatoires.")
+            messages.error(request, _("Le nom et l'identifiant sont obligatoires."))
         elif Role.objects.filter(slug=slug).exists():
-            messages.error(request, "Un rôle avec cet identifiant existe déjà.")
+            messages.error(request, _("Un rôle avec cet identifiant existe déjà."))
         else:
             role = Role.objects.create(name=name, slug=slug, description=description)
             role.permissions.set(Permission.objects.filter(id__in=perm_ids))
@@ -157,7 +158,7 @@ def role_delete(request, role_id):
 
     role = get_object_or_404(Role, pk=role_id)
     if role.is_system:
-        messages.error(request, "Les rôles système ne peuvent pas être supprimés.")
+        messages.error(request, _("Les rôles système ne peuvent pas être supprimés."))
         return redirect('core:roles_list')
     if role.users.exists():
         messages.error(request, f"Ce rôle est assigné à {role.users.count()} utilisateur(s). Réassignez-les d'abord.")
@@ -208,9 +209,9 @@ def project_role_create(request):
         perm_ids = request.POST.getlist('permissions')
 
         if not name or not slug:
-            messages.error(request, "Le nom et l'identifiant sont obligatoires.")
+            messages.error(request, _("Le nom et l'identifiant sont obligatoires."))
         elif ProjectRole.objects.filter(slug=slug).exists():
-            messages.error(request, "Un rôle projet avec cet identifiant existe déjà.")
+            messages.error(request, _("Un rôle projet avec cet identifiant existe déjà."))
         else:
             pr = ProjectRole.objects.create(name=name, slug=slug, description=description)
             pr.permissions.set(Permission.objects.filter(id__in=perm_ids))
@@ -284,7 +285,7 @@ def project_role_delete(request, role_id):
 
     role = get_object_or_404(ProjectRole, pk=role_id)
     if role.is_system:
-        messages.error(request, "Les rôles système ne peuvent pas être supprimés.")
+        messages.error(request, _("Les rôles système ne peuvent pas être supprimés."))
         return redirect('core:project_roles_list')
     if request.method == 'POST':
         name = role.name

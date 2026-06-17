@@ -1,8 +1,9 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
-{% block title %}{% if editing %}Modifier{% else %}Nouveau{% endif %} rôle{% if is_project %} projet{% endif %}{% endblock %}
-{% block page_title %}{% if editing %}Modifier : {{ role.name }}{% else %}Nouveau rôle{% if is_project %} projet{% endif %}{% endif %}{% endblock %}
-{% block page_subtitle %}Définir les permissions associées à ce rôle{% endblock %}
+{% block title %}{% if editing %}{% trans "Modifier" %}{% else %}{% trans "Nouveau" %}{% endif %} {% trans "rôle" %}{% if is_project %} {% trans "projet" %}{% endif %}{% endblock %}
+{% block page_title %}{% if editing %}{% trans "Modifier" %} : {{ role.name }}{% else %}{% trans "Nouveau rôle" %}{% if is_project %} {% trans "projet" %}{% endif %}{% endif %}{% endblock %}
+{% block page_subtitle %}{% trans "Définir les permissions associées à ce rôle" %}{% endblock %}
 
 {% block content %}
 <form method="post">
@@ -14,17 +15,17 @@
     <div>
         <!-- Informations de base -->
         <div class="card mb-4">
-            <div class="card-header"><h3 class="card-title">Informations du rôle</h3></div>
+            <div class="card-header"><h3 class="card-title">{% trans "Informations du rôle" %}</h3></div>
             <div class="card-content">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
                     <div>
-                        <label class="form-label">Nom <span class="required">*</span></label>
+                        <label class="form-label">{% trans "Nom" %} <span class="required">*</span></label>
                         <input type="text" name="name" id="role-name" class="form-control"
                                value="{{ role.name|default:'' }}" required
-                               placeholder="Ex: Chef de projet externe">
+                               placeholder="{% trans 'Ex: Chef de projet externe' %}">
                     </div>
                     <div>
-                        <label class="form-label">Identifiant (slug)
+                        <label class="form-label">{% trans "Identifiant (slug)" %}
                             {% if not editing %}<span class="required">*</span>{% endif %}
                         </label>
                         {% if editing %}
@@ -33,16 +34,16 @@
                         {% else %}
                         <input type="text" name="slug" id="role-slug" class="form-control"
                                value="{{ role.slug|default:'' }}" required
-                               placeholder="ex: chef-projet-externe"
+                               placeholder="{% trans 'ex: chef-projet-externe' %}"
                                style="font-family:monospace;">
-                        <span class="form-help">Lettres minuscules, chiffres et tirets. Non modifiable après création.</span>
+                        <span class="form-help">{% trans "Lettres minuscules, chiffres et tirets. Non modifiable après création." %}</span>
                         {% endif %}
                     </div>
                 </div>
                 <div>
-                    <label class="form-label">Description</label>
+                    <label class="form-label">{% trans "Description" %}</label>
                     <textarea name="description" class="form-control" rows="2"
-                              placeholder="Décrivez le rôle et son périmètre...">{{ role.description|default:'' }}</textarea>
+                              placeholder="{% trans 'Décrivez le rôle et son périmètre...' %}">{{ role.description|default:'' }}</textarea>
                 </div>
             </div>
         </div>
@@ -50,10 +51,10 @@
         <!-- Matrice des permissions -->
         <div class="card">
             <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
-                <h3 class="card-title">Permissions</h3>
+                <h3 class="card-title">{% trans "Permissions" %}</h3>
                 <div style="display:flex;gap:6px;">
-                    <button type="button" onclick="selectAll()" class="btn btn-sm btn-outline">Tout cocher</button>
-                    <button type="button" onclick="clearAll()" class="btn btn-sm btn-outline">Tout effacer</button>
+                    <button type="button" onclick="selectAll()" class="btn btn-sm btn-outline">{% trans "Tout cocher" %}</button>
+                    <button type="button" onclick="clearAll()" class="btn btn-sm btn-outline">{% trans "Tout effacer" %}</button>
                 </div>
             </div>
             <div class="card-content">
@@ -64,24 +65,24 @@
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid
                         {% if subject == 'all' %}#fee2e2{% elif subject == 'Project' %}#dbeafe{% elif subject == 'Milestone' %}#d1fae5{% elif subject == 'Budget' %}#d1fae5{% elif subject == 'User' %}#ede9fe{% elif subject == 'Employee' %}#e0e7ff{% elif subject == 'LeaveRequest' %}#fef3c7{% elif subject == 'Partner' %}#ccfbf1{% elif subject == 'Document' %}#e2e8f0{% elif subject == 'Request' %}#ffedd5{% elif subject == 'Event' %}#cffafe{% elif subject == 'Direction' %}#f1f5f9{% elif subject == 'Role' %}#fce7f3{% else %}#f3f4f6{% endif %};">
                         <span style="font-weight:600;font-size:13px;color:#374151;">
-                            {% if subject == 'all' %}Tout (super-admin)
-                            {% elif subject == 'Project' %}Projets
-                            {% elif subject == 'Milestone' %}Jalons / Tâches
-                            {% elif subject == 'Budget' %}Budgets
-                            {% elif subject == 'User' %}Utilisateurs
-                            {% elif subject == 'Employee' %}Employés
-                            {% elif subject == 'LeaveRequest' %}Congés
-                            {% elif subject == 'Partner' %}Partenaires
-                            {% elif subject == 'Document' %}Documents
-                            {% elif subject == 'Request' %}Demandes
-                            {% elif subject == 'Event' %}Événements
-                            {% elif subject == 'Direction' %}Directions
-                            {% elif subject == 'Role' %}Rôles
-                            {% elif subject == 'Report' %}Rapports
+                            {% if subject == 'all' %}{% trans "Tout (super-admin)" %}
+                            {% elif subject == 'Project' %}{% trans "Projets" %}
+                            {% elif subject == 'Milestone' %}{% trans "Jalons / Tâches" %}
+                            {% elif subject == 'Budget' %}{% trans "Budgets" %}
+                            {% elif subject == 'User' %}{% trans "Utilisateurs" %}
+                            {% elif subject == 'Employee' %}{% trans "Employés" %}
+                            {% elif subject == 'LeaveRequest' %}{% trans "Congés" %}
+                            {% elif subject == 'Partner' %}{% trans "Partenaires" %}
+                            {% elif subject == 'Document' %}{% trans "Documents" %}
+                            {% elif subject == 'Request' %}{% trans "Demandes" %}
+                            {% elif subject == 'Event' %}{% trans "Événements" %}
+                            {% elif subject == 'Direction' %}{% trans "Directions" %}
+                            {% elif subject == 'Role' %}{% trans "Rôles" %}
+                            {% elif subject == 'Report' %}{% trans "Rapports" %}
                             {% else %}{{ subject }}{% endif %}
                         </span>
                         <button type="button" onclick="toggleModule(this)" class="btn btn-sm btn-outline"
-                                style="font-size:10px;padding:2px 8px;">Tout module</button>
+                                style="font-size:10px;padding:2px 8px;">{% trans "Tout module" %}</button>
                     </div>
                     <!-- Checkboxes -->
                     <div style="display:flex;flex-wrap:wrap;gap:6px;">
@@ -102,7 +103,7 @@
                 </div>
                 {% endwith %}
                 {% empty %}
-                <p class="text-gray-500" style="text-align:center;padding:24px;">Aucune permission définie dans le système.</p>
+                <p class="text-gray-500" style="text-align:center;padding:24px;">{% trans "Aucune permission définie dans le système." %}</p>
                 {% endfor %}
             </div>
         </div>
@@ -112,15 +113,15 @@
     <div style="position:sticky;top:80px;">
         <!-- Résumé de sélection -->
         <div class="card mb-4">
-            <div class="card-header"><h3 class="card-title">Récapitulatif</h3></div>
+            <div class="card-header"><h3 class="card-title">{% trans "Récapitulatif" %}</h3></div>
             <div class="card-content">
                 <div style="text-align:center;padding:8px 0 16px;">
                     <p style="font-size:32px;font-weight:700;color:#6366f1;margin:0;" id="perm-count">0</p>
-                    <p class="text-sm text-gray-500">permission{{ '' }} sélectionnée{{ '' }}</p>
+                    <p class="text-sm text-gray-500">{% trans "permissions sélectionnées" %}</p>
                 </div>
                 {% if editing and role.users.count %}
                 <div style="padding:8px 10px;background:#fef9c3;border-radius:6px;border:1px solid #fde047;font-size:11px;color:#854d0e;">
-                    <strong>{{ role.users.count }}</strong> utilisateur{{ role.users.count|pluralize }} aura ces permissions.
+                    {% blocktrans count n=role.users.count %}<strong>{{ n }}</strong> utilisateur aura ces permissions.{% plural %}<strong>{{ n }}</strong> utilisateurs auront ces permissions.{% endblocktrans %}
                 </div>
                 {% endif %}
             </div>
@@ -131,23 +132,23 @@
             <div class="card-content" style="display:flex;flex-direction:column;gap:8px;">
                 <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
                     <i data-lucide="save" width="16" height="16"></i>
-                    {% if editing %}Enregistrer{% else %}Créer le rôle{% endif %}
+                    {% if editing %}{% trans "Enregistrer" %}{% else %}{% trans "Créer le rôle" %}{% endif %}
                 </button>
                 {% if is_project %}
-                <a href="{% url 'core:project_roles_list' %}" class="btn btn-outline" style="width:100%;justify-content:center;">Annuler</a>
+                <a href="{% url 'core:project_roles_list' %}" class="btn btn-outline" style="width:100%;justify-content:center;">{% trans "Annuler" %}</a>
                 {% else %}
-                <a href="{% url 'core:roles_list' %}" class="btn btn-outline" style="width:100%;justify-content:center;">Annuler</a>
+                <a href="{% url 'core:roles_list' %}" class="btn btn-outline" style="width:100%;justify-content:center;">{% trans "Annuler" %}</a>
                 {% endif %}
             </div>
         </div>
 
         <!-- Aide -->
         <div style="padding:12px;margin-top:12px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;">
-            <p style="font-size:11px;font-weight:600;color:#374151;margin-bottom:6px;">À savoir</p>
+            <p style="font-size:11px;font-weight:600;color:#374151;margin-bottom:6px;">{% trans "À savoir" %}</p>
             <ul style="font-size:11px;color:#6b7280;padding-left:14px;margin:0;line-height:1.7;">
-                <li><strong>Gérer (tout)</strong> inclut lire, créer, modifier et supprimer.</li>
-                <li>Les conditions <em>restreignent</em> une permission à un sous-ensemble.</li>
-                <li>Les rôles système ne peuvent pas être supprimés.</li>
+                <li>{% trans "<strong>Gérer (tout)</strong> inclut lire, créer, modifier et supprimer." %}</li>
+                <li>{% trans "Les conditions <em>restreignent</em> une permission à un sous-ensemble." %}</li>
+                <li>{% trans "Les rôles système ne peuvent pas être supprimés." %}</li>
             </ul>
         </div>
     </div>

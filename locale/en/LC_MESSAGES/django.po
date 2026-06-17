@@ -912,7 +912,8 @@ msgid "Devise"
 msgstr "Currency"
 
 msgid "Le montant sera automatiquement converti selon le taux de change"
-msgstr "The amount will be automatically converted according to the exchange rate"
+msgstr ""
+"The amount will be automatically converted according to the exchange rate"
 
 msgid "Date de début"
 msgstr "Start date"
@@ -1164,8 +1165,12 @@ msgstr "Enter a search term"
 msgid "Recherche globale"
 msgstr "Global search"
 
-msgid "Tapez un mot-clé dans la barre de recherche pour trouver des projets, partenaires, employés, demandes ou documents."
-msgstr "Type a keyword in the search bar to find projects, partners, employees, requests, or documents."
+msgid ""
+"Tapez un mot-clé dans la barre de recherche pour trouver des projets, "
+"partenaires, employés, demandes ou documents."
+msgstr ""
+"Type a keyword in the search bar to find projects, partners, employees, "
+"requests, or documents."
 
 msgid "Aucun résultat"
 msgstr "No results"
@@ -1257,8 +1262,12 @@ msgstr "Create a new employee (person not registered in the system)"
 msgid "Employé existant"
 msgstr "Existing employee"
 
-msgid "Utilisez la recherche pour trouver rapidement un employé par nom, poste, département ou email"
-msgstr "Use search to quickly find an employee by name, position, department or email"
+msgid ""
+"Utilisez la recherche pour trouver rapidement un employé par nom, poste, "
+"département ou email"
+msgstr ""
+"Use search to quickly find an employee by name, position, department or "
+"email"
 
 msgid "Employés disponibles"
 msgstr "Available employees"
@@ -1557,7 +1566,9 @@ msgstr "Forgot password"
 msgid "Mot de passe oublié ?"
 msgstr "Forgot your password?"
 
-msgid "Pour réinitialiser votre mot de passe, veuillez contacter l'administrateur système."
+msgid ""
+"Pour réinitialiser votre mot de passe, veuillez contacter l'administrateur "
+"système."
 msgstr "To reset your password, please contact the system administrator."
 
 msgid "Il pourra vous aider à récupérer l'accès à votre compte."
@@ -1568,3 +1579,1274 @@ msgstr "Contact the administrator"
 
 msgid "Retour à la connexion"
 msgstr "Back to login"
+
+msgid "Uploadé par"
+msgstr "Uploaded by"
+
+msgid "En révision"
+msgstr "In review"
+
+msgid "Dupliquer"
+msgstr "Duplicate"
+
+msgid "Est membre du projet"
+msgstr "Is project member"
+
+msgid "Tapez"
+msgstr "Type"
+
+msgid "Supprimer le rôle"
+msgstr "Delete role"
+
+msgid "Créer le rôle"
+msgstr "Create role"
+
+msgid "Nouveau rôle projet"
+msgstr "New project role"
+
+msgid "Date de création"
+msgstr "Creation date"
+
+msgid "autres"
+msgstr "more"
+
+msgid "Demandes de congé"
+msgstr "Leave requests"
+
+msgid "Est propriétaire"
+msgstr "Is owner"
+
+msgid "Nouveau rôle"
+msgstr "New role"
+
+msgid "Permissions projet"
+msgstr "Project permissions"
+
+msgid "Soumise le"
+msgstr "Submitted on"
+
+msgid "Profil actif"
+msgstr "Active profile"
+
+msgid "Attribué par"
+msgstr "Assigned by"
+
+msgid "Photo"
+msgstr "Photo"
+
+msgid "Demandes / Besoins projet"
+msgstr "Requests / Project needs"
+
+msgid "Aucune permission"
+msgstr "No permissions"
+
+msgid "Non conforme"
+msgstr "Non-compliant"
+
+msgid "À faire"
+msgstr "To do"
+
+msgid "Voir le détail"
+msgstr "View details"
+
+msgid "Direction / Service"
+msgstr "Department / Service"
+
+msgid "Consultation"
+msgstr "View"
+
+msgid "Changement de statut"
+msgstr "Status changed"
+
+msgid "Annulée par le demandeur"
+msgstr "Cancelled by requester"
+
+msgid "permissions sélectionnées"
+msgstr "permissions selected"
+
+msgid "Ajout de sous-étape"
+msgstr "Sub-step added"
+
+msgid "Assigné à"
+msgstr "Assigned to"
+
+msgid "Confirmation"
+msgstr "Confirmation"
+
+msgid "Informations du rôle"
+msgstr "Role information"
+
+msgid "Cette action est irréversible."
+msgstr "This action is irreversible."
+
+msgid "Vérifié par (RH)"
+msgstr "Verified by (HR)"
+
+msgid "Dupliquer ce rôle"
+msgstr "Duplicate this role"
+
+msgid "Suppléant / agent intérimaire"
+msgstr "Substitute / interim agent"
+
+msgid "Suppression de jalon"
+msgstr "Milestone deleted"
+
+msgid "Rôles"
+msgstr "Roles"
+
+msgid "Traité le"
+msgstr "Processed on"
+
+msgid "Aucun rôle projet défini."
+msgstr "No project role defined."
+
+msgid "Définir les permissions associées à ce rôle"
+msgstr "Define permissions for this role"
+
+msgid "Permissions accordées"
+msgstr "Granted permissions"
+
+msgid "Libellé"
+msgstr "Label"
+
+msgid "Membres de projet"
+msgstr "Project members"
+
+msgid "Suppression de sous-étape"
+msgstr "Sub-step deleted"
+
+msgid "Identifiant (slug)"
+msgstr "Identifier (slug)"
+
+msgid "Tout"
+msgstr "All"
+
+msgid ""
+"<strong>Gérer (tout)</strong> inclut lire, créer, modifier et supprimer."
+msgstr "<strong>Manage (all)</strong> includes read, create, edit and delete."
+
+msgid "Observations hiérarchie"
+msgstr "Manager comments"
+
+msgid "Commentaire"
+msgstr "Comment"
+
+msgid "Navigateur"
+msgstr "Browser"
+
+msgid "Tout effacer"
+msgstr "Clear all"
+
+msgid "Gérer (tout)"
+msgstr "Manage (all)"
+
+msgid "Soumise - en attente avis hiérarchique"
+msgstr "Submitted - awaiting manager review"
+
+msgid "Aucune permission définie dans le système."
+msgstr "No permissions defined in the system."
+
+msgid "Motif"
+msgstr "Reason"
+
+msgid "Progression manuelle (%)"
+msgstr "Manual progress (%)"
+
+msgid "Compétences"
+msgstr "Skills"
+
+msgid "Rejetée"
+msgstr "Rejected"
+
+msgid "Créer le premier rôle projet"
+msgstr "Create the first project role"
+
+msgid "Rôles projet"
+msgstr "Project roles"
+
+msgid "Congé annuel"
+msgstr "Annual leave"
+
+msgid "Charge de travail (%)"
+msgstr "Workload (%)"
+
+msgid "Supprimer un rôle"
+msgstr "Delete a role"
+
+msgid "Rôle système"
+msgstr "System role"
+
+msgid "Avis hiérarchique"
+msgstr "Manager review"
+
+msgid "Rôles & Permissions"
+msgstr "Roles & Permissions"
+
+msgid "Date avis hiérarchique"
+msgstr "Manager review date"
+
+msgid "Lire"
+msgstr "Read"
+
+msgid "Avis hiérarchique défavorable"
+msgstr "Manager disapproved"
+
+msgid "Changement de progression"
+msgstr "Progress changed"
+
+msgid "Détail du rôle et des permissions associées"
+msgstr "Role details and associated permissions"
+
+msgid "Décrivez le rôle et son périmètre..."
+msgstr "Describe the role and its scope..."
+
+msgid "Personne externe"
+msgstr "External person"
+
+msgid "Système"
+msgstr "System"
+
+msgid "Participants"
+msgstr "Participants"
+
+msgid "Non conforme RH"
+msgstr "HR non-compliant"
+
+msgid "Organisation / Entreprise"
+msgstr "Organization / Company"
+
+msgid "Tout cocher"
+msgstr "Check all"
+
+msgid "Approuvée"
+msgstr "Approved"
+
+msgid "Vérifiée RH - en attente décision finale"
+msgstr "HR verified - awaiting final decision"
+
+msgid "Ce rôle sera supprimé <strong>définitivement</strong>."
+msgstr "This role will be <strong>permanently</strong> deleted."
+
+msgid "Tout (super-admin)"
+msgstr "All (super-admin)"
+
+msgid "Changement statut jalon"
+msgstr "Milestone status changed"
+
+msgid "Jalon parent"
+msgstr "Parent milestone"
+
+msgid "Création"
+msgstr "Creation"
+
+msgid "Ajout de membre"
+msgstr "Member added"
+
+msgid "Condition"
+msgstr "Condition"
+
+msgid "Commentaires projet"
+msgstr "Project comments"
+
+msgid "Suppression de document"
+msgstr "Document deleted"
+
+msgid "Sujet"
+msgstr "Subject"
+
+msgid "Décidé par (Direction)"
+msgstr "Decided by (Management)"
+
+msgid "Récapitulatif"
+msgstr "Summary"
+
+msgid "Responsable (lié)"
+msgstr "Manager (linked)"
+
+msgid "Les utilisateurs qui l'ont seront sans rôle."
+msgstr "Users assigned to it will have no role."
+
+msgid "Observations Direction"
+msgstr "Management comments"
+
+msgid "Type de congé"
+msgstr "Leave type"
+
+msgid "Lettres minuscules, chiffres et tirets. Non modifiable après création."
+msgstr ""
+"Lowercase letters, numbers and hyphens. Cannot be changed after creation."
+
+msgid "Validé par (hiérarchie)"
+msgstr "Validated by (manager)"
+
+msgid "Suspendu"
+msgstr "Suspended"
+
+msgid "Justificatif"
+msgstr "Justification"
+
+msgid "Défavorable"
+msgstr "Unfavorable"
+
+msgid "Résolu"
+msgstr "Resolved"
+
+msgid "Congé sans solde"
+msgstr "Unpaid leave"
+
+msgid "Congé maladie"
+msgstr "Sick leave"
+
+msgid "pour confirmer"
+msgstr "to confirm"
+
+msgid "Modification de jalon"
+msgstr "Milestone modified"
+
+msgid "Ajout de besoin"
+msgstr "Need added"
+
+msgid "Rôle personnalisé"
+msgstr "Custom role"
+
+msgid "Demande de congé"
+msgstr "Leave request"
+
+msgid "Modifier les permissions"
+msgstr "Edit permissions"
+
+msgid "Aucune (accès global)"
+msgstr "None (global access)"
+
+msgid "Les rôles système ne peuvent pas être supprimés."
+msgstr "System roles cannot be deleted."
+
+msgid "Rôle système (non supprimable)"
+msgstr "System role (cannot be deleted)"
+
+msgid "Congé maternité / paternité"
+msgstr "Maternity / paternity leave"
+
+msgid "le rôle"
+msgstr "the role"
+
+msgid "Avis hiérarchique favorable - en attente RH"
+msgstr "Manager approved - awaiting HR"
+
+msgid "Rôles globaux"
+msgstr "Global roles"
+
+msgid "Tout module"
+msgstr "Entire module"
+
+msgid "Conforme"
+msgstr "Compliant"
+
+msgid "Jalons / Tâches"
+msgstr "Milestones / Tasks"
+
+msgid "Vérification RH"
+msgstr "HR verification"
+
+msgid "Retrait de membre"
+msgstr "Member removed"
+
+msgid "Date de fin originale"
+msgstr "Original end date"
+
+msgid "Utilisateurs assignés"
+msgstr "Assigned users"
+
+msgid "Permissions"
+msgstr "Permissions"
+
+msgid "Changement statut sous-étape"
+msgstr "Sub-step status changed"
+
+msgid "Suppression"
+msgstr "Deletion"
+
+msgid "Gérer les rôles globaux et leurs permissions"
+msgstr "Manage global roles and their permissions"
+
+msgid "Modification statut jalon"
+msgstr "Milestone status modified"
+
+msgid "Formation / Mission"
+msgstr "Training / Mission"
+
+msgid "Exporter"
+msgstr "Export"
+
+msgid "Ordre"
+msgstr "Order"
+
+msgid "Date de la tâche"
+msgstr "Task date"
+
+msgid "Suppression de dossier"
+msgstr "Folder deleted"
+
+msgid "Ajout de document"
+msgstr "Document added"
+
+msgid "Note de passation"
+msgstr "Handover note"
+
+msgid "Date décision finale"
+msgstr "Final decision date"
+
+msgid "Date de début originale"
+msgstr "Original start date"
+
+msgid "Terminée le"
+msgstr "Completed on"
+
+msgid "Rôle projet"
+msgstr "Project role"
+
+msgid "Bloqué"
+msgstr "Blocked"
+
+msgid "Voulez-vous supprimer"
+msgstr "Do you want to delete"
+
+msgid "Le nom ne correspond pas exactement."
+msgstr "The name does not match exactly."
+
+msgid "Ajout de dossier"
+msgstr "Folder added"
+
+msgid "Permissions attribuées dans le contexte d'un projet"
+msgstr "Permissions assigned in the context of a project"
+
+msgid "Ex: Chef de projet externe"
+msgstr "Ex: External project manager"
+
+msgid "Pipeline RH (après avis hiérarchique)"
+msgstr "HR pipeline (after manager review)"
+
+msgid "Traité par"
+msgstr "Processed by"
+
+msgid ""
+"Les conditions <em>restreignent</em> une permission à un sous-ensemble."
+msgstr "Conditions <em>restrict</em> a permission to a subset."
+
+msgid "Date vérification RH"
+msgstr "HR verification date"
+
+msgid "Décision finale"
+msgstr "Final decision"
+
+msgid "Modification de sous-étape"
+msgstr "Sub-step modified"
+
+msgid "Responsables"
+msgstr "Managers"
+
+msgid "Terminé le"
+msgstr "Completed on"
+
+msgid "Modification"
+msgstr "Modification"
+
+msgid "Rôle / Fonction"
+msgstr "Role / Function"
+
+msgid "Sous-étape"
+msgstr "Sub-step"
+
+msgid "Nombre de jours"
+msgstr "Number of days"
+
+msgid "À savoir"
+msgstr "Good to know"
+
+msgid "Modifié le"
+msgstr "Modified on"
+
+msgid "Date de la sous-tâche"
+msgstr "Sub-task date"
+
+msgid "Aucun rôle défini."
+msgstr "No role defined."
+
+msgid "ex: chef-projet-externe"
+msgstr "ex: external-project-manager"
+
+msgid "Créer le premier rôle"
+msgstr "Create the first role"
+
+msgid "Demande"
+msgstr "Request"
+
+msgid "Est manager du projet"
+msgstr "Is project manager"
+
+msgid "Progression (%)"
+msgstr "Progress (%)"
+
+msgid "ID Employé"
+msgstr "Employee ID"
+
+msgid "Ajout de jalon"
+msgstr "Milestone added"
+
+msgid "Permission exceptionnelle"
+msgstr "Exceptional leave"
+
+msgid "Observations RH"
+msgstr "HR comments"
+
+msgid "Identifiant"
+msgstr "Identifier"
+
+msgid "Même direction"
+msgstr "Same department"
+
+msgid "Date de signature"
+msgstr "Signature date"
+
+msgid "Favorable"
+msgstr "Favorable"
+
+msgid "Ouvert"
+msgstr "Open"
+
+msgid "Ajout de commentaire"
+msgstr "Comment added"
+
+msgid "Sous-étape modifiée avec succès."
+msgstr ""
+
+msgid "Rechercher un membre..."
+msgstr ""
+
+msgid "Mot de passe modifié avec succès."
+msgstr ""
+
+msgid "Budget alloué (GNF)"
+msgstr ""
+
+msgid "Prêt à soumettre votre demande ?"
+msgstr ""
+
+msgid "Permission insuffisante pour créer des événements."
+msgstr ""
+
+msgid "%s utilisateur"
+msgstr ""
+
+msgid "Aucune demande à afficher"
+msgstr ""
+
+msgid "Dossier créé avec succès."
+msgstr ""
+
+msgid "Action requise : vérification RH"
+msgstr ""
+
+msgid "Comment"
+msgstr ""
+
+msgid "par"
+msgstr ""
+
+msgid "Suspendus"
+msgstr ""
+
+msgid "Ce mois-ci"
+msgstr ""
+
+msgid "Étape 1/3"
+msgstr ""
+
+msgid "Toutes"
+msgstr ""
+
+msgid "Vous ne pouvez gérer que les employés de votre direction."
+msgstr ""
+
+msgid "Vous ne pouvez pas désactiver votre propre compte."
+msgstr ""
+
+msgid "Membres du projet"
+msgstr ""
+
+msgid "Continuité de service"
+msgstr ""
+
+msgid "Aucun fichier attaché à ce document."
+msgstr ""
+
+msgid "LeaveRequest"
+msgstr ""
+
+msgid "voir"
+msgstr ""
+
+msgid "Project"
+msgstr ""
+
+msgid "all"
+msgstr ""
+
+msgid "Sous-étape ajoutée avec succès."
+msgstr ""
+
+msgid "Créer un compte de connexion pour cette personne"
+msgstr ""
+
+msgid "Dossier supprimé."
+msgstr ""
+
+msgid "Jalon supprimé."
+msgstr ""
+
+msgid "Signer"
+msgstr ""
+
+msgid "Partner"
+msgstr ""
+
+msgid "utilisateur"
+msgstr ""
+
+msgid "Pièces déjà jointes"
+msgstr ""
+
+msgid "Demande créée avec succès."
+msgstr ""
+
+msgid "Événement créé avec succès."
+msgstr ""
+
+msgid "Type de membre"
+msgstr ""
+
+msgid "Assigner à un membre"
+msgstr ""
+
+msgid "Demande annulée."
+msgstr ""
+
+msgid "Vérification RH enregistrée."
+msgstr ""
+
+msgid "Ex : Marie Konaté"
+msgstr ""
+
+msgid ""
+"Pensez à désigner un suppléant pour faciliter la continuité du service. Une "
+"note de passation bien rédigée accélère la validation."
+msgstr ""
+
+msgid "Télécharger"
+msgstr ""
+
+msgid ""
+"Personne désignée pour assurer la continuité du service pendant votre "
+"absence."
+msgstr ""
+
+msgid "Cliquez pour ajouter ou glissez vos fichiers"
+msgstr ""
+
+msgid "Refusées"
+msgstr ""
+
+msgid "Disponible (GNF)"
+msgstr ""
+
+msgid "Besoin ajouté avec succès."
+msgstr ""
+
+msgid "Formulaire de demande - CSIG"
+msgstr ""
+
+msgid "Document supprimé."
+msgstr ""
+
+msgid "Document créé avec succès."
+msgstr ""
+
+msgid "membre"
+msgstr ""
+
+msgid "Partenaire créé avec succès."
+msgstr ""
+
+msgid "Aucun employé lié"
+msgstr ""
+
+msgid "Accès réservé aux directeurs et administrateurs."
+msgstr ""
+
+msgid "Membre ajouté avec succès."
+msgstr ""
+
+msgid "rôle"
+msgstr ""
+
+msgid "Jalon modifié avec succès."
+msgstr ""
+
+msgid "Événement supprimé."
+msgstr ""
+
+msgid "Annuler ma demande"
+msgstr ""
+
+msgid "Un rôle avec cet identifiant existe déjà."
+msgstr ""
+
+msgid "Cet événement est passé."
+msgstr ""
+
+msgid "Enregistrer la décision finale"
+msgstr ""
+
+msgid "Report"
+msgstr ""
+
+msgid "Rôles disponibles"
+msgstr ""
+
+msgid "Document modifié avec succès."
+msgstr ""
+
+msgid "Le détail des étapes de validation est confidentiel."
+msgstr ""
+
+msgid "Consommation par projet"
+msgstr ""
+
+msgid "Période"
+msgstr ""
+
+msgid "Demande mise à jour."
+msgstr ""
+
+msgid "Étape"
+msgstr ""
+
+msgid "Statut actuel"
+msgstr ""
+
+msgid "Pièces jointes"
+msgstr ""
+
+msgid "Compte"
+msgstr ""
+
+msgid "En cours de validation"
+msgstr ""
+
+msgid "Vous ne pouvez supprimer que vos propres événements."
+msgstr ""
+
+msgid "Votre compte a été désactivé. Contactez un administrateur."
+msgstr ""
+
+msgid "Répartition du budget par projet"
+msgstr ""
+
+msgid "Créer un compte"
+msgstr ""
+
+msgid "Vous ne pouvez supprimer que les employés de votre direction."
+msgstr ""
+
+msgid "Déjà dans le système"
+msgstr ""
+
+msgid "Pièce jointe supprimée."
+msgstr ""
+
+msgid "<strong>%s</strong> utilisateur aura ces permissions."
+msgstr ""
+
+msgid "Congés"
+msgstr ""
+
+msgid "jour(s)"
+msgstr ""
+
+msgid "Gestion des congés"
+msgstr ""
+
+msgid "Rôle personnalisé — cochez les permissions souhaitées pour ce membre."
+msgstr ""
+
+msgid "en_cours"
+msgstr ""
+
+msgid "Décision finale enregistrée et notifiée."
+msgstr ""
+
+msgid "Aucun employé disponible"
+msgstr ""
+
+msgid "Marquer comme complété"
+msgstr ""
+
+msgid "Vous ne pouvez modifier que vos propres événements."
+msgstr ""
+
+msgid "Action requise : avis hiérarchique"
+msgstr ""
+
+msgid "Un rôle projet avec cet identifiant existe déjà."
+msgstr ""
+
+msgid "Elle sera transmise immédiatement à votre hiérarchie pour validation."
+msgstr ""
+
+msgid "Membre supprimé du projet."
+msgstr ""
+
+msgid "Jours"
+msgstr ""
+
+msgid "Budget supprimé."
+msgstr ""
+
+msgid "Créer une fiche interne"
+msgstr ""
+
+msgid "Budget créé avec succès."
+msgstr ""
+
+msgid "Event"
+msgstr ""
+
+msgid "Dossier modifié avec succès."
+msgstr ""
+
+msgid "Modifier cet événement"
+msgstr ""
+
+msgid "Fran\\u00e7ais"
+msgstr ""
+
+msgid ""
+"Certificat médical, acte de naissance, convocation, ordre de mission… (PDF, "
+"image, Word)"
+msgstr ""
+
+msgid "Total"
+msgstr ""
+
+msgid "Modifier le projet"
+msgstr ""
+
+msgid "Documents justificatifs"
+msgstr ""
+
+msgid "tâche"
+msgstr ""
+
+msgid "Milestone"
+msgstr ""
+
+msgid ""
+"Remplissez ce formulaire pour soumettre votre demande. Elle suivra le "
+"circuit officiel : Hiérarchie → RH → Direction."
+msgstr ""
+
+msgid "Marquer comme complétée"
+msgstr ""
+
+msgid "Budget total (GNF)"
+msgstr ""
+
+msgid "Détails du congé"
+msgstr ""
+
+msgid "Toutes directions"
+msgstr ""
+
+msgid ""
+"Ce jalon contient des sous-étapes : sa progression est calculée "
+"automatiquement."
+msgstr ""
+
+msgid "Consultant, partenaire…"
+msgstr ""
+
+msgid "Délai de traitement"
+msgstr ""
+
+msgid "Cette personne externe doit avoir un compte pour consulter le projet."
+msgstr ""
+
+msgid "ProjectMember"
+msgstr ""
+
+msgid ""
+"Décision officielle de la Direction Générale / Coordination. Une "
+"notification sera envoyée automatiquement à l'agent et à la chaîne de "
+"validation."
+msgstr ""
+
+msgid "Décrivez brièvement le motif de votre demande."
+msgstr ""
+
+msgid "Fiche employé"
+msgstr ""
+
+msgid "manage"
+msgstr ""
+
+msgid "Suppléant"
+msgstr ""
+
+msgid "Valider la vérification RH"
+msgstr ""
+
+msgid "Direction créée avec succès."
+msgstr ""
+
+msgid "Cette section est réservée au Directeur Général."
+msgstr ""
+
+msgid "Cliquez ou glissez un fichier"
+msgstr ""
+
+msgid "Projet modifié avec succès."
+msgstr ""
+
+msgid "Informations de la sous-étape"
+msgstr ""
+
+msgid "Mes tâches"
+msgstr ""
+
+msgid "Partenaire modifié avec succès."
+msgstr ""
+
+msgid "Ce compte est déjà activé. Connectez-vous normalement."
+msgstr ""
+
+msgid "Rôle et direction"
+msgstr ""
+
+msgid "Autres employés"
+msgstr ""
+
+msgid "Mot de passe réinitialisé. Vous pouvez vous connecter."
+msgstr ""
+
+msgid "Mes validations"
+msgstr ""
+
+msgid "Document ajouté avec succès."
+msgstr ""
+
+msgid "Soumise"
+msgstr ""
+
+msgid "Accès refusé."
+msgstr ""
+
+msgid "Identité (depuis la fiche employé)"
+msgstr ""
+
+msgid ""
+"Demande de congé soumise. Elle suit maintenant le circuit de validation."
+msgstr ""
+
+msgid "Request"
+msgstr ""
+
+msgid ""
+"L'employé sera rattaché à la direction du projet et stocké dans le système."
+msgstr ""
+
+msgid ""
+"Évaluez l'impact de cette absence sur le fonctionnement du service avant de "
+"transmettre à la RH."
+msgstr ""
+
+msgid "Créer un nouvel employé interne"
+msgstr ""
+
+msgid "Cette demande ne peut plus être modifiée."
+msgstr ""
+
+msgid "Maladie / maternité / formation"
+msgstr ""
+
+msgid "Étape 3/3"
+msgstr ""
+
+msgid "Budget modifié avec succès."
+msgstr ""
+
+msgid "Conseil"
+msgstr ""
+
+msgid "Projet créé avec succès."
+msgstr ""
+
+msgid "Enregistrer mon avis"
+msgstr ""
+
+msgid "Type de congé, dates et motif"
+msgstr ""
+
+msgid "Votre identité et votre direction de rattachement"
+msgstr ""
+
+msgid "Sans affectation"
+msgstr ""
+
+msgid "Action requise : décision finale"
+msgstr ""
+
+msgid "Personne externe au projet"
+msgstr ""
+
+msgid "Fichier actuel"
+msgstr ""
+
+msgid "permission"
+msgstr ""
+
+msgid "Événement modifié avec succès."
+msgstr ""
+
+msgid "Responsable du projet"
+msgstr ""
+
+msgid "Marquer terminé"
+msgstr ""
+
+msgid "Seul le Directeur Général peut supprimer un projet."
+msgstr ""
+
+msgid "Valider"
+msgstr ""
+
+msgid "Consommé (GNF)"
+msgstr ""
+
+msgid "Poste / Fonction"
+msgstr ""
+
+msgid "Réunions"
+msgstr ""
+
+msgid ""
+"Contrôlez la conformité réglementaire et les droits disponibles avant "
+"transmission à la Direction."
+msgstr ""
+
+msgid "Informations personnelles"
+msgstr ""
+
+msgid "Remplacement et passation des dossiers"
+msgstr ""
+
+msgid "projet"
+msgstr ""
+
+msgid "Logo actuel"
+msgstr ""
+
+msgid "Erreurs"
+msgstr ""
+
+msgid "Vous serez notifié par email à chaque étape."
+msgstr ""
+
+msgid "Mes demandes"
+msgstr ""
+
+msgid "Mes demandes de congé"
+msgstr ""
+
+msgid "Projet / Direction"
+msgstr ""
+
+msgid "Sous-étape supprimée."
+msgstr ""
+
+msgid "Aucune direction associée"
+msgstr ""
+
+msgid "Pièces à fournir selon le type de congé"
+msgstr ""
+
+msgid "Mes vérifications"
+msgstr ""
+
+msgid ""
+"Suivez vos demandes en temps réel et soumettez-en de nouvelles en quelques "
+"clics."
+msgstr ""
+
+msgid "Avis hiérarchique enregistré."
+msgstr ""
+
+msgid "Profil mis à jour avec succès."
+msgstr ""
+
+msgid "Aucun élément ne correspond à cette vue pour le moment."
+msgstr ""
+
+msgid "User"
+msgstr ""
+
+msgid "Commentaire ajouté."
+msgstr ""
+
+msgid "Circuit de validation"
+msgstr ""
+
+msgid "48h hiérarchie, 72h RH, 3j Direction."
+msgstr ""
+
+msgid "Accès insuffisant pour consulter les rapports."
+msgstr ""
+
+msgid "Supprimer « %s » ?"
+msgstr ""
+
+msgid "un justificatif est obligatoire."
+msgstr ""
+
+msgid "Employé modifié avec succès."
+msgstr ""
+
+msgid "Marquer non terminé"
+msgstr ""
+
+msgid "Gérer les membres"
+msgstr ""
+
+msgid "Ex : Consultant senior, Expert technique…"
+msgstr ""
+
+msgid "Ex : Rédiger le cahier des charges"
+msgstr ""
+
+msgid "Ex : Cabinet XYZ, ONG Alpha…"
+msgstr ""
+
+msgid "Détail des budgets par projet"
+msgstr ""
+
+msgid "Projet supprimé."
+msgstr ""
+
+msgid "Budget général"
+msgstr ""
+
+msgid "Permissions insuffisantes."
+msgstr ""
+
+msgid "Toutes les tâches qui vous sont assignées"
+msgstr ""
+
+msgid "Identifiants incorrects."
+msgstr ""
+
+msgid "Décision Direction / Coordination"
+msgstr ""
+
+msgid "Employé créé avec succès."
+msgstr ""
+
+msgid "Ajouter des jalons"
+msgstr ""
+
+msgid "Fichier introuvable."
+msgstr ""
+
+msgid "Partenaire supprimé."
+msgstr ""
+
+msgid "Ex : Amadou Diallo"
+msgstr ""
+
+msgid "Sélectionner un employé existant"
+msgstr ""
+
+msgid "Fichier non trouvé."
+msgstr ""
+
+msgid "Vous avez été déconnecté avec succès."
+msgstr ""
+
+msgid "Détails de la demande"
+msgstr ""
+
+msgid ""
+"Consultant, prestataire, partenaire — la fiche est créée et stockée avec le "
+"marqueur « Externe »."
+msgstr ""
+
+msgid "Avancement"
+msgstr ""
+
+msgid "Statut invalide."
+msgstr ""
+
+msgid "Jalon créé avec succès."
+msgstr ""
+
+msgid "Externe"
+msgstr ""
+
+msgid "si aucune sous-étape"
+msgstr ""
+
+msgid "Cliquez ou glissez une image"
+msgstr ""
+
+msgid "Étape 2/3"
+msgstr ""
+
+msgid "à demander au moins 15 jours avant le départ."
+msgstr ""
+
+msgid "terminée"
+msgstr ""
+
+msgid "Direction modifiée avec succès."
+msgstr ""
+
+msgid "Direction supprimée."
+msgstr ""
+
+msgid "Workflow CSIG : Employé → Hiérarchie → RH → Direction"
+msgstr ""
+
+msgid "optionnel"
+msgstr ""
+
+msgid "Vous ne pouvez pas supprimer votre propre compte."
+msgstr ""
+
+msgid "Créer ma première demande"
+msgstr ""
+
+msgid "Ex : Ingénieur, Analyste, Chef de division…"
+msgstr ""
+
+msgid "Membre"
+msgstr ""
+
+msgid "Partenariats"
+msgstr ""
+
+msgid "Rôle du membre modifié avec succès."
+msgstr ""
+
+msgid "Décision Direction"
+msgstr ""
+
+msgid "Permissions du rôle"
+msgstr ""

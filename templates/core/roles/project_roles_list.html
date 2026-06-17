@@ -1,8 +1,9 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
-{% block title %}Rôles projet{% endblock %}
-{% block page_title %}Rôles projet{% endblock %}
-{% block page_subtitle %}Permissions attribuées dans le contexte d'un projet{% endblock %}
+{% block title %}{% trans "Rôles projet" %}{% endblock %}
+{% block page_title %}{% trans "Rôles projet" %}{% endblock %}
+{% block page_subtitle %}{% trans "Permissions attribuées dans le contexte d'un projet" %}{% endblock %}
 
 {% block content %}
 
@@ -13,18 +14,18 @@
             <div class="stat-box-icon"><i data-lucide="folder" width="20" height="20"></i></div>
             <div class="stat-box-body">
                 <p class="stat-box-value">{{ project_roles|length }}</p>
-                <p class="stat-box-label">Rôles projet</p>
+                <p class="stat-box-label">{% trans "Rôles projet" %}</p>
             </div>
         </div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
         <a href="{% url 'core:roles_list' %}" class="btn btn-outline">
             <i data-lucide="shield-check" width="16" height="16"></i>
-            Rôles globaux
+            {% trans "Rôles globaux" %}
         </a>
         <a href="{% url 'core:project_role_create' %}" class="btn btn-primary">
             <i data-lucide="plus" width="16" height="16"></i>
-            Nouveau rôle projet
+            {% trans "Nouveau rôle projet" %}
         </a>
     </div>
 </div>
@@ -45,7 +46,7 @@
                     </div>
                 </div>
                 {% if role.is_system %}
-                <span class="badge badge-info" style="font-size:10px;flex-shrink:0;">Système</span>
+                <span class="badge badge-info" style="font-size:10px;flex-shrink:0;">{% trans "Système" %}</span>
                 {% endif %}
             </div>
 
@@ -57,11 +58,13 @@
             <div style="display:flex;gap:12px;margin-bottom:14px;">
                 <div style="display:flex;align-items:center;gap:5px;">
                     <i data-lucide="shield-check" width="13" height="13" stroke="#6366f1" style="flex-shrink:0;"></i>
-                    <span class="text-xs text-gray-500"><strong style="color:#374151;">{{ role.permissions.count }}</strong> permission{{ role.permissions.count|pluralize }}</span>
+                    <span class="text-xs text-gray-500"><strong style="color:#374151;">{{ role.permissions.count }}</strong>
+                    {% blocktrans count n=role.permissions.count %} permission{% plural %} permissions{% endblocktrans %}</span>
                 </div>
                 <div style="display:flex;align-items:center;gap:5px;">
                     <i data-lucide="users" width="13" height="13" stroke="#6366f1" style="flex-shrink:0;"></i>
-                    <span class="text-xs text-gray-500"><strong style="color:#374151;">{{ role.memberships.count }}</strong> membre{{ role.memberships.count|pluralize }}</span>
+                    <span class="text-xs text-gray-500"><strong style="color:#374151;">{{ role.memberships.count }}</strong>
+                    {% blocktrans count n=role.memberships.count %} membre{% plural %} membres{% endblocktrans %}</span>
                 </div>
             </div>
 
@@ -72,23 +75,23 @@
                     {{ perm.get_action_display }} {{ perm.subject }}
                 </span>
                 {% empty %}
-                <span class="text-xs text-gray-400" style="font-style:italic;">Aucune permission</span>
+                <span class="text-xs text-gray-400" style="font-style:italic;">{% trans "Aucune permission" %}</span>
                 {% endfor %}
             </div>
         </div>
 
         <!-- Actions -->
         <div style="padding:10px 20px;border-top:1px solid #f1f5f9;display:flex;justify-content:flex-end;gap:4px;background:#fafafa;border-radius:0 0 8px 8px;">
-            <a href="{% url 'core:project_role_edit' role.pk %}" class="action-btn" title="Modifier">
+            <a href="{% url 'core:project_role_edit' role.pk %}" class="action-btn" title="{% trans 'Modifier' %}">
                 <i data-lucide="pencil"></i>
             </a>
-            <a href="{% url 'core:project_role_duplicate' role.pk %}" class="action-btn" title="Dupliquer">
+            <a href="{% url 'core:project_role_duplicate' role.pk %}" class="action-btn" title="{% trans 'Dupliquer' %}">
                 <i data-lucide="copy"></i>
             </a>
             {% if not role.is_system %}
-            <a href="#" class="action-btn danger" title="Supprimer"
+            <a href="#" class="action-btn danger" title="{% trans 'Supprimer' %}"
                data-delete-url="{% url 'core:project_role_delete' role.pk %}"
-               data-delete-type="le rôle"
+               data-delete-type="{% trans 'le rôle' %}"
                data-delete-name="{{ role.name }}">
                 <i data-lucide="trash-2"></i>
             </a>
@@ -98,8 +101,8 @@
     {% empty %}
     <div class="card" style="grid-column:1/-1;text-align:center;padding:48px;">
         <i data-lucide="folder" width="48" height="48" stroke="#d1d5db" style="margin:0 auto 16px;display:block;"></i>
-        <p class="text-gray-500" style="margin-bottom:16px;">Aucun rôle projet défini.</p>
-        <a href="{% url 'core:project_role_create' %}" class="btn btn-primary">Créer le premier rôle projet</a>
+        <p class="text-gray-500" style="margin-bottom:16px;">{% trans "Aucun rôle projet défini." %}</p>
+        <a href="{% url 'core:project_role_create' %}" class="btn btn-primary">{% trans "Créer le premier rôle projet" %}</a>
     </div>
     {% endfor %}
 </div>

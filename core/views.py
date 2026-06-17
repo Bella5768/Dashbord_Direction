@@ -1,3 +1,4 @@
+from django.utils.translation import gettext as _
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.http import JsonResponse, HttpResponse
@@ -215,11 +216,11 @@ def login_view(request):
                 next_url = request.GET.get('next', 'core:dashboard')
                 return redirect(next_url)
             elif not user.has_usable_password():
-                messages.error(request, "Votre compte est en attente d'activation. Consultez votre email pour le lien d'invitation.")
+                messages.error(request, _("Votre compte est en attente d'activation. Consultez votre email pour le lien d'invitation."))
             else:
-                messages.error(request, 'Votre compte a été désactivé. Contactez un administrateur.')
+                messages.error(request, _('Votre compte a été désactivé. Contactez un administrateur.'))
         else:
-            messages.error(request, 'Identifiants incorrects.')
+            messages.error(request, _('Identifiants incorrects.'))
     
     return render(request, 'registration/login.html')
 
@@ -310,7 +311,7 @@ def password_reset_confirm(request, uidb64, token):
                 action='update',
                 description="Réinitialisation du mot de passe via email",
             )
-            messages.success(request, "Mot de passe réinitialisé. Vous pouvez vous connecter.")
+            messages.success(request, _("Mot de passe réinitialisé. Vous pouvez vous connecter."))
             return redirect('core:login')
     else:
         form = SetPasswordForm(user)
@@ -339,7 +340,7 @@ def password_change(request):
             description="Changement de mot de passe",
             ip_address=get_client_ip(request),
         )
-        messages.success(request, "Mot de passe modifié avec succès.")
+        messages.success(request, _("Mot de passe modifié avec succès."))
         return redirect('core:dashboard')
 
     return render(request, 'registration/password_change.html', {'form': form})
@@ -382,7 +383,7 @@ def profile(request):
                 description="Mise à jour du profil",
                 ip_address=get_client_ip(request),
             )
-            messages.success(request, "Profil mis à jour avec succès.")
+            messages.success(request, _("Profil mis à jour avec succès."))
             return redirect('core:profile')
 
         return render(request, 'core/profile.html', {
@@ -843,7 +844,7 @@ def event_create(request):
     from .forms import EventForm
 
     if not request.user.profile.can_manage_events():
-        messages.error(request, "Permission insuffisante pour créer des événements.")
+        messages.error(request, _("Permission insuffisante pour créer des événements."))
         return redirect('core:calendar')
 
     if request.method == 'POST':
@@ -853,7 +854,7 @@ def event_create(request):
             event.created_by = request.user
             event.save()
             form.save_m2m()
-            messages.success(request, "Événement créé avec succès.")
+            messages.success(request, _("Événement créé avec succès."))
             return redirect('core:event_detail', event_id=event.pk)
     else:
         initial = {}
@@ -875,14 +876,14 @@ def event_edit(request, event_id):
     is_creator = event.created_by == request.user
 
     if not can_manage and not is_creator:
-        messages.error(request, "Vous ne pouvez modifier que vos propres événements.")
+        messages.error(request, _("Vous ne pouvez modifier que vos propres événements."))
         return redirect('core:event_detail', event_id=event_id)
 
     if request.method == 'POST':
         form = EventForm(request.POST, instance=event)
         if form.is_valid():
             form.save()
-            messages.success(request, "Événement modifié avec succès.")
+            messages.success(request, _("Événement modifié avec succès."))
             return redirect('core:event_detail', event_id=event.pk)
     else:
         form = EventForm(instance=event)
@@ -900,12 +901,12 @@ def event_delete(request, event_id):
     is_creator = event.created_by == request.user
 
     if not can_manage and not is_creator:
-        messages.error(request, "Vous ne pouvez supprimer que vos propres événements.")
+        messages.error(request, _("Vous ne pouvez supprimer que vos propres événements."))
         return redirect('core:event_detail', event_id=event_id)
 
     if request.method == 'POST':
         event.delete()
-        messages.success(request, "Événement supprimé.")
+        messages.success(request, _("Événement supprimé."))
         return redirect('core:calendar')
 
     return render(request, 'core/event_confirm_delete.html', {'event': event})
@@ -915,7 +916,7 @@ def event_delete(request, event_id):
 def reports(request):
     """Vue des rapports"""
     if not request.user.profile.can_view_reports():
-        messages.error(request, "Accès insuffisant pour consulter les rapports.")
+        messages.error(request, _("Accès insuffisant pour consulter les rapports."))
         return redirect('core:dashboard')
     
     # Projets par direction
@@ -1005,7 +1006,7 @@ def reports(request):
 def export_employees_pdf(request):
     """Exporter la liste des employés en PDF"""
     if not request.user.profile.is_directeur():
-        messages.error(request, "Accès réservé aux directeurs et administrateurs.")
+        messages.error(request, _("Accès réservé aux directeurs et administrateurs."))
         return redirect('core:resources')
     employees = Employee.objects.select_related('direction').all()
     
@@ -1147,7 +1148,7 @@ def export_employees_pdf(request):
 def export_reports_pdf(request):
     """Exporter les rapports en PDF - Réservé au DG"""
     if not (request.user.profile.is_directeur_general() or request.user.is_staff):
-        messages.error(request, "Cette section est réservée au Directeur Général.")
+        messages.error(request, _("Cette section est réservée au Directeur Général."))
         return redirect('core:dashboard')
     
     # Récupérer les mêmes données que la vue reports
@@ -1317,7 +1318,7 @@ def export_reports_pdf(request):
 def partners(request):
     """Vue des partenaires"""
     if not request.user.profile.can_manage_partners():
-        messages.error(request, "Vous n'avez pas la permission de consulter les partenaires.")
+        messages.error(request, _("Vous n'avez pas la permission de consulter les partenaires."))
         return redirect('core:dashboard')
     type_filter = request.GET.get('type', 'all')
     status_filter = request.GET.get('status', 'all')
@@ -1370,7 +1371,7 @@ def directions_list(request):
     """Liste des directions"""
     # Seuls admin et DG peuvent gérer les directions
     if not (request.user.profile.is_directeur_general() or request.user.is_staff):
-        messages.error(request, "Vous n'avez pas la permission de gérer les directions.")
+        messages.error(request, _("Vous n'avez pas la permission de gérer les directions."))
         return redirect('core:dashboard')
     
     directions = Direction.objects.annotate(
@@ -1388,7 +1389,7 @@ def directions_list(request):
 def direction_create(request):
     """Créer une nouvelle direction"""
     if not (request.user.profile.is_directeur_general() or request.user.is_staff):
-        messages.error(request, "Vous n'avez pas la permission de créer des directions.")
+        messages.error(request, _("Vous n'avez pas la permission de créer des directions."))
         return redirect('core:dashboard')
     
     from .forms import DirectionForm
@@ -1397,7 +1398,7 @@ def direction_create(request):
         form = DirectionForm(request.POST)
         if form.is_valid():
             form.save()
-            messages.success(request, "Direction créée avec succès.")
+            messages.success(request, _("Direction créée avec succès."))
             return redirect('core:directions_list')
     else:
         form = DirectionForm()
@@ -1413,7 +1414,7 @@ def direction_create(request):
 def direction_edit(request, direction_id):
     """Modifier une direction"""
     if not (request.user.profile.is_directeur_general() or request.user.is_staff):
-        messages.error(request, "Vous n'avez pas la permission de modifier les directions.")
+        messages.error(request, _("Vous n'avez pas la permission de modifier les directions."))
         return redirect('core:dashboard')
     
     direction = get_object_or_404(Direction, pk=direction_id)
@@ -1423,7 +1424,7 @@ def direction_edit(request, direction_id):
         form = DirectionForm(request.POST, instance=direction)
         if form.is_valid():
             form.save()
-            messages.success(request, "Direction modifiée avec succès.")
+            messages.success(request, _("Direction modifiée avec succès."))
             return redirect('core:directions_list')
     else:
         form = DirectionForm(instance=direction)
@@ -1440,14 +1441,14 @@ def direction_edit(request, direction_id):
 def direction_delete(request, direction_id):
     """Supprimer une direction"""
     if not (request.user.profile.is_directeur_general() or request.user.is_staff):
-        messages.error(request, "Vous n'avez pas la permission de supprimer les directions.")
+        messages.error(request, _("Vous n'avez pas la permission de supprimer les directions."))
         return redirect('core:dashboard')
     
     direction = get_object_or_404(Direction, pk=direction_id)
     
     if request.method == 'POST':
         direction.delete()
-        messages.success(request, "Direction supprimée.")
+        messages.success(request, _("Direction supprimée."))
         return redirect('core:directions_list')
     
     return render(request, 'core/confirm_delete.html', {
@@ -1467,7 +1468,7 @@ def users_list(request):
     
     # Check permission
     if not request.user.profile.has_manage_users_permission():
-        messages.error(request, "Vous n'avez pas les permissions pour gérer les utilisateurs.")
+        messages.error(request, _("Vous n'avez pas les permissions pour gérer les utilisateurs."))
         return redirect('core:dashboard')
     
     search = request.GET.get('search', '')
@@ -1522,7 +1523,7 @@ def user_create(request):
     import json
 
     if not request.user.profile.has_manage_users_permission():
-        messages.error(request, "Vous n'avez pas les permissions pour créer des utilisateurs.")
+        messages.error(request, _("Vous n'avez pas les permissions pour créer des utilisateurs."))
         return redirect('core:dashboard')
 
     initial = {}
@@ -1616,7 +1617,7 @@ def user_edit(request, user_id):
     from .forms import UserUpdateForm
     
     if not request.user.profile.has_manage_users_permission():
-        messages.error(request, "Vous n'avez pas les permissions pour modifier des utilisateurs.")
+        messages.error(request, _("Vous n'avez pas les permissions pour modifier des utilisateurs."))
         return redirect('core:dashboard')
     
     user_obj = get_object_or_404(User, pk=user_id)
@@ -1668,13 +1669,13 @@ def user_delete(request, user_id):
     from django.contrib.auth.models import User
     
     if not request.user.profile.has_manage_users_permission():
-        messages.error(request, "Vous n'avez pas les permissions pour supprimer des utilisateurs.")
+        messages.error(request, _("Vous n'avez pas les permissions pour supprimer des utilisateurs."))
         return redirect('core:dashboard')
     
     user_obj = get_object_or_404(User, pk=user_id)
     
     if user_obj == request.user:
-        messages.error(request, "Vous ne pouvez pas supprimer votre propre compte.")
+        messages.error(request, _("Vous ne pouvez pas supprimer votre propre compte."))
         return redirect('core:users_list')
     
     if request.method == 'POST':
@@ -1705,13 +1706,13 @@ def user_toggle_status(request, user_id):
     from django.contrib.auth.models import User
     
     if not request.user.profile.has_manage_users_permission():
-        messages.error(request, "Vous n'avez pas les permissions.")
+        messages.error(request, _("Vous n'avez pas les permissions."))
         return redirect('core:dashboard')
     
     user_obj = get_object_or_404(User, pk=user_id)
 
     if user_obj == request.user:
-        messages.error(request, "Vous ne pouvez pas désactiver votre propre compte.")
+        messages.error(request, _("Vous ne pouvez pas désactiver votre propre compte."))
         return redirect('core:users_list')
 
     if not user_obj.is_active and not user_obj.has_usable_password():
@@ -1768,7 +1769,7 @@ def account_activate(request, uidb64, token):
     if not token_valid:
         # Compte déjà activé → rediriger vers login avec message
         if user is not None and user.is_active:
-            messages.info(request, "Ce compte est déjà activé. Connectez-vous normalement.")
+            messages.info(request, _("Ce compte est déjà activé. Connectez-vous normalement."))
             return redirect('core:login')
         return render(request, 'core/users/activate.html', {'valid': False})
 
@@ -1854,7 +1855,7 @@ def resend_invitation(request, user_id):
         return redirect('core:users_list')
 
     if not user_obj.email:
-        messages.error(request, "Ce compte n'a pas d'adresse email.")
+        messages.error(request, _("Ce compte n'a pas d'adresse email."))
         return redirect('core:users_list')
 
     activation_link = _build_activation_link(request, user_obj)
@@ -1876,7 +1877,7 @@ def user_activities(request):
     from .models import UserActivity
     
     if not request.user.profile.has_manage_users_permission():
-        messages.error(request, "Vous n'avez pas les permissions.")
+        messages.error(request, _("Vous n'avez pas les permissions."))
         return redirect('core:dashboard')
     
     activities = UserActivity.objects.select_related('user').all()[:100]
@@ -1909,7 +1910,7 @@ def project_detail(request, project_id):
     )
 
     if not request.user.profile.can_view_project(project):
-        messages.error(request, "Vous n'avez pas accès à ce projet.")
+        messages.error(request, _("Vous n'avez pas accès à ce projet."))
         return redirect('core:projects')
 
     profile = request.user.profile
@@ -1985,7 +1986,7 @@ def export_project_activities(request, project_id):
     """Exporter le journal d'activité d'un projet en PDF"""
     project = get_object_or_404(Project, pk=project_id)
     if not request.user.profile.can_view_project(project):
-        messages.error(request, "Vous n'avez pas accès à ce projet.")
+        messages.error(request, _("Vous n'avez pas accès à ce projet."))
         return redirect('core:projects')
     activities = project.activities.all()
     
@@ -2069,7 +2070,7 @@ def project_need_create(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
 
     if not request.user.profile.can_add_project_needs(project):
-        messages.error(request, "Vous n'avez pas les permissions pour ajouter des besoins à ce projet.")
+        messages.error(request, _("Vous n'avez pas les permissions pour ajouter des besoins à ce projet."))
         return redirect('core:project_detail', project_id=project.id)
 
     if request.method != 'POST':
@@ -2082,9 +2083,9 @@ def project_need_create(request, project_id):
         need.created_by = request.user.get_full_name() or request.user.username
         need.save()
         log_project_activity(project, 'ajout_besoin', f"Ajout du besoin '{need.title}'", request.user)
-        messages.success(request, "Besoin ajouté avec succès.")
+        messages.success(request, _("Besoin ajouté avec succès."))
     else:
-        messages.error(request, "Impossible d'ajouter le besoin. Vérifiez le formulaire.")
+        messages.error(request, _("Impossible d'ajouter le besoin. Vérifiez le formulaire."))
 
     return redirect('core:project_detail', project_id=project.id)
 
@@ -2097,7 +2098,7 @@ def project_comment_create(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
 
     if not request.user.profile.can_add_project_comments(project):
-        messages.error(request, "Vous n'avez pas les permissions pour ajouter des commentaires à ce projet.")
+        messages.error(request, _("Vous n'avez pas les permissions pour ajouter des commentaires à ce projet."))
         return redirect('core:project_detail', project_id=project.id)
 
     if request.method != 'POST':
@@ -2110,9 +2111,9 @@ def project_comment_create(request, project_id):
         comment.created_by = request.user.get_full_name() or request.user.username
         comment.save()
         log_project_activity(project, 'ajout_commentaire', f"Ajout d'un commentaire", request.user)
-        messages.success(request, "Commentaire ajouté.")
+        messages.success(request, _("Commentaire ajouté."))
     else:
-        messages.error(request, "Impossible d'ajouter le commentaire. Vérifiez le formulaire.")
+        messages.error(request, _("Impossible d'ajouter le commentaire. Vérifiez le formulaire."))
 
     return redirect('core:project_detail', project_id=project.id)
 
@@ -2122,7 +2123,7 @@ def project_create(request):
     from .forms_project import ProjectForm
     
     if not request.user.profile.can_create_projects():
-        messages.error(request, "Vous n'avez pas les permissions pour créer un projet.")
+        messages.error(request, _("Vous n'avez pas les permissions pour créer un projet."))
         return redirect('core:projects')
     
     if request.method == 'POST':
@@ -2135,7 +2136,7 @@ def project_create(request):
             project.save()
             form.save_m2m()
             log_project_activity(project, 'creation', f"Création du projet '{project.name}'", request.user)
-            messages.success(request, "Projet créé avec succès.")
+            messages.success(request, _("Projet créé avec succès."))
             return redirect('core:project_detail', project_id=project.id)
     else:
         form = ProjectForm()
@@ -2152,7 +2153,7 @@ def project_edit(request, project_id):
 
     # Vérifier les permissions
     if not request.user.profile.can_edit_project(project):
-        messages.error(request, "Vous n'avez pas les permissions pour modifier ce projet.")
+        messages.error(request, _("Vous n'avez pas les permissions pour modifier ce projet."))
         return redirect('core:projects')
 
     # Migration silencieuse : sync manager_employee depuis le string manager si FK est vide
@@ -2172,7 +2173,7 @@ def project_edit(request, project_id):
             project.save()
             form.save_m2m()
             log_project_activity(project, 'modification', "Modification des informations du projet", request.user)
-            messages.success(request, "Projet modifié avec succès.")
+            messages.success(request, _("Projet modifié avec succès."))
             return redirect('core:project_detail', project_id=project.id)
     else:
         form = ProjectForm(instance=project)
@@ -2185,14 +2186,14 @@ def project_delete(request, project_id):
     """Supprimer un projet"""
     # Seul le Directeur Général peut supprimer un projet
     if not request.user.profile.is_directeur_general():
-        messages.error(request, "Seul le Directeur Général peut supprimer un projet.")
+        messages.error(request, _("Seul le Directeur Général peut supprimer un projet."))
         return redirect('core:projects')
     
     project = get_object_or_404(Project, pk=project_id)
     
     if request.method == 'POST':
         project.delete()
-        messages.success(request, "Projet supprimé.")
+        messages.success(request, _("Projet supprimé."))
         return redirect('core:projects')
     
     return render(request, 'core/confirm_delete.html', {'object': project, 'type': 'projet', 'back_url': 'core:projects'})
@@ -2211,7 +2212,7 @@ def milestone_detail(request, milestone_id):
     project = milestone.project
 
     if not request.user.profile.can_view_project(project):
-        messages.error(request, "Vous n'avez pas accès à ce projet.")
+        messages.error(request, _("Vous n'avez pas accès à ce projet."))
         return redirect('core:projects')
 
     profile = request.user.profile
@@ -2242,7 +2243,7 @@ def milestone_create(request, project_id):
     
     # Permission check - utiliser la nouvelle méthode
     if not request.user.profile.can_add_project_milestones(project):
-        messages.error(request, "Vous n'avez pas les permissions pour ajouter des jalons à ce projet.")
+        messages.error(request, _("Vous n'avez pas les permissions pour ajouter des jalons à ce projet."))
         return redirect('core:projects')
     
     if request.method == 'POST':
@@ -2264,7 +2265,7 @@ def milestone_create(request, project_id):
                     if success:
                         messages.info(request, msg)
             log_project_activity(project, 'ajout_jalon', f"Ajout du jalon '{milestone.name}'", request.user)
-            messages.success(request, "Jalon créé avec succès.")
+            messages.success(request, _("Jalon créé avec succès."))
             return redirect('core:project_detail', project_id=project.id)
     else:
         form = MilestoneForm(project=project)
@@ -2287,7 +2288,7 @@ def milestone_edit(request, milestone_id):
     
     # Permission check
     if not request.user.profile.can_edit_project_milestones(project):
-        messages.error(request, "Vous n'avez pas les permissions pour modifier ce jalon.")
+        messages.error(request, _("Vous n'avez pas les permissions pour modifier ce jalon."))
         return redirect('core:projects')
     
     old_assigned_ids = set(milestone.assigned_to.values_list('id', flat=True))
@@ -2317,7 +2318,7 @@ def milestone_edit(request, milestone_id):
                 for emp in assigned_emps:
                     notify_task_completed('jalon', milestone.name, project, emp, milestone.assigned_by, request.user)
             log_project_activity(project, 'modif_jalon', f"Modification du jalon '{milestone.name}'", request.user)
-            messages.success(request, "Jalon modifié avec succès.")
+            messages.success(request, _("Jalon modifié avec succès."))
             return redirect('core:project_detail', project_id=project.id)
     else:
         form = MilestoneForm(project=project, instance=milestone)
@@ -2340,14 +2341,14 @@ def milestone_delete(request, milestone_id):
     
     # Permission check
     if not request.user.profile.can_edit_project_milestones(project):
-        messages.error(request, "Vous n'avez pas les permissions pour supprimer ce jalon.")
+        messages.error(request, _("Vous n'avez pas les permissions pour supprimer ce jalon."))
         return redirect('core:projects')
     
     if request.method == 'POST':
         milestone_name = milestone.name
         milestone.delete()
         log_project_activity(project, 'suppr_jalon', f"Suppression du jalon '{milestone_name}'", request.user)
-        messages.success(request, "Jalon supprimé.")
+        messages.success(request, _("Jalon supprimé."))
         return redirect('core:project_detail', project_id=project.id)
     
     return render(request, 'core/confirm_delete.html', {'object': milestone, 'type': 'jalon', 'back_url': 'core:project_detail', 'back_args': {'project_id': project.id}})
@@ -2366,7 +2367,7 @@ def sub_milestone_create(request, milestone_id):
     
     # Permission check
     if not request.user.profile.can_add_project_milestones(project):
-        messages.error(request, "Vous n'avez pas les permissions pour ajouter des sous-étapes.")
+        messages.error(request, _("Vous n'avez pas les permissions pour ajouter des sous-étapes."))
         return redirect('core:project_detail', project_id=project.id)
     
     if request.method == 'POST':
@@ -2388,7 +2389,7 @@ def sub_milestone_create(request, milestone_id):
                     if success:
                         messages.info(request, msg)
             log_project_activity(project, 'ajout_sous_etape', f"Ajout de la sous-étape '{sub_milestone.name}' au jalon '{milestone.name}'", request.user)
-            messages.success(request, "Sous-étape ajoutée avec succès.")
+            messages.success(request, _("Sous-étape ajoutée avec succès."))
             return redirect('core:project_detail', project_id=project.id)
     else:
         form = SubMilestoneForm(milestone=milestone)
@@ -2414,7 +2415,7 @@ def sub_milestone_edit(request, sub_milestone_id):
     
     # Permission check
     if not request.user.profile.can_edit_project_milestones(project):
-        messages.error(request, "Vous n'avez pas les permissions pour modifier cette sous-étape.")
+        messages.error(request, _("Vous n'avez pas les permissions pour modifier cette sous-étape."))
         return redirect('core:project_detail', project_id=project.id)
     
     old_assigned_ids = set(sub_milestone.assigned_to.values_list('id', flat=True))
@@ -2444,7 +2445,7 @@ def sub_milestone_edit(request, sub_milestone_id):
                 for emp in assigned_emps:
                     notify_task_completed('sous-étape', sub_milestone.name, project, emp, sub_milestone.assigned_by, request.user)
             log_project_activity(project, 'modif_sous_etape', f"Modification de la sous-étape '{sub_milestone.name}'", request.user)
-            messages.success(request, "Sous-étape modifiée avec succès.")
+            messages.success(request, _("Sous-étape modifiée avec succès."))
             return redirect('core:project_detail', project_id=project.id)
     else:
         form = SubMilestoneForm(milestone=milestone, instance=sub_milestone)
@@ -2470,14 +2471,14 @@ def sub_milestone_delete(request, sub_milestone_id):
     
     # Permission check
     if not request.user.profile.can_edit_project_milestones(project):
-        messages.error(request, "Vous n'avez pas les permissions pour supprimer cette sous-étape.")
+        messages.error(request, _("Vous n'avez pas les permissions pour supprimer cette sous-étape."))
         return redirect('core:project_detail', project_id=project.id)
     
     if request.method == 'POST':
         sub_name = sub_milestone.name
         sub_milestone.delete()
         log_project_activity(project, 'suppr_sous_etape', f"Suppression de la sous-étape '{sub_name}'", request.user)
-        messages.success(request, "Sous-étape supprimée.")
+        messages.success(request, _("Sous-étape supprimée."))
         return redirect('core:project_detail', project_id=project.id)
     
     return render(request, 'core/confirm_delete.html', {
@@ -2586,7 +2587,7 @@ def sub_milestone_toggle(request, sub_milestone_id):
         or _user_is_assignee(request.user, sub_milestone.assigned_to)
     )
     if not can_toggle:
-        messages.error(request, "Vous n'avez pas les permissions pour modifier cette sous-étape.")
+        messages.error(request, _("Vous n'avez pas les permissions pour modifier cette sous-étape."))
         return redirect('core:project_detail', project_id=project.id)
 
     was_completed = sub_milestone.completed
@@ -2617,11 +2618,11 @@ def milestone_toggle(request, milestone_id):
         or _user_is_assignee(request.user, milestone.assigned_to)
     )
     if not can_toggle:
-        messages.error(request, "Vous n'avez pas les permissions pour modifier ce jalon.")
+        messages.error(request, _("Vous n'avez pas les permissions pour modifier ce jalon."))
         return redirect('core:project_detail', project_id=project.id)
 
     if milestone.sub_milestones.exists():
-        messages.warning(request, "Ce jalon contient des sous-étapes : sa progression est calculée automatiquement.")
+        messages.warning(request, _("Ce jalon contient des sous-étapes : sa progression est calculée automatiquement."))
         return redirect('core:project_detail', project_id=project.id)
 
     from django.utils import timezone
@@ -2650,13 +2651,13 @@ def milestone_update_status(request, milestone_id):
     milestone = get_object_or_404(Milestone.objects.select_related('project'), pk=milestone_id)
     project = milestone.project
     if not (request.user.profile.can_edit_project_milestones(project) or _user_is_assignee(request.user, milestone.assigned_to)):
-        messages.error(request, "Permissions insuffisantes.")
+        messages.error(request, _("Permissions insuffisantes."))
         return redirect('core:project_detail', project_id=project.id)
 
     new_status = request.POST.get('status', '')
     valid = dict(Milestone.TASK_STATUS_CHOICES)
     if new_status not in valid:
-        messages.error(request, "Statut invalide.")
+        messages.error(request, _("Statut invalide."))
         return redirect('core:project_detail', project_id=project.id)
 
     from django.utils import timezone
@@ -2692,16 +2693,16 @@ def project_need_update_status(request, need_id):
     project = need.project
 
     if not request.user.profile.can_view_project(project):
-        messages.error(request, "Accès refusé.")
+        messages.error(request, _("Accès refusé."))
         return redirect('core:projects')
     if not (request.user.profile.can_add_project_needs(project) or request.user.profile.can_manage_project_members(project)):
-        messages.error(request, "Permissions insuffisantes.")
+        messages.error(request, _("Permissions insuffisantes."))
         return redirect('core:project_detail', project_id=project.id)
 
     new_status = request.POST.get('status', '')
     valid = dict(ProjectNeed.NEED_STATUS_CHOICES)
     if new_status not in valid:
-        messages.error(request, "Statut invalide.")
+        messages.error(request, _("Statut invalide."))
         return redirect('core:project_detail', project_id=project.id)
 
     need.status = new_status
@@ -2729,7 +2730,7 @@ def my_tasks(request):
 
     user_employee = getattr(request.user.profile, 'employee', None)
     if not user_employee:
-        messages.info(request, "Votre compte n'est pas encore lié à un employé. Contactez un administrateur.")
+        messages.info(request, _("Votre compte n'est pas encore lié à un employé. Contactez un administrateur."))
         return redirect('core:dashboard')
 
     milestones_qs = (
@@ -2903,7 +2904,7 @@ def project_folder_create(request, project_id):
         parent_folder = get_object_or_404(ProjectFolder, pk=parent_id, project=project)
 
     if not request.user.profile.can_add_project_documents(project):
-        messages.error(request, "Vous n'avez pas les permissions pour gérer les dossiers de ce projet.")
+        messages.error(request, _("Vous n'avez pas les permissions pour gérer les dossiers de ce projet."))
         return redirect('core:projects')
     
     if request.method == 'POST':
@@ -2913,7 +2914,7 @@ def project_folder_create(request, project_id):
             folder.project = project
             folder.save()
             log_project_activity(project, 'ajout_dossier', f"Création du dossier '{folder.name}'", request.user)
-            messages.success(request, "Dossier créé avec succès.")
+            messages.success(request, _("Dossier créé avec succès."))
             if folder.parent_id:
                 return redirect('core:project_folder_detail', folder_id=folder.id)
             return redirect('core:project_detail', project_id=project.id)
@@ -2933,7 +2934,7 @@ def project_folder_detail(request, folder_id):
     project = folder.project
 
     if not request.user.profile.can_view_project(project):
-        messages.error(request, "Vous n'avez pas accès à ce projet.")
+        messages.error(request, _("Vous n'avez pas accès à ce projet."))
         return redirect('core:projects')
 
     subfolders = folder.subfolders.all().order_by('name')
@@ -2957,7 +2958,7 @@ def project_folder_edit(request, folder_id):
     project = folder.project
 
     if not request.user.profile.can_add_project_documents(project):
-        messages.error(request, "Vous n'avez pas les permissions pour gérer les dossiers de ce projet.")
+        messages.error(request, _("Vous n'avez pas les permissions pour gérer les dossiers de ce projet."))
         return redirect('core:projects')
     
     if request.method == 'POST':
@@ -2965,7 +2966,7 @@ def project_folder_edit(request, folder_id):
         if form.is_valid():
             form.save()
             log_project_activity(project, 'modification', f"Modification du dossier '{folder.name}'", request.user)
-            messages.success(request, "Dossier modifié avec succès.")
+            messages.success(request, _("Dossier modifié avec succès."))
             return redirect('core:project_detail', project_id=project.id)
     else:
         form = ProjectFolderForm(project, instance=folder)
@@ -2980,14 +2981,14 @@ def project_folder_delete(request, folder_id):
     project = folder.project
 
     if not request.user.profile.can_edit_project_documents(project):
-        messages.error(request, "Vous n'avez pas les permissions pour gérer les dossiers de ce projet.")
+        messages.error(request, _("Vous n'avez pas les permissions pour gérer les dossiers de ce projet."))
         return redirect('core:projects')
 
     if request.method == 'POST':
         folder_name = folder.name
         folder.delete()
         log_project_activity(project, 'suppr_dossier', f"Suppression du dossier '{folder_name}'", request.user)
-        messages.success(request, "Dossier supprimé.")
+        messages.success(request, _("Dossier supprimé."))
         return redirect('core:project_detail', project_id=project.id)
     
     return render(request, 'core/confirm_delete.html', {'object': folder, 'type': 'dossier', 'back_url': 'core:project_detail', 'back_args': {'project_id': project.id}})
@@ -3005,7 +3006,7 @@ def project_document_create(request, project_id):
         initial_folder = get_object_or_404(ProjectFolder, pk=folder_id, project=project)
 
     if not request.user.profile.can_add_project_documents(project):
-        messages.error(request, "Vous n'avez pas les permissions pour ajouter des documents à ce projet.")
+        messages.error(request, _("Vous n'avez pas les permissions pour ajouter des documents à ce projet."))
         return redirect('core:projects')
     
     if request.method == 'POST':
@@ -3016,7 +3017,7 @@ def project_document_create(request, project_id):
             doc.uploaded_by = request.user.get_full_name() or request.user.username
             doc.save()
             log_project_activity(project, 'ajout_document', f"Ajout du document '{doc.title}'", request.user)
-            messages.success(request, "Document ajouté avec succès.")
+            messages.success(request, _("Document ajouté avec succès."))
             if doc.folder_id:
                 return redirect('core:project_folder_detail', folder_id=doc.folder_id)
             return redirect('core:project_detail', project_id=project.id)
@@ -3038,7 +3039,7 @@ def project_document_edit(request, doc_id):
     project = doc.project
 
     if not request.user.profile.can_edit_project_documents(project):
-        messages.error(request, "Vous n'avez pas les permissions pour modifier les documents de ce projet.")
+        messages.error(request, _("Vous n'avez pas les permissions pour modifier les documents de ce projet."))
         return redirect('core:projects')
     
     if request.method == 'POST':
@@ -3046,7 +3047,7 @@ def project_document_edit(request, doc_id):
         if form.is_valid():
             form.save()
             log_project_activity(project, 'ajout_document', f"Modification du document '{doc.title}'", request.user)
-            messages.success(request, "Document modifié avec succès.")
+            messages.success(request, _("Document modifié avec succès."))
             return redirect('core:project_detail', project_id=project.id)
     else:
         form = ProjectDocumentForm(project, instance=doc)
@@ -3061,14 +3062,14 @@ def project_document_delete(request, doc_id):
     project = doc.project
 
     if not request.user.profile.can_edit_project_documents(project):
-        messages.error(request, "Vous n'avez pas les permissions pour supprimer les documents de ce projet.")
+        messages.error(request, _("Vous n'avez pas les permissions pour supprimer les documents de ce projet."))
         return redirect('core:projects')
     
     if request.method == 'POST':
         doc_title = doc.title
         doc.delete()
         log_project_activity(project, 'suppr_document', f"Suppression du document '{doc_title}'", request.user)
-        messages.success(request, "Document supprimé.")
+        messages.success(request, _("Document supprimé."))
         return redirect('core:project_detail', project_id=project.id)
 
     return render(request, 'core/confirm_delete.html', {'object': doc, 'type': 'document', 'back_url': 'core:project_detail', 'back_args': {'project_id': project.id}})
@@ -3084,7 +3085,7 @@ def project_document_download(request, doc_id):
     project = doc.project
 
     if not request.user.profile.can_view_project(project):
-        messages.error(request, "Vous n'avez pas accès à ce projet.")
+        messages.error(request, _("Vous n'avez pas accès à ce projet."))
         return redirect('core:projects')
     
     # Retourner le fichier
@@ -3099,7 +3100,7 @@ def project_document_download(request, doc_id):
         )
         return response
     else:
-        messages.error(request, "Fichier non trouvé.")
+        messages.error(request, _("Fichier non trouvé."))
         return redirect('core:project_detail', project_id=project.id)
 
 
@@ -3114,7 +3115,7 @@ def project_member_add(request, project_id):
 
     # Permission check - utiliser la nouvelle méthode
     if not request.user.profile.can_add_project_members(project):
-        messages.error(request, "Vous n'avez pas les permissions pour ajouter des membres à ce projet.")
+        messages.error(request, _("Vous n'avez pas les permissions pour ajouter des membres à ce projet."))
         return redirect('core:project_detail', project_id=project.id)
     
     directions = Direction.objects.all()
@@ -3279,7 +3280,7 @@ def project_member_add(request, project_id):
                 success, msg = notify_project_member_added(member, request.user)
                 if success:
                     messages.info(request, msg)
-                messages.success(request, "Membre ajouté avec succès.")
+                messages.success(request, _("Membre ajouté avec succès."))
                 return redirect('core:project_detail', project_id=project.id)
             context['form'] = form
             return render(request, 'core/project_member_form.html', context)
@@ -3299,7 +3300,7 @@ def project_member_edit(request, member_id):
     project = member.project
 
     if not request.user.profile.can_manage_project_members(project):
-        messages.error(request, "Vous n'avez pas les permissions pour modifier les membres de ce projet.")
+        messages.error(request, _("Vous n'avez pas les permissions pour modifier les membres de ce projet."))
         return redirect('core:project_detail', project_id=project.id)
     
     if request.method == 'POST':
@@ -3308,7 +3309,7 @@ def project_member_edit(request, member_id):
             form.save()
             new_role_name = member.project_role.name if member.project_role else 'sans rôle'
             log_project_activity(project, 'modification', f"Rôle de '{member.employee.name}' modifié → '{new_role_name}'", request.user)
-            messages.success(request, "Rôle du membre modifié avec succès.")
+            messages.success(request, _("Rôle du membre modifié avec succès."))
             return redirect('core:project_detail', project_id=project.id)
     else:
         form = ProjectMemberForm(project, instance=member)
@@ -3356,14 +3357,14 @@ def project_member_delete(request, member_id):
     project = member.project
 
     if not request.user.profile.can_manage_project_members(project):
-        messages.error(request, "Vous n'avez pas les permissions pour supprimer des membres de ce projet.")
+        messages.error(request, _("Vous n'avez pas les permissions pour supprimer des membres de ce projet."))
         return redirect('core:project_detail', project_id=project.id)
     
     if request.method == 'POST':
         member_name = member.employee.name
         member.delete()
         log_project_activity(project, 'retrait_membre', f"Retrait du membre '{member_name}'", request.user)
-        messages.success(request, "Membre supprimé du projet.")
+        messages.success(request, _("Membre supprimé du projet."))
         return redirect('core:project_detail', project_id=project.id)
     
     return render(request, 'core/confirm_delete.html', {'object': member, 'type': 'membre', 'back_url': 'core:project_detail', 'back_args': {'project_id': project.id}})
@@ -3377,14 +3378,14 @@ def document_create(request):
     from .forms_project import DocumentForm
     
     if not request.user.profile.can_approve_documents():
-        messages.error(request, "Vous n'avez pas les permissions.")
+        messages.error(request, _("Vous n'avez pas les permissions."))
         return redirect('core:documents')
     
     if request.method == 'POST':
         form = DocumentForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
-            messages.success(request, "Document créé avec succès.")
+            messages.success(request, _("Document créé avec succès."))
             return redirect('core:documents')
     else:
         form = DocumentForm()
@@ -3398,7 +3399,7 @@ def document_edit(request, doc_id):
     from .forms_project import DocumentForm
     
     if not request.user.profile.can_approve_documents():
-        messages.error(request, "Vous n'avez pas les permissions.")
+        messages.error(request, _("Vous n'avez pas les permissions."))
         return redirect('core:documents')
     
     doc = get_object_or_404(Document, pk=doc_id)
@@ -3407,7 +3408,7 @@ def document_edit(request, doc_id):
         form = DocumentForm(request.POST, request.FILES, instance=doc)
         if form.is_valid():
             form.save()
-            messages.success(request, "Document modifié avec succès.")
+            messages.success(request, _("Document modifié avec succès."))
             return redirect('core:documents')
     else:
         form = DocumentForm(instance=doc)
@@ -3419,14 +3420,14 @@ def document_edit(request, doc_id):
 def document_delete(request, doc_id):
     """Supprimer un document"""
     if not request.user.profile.can_approve_documents():
-        messages.error(request, "Vous n'avez pas les permissions.")
+        messages.error(request, _("Vous n'avez pas les permissions."))
         return redirect('core:documents')
     
     doc = get_object_or_404(Document, pk=doc_id)
     
     if request.method == 'POST':
         doc.delete()
-        messages.success(request, "Document supprimé.")
+        messages.success(request, _("Document supprimé."))
         return redirect('core:documents')
     
     return render(request, 'core/confirm_delete.html', {'object': doc, 'type': 'document', 'back_url': 'core:documents'})
@@ -3436,7 +3437,7 @@ def document_delete(request, doc_id):
 def document_sign(request, doc_id):
     """Signer un document"""
     if not request.user.profile.can_approve_documents():
-        messages.error(request, "Vous n'avez pas les permissions.")
+        messages.error(request, _("Vous n'avez pas les permissions."))
         return redirect('core:documents')
     
     doc = get_object_or_404(Document, pk=doc_id)
@@ -3451,7 +3452,7 @@ def document_sign(request, doc_id):
 def document_validate(request, doc_id):
     """Valider un document"""
     if not request.user.profile.can_approve_documents():
-        messages.error(request, "Vous n'avez pas les permissions.")
+        messages.error(request, _("Vous n'avez pas les permissions."))
         return redirect('core:documents')
     
     doc = get_object_or_404(Document, pk=doc_id)
@@ -3469,11 +3470,11 @@ def document_download(request, doc_id):
     from django.http import FileResponse
     doc = get_object_or_404(Document, pk=doc_id)
     if not doc.file:
-        messages.error(request, "Aucun fichier attaché à ce document.")
+        messages.error(request, _("Aucun fichier attaché à ce document."))
         return redirect('core:documents')
     file_path = doc.file.path
     if not os.path.exists(file_path):
-        messages.error(request, "Fichier introuvable.")
+        messages.error(request, _("Fichier introuvable."))
         return redirect('core:documents')
     from urllib.parse import quote
     mime_type, _ = mimetypes.guess_type(file_path)
@@ -3498,7 +3499,7 @@ def request_create(request):
             req = form.save(commit=False)
             req.status = 'en_attente'
             req.save()
-            messages.success(request, "Demande créée avec succès.")
+            messages.success(request, _("Demande créée avec succès."))
             return redirect('core:requests')
     else:
         form = RequestForm()
@@ -3510,7 +3511,7 @@ def request_create(request):
 def request_approve(request, req_id):
     """Approuver une demande"""
     if not request.user.profile.has_approve_requests_permission():
-        messages.error(request, "Vous n'avez pas les permissions.")
+        messages.error(request, _("Vous n'avez pas les permissions."))
         return redirect('core:requests')
     
     req = get_object_or_404(Request, pk=req_id)
@@ -3525,7 +3526,7 @@ def request_approve(request, req_id):
 def request_reject(request, req_id):
     """Rejeter une demande"""
     if not request.user.profile.has_approve_requests_permission():
-        messages.error(request, "Vous n'avez pas les permissions.")
+        messages.error(request, _("Vous n'avez pas les permissions."))
         return redirect('core:requests')
     
     req = get_object_or_404(Request, pk=req_id)
@@ -3543,14 +3544,14 @@ def partner_create(request):
     from .forms_project import PartnerForm
     
     if not request.user.profile.can_manage_partners():
-        messages.error(request, "Vous n'avez pas les permissions.")
+        messages.error(request, _("Vous n'avez pas les permissions."))
         return redirect('core:partners')
     
     if request.method == 'POST':
         form = PartnerForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
-            messages.success(request, "Partenaire créé avec succès.")
+            messages.success(request, _("Partenaire créé avec succès."))
             return redirect('core:partners')
     else:
         form = PartnerForm()
@@ -3564,7 +3565,7 @@ def partner_edit(request, partner_id):
     from .forms_project import PartnerForm
     
     if not request.user.profile.can_manage_partners():
-        messages.error(request, "Vous n'avez pas les permissions.")
+        messages.error(request, _("Vous n'avez pas les permissions."))
         return redirect('core:partners')
     
     partner = get_object_or_404(Partner, pk=partner_id)
@@ -3573,7 +3574,7 @@ def partner_edit(request, partner_id):
         form = PartnerForm(request.POST, request.FILES, instance=partner)
         if form.is_valid():
             form.save()
-            messages.success(request, "Partenaire modifié avec succès.")
+            messages.success(request, _("Partenaire modifié avec succès."))
             return redirect('core:partners')
     else:
         form = PartnerForm(instance=partner)
@@ -3585,14 +3586,14 @@ def partner_edit(request, partner_id):
 def partner_delete(request, partner_id):
     """Supprimer un partenaire"""
     if not request.user.profile.can_manage_partners():
-        messages.error(request, "Vous n'avez pas les permissions.")
+        messages.error(request, _("Vous n'avez pas les permissions."))
         return redirect('core:partners')
     
     partner = get_object_or_404(Partner, pk=partner_id)
     
     if request.method == 'POST':
         partner.delete()
-        messages.success(request, "Partenaire supprimé.")
+        messages.success(request, _("Partenaire supprimé."))
         return redirect('core:partners')
     
     return render(request, 'core/confirm_delete.html', {'object': partner, 'type': 'partenaire', 'back_url': 'core:partners'})
@@ -3623,7 +3624,7 @@ def employee_create(request):
     from .forms_project import EmployeeForm
 
     if not _user_can_manage_employee(request.user):
-        messages.error(request, "Vous n'avez pas les permissions pour gérer les employés.")
+        messages.error(request, _("Vous n'avez pas les permissions pour gérer les employés."))
         return redirect('core:resources')
 
     profile = request.user.profile
@@ -3636,7 +3637,7 @@ def employee_create(request):
             if profile.role_slug == 'directeur' and profile.direction_id:
                 employee.direction_id = profile.direction_id
             employee.save()
-            messages.success(request, "Employé créé avec succès.")
+            messages.success(request, _("Employé créé avec succès."))
             return redirect('core:resources')
     else:
         form = EmployeeForm(user=request.user)
@@ -3652,7 +3653,7 @@ def employee_edit(request, employee_id):
     employee = get_object_or_404(Employee, pk=employee_id)
 
     if not _user_can_manage_employee(request.user, employee):
-        messages.error(request, "Vous ne pouvez gérer que les employés de votre direction.")
+        messages.error(request, _("Vous ne pouvez gérer que les employés de votre direction."))
         return redirect('core:resources')
 
     profile = request.user.profile
@@ -3678,7 +3679,7 @@ def employee_edit(request, employee_id):
             except Exception:
                 pass  # pas de compte lié
 
-            messages.success(request, "Employé modifié avec succès.")
+            messages.success(request, _("Employé modifié avec succès."))
             return redirect('core:resources')
     else:
         form = EmployeeForm(instance=employee, user=request.user)
@@ -3692,7 +3693,7 @@ def employee_delete(request, employee_id):
     employee = get_object_or_404(Employee, pk=employee_id)
 
     if not _user_can_manage_employee(request.user, employee):
-        messages.error(request, "Vous ne pouvez supprimer que les employés de votre direction.")
+        messages.error(request, _("Vous ne pouvez supprimer que les employés de votre direction."))
         return redirect('core:resources')
 
     # Calcul des dépendances pour afficher l'avertissement
@@ -3732,14 +3733,14 @@ def budget_create(request):
     from .forms_project import BudgetForm
     
     if not request.user.profile.can_manage_budgets():
-        messages.error(request, "Vous n'avez pas les permissions pour gérer les budgets.")
+        messages.error(request, _("Vous n'avez pas les permissions pour gérer les budgets."))
         return redirect('core:resources')
     
     if request.method == 'POST':
         form = BudgetForm(request.POST)
         if form.is_valid():
             form.save()
-            messages.success(request, "Budget créé avec succès.")
+            messages.success(request, _("Budget créé avec succès."))
             return redirect('core:resources')
     else:
         form = BudgetForm()
@@ -3753,7 +3754,7 @@ def budget_edit(request, budget_id):
     from .forms_project import BudgetForm
     
     if not request.user.profile.can_manage_budgets():
-        messages.error(request, "Vous n'avez pas les permissions pour gérer les budgets.")
+        messages.error(request, _("Vous n'avez pas les permissions pour gérer les budgets."))
         return redirect('core:resources')
     
     budget = get_object_or_404(Budget, pk=budget_id)
@@ -3762,7 +3763,7 @@ def budget_edit(request, budget_id):
         form = BudgetForm(request.POST, instance=budget)
         if form.is_valid():
             form.save()
-            messages.success(request, "Budget modifié avec succès.")
+            messages.success(request, _("Budget modifié avec succès."))
             return redirect('core:resources')
     else:
         form = BudgetForm(instance=budget)
@@ -3775,14 +3776,14 @@ def budget_edit(request, budget_id):
 def budget_delete(request, budget_id):
     """Supprimer un budget"""
     if not request.user.profile.can_manage_budgets():
-        messages.error(request, "Vous n'avez pas les permissions.")
+        messages.error(request, _("Vous n'avez pas les permissions."))
         return redirect('core:resources')
     
     budget = get_object_or_404(Budget, pk=budget_id)
     
     if request.method == 'POST':
         budget.delete()
-        messages.success(request, "Budget supprimé.")
+        messages.success(request, _("Budget supprimé."))
         return redirect('core:resources')
     
     return render(request, 'core/confirm_delete.html', {'object': budget, 'type': 'budget', 'back_url': 'core:resources'})
