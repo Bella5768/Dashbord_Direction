@@ -1,6 +1,6 @@
 from django import forms
 from django.db.models import Max
-from .models import Project, Document, Request, Partner, Event, Direction, Budget, Employee, Milestone, SubMilestone, ProjectFolder, ProjectDocument, ProjectMember, ProjectNeed, ProjectComment
+from .models import Project, Document, Request, Partner, Event, Direction, Budget, Employee, Milestone, SubMilestone, ProjectFolder, ProjectDocument, ProjectMember, ProjectNeed, ProjectComment, ProjectRole
 from .currencies import CURRENCY_CHOICES, convert_currency, format_currency
 
 
@@ -186,62 +186,59 @@ class ProjectDocumentForm(forms.ModelForm):
 
 
 class ProjectMemberForm(forms.ModelForm):
-    """Formulaire pour les membres de projet"""
+    """Formulaire pour les membres de projet."""
     class Meta:
         model = ProjectMember
-        fields = ['employee', 'role', 'can_manage_members_perm', 'can_edit_project_perm', 
-                  'can_add_milestones_perm', 'can_add_documents_perm', 'can_add_needs_perm', 'can_add_comments_perm']
+        fields = ['employee', 'project_role']
         widgets = {
             'employee': forms.Select(attrs={'class': 'form-control select-searchable'}),
-            'role': forms.Select(attrs={'class': 'form-control', 'onchange': 'togglePermissions()'}),
-            'can_manage_members_perm': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'can_edit_project_perm': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'can_add_milestones_perm': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'can_add_documents_perm': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'can_add_needs_perm': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'can_add_comments_perm': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'project_role': forms.Select(attrs={'class': 'form-control'}),
         }
-    
+
     def __init__(self, project, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.project = project
-        # Rendre employee non requis pour permettre la création d'un nouvel employé
-        self.fields['employee'].required = False
-        # Filter employees to exclude those already in the project
-        if self.instance and self.instance.pk:
+        self._is_edit = bool(self.instance and self.instance.pk)
+        # Employee obligatoire à la création, optionnel en édition (déjà fixé)
+        self.fields['employee'].required = not self._is_edit
+        self.fields['project_role'].required = False
+        self.fields['project_role'].label = "Rôle projet"
+
+        if self._is_edit:
             existing_members = project.members.exclude(pk=self.instance.pk)
         else:
             existing_members = project.members.all()
-        
+
         employee_ids = existing_members.values_list('employee_id', flat=True)
-        
-        # Get available employees with their details
         available_employees = Employee.objects.exclude(id__in=employee_ids).order_by('name')
-        
-        # Create custom choices with employee details
+
         employee_choices = [('', '--- Sélectionner un employé ---')]
         for emp in available_employees:
-            display_text = f"{emp.name}"
+            display_text = emp.name
             if emp.role:
                 display_text += f" - {emp.role}"
             if emp.email:
                 display_text += f" ({emp.email})"
             employee_choices.append((emp.id, display_text))
-        
+
         self.fields['employee'].choices = employee_choices
-        
-        # Add search capability
         self.fields['employee'].widget.attrs.update({
             'data-placeholder': 'Rechercher un employé...',
-            'data-allow-clear': 'true'
+            'data-allow-clear': 'true',
         })
-        
-        # Ensure role field has proper choices
-        self.fields['role'].choices = ProjectMember.ROLE_CHOICES
-        
+
+        # Rôles projet disponibles
+        self.fields['project_role'].queryset = ProjectRole.objects.all()
+
         for field_name, field in self.fields.items():
             if field_name != 'employee':
                 field.widget.attrs['class'] = 'form-control'
+
+    def clean_employee(self):
+        employee = self.cleaned_data.get('employee')
+        if not self._is_edit and not employee:
+            raise forms.ValidationError("Veuillez sélectionner un employé.")
+        return employee
 
 
 class ProjectNeedForm(forms.ModelForm):
@@ -373,7 +370,7 @@ class EmployeeForm(forms.ModelForm):
 
         # Restriction : un directeur ne peut creer/modifier que des employes de sa direction
         profile = getattr(user, 'profile', None) if user else None
-        if profile and profile.role == 'directeur' and profile.direction_id:
+        if profile and profile.role_slug == 'directeur' and profile.direction_id:
             from .models import Direction
             self.fields['direction'].queryset = Direction.objects.filter(id=profile.direction_id)
             self.fields['direction'].initial = profile.direction_id

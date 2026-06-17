@@ -82,7 +82,7 @@ def _resolve_manager_email(project):
         if emp:
             return emp.name, emp.email
 
-    member = project.members.filter(role='responsable').select_related('employee').first()
+    member = project.members.filter(project_role__slug='responsable').select_related('employee').first()
     if member and member.employee and member.employee.email:
         return member.employee.name, member.employee.email
 
@@ -118,6 +118,34 @@ def notify_account_invitation(user, activation_link, invited_by=None):
     except Exception as e:
         err = str(e)
         logger.error(f"Echec invitation {user.email}: {err}")
+        return (False, err)
+
+
+# =====================================================================
+# Réinitialisation de mot de passe
+# =====================================================================
+
+def notify_password_reset(user, reset_link):
+    """Envoie l'email de réinitialisation de mot de passe."""
+    if not _is_email_configured():
+        logger.warning("Reset non envoyé : email non configuré")
+        return (False, "Email non configuré")
+    if not user.email:
+        return (False, "Cet utilisateur n'a pas d'adresse email")
+
+    subject = "[CSIG] Réinitialisation de votre mot de passe"
+    text, html = _render_email('password_reset_email.html', {
+        'recipient_name': user.get_full_name() or user.username,
+        'username': user.username,
+        'reset_link': reset_link,
+    })
+    try:
+        _send(subject, text, html, user.email)
+        logger.info(f"Email reset envoyé à {user.email}")
+        return (True, f"Email envoyé à {user.email}")
+    except Exception as e:
+        err = str(e)
+        logger.error(f"Echec reset {user.email}: {err}")
         return (False, err)
 
 
@@ -378,7 +406,7 @@ def _leave_recipients_step(leave, step):
     def _hr_users():
         try:
             return User_.objects.filter(
-                Q(profile__is_hr_manager=True) | Q(profile__role='admin'),
+                Q(profile__is_hr_manager=True) | Q(profile__role__slug='admin'),
                 is_active=True,
             ).exclude(email='')
         except Exception:
@@ -391,7 +419,7 @@ def _leave_recipients_step(leave, step):
     def _direction_managers():
         try:
             return User_.objects.filter(
-                profile__role='directeur',
+                profile__role__slug='directeur',
                 profile__direction_id=leave.direction_id,
                 is_active=True,
             ).exclude(email='')
@@ -419,7 +447,7 @@ def _leave_recipients_step(leave, step):
         if leave.hr_decision == 'conforme':
             try:
                 dg_users = User_.objects.filter(
-                    profile__role__in=['directeur_general', 'admin'],
+                    profile__role__slug__in=['directeur_general', 'admin'],
                     is_active=True,
                 ).exclude(email='')
                 for u in dg_users:
@@ -438,7 +466,7 @@ def _leave_recipients_step(leave, step):
         _add_hr("Décision finale enregistrée (copie équipe RH) :")
         try:
             dg_users = User_.objects.filter(
-                profile__role__in=['directeur_general', 'admin'],
+                profile__role__slug__in=['directeur_general', 'admin'],
                 is_active=True,
             ).exclude(email='')
             for u in dg_users:

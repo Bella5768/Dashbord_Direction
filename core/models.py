@@ -4,355 +4,309 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
 
-class UserProfile(models.Model):
-    """Extended user profile with role-based access control."""
-    ROLE_CHOICES = [
-        ('admin', 'Administrateur'),
-        ('directeur_general', 'Directeur Général'),
-        ('directeur', 'Directeur'),
-        ('chef_projet', 'Chef de Projet'),
-        ('employe', 'Employé'),
-        ('visiteur', 'Visiteur'),
+# =====================================================================
+# RBAC : Permission / Role / ProjectRole
+# =====================================================================
+
+class Permission(models.Model):
+    ACTION_CHOICES = [
+        ('read',    'Lire'),
+        ('create',  'Créer'),
+        ('update',  'Modifier'),
+        ('delete',  'Supprimer'),
+        ('manage',  'Gérer (tout)'),
+        ('approve', 'Approuver'),
+        ('export',  'Exporter'),
     ]
-    
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='visiteur', verbose_name="Rôle")
-    direction = models.ForeignKey('Direction', on_delete=models.SET_NULL, null=True, blank=True, 
-                                  related_name='users', verbose_name="Direction")
-    employee = models.OneToOneField('Employee', on_delete=models.SET_NULL, null=True, blank=True,
-                                    related_name='user_profile', verbose_name="Employé")
+    SUBJECT_CHOICES = [
+        ('all',           'Tout'),
+        ('Project',       'Projets'),
+        ('Milestone',     'Jalons / Tâches'),
+        ('Comment',       'Commentaires projet'),
+        ('ProjectMember', 'Membres de projet'),
+        ('Budget',        'Budgets'),
+        ('User',          'Utilisateurs'),
+        ('Employee',      'Employés'),
+        ('LeaveRequest',  'Demandes de congé'),
+        ('Partner',       'Partenaires'),
+        ('Document',      'Documents'),
+        ('Request',       'Demandes / Besoins projet'),
+        ('Event',         'Événements'),
+        ('Direction',     'Directions'),
+        ('Role',          'Rôles'),
+        ('Report',        'Rapports'),
+    ]
+    CONDITION_CHOICES = [
+        ('',                   'Aucune (accès global)'),
+        ('same_direction',     'Même direction'),
+        ('is_project_manager', 'Est manager du projet'),
+        ('is_project_member',  'Est membre du projet'),
+        ('is_owner',           'Est propriétaire'),
+        ('hr_pipeline',        'Pipeline RH (après avis hiérarchique)'),
+    ]
+
+    action      = models.CharField(max_length=20, choices=ACTION_CHOICES, verbose_name="Action")
+    subject     = models.CharField(max_length=30, choices=SUBJECT_CHOICES, verbose_name="Sujet")
+    condition   = models.CharField(max_length=30, choices=CONDITION_CHOICES, blank=True, default='', verbose_name="Condition")
+    description = models.CharField(max_length=200, blank=True, verbose_name="Description")
+
+    class Meta:
+        unique_together = ['action', 'subject', 'condition']
+        verbose_name = "Permission"
+        verbose_name_plural = "Permissions"
+        ordering = ['subject', 'action']
+
+    def __str__(self):
+        cond = f" [{self.condition}]" if self.condition else ""
+        return f"{self.get_action_display()} : {self.get_subject_display()}{cond}"
+
+
+class Role(models.Model):
+    name        = models.CharField(max_length=100, verbose_name="Nom")
+    slug        = models.SlugField(max_length=50, unique=True, verbose_name="Identifiant")
+    description = models.TextField(blank=True, verbose_name="Description")
+    permissions = models.ManyToManyField(Permission, blank=True, related_name='roles', verbose_name="Permissions")
+    is_system   = models.BooleanField(default=False, verbose_name="Rôle système (non supprimable)")
+    created_at  = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Rôle"
+        verbose_name_plural = "Rôles"
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
+class ProjectRole(models.Model):
+    name        = models.CharField(max_length=100, verbose_name="Nom")
+    slug        = models.SlugField(max_length=50, unique=True, verbose_name="Identifiant")
+    description = models.TextField(blank=True, verbose_name="Description")
+    permissions = models.ManyToManyField(Permission, blank=True, related_name='project_roles', verbose_name="Permissions projet")
+    is_system   = models.BooleanField(default=False, verbose_name="Rôle système (non supprimable)")
+    created_at  = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Rôle projet"
+        verbose_name_plural = "Rôles projet"
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
+# =====================================================================
+# Profil utilisateur
+# =====================================================================
+
+class UserProfile(models.Model):
+    user                = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    role                = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True, related_name='users', verbose_name="Rôle")
+    direction           = models.ForeignKey('Direction', on_delete=models.SET_NULL, null=True, blank=True, related_name='users', verbose_name="Direction")
+    employee            = models.OneToOneField('Employee', on_delete=models.SET_NULL, null=True, blank=True, related_name='user_profile', verbose_name="Employé")
     employee_identifier = models.CharField(max_length=50, null=True, blank=True, verbose_name="ID Employé")
-    phone = models.CharField(max_length=20, blank=True, verbose_name="Téléphone")
-    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True, verbose_name="Photo")
-    is_active_profile = models.BooleanField(default=True, verbose_name="Profil actif")
+    phone               = models.CharField(max_length=20, blank=True, verbose_name="Téléphone")
+    avatar              = models.ImageField(upload_to='avatars/', null=True, blank=True, verbose_name="Photo")
+    is_active_profile   = models.BooleanField(default=True, verbose_name="Profil actif")
+    created_at          = models.DateTimeField(auto_now_add=True)
+    updated_at          = models.DateTimeField(auto_now=True)
 
-    # Permissions budgets
-    budget_view = models.BooleanField(default=False, verbose_name="Peut voir les budgets")
-    budget_manage = models.BooleanField(default=False, verbose_name="Peut gérer les budgets")
-    budget_view_all_directions = models.BooleanField(default=False, verbose_name="Peut voir les budgets de toutes les directions")
-    
-    # Permissions projets
-    can_create_project = models.BooleanField(default=False, verbose_name="Peut créer des projets")
-    can_edit_projects = models.BooleanField(default=False, verbose_name="Peut modifier les projets")
-    can_add_milestones = models.BooleanField(default=False, verbose_name="Peut ajouter des jalons")
-    can_add_members = models.BooleanField(default=False, verbose_name="Peut ajouter des membres")
-    
-    # Permissions utilisateurs et demandes
-    can_manage_users = models.BooleanField(default=False, verbose_name="Peut gérer les utilisateurs")
-    can_approve_requests = models.BooleanField(default=False, verbose_name="Peut approuver les demandes")
-    
-    # Permissions événements
-    can_create_events = models.BooleanField(default=False, verbose_name="Peut créer des événements")
-
-    # Permissions congés
-    is_hr_manager = models.BooleanField(default=False, verbose_name="Gestionnaire RH (vérifie les demandes de congé)")
-    can_approve_leaves = models.BooleanField(default=False, verbose_name="Peut donner l'avis hiérarchique sur les congés")
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
     class Meta:
         verbose_name = "Profil utilisateur"
         verbose_name_plural = "Profils utilisateurs"
-    
+
     def __str__(self):
-        return f"{self.user.get_full_name() or self.user.username} - {self.get_role_display()}"
-    
+        role_name = self.role.name if self.role else "Sans rôle"
+        return f"{self.user.get_full_name() or self.user.username} - {role_name}"
+
     def get_initials(self):
         if self.user.first_name and self.user.last_name:
             return f"{self.user.first_name[0]}{self.user.last_name[0]}".upper()
         return self.user.username[:2].upper()
-    
+
+    @property
+    def role_slug(self):
+        return self.role.slug if self.role else None
+
     def get_project_membership(self, project):
         """Trouve le ProjectMember lié à cet utilisateur pour un projet donné."""
         if not self.employee_id:
             return None
         return project.members.filter(employee_id=self.employee_id).first()
 
-    # Permission methods
-    def is_admin(self):
-        return self.role == 'admin'
-    
-    def is_directeur_general(self):
-        return self.role in ['admin', 'directeur_general']
-    
-    def is_directeur(self):
-        return self.role in ['admin', 'directeur_general', 'directeur']
-    
-    def is_chef_projet(self):
-        return self.role in ['admin', 'directeur_general', 'directeur', 'chef_projet']
-    
-    def is_employe(self):
-        return self.role == 'employe'
-    
-    def is_visiteur(self):
-        return self.role == 'visiteur'
-    
-    def has_manage_users_permission(self):
-        """Admin et DG peuvent gérer les utilisateurs, ou permission explicite"""
-        return self.role in ['admin', 'directeur_general'] or self.can_manage_users
-    
-    def can_manage_budgets(self):
-        """Admin, DG et Directeur peuvent gérer les budgets, ou permission explicite"""
-        return self.role in ['admin', 'directeur_general', 'directeur'] or self.budget_manage
+    # ------------------------------------------------------------------
+    # Point d'entrée CASL
+    # ------------------------------------------------------------------
+    def can(self, action, subject, instance=None):
+        from .ability import Ability
+        return Ability(self.user).can(action, subject, instance)
 
+    # ------------------------------------------------------------------
+    # Wrappers de rôle — utilisés dans les templates et l'affichage
+    # Ne pas utiliser pour des décisions de sécurité : préférer .can()
+    # ------------------------------------------------------------------
+    def is_admin(self):
+        return self.role_slug == 'admin' or self.user.is_superuser
+
+    def is_directeur_general(self):
+        return self.role_slug in ['admin', 'directeur_general'] or self.user.is_superuser
+
+    def is_directeur(self):
+        return self.role_slug in ['admin', 'directeur_general', 'directeur'] or self.user.is_superuser
+
+    def is_chef_projet(self):
+        return self.role_slug in ['admin', 'directeur_general', 'directeur', 'chef_projet']
+
+    # ------------------------------------------------------------------
+    # Wrappers fonctionnels — délèguent à Ability
+    # Conservés pour compatibilité avec les vues existantes
+    # ------------------------------------------------------------------
+
+    # Budget
     def can_view_budgets(self):
-        return self.can_manage_budgets() or self.budget_view
+        return self.can('read', 'Budget') or self.can('manage', 'Budget')
+
+    def can_manage_budgets(self):
+        return self.can('manage', 'Budget')
 
     def can_view_all_budget_directions(self):
-        return self.is_directeur() or self.budget_view_all_directions
-    
-    def can_approve_documents(self):
-        return self.role in ['admin', 'directeur_general', 'directeur']
+        from .ability import Ability
+        ab = Ability(self.user)
+        for rule in ab.rules:
+            action  = rule.get('action')       if isinstance(rule, dict) else rule.action
+            subject = rule.get('subject')      if isinstance(rule, dict) else rule.subject
+            cond    = rule.get('condition','') if isinstance(rule, dict) else rule.condition
+            if action in ('read', 'manage') and subject in ('Budget', 'all') and not cond:
+                return True
+        return False
 
-    # --- Conges -----------------------------------------------------------
-    def is_hr(self):
-        """Membre du service RH (verifie les demandes de conge)."""
-        return self.is_hr_manager or self.role == 'admin'
+    # Utilisateurs
+    def has_manage_users_permission(self):
+        return self.can('manage', 'User')
 
-    def can_give_manager_approval(self, leave_request=None):
-        """Peut donner l'avis hierarchique sur une demande de conge."""
-        if self.role in ['admin', 'directeur_general']:
-            return True
-        if self.can_approve_leaves:
-            return True
-        # Un directeur valide les demandes de sa direction
-        if self.role == 'directeur' and leave_request is not None:
-            return self.direction_id is not None and self.direction_id == leave_request.direction_id
-        return self.role == 'directeur'
+    def can_manage_users(self):
+        return self.can('manage', 'User')
 
-    def can_give_hr_check(self):
-        return self.is_hr() or self.role in ['admin', 'directeur_general']
-
-    def can_give_final_approval(self):
-        return self.role in ['admin', 'directeur_general']
-    
+    # Demandes
     def has_approve_requests_permission(self):
-        """Admin et DG peuvent approuver les demandes, ou permission explicite"""
-        return self.role in ['admin', 'directeur_general'] or self.can_approve_requests
-    
+        return self.can('approve', 'Request')
+
+    def can_approve_requests(self):
+        return self.can('approve', 'Request')
+
+    # Événements
+    def has_create_events_permission(self):
+        return self.can('manage', 'Event')
+
+    def can_manage_events(self):
+        return self.can('manage', 'Event')
+
+    def can_read_events(self):
+        return self.can('read', 'Event') or self.can('manage', 'Event')
+
+    # Rapports
+    def can_view_reports(self):
+        return self.can('read', 'Report')
+
+    # Partenaires
+    def can_manage_partners(self):
+        return self.can('manage', 'Partner') or self.can('read', 'Partner')
+
+    # Documents
+    def can_approve_documents(self):
+        return self.can('approve', 'Document')
+
+    # Projets — globaux
     def can_create_projects(self):
-        """Admin, DG et Directeur peuvent créer des projets, ou permission explicite"""
-        return self.role in ['admin', 'directeur_general', 'directeur'] or self.can_create_project
-    
+        return self.can('create', 'Project')
+
     def can_manage_projects(self):
-        """Admin, DG, Directeur et Chef de projet peuvent gérer les projets"""
-        return self.role in ['admin', 'directeur_general', 'directeur', 'chef_projet']
-    
-    def can_add_project_members(self, project):
-        """Vérifie si l'utilisateur peut ajouter des membres à un projet"""
-        # Permission explicite
-        if self.can_add_members:
-            return True
-        # Rôles par défaut
-        if self.role in ['admin', 'directeur_general']:
-            return True
-        if self.role == 'directeur' and self.direction == project.direction:
-            return True
-        if self.role == 'chef_projet' and project.manager:
-            user_name = self.user.get_full_name() or self.user.username
-            # Priorité 1 : FK manager_employee
-            if self.employee_id and project.manager_employee_id and project.manager_employee_id == self.employee_id:
-                return True
-            # Priorité 2 : comparaison exacte sur CharField
-            if project.manager and project.manager.strip() == user_name:
-                return True
-        # Vérifier les permissions de membre
-        membership = self.get_project_membership(project)
-        if membership and membership.can_manage_members():
-            return True
-        return False
-    
-    def can_perform_actions_as_member(self, project):
-        """Vérifie si l'utilisateur peut effectuer des actions sur un projet en tant que membre"""
-        # Admin, DG, Directeur peuvent toujours agir
-        if self.role in ['admin', 'directeur_general']:
-            return True
-        if self.role == 'directeur' and self.direction == project.direction:
-            return True
-        if self.role == 'chef_projet':
-            user_name = self.user.get_full_name() or self.user.username
-            if self.employee_id and project.manager_employee_id and project.manager_employee_id == self.employee_id:
-                return True
-            if project.manager and project.manager.strip() == user_name:
-                return True
-        
-        # Vérifier les permissions de membre
-        membership = self.get_project_membership(project)
-        if membership:
-            return membership.can_perform_actions()
-        
-        return False
-    
-    def can_manage_project_members(self, project):
-        """Vérifie si l'utilisateur peut gérer les membres d'un projet (ajouter/supprimer)"""
-        # Admin, DG peuvent toujours gérer
-        if self.role in ['admin', 'directeur_general']:
-            return True
-        if self.role == 'directeur' and self.direction == project.direction:
-            return True
-        # Chef de projet principal peut gérer
-        if self.role == 'chef_projet' and project.manager:
-            user_name = self.user.get_full_name() or self.user.username
-            if self.employee_id and project.manager_employee_id and project.manager_employee_id == self.employee_id:
-                return True
-            if project.manager.strip() == user_name:
-                return True
-        # Vérifier les permissions de membre
-        membership = self.get_project_membership(project)
-        if membership and membership.can_manage_members():
-            return True
-        return False
-    
-    def is_project_readonly(self, project):
-        """Vérifie si l'utilisateur est en lecture seule sur ce projet"""
-        # Admin, DG, Directeur ne sont jamais en readonly
-        if self.role in ['admin', 'directeur_general']:
-            return False
-        if self.role == 'directeur' and self.direction == project.direction:
-            return False
-        # Vérifier si c'est un chef de projet
-        if self.role == 'chef_projet':
-            user_name = self.user.get_full_name() or self.user.username
-            if self.employee_id and project.manager_employee_id and project.manager_employee_id == self.employee_id:
-                return False
-            if project.manager and project.manager.strip() == user_name:
-                return False
-        # Vérifier les droits de membre
-        membership = self.get_project_membership(project)
-        if membership:
-            return membership.is_readonly()
-        return True
-    
+        return self.can('read', 'Project') or self.can('manage', 'Project')
+
+    # Projets — niveau instance
+    def can_view_project(self, project):
+        from .ability import Ability
+        return Ability(self.user).can_view_project(project)
+
+    def can_edit_project(self, project):
+        from .ability import Ability
+        return Ability(self.user).can_edit_project(project)
+
     def can_add_project_milestones(self, project):
-        """Vérifie si l'utilisateur peut ajouter des jalons à un projet"""
-        # Permission explicite du profil
-        if self.can_add_milestones:
-            return True
-        # Admin, DG, Directeur
-        if self.role in ['admin', 'directeur_general']:
-            return True
-        if self.role == 'directeur' and self.direction == project.direction:
-            return True
-        # Chef de projet principal
-        if self.role == 'chef_projet' and project.manager:
-            user_name = self.user.get_full_name() or self.user.username
-            if self.employee_id and project.manager_employee_id and project.manager_employee_id == self.employee_id:
-                return True
-            if project.manager.strip() == user_name:
-                return True
-        # Vérifier les permissions de membre (y compris custom)
-        membership = self.get_project_membership(project)
-        if membership and membership.can_add_milestones():
-            return True
-        return False
-    
+        from .ability import Ability
+        return Ability(self.user).can_add_project_milestones(project)
+
+    def can_edit_project_milestones(self, project):
+        from .ability import Ability
+        return Ability(self.user).can_edit_project_milestones(project)
+
     def can_add_project_documents(self, project):
-        """Vérifie si l'utilisateur peut ajouter des documents à un projet"""
-        if self.role in ['admin', 'directeur_general']:
-            return True
-        if self.role == 'directeur' and self.direction == project.direction:
-            return True
-        if self.role == 'chef_projet' and project.manager:
-            user_name = self.user.get_full_name() or self.user.username
-            if self.employee_id and project.manager_employee_id and project.manager_employee_id == self.employee_id:
-                return True
-            if project.manager.strip() == user_name:
-                return True
-        membership = self.get_project_membership(project)
-        if membership and membership.can_add_documents():
-            return True
-        return False
+        from .ability import Ability
+        return Ability(self.user).can_add_project_documents(project)
+
+    def can_edit_project_documents(self, project):
+        from .ability import Ability
+        return Ability(self.user).can_edit_project_documents(project)
 
     def can_add_project_needs(self, project):
-        """Vérifie si l'utilisateur peut ajouter des besoins à un projet"""
-        if self.role in ['admin', 'directeur_general']:
-            return True
-        if self.role == 'directeur' and self.direction == project.direction:
-            return True
-        if self.role == 'chef_projet' and project.manager:
-            user_name = self.user.get_full_name() or self.user.username
-            if self.employee_id and project.manager_employee_id and project.manager_employee_id == self.employee_id:
-                return True
-            if project.manager.strip() == user_name:
-                return True
-        membership = self.get_project_membership(project)
-        if membership and membership.can_add_needs():
-            return True
-        return False
+        from .ability import Ability
+        return Ability(self.user).can_add_project_needs(project)
 
     def can_add_project_comments(self, project):
-        """Vérifie si l'utilisateur peut ajouter des commentaires à un projet"""
-        if self.role in ['admin', 'directeur_general']:
-            return True
-        if self.role == 'directeur' and self.direction == project.direction:
-            return True
-        if self.role == 'chef_projet' and project.manager:
-            user_name = self.user.get_full_name() or self.user.username
-            if self.employee_id and project.manager_employee_id and project.manager_employee_id == self.employee_id:
+        from .ability import Ability
+        return Ability(self.user).can_add_project_comments(project)
+
+    def can_add_project_members(self, project):
+        from .ability import Ability
+        return Ability(self.user).can_manage_project_members(project)
+
+    def can_manage_project_members(self, project):
+        from .ability import Ability
+        return Ability(self.user).can_manage_project_members(project)
+
+    def can_perform_actions_as_member(self, project):
+        from .ability import Ability
+        return not Ability(self.user).is_project_readonly(project)
+
+    def is_project_readonly(self, project):
+        from .ability import Ability
+        return Ability(self.user).is_project_readonly(project)
+
+    # Congés
+    def can_give_final_approval(self):
+        return self.can('manage', 'LeaveRequest')
+
+    def is_hr(self):
+        from .ability import Ability
+        ab = Ability(self.user)
+        for rule in ab.rules:
+            action  = rule.get('action')       if isinstance(rule, dict) else rule.action
+            subject = rule.get('subject')      if isinstance(rule, dict) else rule.subject
+            cond    = rule.get('condition','') if isinstance(rule, dict) else rule.condition
+            if action in ('approve', 'manage') and subject in ('LeaveRequest', 'all') and cond == 'hr_pipeline':
                 return True
-            if project.manager.strip() == user_name:
-                return True
-        membership = self.get_project_membership(project)
-        if membership and membership.can_add_comments():
-            return True
         return False
-    
-    def can_edit_project(self, project):
-        """Vérifie si l'utilisateur peut modifier le projet"""
-        # Admin, DG, Directeur peuvent toujours modifier
-        if self.role in ['admin', 'directeur_general']:
+
+    def can_give_hr_check(self):
+        return self.is_hr() or self.can_give_final_approval()
+
+    def can_give_manager_approval(self, leave_request=None):
+        if self.can_give_final_approval():
             return True
-        if self.role == 'directeur' and self.direction == project.direction:
-            return True
-        # Permission explicite
-        if self.can_edit_projects:
-            return True
-        # Chef de projet principal peut modifier
-        if self.role == 'chef_projet' and project.manager:
-            user_name = self.user.get_full_name() or self.user.username
-            if self.employee_id and project.manager_employee_id and project.manager_employee_id == self.employee_id:
+        if leave_request is not None:
+            return self.can('approve', 'LeaveRequest', leave_request)
+        from .ability import Ability
+        ab = Ability(self.user)
+        for rule in ab.rules:
+            action  = rule.get('action')       if isinstance(rule, dict) else rule.action
+            subject = rule.get('subject')      if isinstance(rule, dict) else rule.subject
+            if action in ('approve', 'manage') and subject in ('LeaveRequest', 'all'):
                 return True
-            if project.manager.strip() == user_name:
-                return True
-        # Vérifier les permissions de membre
-        membership = self.get_project_membership(project)
-        if membership and membership.can_edit_project():
-            return True
         return False
-    
-    def can_view_project(self, project):
-        """Vérifie si l'utilisateur peut voir un projet"""
-        if self.role in ['admin', 'directeur_general']:
-            return True
-        # Directeur : uniquement les projets de sa direction
-        if self.role == 'directeur':
-            return self.direction_id is not None and project.direction_id == self.direction_id
-        # Vérifier si l'utilisateur est manager du projet
-        user_name = self.user.get_full_name() or self.user.username
-        if self.employee_id and project.manager_employee_id and project.manager_employee_id == self.employee_id:
-            return True
-        if project.manager and project.manager.strip() == user_name:
-            return True
-        # Vérifier si l'utilisateur est membre du projet
-        membership = self.get_project_membership(project)
-        if membership:
-            return True
-        return False
-    
-    def can_view_reports(self):
-        return self.role in ['admin', 'directeur_general', 'directeur', 'chef_projet']
-    
-    def can_manage_partners(self):
-        return self.role in ['admin', 'directeur_general', 'directeur']
-    
+
+    # Calendrier
     def can_view_calendar(self):
-        """Tous sauf visiteur peuvent voir le calendrier"""
-        return self.role != 'visiteur'
-    
-    def has_create_events_permission(self):
-        """Admin, DG, Directeur peuvent créer des événements, ou permission explicite"""
-        return self.role in ['admin', 'directeur_general', 'directeur'] or self.can_create_events
+        return self.can('read', 'Event')
 
 
 @receiver(post_save, sender=User)
@@ -477,89 +431,64 @@ class Project(models.Model):
 
 
 class ProjectMember(models.Model):
-    """Membres d'un projet"""
-    ROLE_CHOICES = [
-        ('responsable', 'Responsable'),
-        ('membre', 'Membre'),
-        ('observateur', 'Observateur'),
-        ('ressource_externe_observateur', 'Ressource externe (observateur)'),
-        ('ressource_externe_edit', 'Ressource externe (éditeur)'),
-        ('custom', 'Personnalisé'),
-    ]
-    
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='members', verbose_name="Projet")
-    employee = models.ForeignKey('Employee', on_delete=models.CASCADE, related_name='project_memberships', verbose_name="Employé")
-    role = models.CharField(max_length=30, choices=ROLE_CHOICES, default='membre', verbose_name="Rôle")
-    joined_at = models.DateTimeField(auto_now_add=True, verbose_name="Date d'ajout")
-    
-    # Permissions individuelles
-    can_manage_members_perm = models.BooleanField(default=False, verbose_name="Gérer les membres")
-    can_edit_project_perm = models.BooleanField(default=False, verbose_name="Modifier le projet")
-    can_add_milestones_perm = models.BooleanField(default=False, verbose_name="Ajouter des jalons")
-    can_add_documents_perm = models.BooleanField(default=False, verbose_name="Ajouter des documents")
-    can_add_needs_perm = models.BooleanField(default=False, verbose_name="Ajouter des besoins")
-    can_add_comments_perm = models.BooleanField(default=False, verbose_name="Ajouter des commentaires")
-    
+    """Membres d'un projet — le rôle et ses permissions sont portés par ProjectRole."""
+
+    project      = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='members', verbose_name="Projet")
+    employee     = models.ForeignKey('Employee', on_delete=models.CASCADE, related_name='project_memberships', verbose_name="Employé")
+    project_role = models.ForeignKey(ProjectRole, on_delete=models.SET_NULL, null=True, blank=True, related_name='memberships', verbose_name="Rôle projet")
+    joined_at    = models.DateTimeField(auto_now_add=True, verbose_name="Date d'ajout")
+
     class Meta:
         verbose_name = "Membre de projet"
         verbose_name_plural = "Membres de projet"
         unique_together = ['project', 'employee']
-        ordering = ['role', 'joined_at']
-    
+        ordering = ['joined_at']
+
     def __str__(self):
-        role_display = self.get_role_display() if self.role else 'Sans rôle'
-        return f"{self.project.name} - {self.employee.name} ({role_display})"
-    
-    def can_perform_actions(self):
-        """Vérifie si le membre peut effectuer des actions sur le projet (autre que lecture)"""
-        if self.role == 'custom':
-            return any([self.can_add_milestones_perm, self.can_add_documents_perm, 
-                       self.can_add_needs_perm, self.can_add_comments_perm])
-        return self.role in ['responsable', 'membre', 'ressource_externe_edit']
+        role_name = self.project_role.name if self.project_role else 'Sans rôle'
+        return f"{self.project.name} - {self.employee.name} ({role_name})"
+
+    # ------------------------------------------------------------------
+    # Helpers qui délèguent aux permissions du ProjectRole
+    # ------------------------------------------------------------------
+    def _has_perm(self, action, subject):
+        if not self.project_role_id:
+            return False
+        return self.project_role.permissions.filter(action=action, subject=subject).exists()
 
     def can_manage_members(self):
-        """Vérifie si le membre peut gérer les autres membres"""
-        if self.role == 'custom':
-            return self.can_manage_members_perm
-        return self.role == 'responsable'
+        return self._has_perm('manage', 'ProjectMember')
 
     def can_edit_project(self):
-        """Vérifie si le membre peut modifier le projet"""
-        if self.role == 'custom':
-            return self.can_edit_project_perm
-        return self.role in ['responsable', 'ressource_externe_edit']
+        return self._has_perm('update', 'Project')
 
     def can_add_milestones(self):
-        """Vérifie si le membre peut ajouter/modifier des jalons"""
-        if self.role == 'custom':
-            return self.can_add_milestones_perm
-        return self.role in ['responsable', 'membre', 'ressource_externe_edit']
+        return self._has_perm('create', 'Milestone')
+
+    def can_update_milestones(self):
+        return self._has_perm('update', 'Milestone')
 
     def can_add_documents(self):
-        """Vérifie si le membre peut ajouter des documents"""
-        if self.role == 'custom':
-            return self.can_add_documents_perm
-        return self.role in ['responsable', 'membre', 'ressource_externe_edit']
-    
+        return self._has_perm('create', 'Document')
+
+    def can_update_documents(self):
+        return self._has_perm('update', 'Document')
+
     def can_add_needs(self):
-        """Vérifie si le membre peut ajouter des besoins"""
-        if self.role == 'custom':
-            return self.can_add_needs_perm
-        return self.role in ['responsable', 'membre', 'ressource_externe_edit']
-    
+        return self._has_perm('create', 'Request')
+
     def can_add_comments(self):
-        """Vérifie si le membre peut ajouter des commentaires"""
-        if self.role == 'custom':
-            return self.can_add_comments_perm
-        return self.role in ['responsable', 'membre', 'ressource_externe_edit']
+        return self._has_perm('create', 'Comment')
+
+    def can_perform_actions(self):
+        return any([
+            self.can_edit_project(), self.can_add_milestones(), self.can_update_milestones(),
+            self.can_add_documents(), self.can_update_documents(),
+            self.can_add_needs(), self.can_add_comments(),
+        ])
 
     def is_readonly(self):
-        """Vérifie si le membre est en lecture seule"""
-        if self.role == 'custom':
-            return not any([self.can_manage_members_perm, self.can_edit_project_perm, 
-                           self.can_add_milestones_perm, self.can_add_documents_perm,
-                           self.can_add_needs_perm, self.can_add_comments_perm])
-        return self.role in ['observateur', 'ressource_externe_observateur']
+        return not self.can_perform_actions()
 
 
 class Milestone(models.Model):
@@ -724,6 +653,8 @@ class ProjectActivity(models.Model):
         ('ajout_sous_etape', 'Ajout de sous-étape'),
         ('modif_sous_etape', 'Modification de sous-étape'),
         ('suppr_sous_etape', 'Suppression de sous-étape'),
+        ('toggle_jalon',      'Changement statut jalon'),
+        ('modif_statut_jalon','Modification statut jalon'),
         ('toggle_sous_etape', 'Changement statut sous-étape'),
         ('ajout_document', 'Ajout de document'),
         ('suppr_document', 'Suppression de document'),
@@ -899,15 +830,34 @@ class Event(models.Model):
     time = models.TimeField(verbose_name="Heure")
     duration = models.IntegerField(default=60, verbose_name="Durée (minutes)")
     location = models.CharField(max_length=200, blank=True, verbose_name="Lieu")
-    participants = models.ManyToManyField(Direction, related_name='events', verbose_name="Participants")
-    
+    participants = models.ManyToManyField(Direction, related_name='events', verbose_name="Participants", blank=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_events', verbose_name="Créé par")
+    created_at = models.DateTimeField(null=True, blank=True, auto_now_add=True, verbose_name="Créé le")
+    updated_at = models.DateTimeField(null=True, blank=True, auto_now=True, verbose_name="Modifié le")
+
     class Meta:
         verbose_name = "Événement"
         verbose_name_plural = "Événements"
         ordering = ['date', 'time']
-    
+
     def __str__(self):
         return f"{self.title} - {self.date}"
+
+    def is_past(self):
+        from django.utils import timezone
+        return self.date < timezone.now().date()
+
+    def is_today(self):
+        from django.utils import timezone
+        return self.date == timezone.now().date()
+
+    def duration_display(self):
+        h, m = divmod(self.duration, 60)
+        if h and m:
+            return f"{h}h{m:02d}"
+        elif h:
+            return f"{h}h"
+        return f"{m} min"
 
 
 class Request(models.Model):

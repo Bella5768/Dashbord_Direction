@@ -45,12 +45,13 @@ _AVATAR_COLORS = [
 
 def _get_project_member_cards(project):
     """Return (project_members, other_employees) as lists of card dicts for the assignment picker."""
-    member_pks = set(
-        project.members.filter(employee__isnull=False).values_list('employee_id', flat=True)
+    _project_members = list(
+        project.members.filter(employee__isnull=False).select_related('project_role')
     )
+    member_pks = {pm.employee_id for pm in _project_members}
     pm_roles = {
         pm.employee_id: pm.project_role.name if pm.project_role else '—'
-        for pm in project.members.filter(employee__isnull=False)
+        for pm in _project_members
     }
     m_counts = dict(
         Employee.objects.filter(assigned_milestones__project=project)
@@ -161,6 +162,20 @@ def _generate_username(full_name):
     return username
 
 
+def _build_reset_link(request, user):
+    """Génère le lien de réinitialisation de mot de passe (uid + token Django, valable 3 jours)."""
+    from django.contrib.auth.tokens import default_token_generator
+    from django.utils.http import urlsafe_base64_encode
+    from django.utils.encoding import force_bytes
+    from django.urls import reverse
+
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    token = default_token_generator.make_token(user)
+    return request.build_absolute_uri(
+        reverse('core:password_reset_confirm', kwargs={'uidb64': uid, 'token': token})
+    )
+
+
 def _build_activation_link(request, user):
     """Génère le lien d'activation sécurisé (uid + token Django, valable 3 jours)."""
     from django.contrib.auth.tokens import default_token_generator
@@ -223,9 +238,89 @@ def logout_view(request):
     return redirect('core:dashboard')
 
 
-def password_reset_info(request):
-    """Page d'information pour mot de passe oublié"""
-    return render(request, 'registration/password_reset.html')
+def password_reset_request(request):
+    """Formulaire de demande de réinitialisation de mot de passe (publique)."""
+    from django.contrib.auth.models import User as DjangoUser
+
+    sent = False
+    form_error = None
+
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip()
+        if not email:
+            form_error = "Veuillez saisir votre adresse email."
+        else:
+            try:
+                user = DjangoUser.objects.get(email__iexact=email, is_active=True)
+            except DjangoUser.DoesNotExist:
+                user = None
+
+            if user is not None and user.has_usable_password():
+                reset_link = _build_reset_link(request, user)
+                from .notifications import notify_password_reset
+                notify_password_reset(user, reset_link)
+
+            # Réponse neutre : ne pas révéler si l'email existe
+            sent = True
+
+    return render(request, 'registration/password_reset.html', {
+        'sent': sent,
+        'form_error': form_error,
+        'email_value': request.POST.get('email', '') if not sent else '',
+    })
+
+
+def password_reset_confirm(request, uidb64, token):
+    """Confirmation de réinitialisation — saisie du nouveau mot de passe."""
+    from django.contrib.auth.tokens import default_token_generator
+    from django.utils.http import urlsafe_base64_decode
+    from django.utils.encoding import force_str
+    from django.contrib.auth.models import User as DjangoUser
+    from django.contrib.auth.forms import SetPasswordForm
+
+    user = None
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = DjangoUser.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, DjangoUser.DoesNotExist):
+        pass
+
+    token_valid = (
+        user is not None
+        and user.is_active
+        and user.has_usable_password()
+        and default_token_generator.check_token(user, token)
+    )
+
+    if not token_valid:
+        if user is not None and not user.has_usable_password():
+            # Compte en attente d'activation — rediriger vers le bon flow
+            return render(request, 'registration/password_reset_confirm.html', {
+                'valid': False,
+                'pending_account': True,
+            })
+        return render(request, 'registration/password_reset_confirm.html', {'valid': False})
+
+    if request.method == 'POST':
+        form = SetPasswordForm(user, request.POST)
+        if form.is_valid():
+            form.save()
+            UserActivity.objects.create(
+                user=user,
+                action='update',
+                description="Réinitialisation du mot de passe via email",
+            )
+            messages.success(request, "Mot de passe réinitialisé. Vous pouvez vous connecter.")
+            return redirect('core:login')
+    else:
+        form = SetPasswordForm(user)
+
+    return render(request, 'registration/password_reset_confirm.html', {
+        'valid': True,
+        'form': form,
+        'username': user.username,
+        'full_name': user.get_full_name(),
+    })
 
 
 @login_required
@@ -248,6 +343,54 @@ def password_change(request):
         return redirect('core:dashboard')
 
     return render(request, 'registration/password_change.html', {'form': form})
+
+
+@login_required
+def profile(request):
+    """Page de profil : informations personnelles de l'utilisateur connecté."""
+    user = request.user
+    prof = user.profile
+    errors = {}
+
+    if request.method == 'POST':
+        first_name = request.POST.get('first_name', '').strip()
+        last_name  = request.POST.get('last_name', '').strip()
+        email      = request.POST.get('email', '').strip()
+        phone      = request.POST.get('phone', '').strip()
+
+        if not first_name:
+            errors['first_name'] = "Le prénom est requis."
+        if not last_name:
+            errors['last_name'] = "Le nom est requis."
+        if not email:
+            errors['email'] = "L'adresse email est requise."
+        elif email != user.email:
+            from django.contrib.auth.models import User as DjangoUser
+            if DjangoUser.objects.filter(email__iexact=email).exclude(pk=user.pk).exists():
+                errors['email'] = "Cette adresse email est déjà utilisée par un autre compte."
+
+        if not errors:
+            user.first_name = first_name
+            user.last_name  = last_name
+            user.email      = email
+            user.save(update_fields=['first_name', 'last_name', 'email'])
+            prof.phone = phone
+            prof.save(update_fields=['phone', 'updated_at'])
+            UserActivity.objects.create(
+                user=user,
+                action='update',
+                description="Mise à jour du profil",
+                ip_address=get_client_ip(request),
+            )
+            messages.success(request, "Profil mis à jour avec succès.")
+            return redirect('core:profile')
+
+        return render(request, 'core/profile.html', {
+            'form_data': request.POST,
+            'errors': errors,
+        })
+
+    return render(request, 'core/profile.html', {})
 
 
 @login_required
@@ -1342,7 +1485,7 @@ def users_list(request):
         )
     
     if role_filter != 'all':
-        users = users.filter(profile__role=role_filter)
+        users = users.filter(profile__role__slug=role_filter)
     
     if status_filter == 'active':
         users = users.filter(is_active=True)
@@ -1656,6 +1799,39 @@ def account_activate(request, uidb64, token):
     })
 
 
+def request_new_activation(request):
+    """Page publique : l'utilisateur entre son email pour recevoir un nouveau lien d'activation."""
+    from django.contrib.auth.models import User as DjangoUser
+
+    sent = False
+    form_error = None
+
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip()
+        if not email:
+            form_error = "Veuillez saisir votre adresse email."
+        else:
+            try:
+                user = DjangoUser.objects.get(email__iexact=email, is_active=False)
+            except DjangoUser.DoesNotExist:
+                user = None
+
+            # Envoyer seulement si le compte est réellement en attente
+            if user is not None and not user.has_usable_password():
+                activation_link = _build_activation_link(request, user)
+                from .notifications import notify_account_invitation
+                notify_account_invitation(user, activation_link, invited_by=None)
+
+            # Réponse neutre (ne pas révéler si l'email existe)
+            sent = True
+
+    return render(request, 'core/users/request_activation.html', {
+        'sent': sent,
+        'form_error': form_error,
+        'email_value': request.POST.get('email', '') if not sent else '',
+    })
+
+
 @login_required
 def resend_invitation(request, user_id):
     """Renvoie l'email d'invitation à un utilisateur inactif (POST uniquement)."""
@@ -1815,7 +1991,11 @@ def export_project_activities(request, project_id):
     
     # Créer le PDF
     response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="journal_activite_{project.name.replace(" ", "_")}.pdf"'
+    from urllib.parse import quote
+    _pdf_name = f"journal_activite_{project.name.replace(' ', '_')}.pdf"
+    response['Content-Disposition'] = (
+        f"attachment; filename=\"{_pdf_name}\"; filename*=UTF-8''{quote(_pdf_name)}"
+    )
     
     doc = SimpleDocTemplate(response, pagesize=A4, topMargin=50, bottomMargin=50)
     styles = getSampleStyleSheet()
@@ -1901,6 +2081,7 @@ def project_need_create(request, project_id):
         need.project = project
         need.created_by = request.user.get_full_name() or request.user.username
         need.save()
+        log_project_activity(project, 'ajout_besoin', f"Ajout du besoin '{need.title}'", request.user)
         messages.success(request, "Besoin ajouté avec succès.")
     else:
         messages.error(request, "Impossible d'ajouter le besoin. Vérifiez le formulaire.")
@@ -1928,6 +2109,7 @@ def project_comment_create(request, project_id):
         comment.project = project
         comment.created_by = request.user.get_full_name() or request.user.username
         comment.save()
+        log_project_activity(project, 'ajout_commentaire', f"Ajout d'un commentaire", request.user)
         messages.success(request, "Commentaire ajouté.")
     else:
         messages.error(request, "Impossible d'ajouter le commentaire. Vérifiez le formulaire.")
@@ -2033,7 +2215,7 @@ def milestone_detail(request, milestone_id):
         return redirect('core:projects')
 
     profile = request.user.profile
-    can_edit    = profile.can_add_project_milestones(project)
+    can_edit    = profile.can_edit_project_milestones(project)
     user_employee = profile.employee
 
     sub_milestones = milestone.sub_milestones.prefetch_related('assigned_to').all()
@@ -2104,7 +2286,7 @@ def milestone_edit(request, milestone_id):
     project = milestone.project
     
     # Permission check
-    if not request.user.profile.can_add_project_milestones(project):
+    if not request.user.profile.can_edit_project_milestones(project):
         messages.error(request, "Vous n'avez pas les permissions pour modifier ce jalon.")
         return redirect('core:projects')
     
@@ -2157,7 +2339,7 @@ def milestone_delete(request, milestone_id):
     project = milestone.project
     
     # Permission check
-    if not request.user.profile.can_add_project_milestones(project):
+    if not request.user.profile.can_edit_project_milestones(project):
         messages.error(request, "Vous n'avez pas les permissions pour supprimer ce jalon.")
         return redirect('core:projects')
     
@@ -2231,7 +2413,7 @@ def sub_milestone_edit(request, sub_milestone_id):
     project = milestone.project
     
     # Permission check
-    if not request.user.profile.can_add_project_milestones(project):
+    if not request.user.profile.can_edit_project_milestones(project):
         messages.error(request, "Vous n'avez pas les permissions pour modifier cette sous-étape.")
         return redirect('core:project_detail', project_id=project.id)
     
@@ -2287,7 +2469,7 @@ def sub_milestone_delete(request, sub_milestone_id):
     project = milestone.project
     
     # Permission check
-    if not request.user.profile.can_add_project_milestones(project):
+    if not request.user.profile.can_edit_project_milestones(project):
         messages.error(request, "Vous n'avez pas les permissions pour supprimer cette sous-étape.")
         return redirect('core:project_detail', project_id=project.id)
     
@@ -2314,7 +2496,7 @@ def milestone_quick_assign(request, milestone_id):
         return JsonResponse({'ok': False}, status=405)
     milestone = get_object_or_404(Milestone.objects.select_related('project'), pk=milestone_id)
     project = milestone.project
-    if not request.user.profile.can_add_project_milestones(project):
+    if not request.user.profile.can_edit_project_milestones(project):
         return JsonResponse({'ok': False, 'error': 'Permission refusée'}, status=403)
 
     emp_id = request.POST.get('assigned_to') or None
@@ -2355,7 +2537,7 @@ def sub_milestone_quick_assign(request, sub_milestone_id):
         return JsonResponse({'ok': False}, status=405)
     sub = get_object_or_404(SubMilestone.objects.select_related('milestone__project'), pk=sub_milestone_id)
     project = sub.milestone.project
-    if not request.user.profile.can_add_project_milestones(project):
+    if not request.user.profile.can_edit_project_milestones(project):
         return JsonResponse({'ok': False, 'error': 'Permission refusée'}, status=403)
 
     emp_id = request.POST.get('assigned_to') or None
@@ -2400,7 +2582,7 @@ def sub_milestone_toggle(request, sub_milestone_id):
     project = milestone.project
 
     can_toggle = (
-        request.user.profile.can_add_project_milestones(project)
+        request.user.profile.can_edit_project_milestones(project)
         or _user_is_assignee(request.user, sub_milestone.assigned_to)
     )
     if not can_toggle:
@@ -2431,7 +2613,7 @@ def milestone_toggle(request, milestone_id):
     project = milestone.project
 
     can_toggle = (
-        request.user.profile.can_add_project_milestones(project)
+        request.user.profile.can_edit_project_milestones(project)
         or _user_is_assignee(request.user, milestone.assigned_to)
     )
     if not can_toggle:
@@ -2467,7 +2649,7 @@ def milestone_update_status(request, milestone_id):
     """Changer le statut d'un jalon (AJAX-compatible, méthode POST)."""
     milestone = get_object_or_404(Milestone.objects.select_related('project'), pk=milestone_id)
     project = milestone.project
-    if not (request.user.profile.can_add_project_milestones(project) or _user_is_assignee(request.user, milestone.assigned_to)):
+    if not (request.user.profile.can_edit_project_milestones(project) or _user_is_assignee(request.user, milestone.assigned_to)):
         messages.error(request, "Permissions insuffisantes.")
         return redirect('core:project_detail', project_id=project.id)
 
@@ -2530,6 +2712,11 @@ def project_need_update_status(request, need_id):
         need.resolved_by = ''
         need.resolved_at = None
     need.save()
+    log_project_activity(
+        project, 'modification',
+        f"Statut du besoin '{need.title}' → {valid[new_status]}",
+        request.user,
+    )
     messages.success(request, f"Besoin marqué : {valid[new_status]}.")
     return redirect('core:project_detail', project_id=project.id)
 
@@ -2661,7 +2848,7 @@ def api_project_task_update(request, milestone_id):
 
     milestone = get_object_or_404(Milestone.objects.select_related('project'), pk=milestone_id)
     project = milestone.project
-    if not request.user.profile.can_add_project_milestones(project):
+    if not request.user.profile.can_edit_project_milestones(project):
         return JsonResponse({'error': 'Permission denied'}, status=403)
 
     try:
@@ -2674,15 +2861,21 @@ def api_project_task_update(request, milestone_id):
             milestone.need = data.get('description') or ''
         if 'status' in data:
             status = data.get('status')
-            if status == 'a_faire':
-                milestone.manual_progress = 0
-                milestone.completed = False
-            elif status == 'en_cours':
-                milestone.manual_progress = 50
-                milestone.completed = False
-            elif status == 'termine':
-                milestone.manual_progress = 100
-                milestone.completed = True
+            valid_statuses = [s[0] for s in Milestone.TASK_STATUS_CHOICES]
+            if status in valid_statuses:
+                milestone.status = status
+                if status == 'a_faire':
+                    milestone.manual_progress = 0
+                    milestone.completed = False
+                elif status == 'en_cours':
+                    if milestone.manual_progress == 0:
+                        milestone.manual_progress = 50
+                    milestone.completed = False
+                elif status == 'termine':
+                    milestone.manual_progress = 100
+                    milestone.completed = True
+                else:
+                    milestone.completed = False
         if 'progress' in data:
             progress = max(0, min(100, int(data.get('progress') or 0)))
             milestone.manual_progress = progress
@@ -2719,6 +2912,7 @@ def project_folder_create(request, project_id):
             folder = form.save(commit=False)
             folder.project = project
             folder.save()
+            log_project_activity(project, 'ajout_dossier', f"Création du dossier '{folder.name}'", request.user)
             messages.success(request, "Dossier créé avec succès.")
             if folder.parent_id:
                 return redirect('core:project_folder_detail', folder_id=folder.id)
@@ -2770,6 +2964,7 @@ def project_folder_edit(request, folder_id):
         form = ProjectFolderForm(project, request.POST, instance=folder)
         if form.is_valid():
             form.save()
+            log_project_activity(project, 'modification', f"Modification du dossier '{folder.name}'", request.user)
             messages.success(request, "Dossier modifié avec succès.")
             return redirect('core:project_detail', project_id=project.id)
     else:
@@ -2784,12 +2979,14 @@ def project_folder_delete(request, folder_id):
     folder = get_object_or_404(ProjectFolder.objects.select_related('project'), pk=folder_id)
     project = folder.project
 
-    if not request.user.profile.can_add_project_documents(project):
+    if not request.user.profile.can_edit_project_documents(project):
         messages.error(request, "Vous n'avez pas les permissions pour gérer les dossiers de ce projet.")
         return redirect('core:projects')
-    
+
     if request.method == 'POST':
+        folder_name = folder.name
         folder.delete()
+        log_project_activity(project, 'suppr_dossier', f"Suppression du dossier '{folder_name}'", request.user)
         messages.success(request, "Dossier supprimé.")
         return redirect('core:project_detail', project_id=project.id)
     
@@ -2840,7 +3037,7 @@ def project_document_edit(request, doc_id):
     doc = get_object_or_404(ProjectDocument.objects.select_related('project'), pk=doc_id)
     project = doc.project
 
-    if not request.user.profile.can_add_project_documents(project):
+    if not request.user.profile.can_edit_project_documents(project):
         messages.error(request, "Vous n'avez pas les permissions pour modifier les documents de ce projet.")
         return redirect('core:projects')
     
@@ -2848,6 +3045,7 @@ def project_document_edit(request, doc_id):
         form = ProjectDocumentForm(project, request.POST, request.FILES, instance=doc)
         if form.is_valid():
             form.save()
+            log_project_activity(project, 'ajout_document', f"Modification du document '{doc.title}'", request.user)
             messages.success(request, "Document modifié avec succès.")
             return redirect('core:project_detail', project_id=project.id)
     else:
@@ -2862,15 +3060,17 @@ def project_document_delete(request, doc_id):
     doc = get_object_or_404(ProjectDocument.objects.select_related('project'), pk=doc_id)
     project = doc.project
 
-    if not request.user.profile.can_add_project_documents(project):
+    if not request.user.profile.can_edit_project_documents(project):
         messages.error(request, "Vous n'avez pas les permissions pour supprimer les documents de ce projet.")
         return redirect('core:projects')
     
     if request.method == 'POST':
+        doc_title = doc.title
         doc.delete()
+        log_project_activity(project, 'suppr_document', f"Suppression du document '{doc_title}'", request.user)
         messages.success(request, "Document supprimé.")
         return redirect('core:project_detail', project_id=project.id)
-    
+
     return render(request, 'core/confirm_delete.html', {'object': doc, 'type': 'document', 'back_url': 'core:project_detail', 'back_args': {'project_id': project.id}})
 
 
@@ -2890,8 +3090,13 @@ def project_document_download(request, doc_id):
     # Retourner le fichier
     file_path = doc.file.path
     if os.path.exists(file_path):
+        from urllib.parse import quote
+        filename = os.path.basename(file_path)
+        encoded = quote(filename)
         response = FileResponse(open(file_path, 'rb'), as_attachment=True)
-        response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
+        response['Content-Disposition'] = (
+            f"attachment; filename=\"{filename}\"; filename*=UTF-8''{encoded}"
+        )
         return response
     else:
         messages.error(request, "Fichier non trouvé.")
@@ -2918,12 +3123,34 @@ def project_member_add(request, project_id):
     existing_member_ids = project.members.values_list('employee_id', flat=True)
     available_employees_count = Employee.objects.exclude(id__in=existing_member_ids).count()
 
+    from .models import ProjectRole as PRole
+    import json as _json
+
+    def _role_perms(r):
+        perms = set(r.permissions.values_list('action', 'subject'))
+        return {
+            'is_system':           r.is_system,
+            'name':                r.name,
+            'can_manage_members':  ('manage', 'ProjectMember') in perms,
+            'can_edit_project':    ('update', 'Project')       in perms,
+            'can_add_milestones':  ('create', 'Milestone')     in perms,
+            'can_add_documents':   ('create', 'Document')      in perms,
+            'can_add_needs':       ('create', 'Request')       in perms,
+            'can_add_comments':    ('create', 'Comment')       in perms,
+        }
+
+    project_roles_meta = {
+        str(r.pk): _role_perms(r)
+        for r in PRole.objects.prefetch_related('permissions').all()
+    }
+
     context = {
         'project': project,
         'title': 'Ajouter un membre',
         'directions': directions,
         'available_employees_count': available_employees_count,
         'role_choices': [(r.slug, r.name) for r in Role.objects.all().order_by('name')],
+        'project_roles_meta_json': _json.dumps(project_roles_meta),
     }
     
     if request.method == 'POST':
@@ -2979,32 +3206,29 @@ def project_member_add(request, project_id):
                 return render(request, 'core/project_member_form.html', context)
 
             try:
-                new_employee = Employee.objects.create(
-                    name=new_name,
-                    direction=project.direction if not is_external else None,
-                    role=new_role_val,
-                    phone=new_phone,
-                    email=new_email,
-                    is_external=is_external,
-                    organization=new_org if is_external else '',
-                )
-                member = ProjectMember.objects.create(project=project, employee=new_employee, project_role=project_role_obj)
-                log_project_activity(project, 'ajout_membre', f"Ajout du membre '{new_name}' ({project_role_obj.name if project_role_obj else 'sans rôle'})", request.user)
-                from .notifications import notify_project_member_added
-                success, msg = notify_project_member_added(member, request.user)
-                if success:
-                    messages.info(request, msg)
+                from django.db import transaction as _tx
+                with _tx.atomic():
+                    new_employee = Employee.objects.create(
+                        name=new_name,
+                        direction=project.direction if not is_external else None,
+                        role=new_role_val,
+                        phone=new_phone,
+                        email=new_email,
+                        is_external=is_external,
+                        organization=new_org if is_external else '',
+                    )
+                    member = ProjectMember.objects.create(project=project, employee=new_employee, project_role=project_role_obj)
+                    log_project_activity(project, 'ajout_membre', f"Ajout du membre '{new_name}' ({project_role_obj.name if project_role_obj else 'sans rôle'})", request.user)
 
-                # --- Créer un compte de connexion (flow invitation) ---
-                create_user = request.POST.get('create_user') == 'on'
-                if create_user:
-                    from django.contrib.auth.models import User as DjangoUser
-                    default_role = 'visiteur' if is_external else 'employe'
-                    new_user_role = request.POST.get('new_user_role', default_role) or default_role
+                    # --- Créer un compte de connexion (flow invitation) ---
+                    create_user = request.POST.get('create_user') == 'on'
+                    if create_user and new_employee.email:
+                        from django.contrib.auth.models import User as DjangoUser
+                        from .models import Role as SysRole
+                        default_role_slug = 'visiteur' if is_external else 'employe'
+                        new_user_role_slug = request.POST.get('new_user_role', default_role_slug) or default_role_slug
+                        sys_role = SysRole.objects.filter(slug=new_user_role_slug).first()
 
-                    if not new_employee.email:
-                        messages.warning(request, f"Compte non créé : {new_employee.name} n'a pas d'adresse email. Ajoutez-en une à sa fiche.")
-                    else:
                         new_username = _generate_username(new_employee.name)
                         name_parts = new_employee.name.split() if new_employee.name else []
                         new_user = DjangoUser.objects.create(
@@ -3018,7 +3242,7 @@ def project_member_add(request, project_id):
                         new_user.save()
                         UserProfile.objects.filter(user=new_user).update(
                             employee=new_employee,
-                            role=new_user_role,
+                            role=sys_role,
                             direction=new_employee.direction,
                         )
                         activation_link = _build_activation_link(request, new_user)
@@ -3028,6 +3252,13 @@ def project_member_add(request, project_id):
                             messages.success(request, f"Invitation envoyée à {new_employee.email} (identifiant : {new_username}).")
                         else:
                             messages.warning(request, f"Compte '{new_username}' créé mais l'email n'a pas pu être envoyé : {msg}.")
+                    elif create_user and not new_employee.email:
+                        messages.warning(request, f"Compte non créé : {new_employee.name} n'a pas d'adresse email.")
+
+                from .notifications import notify_project_member_added
+                success, msg = notify_project_member_added(member, request.user)
+                if success:
+                    messages.info(request, msg)
 
                 label = "externe" if is_external else "interne"
                 messages.success(request, f"Personne {label} '{new_name}' créée et ajoutée au projet.")
@@ -3067,8 +3298,7 @@ def project_member_edit(request, member_id):
     member = get_object_or_404(ProjectMember.objects.select_related('project', 'employee'), pk=member_id)
     project = member.project
 
-    # Permission check - utiliser la nouvelle méthode
-    if not request.user.profile.can_add_project_members(project):
+    if not request.user.profile.can_manage_project_members(project):
         messages.error(request, "Vous n'avez pas les permissions pour modifier les membres de ce projet.")
         return redirect('core:project_detail', project_id=project.id)
     
@@ -3076,7 +3306,8 @@ def project_member_edit(request, member_id):
         form = ProjectMemberForm(project, request.POST, instance=member)
         if form.is_valid():
             form.save()
-            log_project_activity(project, 'ajout_membre', f"Modification du rôle de '{member.employee.name}' en '{member.project_role.name if member.project_role else 'sans rôle'}'", request.user)
+            new_role_name = member.project_role.name if member.project_role else 'sans rôle'
+            log_project_activity(project, 'modification', f"Rôle de '{member.employee.name}' modifié → '{new_role_name}'", request.user)
             messages.success(request, "Rôle du membre modifié avec succès.")
             return redirect('core:project_detail', project_id=project.id)
     else:
@@ -3086,12 +3317,35 @@ def project_member_edit(request, member_id):
     existing_member_ids = project.members.values_list('employee_id', flat=True)
     available_employees_count = Employee.objects.exclude(id__in=existing_member_ids).count()
     
+    from .models import ProjectRole as PRole
+    import json as _json
+
+    def _role_perms(r):
+        perms = set(r.permissions.values_list('action', 'subject'))
+        return {
+            'is_system':           r.is_system,
+            'name':                r.name,
+            'can_manage_members':  ('manage', 'ProjectMember') in perms,
+            'can_edit_project':    ('update', 'Project')       in perms,
+            'can_add_milestones':  ('create', 'Milestone')     in perms,
+            'can_add_documents':   ('create', 'Document')      in perms,
+            'can_add_needs':       ('create', 'Request')       in perms,
+            'can_add_comments':    ('create', 'Comment')       in perms,
+        }
+
+    project_roles_meta = {
+        str(r.pk): _role_perms(r)
+        for r in PRole.objects.prefetch_related('permissions').all()
+    }
+
     return render(request, 'core/project_member_form.html', {
-        'form': form, 
-        'project': project, 
-        'member': member, 
+        'form': form,
+        'project': project,
+        'member': member,
         'title': f'Modifier {member.employee.name}',
         'available_employees_count': available_employees_count,
+        'role_choices': [(r.slug, r.name) for r in Role.objects.all().order_by('name')],
+        'project_roles_meta_json': _json.dumps(project_roles_meta),
     })
 
 
@@ -3101,8 +3355,7 @@ def project_member_delete(request, member_id):
     member = get_object_or_404(ProjectMember.objects.select_related('project', 'employee'), pk=member_id)
     project = member.project
 
-    # Permission check - utiliser la nouvelle méthode
-    if not request.user.profile.can_add_project_members(project):
+    if not request.user.profile.can_manage_project_members(project):
         messages.error(request, "Vous n'avez pas les permissions pour supprimer des membres de ce projet.")
         return redirect('core:project_detail', project_id=project.id)
     
@@ -3222,9 +3475,13 @@ def document_download(request, doc_id):
     if not os.path.exists(file_path):
         messages.error(request, "Fichier introuvable.")
         return redirect('core:documents')
+    from urllib.parse import quote
     mime_type, _ = mimetypes.guess_type(file_path)
     response = FileResponse(open(file_path, 'rb'), content_type=mime_type or 'application/octet-stream')
-    response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
+    _dl_name = os.path.basename(file_path)
+    response['Content-Disposition'] = (
+        f"attachment; filename=\"{_dl_name}\"; filename*=UTF-8''{quote(_dl_name)}"
+    )
     return response
 
 
@@ -3576,9 +3833,12 @@ def milestone_reorder(request, project_id):
     import json
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)
-    
+
     project = get_object_or_404(Project, pk=project_id)
-    
+
+    if not request.user.profile.can_edit_project_milestones(project):
+        return JsonResponse({'error': 'Permission refusée'}, status=403)
+
     try:
         data = json.loads(request.body)
         order_list = data.get('order', [])
@@ -3594,12 +3854,16 @@ def sub_milestone_reorder(request, milestone_id):
     """API pour réordonner les sous-étapes par drag & drop"""
     import json
     from .models import SubMilestone
-    
+
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)
-    
-    milestone = get_object_or_404(Milestone, pk=milestone_id)
-    
+
+    milestone = get_object_or_404(Milestone.objects.select_related('project'), pk=milestone_id)
+    project = milestone.project
+
+    if not request.user.profile.can_edit_project_milestones(project):
+        return JsonResponse({'error': 'Permission refusée'}, status=403)
+
     try:
         data = json.loads(request.body)
         order_list = data.get('order', [])
@@ -3616,9 +3880,12 @@ def api_project_update_status(request, project_id):
     import json
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)
-    
+
     project = get_object_or_404(Project, pk=project_id)
-    
+
+    if not request.user.profile.can_edit_project(project):
+        return JsonResponse({'error': 'Permission refusée'}, status=403)
+
     try:
         data = json.loads(request.body)
         new_status = data.get('status')
@@ -3626,8 +3893,14 @@ def api_project_update_status(request, project_id):
         if new_status not in valid_statuses:
             return JsonResponse({'error': f'Invalid status: {new_status}'}, status=400)
         
+        old_status = project.get_status_display()
         project.status = new_status
         project.save(update_fields=['status', 'updated_at'])
+        log_project_activity(
+            project, 'changement_statut',
+            f"Statut changé vers '{project.get_status_display()}'",
+            request.user,
+        )
         return JsonResponse({'success': True, 'status': new_status})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)

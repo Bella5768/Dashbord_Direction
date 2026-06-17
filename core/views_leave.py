@@ -42,13 +42,13 @@ def _user_can_view_leave(user, leave):
     if profile.can_give_final_approval():
         return True
     # Directeur : uniquement sa direction
-    if profile.role == 'directeur':
+    if profile.role_slug == 'directeur':
         return profile.direction_id is not None and profile.direction_id == leave.direction_id
-    # RH : uniquement apres avis hierarchique
+    # RH : uniquement les demandes qui entrent dans son périmètre de traitement
     if profile.is_hr():
-        return leave.status not in ['soumise']
+        return leave.status in ['avis_favorable', 'rh_conforme', 'rh_non_conforme', 'approuvee', 'rejetee']
     # Validateur explicite (can_approve_leaves) : seulement les demandes qu'il a touche
-    if profile.can_approve_leaves and leave.manager_user_id == user.id:
+    if profile.can_give_manager_approval() and leave.manager_user_id == user.id:
         return True
     return False
 
@@ -78,7 +78,7 @@ def _can_see_step(user, leave, step):
         return True
     if profile.is_hr():
         return step in ('manager', 'hr')
-    if profile.role == 'directeur' or profile.can_approve_leaves:
+    if profile.role_slug == 'directeur' or profile.can_give_manager_approval():
         return step == 'manager'
     return False
 
@@ -104,7 +104,7 @@ def leave_list(request):
     base_qs = LeaveRequest.objects.select_related('employee', 'direction', 'user')
 
     # Permissions par onglet
-    can_manager = bool(profile and (profile.role == 'directeur' or profile.can_approve_leaves or profile.can_give_final_approval()))
+    can_manager = bool(profile and (profile.role_slug == 'directeur' or profile.can_give_manager_approval() or profile.can_give_final_approval()))
     can_hr = bool(profile and profile.can_give_hr_check())
     can_final = bool(profile and profile.can_give_final_approval())
 
@@ -113,7 +113,7 @@ def leave_list(request):
         if not can_manager:
             return HttpResponseForbidden()
         qs = base_qs.filter(status='soumise')
-        if profile.role == 'directeur' and not profile.can_give_final_approval():
+        if profile.role_slug == 'directeur' and not profile.can_give_final_approval():
             qs = qs.filter(direction_id=profile.direction_id)
     elif tab == 'history_mine_decisions':
         if not can_manager:
@@ -154,7 +154,7 @@ def leave_list(request):
     }
     if can_manager:
         mgr_qs = base_qs.filter(status='soumise')
-        if profile.role == 'directeur' and not profile.can_give_final_approval():
+        if profile.role_slug == 'directeur' and not profile.can_give_final_approval():
             mgr_qs = mgr_qs.filter(direction_id=profile.direction_id)
         counts['to_approve_manager'] = mgr_qs.count()
         counts['history_mine_decisions'] = base_qs.filter(manager_user=request.user).count()
