@@ -60,11 +60,11 @@
             <div class="card-content">
                 {% for subject, perms in subjects.items %}
                 {% with module_count=perms|length %}
-                <div style="margin-bottom:20px;">
+                <div role="group" aria-labelledby="module-lbl-{{ subject }}" style="margin-bottom:20px;">
                     <!-- En-tête du module -->
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid
                         {% if subject == 'all' %}#fee2e2{% elif subject == 'Project' %}#dbeafe{% elif subject == 'Milestone' %}#d1fae5{% elif subject == 'Budget' %}#d1fae5{% elif subject == 'User' %}#ede9fe{% elif subject == 'Employee' %}#e0e7ff{% elif subject == 'LeaveRequest' %}#fef3c7{% elif subject == 'Partner' %}#ccfbf1{% elif subject == 'Document' %}#e2e8f0{% elif subject == 'Request' %}#ffedd5{% elif subject == 'Event' %}#cffafe{% elif subject == 'Direction' %}#f1f5f9{% elif subject == 'Role' %}#fce7f3{% else %}#f3f4f6{% endif %};">
-                        <span style="font-weight:600;font-size:13px;color:#374151;">
+                        <span id="module-lbl-{{ subject }}" style="font-weight:600;font-size:13px;color:#374151;">
                             {% if subject == 'all' %}{% trans "Tout (super-admin)" %}
                             {% elif subject == 'Project' %}{% trans "Projets" %}
                             {% elif subject == 'Milestone' %}{% trans "Jalons / Tâches" %}
@@ -82,7 +82,9 @@
                             {% else %}{{ subject }}{% endif %}
                         </span>
                         <button type="button" onclick="toggleModule(this)" class="btn btn-sm btn-outline"
-                                style="font-size:10px;padding:2px 8px;">{% trans "Tout module" %}</button>
+                                style="font-size:10px;padding:2px 8px;"
+                                data-label-check="{% trans 'Tout cocher' %}"
+                                data-label-uncheck="{% trans 'Tout décocher' %}">{% trans "Tout cocher" %}</button>
                     </div>
                     <!-- Checkboxes -->
                     <div style="display:flex;flex-wrap:wrap;gap:6px;">
@@ -136,6 +138,8 @@
                 </button>
                 {% if is_project %}
                 <a href="{% url 'core:project_roles_list' %}" class="btn btn-outline" style="width:100%;justify-content:center;">{% trans "Annuler" %}</a>
+                {% elif editing %}
+                <a href="{% url 'core:role_detail' role.pk %}" class="btn btn-outline" style="width:100%;justify-content:center;">{% trans "Annuler" %}</a>
                 {% else %}
                 <a href="{% url 'core:roles_list' %}" class="btn btn-outline" style="width:100%;justify-content:center;">{% trans "Annuler" %}</a>
                 {% endif %}
@@ -202,6 +206,7 @@ function toggleModule(btn) {
     const boxes = group.querySelectorAll('input[name="permissions"]');
     const allChecked = Array.from(boxes).every(cb => cb.checked);
     boxes.forEach(cb => { cb.checked = !allChecked; cb.dispatchEvent(new Event('change')); });
+    btn.textContent = allChecked ? btn.dataset.labelCheck : btn.dataset.labelUncheck;
 }
 </script>
 {% endblock %}

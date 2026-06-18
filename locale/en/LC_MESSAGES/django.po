@@ -4761,3 +4761,9 @@ msgstr "Links an internal employee as project manager."
 
 msgid "RWF - Franc Rwandais"
 msgstr "RWF - Rwandan Franc"
+
+msgid "Voir le détail de"
+msgstr "View details of"
+
+msgid "Tout décocher"
+msgstr "Uncheck all"

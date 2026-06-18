@@ -160,6 +160,16 @@
                     </li>
                     {% endif %}
                     
+                    <!-- Rôles & Permissions - Admin et DG -->
+                    {% if user.profile.can_manage_users %}
+                    <li>
+                        <a href="{% url 'core:roles_list' %}" {% if 'roles' in request.path %}class="active"{% endif %}>
+                            <i data-lucide="shield-check" ></i>
+                            {% trans 'Rôles' %}
+                        </a>
+                    </li>
+                    {% endif %}
+
                     <!-- Administration - Admin seulement -->
                     {% if user.profile.is_admin or user.is_superuser %}
                     <li>

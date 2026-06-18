@@ -132,6 +132,7 @@ urlpatterns = [
     # Rôles projet
     path('roles-projet/', views_roles.project_roles_list, name='project_roles_list'),
     path('roles-projet/nouveau/', views_roles.project_role_create, name='project_role_create'),
+    path('roles-projet/<int:role_id>/', views_roles.project_role_detail, name='project_role_detail'),
     path('roles-projet/<int:role_id>/modifier/', views_roles.project_role_edit, name='project_role_edit'),
     path('roles-projet/<int:role_id>/dupliquer/', views_roles.project_role_duplicate, name='project_role_duplicate'),
     path('roles-projet/<int:role_id>/supprimer/', views_roles.project_role_delete, name='project_role_delete'),

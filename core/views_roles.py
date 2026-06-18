@@ -278,6 +278,30 @@ def project_role_duplicate(request, role_id):
 
 
 @login_required
+def project_role_detail(request, role_id):
+    guard = _require_role_admin(request)
+    if guard:
+        return guard
+
+    role = get_object_or_404(ProjectRole, pk=role_id)
+    all_permissions = Permission.objects.all().order_by('subject', 'action')
+    role_perm_ids = set(role.permissions.values_list('id', flat=True))
+
+    subjects = {}
+    for perm in all_permissions:
+        subjects.setdefault(perm.subject, []).append(perm)
+
+    context = {
+        'role': role,
+        'subjects': subjects,
+        'role_perm_ids': role_perm_ids,
+        'user_count': role.memberships.count(),
+        'is_project': True,
+    }
+    return render(request, 'core/roles/role_detail.html', context)
+
+
+@login_required
 def project_role_delete(request, role_id):
     guard = _require_role_admin(request)
     if guard:

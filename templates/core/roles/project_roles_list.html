@@ -7,27 +7,27 @@
 
 {% block content %}
 
-<!-- Stats + actions -->
-<div class="flex justify-between items-center mb-6">
-    <div class="stats-row">
-        <div class="stat-box blue">
-            <div class="stat-box-icon"><i data-lucide="folder" width="20" height="20"></i></div>
-            <div class="stat-box-body">
-                <p class="stat-box-value">{{ project_roles|length }}</p>
-                <p class="stat-box-label">{% trans "Rôles projet" %}</p>
-            </div>
+<!-- Stats -->
+<div class="stats-row mb-4">
+    <div class="stat-box blue">
+        <div class="stat-box-icon"><i data-lucide="folder" width="20" height="20"></i></div>
+        <div class="stat-box-body">
+            <p class="stat-box-value">{{ project_roles|length }}</p>
+            <p class="stat-box-label">{% trans "Rôles projet" %}</p>
         </div>
     </div>
-    <div style="display:flex;gap:8px;align-items:center;">
-        <a href="{% url 'core:roles_list' %}" class="btn btn-outline">
-            <i data-lucide="shield-check" width="16" height="16"></i>
-            {% trans "Rôles globaux" %}
-        </a>
-        <a href="{% url 'core:project_role_create' %}" class="btn btn-primary">
-            <i data-lucide="plus" width="16" height="16"></i>
-            {% trans "Nouveau rôle projet" %}
-        </a>
-    </div>
+</div>
+
+<!-- Barre d'actions -->
+<div class="flex justify-between items-center mb-6">
+    <a href="{% url 'core:roles_list' %}" class="btn btn-outline">
+        <i data-lucide="shield-check" width="16" height="16"></i>
+        {% trans "Rôles globaux" %}
+    </a>
+    <a href="{% url 'core:project_role_create' %}" class="btn btn-primary">
+        <i data-lucide="plus" width="16" height="16"></i>
+        {% trans "Nouveau rôle projet" %}
+    </a>
 </div>
 
 <!-- Grille de cartes -->
@@ -72,7 +72,7 @@
             <div style="display:flex;flex-wrap:wrap;gap:4px;min-height:24px;">
                 {% for perm in role.permissions.all %}
                 <span style="display:inline-flex;align-items:center;padding:2px 7px;background:#f0fdf4;border-radius:4px;font-size:10px;color:#15803d;font-weight:500;">
-                    {{ perm.get_action_display }} {{ perm.subject }}
+                    {{ perm.get_action_display }} {{ perm.get_subject_display }}
                 </span>
                 {% empty %}
                 <span class="text-xs text-gray-400" style="font-style:italic;">{% trans "Aucune permission" %}</span>
@@ -82,14 +82,25 @@
 
         <!-- Actions -->
         <div style="padding:10px 20px;border-top:1px solid #f1f5f9;display:flex;justify-content:flex-end;gap:4px;background:#fafafa;border-radius:0 0 8px 8px;">
-            <a href="{% url 'core:project_role_edit' role.pk %}" class="action-btn" title="{% trans 'Modifier' %}">
+            <a href="{% url 'core:project_role_detail' role.pk %}" class="action-btn"
+               title="{% trans 'Voir le détail' %}"
+               aria-label="{% trans 'Voir le détail de' %} {{ role.name }}">
+                <i data-lucide="eye"></i>
+            </a>
+            <a href="{% url 'core:project_role_edit' role.pk %}" class="action-btn"
+               title="{% trans 'Modifier' %}"
+               aria-label="{% trans 'Modifier' %} {{ role.name }}">
                 <i data-lucide="pencil"></i>
             </a>
-            <a href="{% url 'core:project_role_duplicate' role.pk %}" class="action-btn" title="{% trans 'Dupliquer' %}">
+            <a href="{% url 'core:project_role_duplicate' role.pk %}" class="action-btn"
+               title="{% trans 'Dupliquer' %}"
+               aria-label="{% trans 'Dupliquer' %} {{ role.name }}">
                 <i data-lucide="copy"></i>
             </a>
             {% if not role.is_system %}
-            <a href="#" class="action-btn danger" title="{% trans 'Supprimer' %}"
+            <a href="#" class="action-btn danger"
+               title="{% trans 'Supprimer' %}"
+               aria-label="{% trans 'Supprimer' %} {{ role.name }}"
                data-delete-url="{% url 'core:project_role_delete' role.pk %}"
                data-delete-type="{% trans 'le rôle' %}"
                data-delete-name="{{ role.name }}">
