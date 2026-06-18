@@ -3,7 +3,8 @@
 
 {% block title %}{% trans "Rôle" %} : {{ role.name }}{% endblock %}
 {% block page_title %}{{ role.name }}{% endblock %}
-{% block page_subtitle %}{{ role.description|default:"{% trans 'Détail du rôle et des permissions associées' %}" }}{% endblock %}
+{% trans 'Détail du rôle et des permissions associées' as default_subtitle %}
+{% block page_subtitle %}{{ role.description|default:default_subtitle }}{% endblock %}
 
 {% block content %}
 

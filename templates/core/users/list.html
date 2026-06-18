@@ -100,7 +100,7 @@
                         <td>
                             {% if u.profile %}
                             <span class="badge {% if u.profile.role_slug == 'admin' %}badge-danger{% elif u.profile.role_slug == 'directeur_general' %}badge-warning{% elif u.profile.role_slug == 'directeur' %}badge-info{% else %}badge-secondary{% endif %}">
-                                {{ u.profile.role.name|default:"Sans rôle" }}
+                                {% trans 'Sans rôle' as no_role_label %}{{ u.profile.role.name|default:no_role_label }}
                             </span>
                             {% else %}
                             <span class="badge badge-secondary">{% trans 'Non défini' %}</span>
@@ -117,17 +117,17 @@
                             {% if u.profile and u.profile.employee %}
                                 <span class="font-medium text-sm">{{ u.profile.employee.name }}</span>
                                 {% if u.profile.employee.is_external %}
-                                <span class="badge badge-secondary" style="font-size:10px;">Externe</span>
+                                <span class="badge badge-secondary" style="font-size:10px;">{% trans 'Externe' %}</span>
                                 {% endif %}
                             {% else %}
-                                <span class="badge badge-warning" style="font-size:10px;" title="Aucun employé lié à ce compte">Non lié</span>
+                                <span class="badge badge-warning" style="font-size:10px;" title="{% trans 'Aucun employé lié à ce compte' %}">{% trans 'Non lié' %}</span>
                             {% endif %}
                         </td>
                         <td style="text-align: center;">
                             {% if u.is_active %}
                             <span class="badge badge-success">{% trans 'Actif' %}</span>
                             {% elif not u.has_usable_password %}
-                            <span class="badge badge-warning">En attente</span>
+                            <span class="badge badge-warning">{% trans 'En attente' %}</span>
                             {% else %}
                             <span class="badge badge-danger">{% trans 'Inactif' %}</span>
                             {% endif %}
@@ -141,23 +141,23 @@
                         </td>
                         <td>
                             <div class="flex items-center justify-center gap-1">
-                                <a href="{% url 'core:user_edit' u.id %}" class="action-btn" title="Modifier">
+                                <a href="{% url 'core:user_edit' u.id %}" class="action-btn" title="{% trans 'Modifier' %}">
                                     <i data-lucide="pencil" ></i>
                                 </a>
                                 {% if not u.is_active %}
                                 <form method="post" action="{% url 'core:resend_invitation' u.id %}" style="display:inline;"
-                                      data-confirm="Renvoyer l'invitation à {{ u.email }} ?"
-                                      data-confirm-title="Renvoyer l'invitation"
-                                      data-confirm-label="Renvoyer">
+                                      data-confirm="{% blocktrans with email=u.email %}Renvoyer l'invitation à {{ email }} ?{% endblocktrans %}"
+                                      data-confirm-title="{% trans "Renvoyer l'invitation" %}"
+                                      data-confirm-label="{% trans 'Renvoyer' %}">
                                     {% csrf_token %}
-                                    <button type="submit" class="action-btn" title="Renvoyer l'invitation" style="background:none;border:none;padding:0;cursor:pointer;">
+                                    <button type="submit" class="action-btn" title="{% trans "Renvoyer l'invitation" %}" style="background:none;border:none;padding:0;cursor:pointer;">
                                         <i data-lucide="mail" ></i>
                                     </button>
                                 </form>
                                 {% endif %}
                                 {% if u != request.user %}
                                 {% if u.is_active or u.has_usable_password %}
-                                <a href="{% url 'core:user_toggle_status' u.id %}" class="action-btn {% if u.is_active %}danger{% else %}success{% endif %}" title="{% if u.is_active %}Désactiver{% else %}Activer{% endif %}">
+                                <a href="{% url 'core:user_toggle_status' u.id %}" class="action-btn {% if u.is_active %}danger{% else %}success{% endif %}" title="{% if u.is_active %}{% trans 'Désactiver' %}{% else %}{% trans 'Activer' %}{% endif %}">
                                     {% if u.is_active %}
                                     <i data-lucide="ban" ></i>
                                     {% else %}
@@ -165,7 +165,7 @@
                                     {% endif %}
                                 </a>
                                 {% endif %}
-                                <a href="{% url 'core:user_delete' u.id %}" class="action-btn danger" title="Supprimer">
+                                <a href="{% url 'core:user_delete' u.id %}" class="action-btn danger" title="{% trans 'Supprimer' %}">
                                     <i data-lucide="trash-2" ></i>
                                 </a>
                                 {% endif %}

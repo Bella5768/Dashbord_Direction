@@ -1575,9 +1575,9 @@ def user_create(request):
             )
 
             if email_ok:
-                messages.success(request, f"Compte créé pour {emp.name}. Invitation envoyée à {emp.email}.")
+                messages.success(request, _("Compte créé pour {name}. Invitation envoyée à {email}.").format(name=emp.name, email=emp.email))
             else:
-                messages.warning(request, f"Compte créé (identifiant : {username}) mais l'email n'a pas pu être envoyé : {email_msg}")
+                messages.warning(request, _("Compte créé (identifiant : {username}) mais l'email n'a pas pu être envoyé : {msg}").format(username=username, msg=email_msg))
             return redirect('core:users_list')
     else:
         form = UserCreateForm(initial=initial)
@@ -1650,7 +1650,7 @@ def user_edit(request, user_id):
                 user_agent=request.META.get('HTTP_USER_AGENT', '')[:500]
             )
 
-            messages.success(request, f"L'utilisateur {user_obj.username} a été modifié avec succès.")
+            messages.success(request, _("L'utilisateur {username} a été modifié avec succès.").format(username=user_obj.username))
             return redirect('core:users_list')
     else:
         form = UserUpdateForm(instance=user_obj)
@@ -1691,7 +1691,7 @@ def user_delete(request, user_id):
             user_agent=request.META.get('HTTP_USER_AGENT', '')[:500]
         )
         
-        messages.success(request, f"L'utilisateur {username} a été supprimé.")
+        messages.success(request, _("L'utilisateur {username} a été supprimé.").format(username=username))
         return redirect('core:users_list')
     
     context = {
@@ -1716,14 +1716,14 @@ def user_toggle_status(request, user_id):
         return redirect('core:users_list')
 
     if not user_obj.is_active and not user_obj.has_usable_password():
-        messages.error(request, f"{user_obj.username} est en attente d'invitation. Renvoyez l'invitation pour qu'il active son compte lui-même.")
+        messages.error(request, _("{username} est en attente d'invitation. Renvoyez l'invitation pour qu'il active son compte lui-même.").format(username=user_obj.username))
         return redirect('core:users_list')
 
     user_obj.is_active = not user_obj.is_active
     user_obj.save()
 
     status = "activé" if user_obj.is_active else "désactivé"
-    messages.success(request, f"L'utilisateur {user_obj.username} a été {status}.")
+    messages.success(request, _("L'utilisateur {username} a été {status}.").format(username=user_obj.username, status=status))
     
     return redirect('core:users_list')
 
@@ -1733,9 +1733,9 @@ def user_change_password(request, user_id):
     """L'admin ne peut plus modifier les mots de passe des autres utilisateurs."""
     messages.error(
         request,
-        "Pour des raisons de sécurité, vous ne pouvez pas modifier le mot de passe "
-        "d'un autre utilisateur. Utilisez « Renvoyer l'invitation » pour lui permettre "
-        "de définir lui-même son mot de passe."
+        _("Pour des raisons de sécurité, vous ne pouvez pas modifier le mot de passe "
+          "d'un autre utilisateur. Utilisez « Renvoyer l'invitation » pour lui permettre "
+          "de définir lui-même son mot de passe.")
     )
     return redirect('core:users_list')
 
@@ -1787,7 +1787,7 @@ def account_activate(request, uidb64, token):
             from django.contrib.auth import update_session_auth_hash
             auth_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             update_session_auth_hash(request, user)
-            messages.success(request, f"Bienvenue {user.get_full_name() or user.username} ! Votre compte est activé.")
+            messages.success(request, _("Bienvenue {name} ! Votre compte est activé.").format(name=user.get_full_name() or user.username))
             return redirect('core:dashboard')
     else:
         form = SetPasswordForm(user)
@@ -1847,11 +1847,11 @@ def resend_invitation(request, user_id):
     user_obj = get_object_or_404(DjangoUser, pk=user_id)
 
     if user_obj.is_active:
-        messages.warning(request, f"Le compte de {user_obj.username} est déjà actif.")
+        messages.warning(request, _("Le compte de {username} est déjà actif.").format(username=user_obj.username))
         return redirect('core:users_list')
 
     if user_obj.has_usable_password():
-        messages.warning(request, f"Le compte de {user_obj.username} n'est pas en attente d'invitation (il a déjà un mot de passe).")
+        messages.warning(request, _("Le compte de {username} n'est pas en attente d'invitation (il a déjà un mot de passe).").format(username=user_obj.username))
         return redirect('core:users_list')
 
     if not user_obj.email:
@@ -1864,9 +1864,9 @@ def resend_invitation(request, user_id):
     ok, msg = notify_account_invitation(user_obj, activation_link, invited_by)
 
     if ok:
-        messages.success(request, f"Invitation renvoyée à {user_obj.email}.")
+        messages.success(request, _("Invitation renvoyée à {email}.").format(email=user_obj.email))
     else:
-        messages.error(request, f"Échec de l'envoi : {msg}")
+        messages.error(request, _("Échec de l'envoi : {msg}").format(msg=msg))
 
     return redirect('core:users_list')
 
@@ -2601,8 +2601,8 @@ def sub_milestone_toggle(request, sub_milestone_id):
         for emp in sub_milestone.assigned_to.all():
             success, msg = notify_task_completed('sous-étape', sub_milestone.name, project, emp, sub_milestone.assigned_by, request.user)
             if not success:
-                messages.warning(request, f"Sous-étape terminée mais notification email échouée : {msg}")
-    messages.success(request, f"Sous-étape marquée comme {status}.")
+                messages.warning(request, _("Sous-étape terminée mais notification email échouée : {msg}").format(msg=msg))
+    messages.success(request, _("Sous-étape marquée comme {status}.").format(status=status))
     return redirect('core:project_detail', project_id=project.id)
 
 
@@ -2640,8 +2640,8 @@ def milestone_toggle(request, milestone_id):
         for emp in milestone.assigned_to.all():
             success, msg = notify_task_completed('jalon', milestone.name, project, emp, milestone.assigned_by, request.user)
             if not success:
-                messages.warning(request, f"Jalon terminé mais notification email échouée : {msg}")
-    messages.success(request, f"Jalon marqué comme {label}.")
+                messages.warning(request, _("Jalon terminé mais notification email échouée : {msg}").format(msg=msg))
+    messages.success(request, _("Jalon marqué comme {label}.").format(label=label))
     return redirect('core:project_detail', project_id=project.id)
 
 
@@ -2680,7 +2680,7 @@ def milestone_update_status(request, milestone_id):
         from .notifications import notify_task_completed
         for emp in milestone.assigned_to.all():
             notify_task_completed('jalon', milestone.name, project, emp, milestone.assigned_by, request.user)
-    messages.success(request, f"Statut mis à jour : {valid[new_status]}.")
+    messages.success(request, _("Statut mis à jour : {status}.").format(status=valid[new_status]))
     return redirect('core:project_detail', project_id=project.id)
 
 
@@ -2718,7 +2718,7 @@ def project_need_update_status(request, need_id):
         f"Statut du besoin '{need.title}' → {valid[new_status]}",
         request.user,
     )
-    messages.success(request, f"Besoin marqué : {valid[new_status]}.")
+    messages.success(request, _("Besoin marqué : {status}.").format(status=valid[new_status]))
     return redirect('core:project_detail', project_id=project.id)
 
 
@@ -3187,10 +3187,10 @@ def project_member_add(request, project_id):
                 try:
                     _validate_email(new_email)
                 except _VE:
-                    errors.append("L'adresse email n'est pas valide.")
+                    errors.append(_("L'adresse email n'est pas valide."))
                 else:
                     if Employee.objects.filter(email__iexact=new_email).exists():
-                        errors.append(f"Un employé avec l'email « {new_email} » existe déjà.")
+                        errors.append(_("Un employé avec l'email « %(email)s » existe déjà.") % {'email': new_email})
 
             if errors:
                 for e in errors:
@@ -3250,11 +3250,11 @@ def project_member_add(request, project_id):
                         from .notifications import notify_account_invitation
                         ok, msg = notify_account_invitation(new_user, activation_link, invited_by=request.user.get_full_name() or request.user.username)
                         if ok:
-                            messages.success(request, f"Invitation envoyée à {new_employee.email} (identifiant : {new_username}).")
+                            messages.success(request, _("Invitation envoyée à {email} (identifiant : {username}).").format(email=new_employee.email, username=new_username))
                         else:
-                            messages.warning(request, f"Compte '{new_username}' créé mais l'email n'a pas pu être envoyé : {msg}.")
+                            messages.warning(request, _("Compte '{username}' créé mais l'email n'a pas pu être envoyé : {msg}.").format(username=new_username, msg=msg))
                     elif create_user and not new_employee.email:
-                        messages.warning(request, f"Compte non créé : {new_employee.name} n'a pas d'adresse email.")
+                        messages.warning(request, _("Compte non créé : {name} n'a pas d'adresse email.").format(name=new_employee.name))
 
                 from .notifications import notify_project_member_added
                 success, msg = notify_project_member_added(member, request.user)
@@ -3262,10 +3262,10 @@ def project_member_add(request, project_id):
                     messages.info(request, msg)
 
                 label = "externe" if is_external else "interne"
-                messages.success(request, f"Personne {label} '{new_name}' créée et ajoutée au projet.")
+                messages.success(request, _("Personne {label} '{name}' créée et ajoutée au projet.").format(label=label, name=new_name))
                 return redirect('core:project_detail', project_id=project.id)
             except Exception as exc:
-                messages.error(request, f"Erreur : {exc}")
+                messages.error(request, _("Erreur : {err}").format(err=exc))
                 context.update({'member_type': member_type, 'form': ProjectMemberForm(project, request.POST)})
                 return render(request, 'core/project_member_form.html', context)
         else:
@@ -3444,7 +3444,7 @@ def document_sign(request, doc_id):
     doc.status = 'signe'
     doc.signed_at = timezone.now().date()
     doc.save()
-    messages.success(request, f"Document '{doc.title}' signé.")
+    messages.success(request, _("Document '{title}' signé.").format(title=doc.title))
     return redirect('core:documents')
 
 
@@ -3458,7 +3458,7 @@ def document_validate(request, doc_id):
     doc = get_object_or_404(Document, pk=doc_id)
     doc.status = 'a_signer'
     doc.save()
-    messages.success(request, f"Document '{doc.title}' validé, en attente de signature.")
+    messages.success(request, _("Document '{title}' validé, en attente de signature.").format(title=doc.title))
     return redirect('core:documents')
 
 
@@ -3518,7 +3518,7 @@ def request_approve(request, req_id):
     req.status = 'approuve'
     req.approved_at = timezone.now().date()
     req.save()
-    messages.success(request, f"Demande '{req.title}' approuvée.")
+    messages.success(request, _("Demande '{title}' approuvée.").format(title=req.title))
     return redirect('core:requests')
 
 
@@ -3532,7 +3532,7 @@ def request_reject(request, req_id):
     req = get_object_or_404(Request, pk=req_id)
     req.status = 'rejete'
     req.save()
-    messages.success(request, f"Demande '{req.title}' rejetée.")
+    messages.success(request, _("Demande '{title}' rejetée.").format(title=req.title))
     return redirect('core:requests')
 
 
@@ -3704,14 +3704,14 @@ def employee_delete(request, employee_id):
 
     if request.method == 'POST':
         if leave_count > 0:
-            messages.error(request, f"Impossible de supprimer {employee.name} : {leave_count} demande(s) de congé sont liées à cette fiche.")
+            messages.error(request, _("Impossible de supprimer {name} : {count} demande(s) de congé sont liées à cette fiche.").format(name=employee.name, count=leave_count))
             return redirect('core:resources')
         try:
             name = employee.name
             employee.delete()
-            messages.success(request, f"Employé « {name} » supprimé.")
+            messages.success(request, _("Employé « {name} » supprimé.").format(name=name))
         except Exception as e:
-            messages.error(request, f"Suppression impossible : {e}")
+            messages.error(request, _("Suppression impossible : {err}").format(err=e))
         return redirect('core:resources')
 
     context = {

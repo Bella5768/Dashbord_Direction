@@ -385,11 +385,11 @@ textarea.form-control, .lf-section textarea { min-height: 100px; resize: vertica
                                     <span class="lf-doc-date">{{ doc.uploaded_at|date:"d/m/Y" }}</span>
                                     {% if leave.status == 'soumise' %}
                                     <form method="post" action="{% url 'core:leave_document_delete' leave.id doc.id %}" style="display:inline;"
-                                          data-confirm="Ce document sera supprimé définitivement."
-                                          data-confirm-title="Supprimer le document"
-                                          data-confirm-label="Supprimer"
+                                          data-confirm="{% trans 'Ce document sera supprimé définitivement.' %}"
+                                          data-confirm-title="{% trans 'Supprimer le document' %}"
+                                          data-confirm-label="{% trans 'Supprimer' %}"
                                           data-confirm-danger
-                                          data-confirm-keyword="SUPPRIMER">
+                                          data-confirm-keyword="{% trans 'SUPPRIMER' %}">
                                         {% csrf_token %}
                                         <button type="submit" class="lf-doc-del" title="{% trans 'Supprimer' %}">✕</button>
                                     </form>

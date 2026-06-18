@@ -4,7 +4,7 @@
 
 {% block title %}{{ milestone.name }} — {{ project.name }}{% endblock %}
 {% block page_title %}{{ milestone.name }}{% endblock %}
-{% block page_subtitle %}Jalon · {{ project.name }}{% endblock %}
+{% block page_subtitle %}{% trans 'Jalon' %} · {{ project.name }}{% endblock %}
 
 {% block content %}
 <style>
@@ -86,7 +86,7 @@
 
 <!-- Fil d'Ariane -->
 <nav class="md-bc">
-  <a href="{% url 'core:projects' %}">Projets</a>
+  <a href="{% url 'core:projects' %}">{% trans 'Projets' %}</a>
   <span class="md-bc-sep">›</span>
   <a href="{% url 'core:project_detail' project.id %}">{{ project.name }}</a>
   <span class="md-bc-sep">›</span>
@@ -104,34 +104,34 @@
 
         <div class="md-hdr-top">
           <div class="md-badges">
-            {% if milestone.status == 'a_faire' %}<span class="badge badge-secondary">À faire</span>
-            {% elif milestone.status == 'en_cours' %}<span class="badge badge-info">En cours</span>
-            {% elif milestone.status == 'bloque' %}<span class="badge badge-danger">Bloqué</span>
-            {% elif milestone.status == 'en_revision' %}<span class="badge badge-warning">En révision</span>
-            {% elif milestone.status == 'termine' %}<span class="badge badge-success">Terminé</span>
+            {% if milestone.status == 'a_faire' %}<span class="badge badge-secondary">{% trans 'À faire' %}</span>
+            {% elif milestone.status == 'en_cours' %}<span class="badge badge-info">{% trans 'En cours' %}</span>
+            {% elif milestone.status == 'bloque' %}<span class="badge badge-danger">{% trans 'Bloqué' %}</span>
+            {% elif milestone.status == 'en_revision' %}<span class="badge badge-warning">{% trans 'En révision' %}</span>
+            {% elif milestone.status == 'termine' %}<span class="badge badge-success">{% trans 'Terminé' %}</span>
             {% endif %}
             {% if milestone.completed %}
             <span class="md-badge-done">
               <i data-lucide="check" ></i>
-              Complété{% if milestone.completed_at %} le {{ milestone.completed_at|date:"d/m/Y" }}{% endif %}
+              {% trans 'Complété' %}{% if milestone.completed_at %} {% trans 'le' %} {{ milestone.completed_at|date:"d/m/Y" }}{% endif %}
             </span>
             {% endif %}
             {% if milestone.due_date %}
             {% with overdue=milestone.due_date|is_overdue %}
             <span class="md-due{% if not milestone.completed and overdue %} overdue{% endif %}">
               <i data-lucide="calendar" ></i>
-              Échéance : {{ milestone.due_date|date:"d/m/Y" }}{% if not milestone.completed and overdue %} — En retard{% endif %}
+              {% trans 'Échéance :' %} {{ milestone.due_date|date:"d/m/Y" }}{% if not milestone.completed and overdue %} — {% trans 'En retard' %}{% endif %}
             </span>
             {% endwith %}
             {% endif %}
           </div>
           {% if can_edit %}
           <div class="md-actions">
-            <a href="{% url 'core:milestone_edit' milestone.id %}" class="btn btn-outline btn-sm">Modifier</a>
+            <a href="{% url 'core:milestone_edit' milestone.id %}" class="btn btn-outline btn-sm">{% trans 'Modifier' %}</a>
             <a href="#" class="btn btn-sm" style="background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;"
                data-delete-url="{% url 'core:milestone_delete' milestone.id %}"
-               data-delete-type="le jalon"
-               data-delete-name="{{ milestone.name }}">Supprimer</a>
+               data-delete-type="{% trans 'le jalon' %}"
+               data-delete-name="{{ milestone.name }}">{% trans 'Supprimer' %}</a>
           </div>
           {% endif %}
         </div>
@@ -146,7 +146,7 @@
 
         {% if milestone.need %}
         <div class="md-need-box">
-          <p class="md-need-label">Description / Besoin</p>
+          <p class="md-need-label">{% trans 'Description / Besoin' %}</p>
           <p class="md-need-text">{{ milestone.need }}</p>
         </div>
         {% endif %}
@@ -157,7 +157,7 @@
     {% if can_edit %}
     <div class="card">
       <div class="card-header">
-        <h3 class="card-title">Changer le statut</h3>
+        <h3 class="card-title">{% trans 'Changer le statut' %}</h3>
       </div>
       <div class="card-content">
         <form method="post" action="{% url 'core:milestone_update_status' milestone.id %}" class="md-status-form">
@@ -177,13 +177,13 @@
     <div class="card">
       <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
         <div>
-          <h3 class="card-title">Sous-étapes</h3>
-          <p class="text-sm text-gray-500">{{ sub_done }}/{{ sub_total }} complétée{% if sub_total != 1 %}s{% endif %}</p>
+          <h3 class="card-title">{% trans 'Sous-étapes' %}</h3>
+          <p class="text-sm text-gray-500">{{ sub_done }}/{{ sub_total }} {% blocktrans count count=sub_total %}complétée{% plural %}complétées{% endblocktrans %}</p>
         </div>
         {% if can_edit %}
         <a href="{% url 'core:sub_milestone_create' milestone.id %}" class="btn btn-primary btn-sm" style="display:flex;align-items:center;gap:6px;">
           <i data-lucide="plus-circle" width="14" height="14" ></i>
-          Ajouter
+          {% trans 'Ajouter' %}
         </a>
         {% endif %}
       </div>
@@ -196,7 +196,7 @@
             {% if can_edit or is_mine %}
             <a href="{% url 'core:sub_milestone_toggle' sub.id %}"
                class="msub-check{% if sub.completed %} done{% endif %}"
-               title="{% if sub.completed %}Marquer non terminée{% else %}Marquer terminée{% endif %}">
+               title="{% if sub.completed %}{% trans 'Marquer non terminée' %}{% else %}{% trans 'Marquer terminée' %}{% endif %}">
               {% if sub.completed %}✓{% endif %}
             </a>
             {% else %}
@@ -223,12 +223,12 @@
 
             {% if can_edit %}
             <div class="msub-acts">
-              <a href="{% url 'core:sub_milestone_edit' sub.id %}" class="action-btn" title="Modifier">
+              <a href="{% url 'core:sub_milestone_edit' sub.id %}" class="action-btn" title="{% trans 'Modifier' %}">
                 <i data-lucide="pencil" width="12" height="12" ></i>
               </a>
-              <a href="#" class="action-btn danger" title="Supprimer"
+              <a href="#" class="action-btn danger" title="{% trans 'Supprimer' %}"
                  data-delete-url="{% url 'core:sub_milestone_delete' sub.id %}"
-                 data-delete-type="la sous-étape"
+                 data-delete-type="{% trans 'la sous-étape' %}"
                  data-delete-name="{{ sub.name }}">
                 <i data-lucide="trash-2" width="12" height="12" ></i>
               </a>
@@ -241,9 +241,9 @@
         {% else %}
         <div style="text-align:center;padding:32px 16px;">
           <i data-lucide="clipboard" width="36" height="36" style="color:#d1d5db;margin:0 auto 10px;" ></i>
-          <p class="text-gray-500" style="margin-bottom:12px;">Aucune sous-étape définie.</p>
+          <p class="text-gray-500" style="margin-bottom:12px;">{% trans 'Aucune sous-étape définie.' %}</p>
           {% if can_edit %}
-          <a href="{% url 'core:sub_milestone_create' milestone.id %}" class="btn btn-primary btn-sm">Ajouter la première sous-étape</a>
+          <a href="{% url 'core:sub_milestone_create' milestone.id %}" class="btn btn-primary btn-sm">{% trans 'Ajouter la première sous-étape' %}</a>
           {% endif %}
         </div>
         {% endif %}
@@ -258,18 +258,18 @@
     <!-- Infos du jalon -->
     <div class="card">
       <div class="card-header">
-        <h3 class="card-title">Informations</h3>
+        <h3 class="card-title">{% trans 'Informations' %}</h3>
       </div>
       <div class="card-content">
         <div class="md-info-list">
 
           <div class="md-info-field">
-            <span class="md-info-label">Projet</span>
+            <span class="md-info-label">{% trans 'Projet' %}</span>
             <span class="md-info-val"><a href="{% url 'core:project_detail' project.id %}">{{ project.name }}</a></span>
           </div>
 
           <div class="md-info-field">
-            <span class="md-info-label">Progression</span>
+            <span class="md-info-label">{% trans 'Progression' %}</span>
             <div style="display:flex;align-items:center;gap:8px;">
               <div class="progress" style="flex:1;height:6px;">
                 <div class="progress-bar {% if milestone.progress >= 80 %}green{% elif milestone.progress >= 50 %}blue{% elif milestone.progress >= 25 %}amber{% else %}red{% endif %}" style="width:{{ milestone.progress }}%"></div>
@@ -280,10 +280,10 @@
 
           {% if milestone.due_date %}
           <div class="md-info-field">
-            <span class="md-info-label">Échéance</span>
+            <span class="md-info-label">{% trans 'Échéance' %}</span>
             {% with overdue=milestone.due_date|is_overdue %}
             <span class="md-info-val{% if not milestone.completed and overdue %} overdue{% endif %}">
-              {{ milestone.due_date|date:"d/m/Y" }}{% if not milestone.completed and overdue %} — En retard{% endif %}
+              {{ milestone.due_date|date:"d/m/Y" }}{% if not milestone.completed and overdue %} — {% trans 'En retard' %}{% endif %}
             </span>
             {% endwith %}
           </div>
@@ -291,14 +291,14 @@
 
           {% if milestone.assigned_by %}
           <div class="md-info-field">
-            <span class="md-info-label">Attribué par</span>
+            <span class="md-info-label">{% trans 'Attribué par' %}</span>
             <span class="md-info-val">{{ milestone.assigned_by.get_full_name|default:milestone.assigned_by.username }}</span>
           </div>
           {% endif %}
 
           <div class="md-info-field">
-            <span class="md-info-label">Sous-étapes</span>
-            <span class="md-info-val">{{ sub_done }}/{{ sub_total }} complétée{% if sub_total != 1 %}s{% endif %}</span>
+            <span class="md-info-label">{% trans 'Sous-étapes' %}</span>
+            <span class="md-info-val">{{ sub_done }}/{{ sub_total }} {% blocktrans count count=sub_total %}complétée{% plural %}complétées{% endblocktrans %}</span>
           </div>
 
         </div>
@@ -308,7 +308,7 @@
     <!-- Membres assignés -->
     <div class="card">
       <div class="card-header">
-        <h3 class="card-title">Assignés</h3>
+        <h3 class="card-title">{% trans 'Assignés' %}</h3>
       </div>
       <div class="card-content">
         {% if milestone.assigned_to.exists %}
@@ -324,13 +324,13 @@
           {% endfor %}
         </div>
         {% else %}
-        <p class="md-empty">Aucun membre assigné</p>
+        <p class="md-empty">{% trans 'Aucun membre assigné' %}</p>
         {% endif %}
         {% if can_edit %}
         <div class="md-manage">
           <a href="{% url 'core:milestone_edit' milestone.id %}">
             <i data-lucide="pencil" ></i>
-            Gérer les assignés
+            {% trans 'Gérer les assignés' %}
           </a>
         </div>
         {% endif %}
@@ -339,7 +339,7 @@
 
     <!-- Retour -->
     <a href="{% url 'core:project_detail' project.id %}" class="btn btn-outline btn-sm" style="text-align:center;">
-      ← Retour au projet
+      {% trans '← Retour au projet' %}
     </a>
 
   </div>

@@ -108,13 +108,13 @@
 <script>
     $(document).ready(function() {
         $('#id_participants').select2({
-            placeholder: 'Sélectionner des directions...',
+            placeholder: '{% trans "Sélectionner des directions..." %}',
             allowClear: true,
             width: '100%',
             closeOnSelect: false,
             language: {
                 noResults: function() {
-                    return 'Aucune direction trouvée';
+                    return '{% trans "Aucune direction trouvée" %}';
                 }
             }
         });

@@ -2,7 +2,7 @@
 {% load custom_filters %}
 {% load i18n %}
 
-{% block title %}{{ project.name }} - Projet{% endblock %}
+{% block title %}{{ project.name }} - {% trans 'Projet' %}{% endblock %}
 {% block page_title %}{{ project.name }}{% endblock %}
 {% block page_subtitle %}{% trans 'Aperçu et suivi du projet' %}{% endblock %}
 
@@ -139,23 +139,23 @@
   <div class="pdetail-hdr-top">
     <div class="pdetail-badges">
       {% with cs=project.computed_status %}
-      <span class="pdetail-badge s-{{ cs }}">{% if cs == 'en_retard' %}En retard{% else %}{{ project.get_status_display }}{% endif %}</span>
+      <span class="pdetail-badge s-{{ cs }}">{% if cs == 'en_retard' %}{% trans 'En retard' %}{% else %}{{ project.get_status_display }}{% endif %}</span>
       {% endwith %}
       <span class="pdetail-badge prio-{{ project.priority }}">{{ project.get_priority_display }}</span>
       {% if project.direction %}<span class="pdetail-badge dir">{{ project.direction.code }}</span>{% endif %}
-      <span class="pdetail-date">Mis à jour le {{ project.updated_at|date:"d/m/Y" }}</span>
+      <span class="pdetail-date">{% trans 'Mis à jour le' %} {{ project.updated_at|date:"d/m/Y" }}</span>
     </div>
     <div class="pdetail-actions">
       {% if can_edit_project %}
-      <a href="{% url 'core:project_edit' project.id %}" class="btn btn-primary btn-sm">Modifier</a>
+      <a href="{% url 'core:project_edit' project.id %}" class="btn btn-primary btn-sm">{% trans 'Modifier' %}</a>
       {% endif %}
       {% if user.profile.is_directeur_general %}
       <a href="#" class="btn btn-sm" style="background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;"
          data-delete-url="{% url 'core:project_delete' project.id %}"
-         data-delete-type="le projet"
-         data-delete-name="{{ project.name }}">Supprimer</a>
+         data-delete-type="{% trans 'le projet' %}"
+         data-delete-name="{{ project.name }}">{% trans 'Supprimer' %}</a>
       {% endif %}
-      <a href="{% url 'core:projects' %}" class="btn btn-outline btn-sm">← Retour</a>
+      <a href="{% url 'core:projects' %}" class="btn btn-outline btn-sm">{% trans '← Retour' %}</a>
     </div>
   </div>
 
@@ -173,27 +173,27 @@
     <div class="pdetail-meta">
       <span class="pdetail-mi">
         <i data-lucide="user" ></i>
-        <span class="pdetail-ml">Responsable</span>
+        <span class="pdetail-ml">{% trans 'Responsable' %}</span>
         <span class="pdetail-mv">{% if project.manager_employee %}<a href="{% url 'core:employee_edit' project.manager_employee.id %}" style="color:#1e3a5f;text-decoration:none;">{{ project.manager_employee.name }}</a>{% else %}{{ project.manager }}{% endif %}</span>
       </span>
       {% if project.start_date %}
       <span class="pdetail-mi">
         <i data-lucide="calendar" ></i>
-        <span class="pdetail-ml">Début</span>
+        <span class="pdetail-ml">{% trans 'Début' %}</span>
         <span class="pdetail-mv">{{ project.start_date|date:"d/m/Y" }}</span>
       </span>
       {% endif %}
       {% if project.end_date %}
       <span class="pdetail-mi">
         <i data-lucide="calendar" ></i>
-        <span class="pdetail-ml">Fin</span>
+        <span class="pdetail-ml">{% trans 'Fin' %}</span>
         <span class="pdetail-mv">{{ project.end_date|date:"d/m/Y" }}</span>
       </span>
       {% endif %}
       {% if project.budget %}
       <span class="pdetail-mi">
         <i data-lucide="circle-dollar-sign" ></i>
-        <span class="pdetail-ml">Budget</span>
+        <span class="pdetail-ml">{% trans 'Budget' %}</span>
         <span class="pdetail-mv">{{ project.budget|number_format }} {{ project.currency }}</span>
       </span>
       {% endif %}
@@ -205,27 +205,27 @@
 <div class="pd-tabs">
   <button class="pd-tab" data-tab="jalons">
     <i data-lucide="clipboard" ></i>
-    Jalons <span class="pd-tab-count">{{ milestones|length }}</span>
+    {% trans 'Jalons' %} <span class="pd-tab-count">{{ milestones|length }}</span>
   </button>
   <button class="pd-tab" data-tab="equipe">
     <i data-lucide="users" ></i>
-    Équipe <span class="pd-tab-count">{{ members|length }}</span>
+    {% trans 'Équipe' %} <span class="pd-tab-count">{{ members|length }}</span>
   </button>
   <button class="pd-tab" data-tab="documents">
     <i data-lucide="folder" ></i>
-    Documents <span class="pd-tab-count">{{ documents|length }}</span>
+    {% trans 'Documents' %} <span class="pd-tab-count">{{ documents|length }}</span>
   </button>
   <button class="pd-tab" data-tab="besoins">
     <i data-lucide="circle-check" ></i>
-    Besoins <span class="pd-tab-count">{{ needs|length }}</span>
+    {% trans 'Besoins' %} <span class="pd-tab-count">{{ needs|length }}</span>
   </button>
   <button class="pd-tab" data-tab="commentaires">
     <i data-lucide="message-circle" ></i>
-    Commentaires <span class="pd-tab-count">{{ comments|length }}</span>
+    {% trans 'Commentaires' %} <span class="pd-tab-count">{{ comments|length }}</span>
   </button>
   <button class="pd-tab" data-tab="activite">
     <i data-lucide="clock" ></i>
-    Activité
+    {% trans 'Activité' %}
   </button>
 </div>
 
@@ -234,33 +234,33 @@
   <div class="card">
     <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
       <div>
-        <h3 class="card-title">Jalons</h3>
-        <p class="text-sm text-gray-500">{{ milestones|length }} étape{% if milestones|length != 1 %}s{% endif %} définie{% if milestones|length != 1 %}s{% endif %}</p>
+        <h3 class="card-title">{% trans 'Jalons' %}</h3>
+        <p class="text-sm text-gray-500">{% with cnt=milestones|length %}{% blocktrans count count=cnt %}{{ count }} étape définie{% plural %}{{ count }} étapes définies{% endblocktrans %}{% endwith %}</p>
       </div>
       {% if milestones %}
       <div id="jalons-view-switcher" class="jv-switcher">
         <button id="jv-btn-list" class="jv-btn jv-active" onclick="setJalonView('list')">
           <i data-lucide="list" ></i>
-          Liste
+          {% trans 'Liste' %}
         </button>
         <button id="jv-btn-kanban" class="jv-btn" onclick="setJalonView('kanban')">
           <i data-lucide="bar-chart" ></i>
-          Kanban
+          {% trans 'Kanban' %}
         </button>
         <button id="jv-btn-gantt" class="jv-btn" onclick="setJalonView('gantt')">
           <i data-lucide="align-left" ></i>
-          Gantt
+          {% trans 'Gantt' %}
         </button>
         <button id="jv-btn-calendrier" class="jv-btn" onclick="setJalonView('calendrier')">
           <i data-lucide="calendar" ></i>
-          Calendrier
+          {% trans 'Calendrier' %}
         </button>
       </div>
       {% endif %}
       {% if can_add_milestones %}
       <a href="{% url 'core:milestone_create' project.id %}" class="btn btn-primary btn-sm" style="display:flex;align-items:center;gap:6px;">
         <i data-lucide="plus-circle" width="15" height="15" ></i>
-        Ajouter un jalon
+        {% trans 'Ajouter un jalon' %}
       </a>
       {% endif %}
     </div>
@@ -282,7 +282,7 @@
               {% if sub_stats.total == 0 and can_add_milestones or sub_stats.total == 0 and is_my_milestone %}
               <a href="{% url 'core:milestone_toggle' milestone.id %}"
                  class="mrow-check{% if milestone.completed %} done{% endif %}"
-                 title="{% if milestone.completed %}Marquer non terminé{% else %}Marquer terminé{% endif %}">
+                 title="{% if milestone.completed %}{% trans 'Marquer non terminé' %}{% else %}{% trans 'Marquer terminé' %}{% endif %}">
                 {% if milestone.completed %}✓{% endif %}
               </a>
               {% else %}
@@ -297,8 +297,8 @@
                     {{ milestone.name }}
                     <i data-lucide="external-link" width="12" height="12" style="opacity:0;transition:opacity .15s;flex-shrink:0;" ></i>
                   </a>
-                  {% if is_my_milestone %}<span class="mrow-badge mine">Votre tâche</span>{% endif %}
-                  <span id="mstatus-{{milestone.id}}" class="mrow-sbadge s-{{ milestone.status }}">{% if milestone.status == 'a_faire' %}À faire{% elif milestone.status == 'en_cours' %}En cours{% elif milestone.status == 'bloque' %}Bloqué{% elif milestone.status == 'en_revision' %}En révision{% elif milestone.status == 'termine' %}Terminé{% endif %}</span>
+                  {% if is_my_milestone %}<span class="mrow-badge mine">{% trans 'Votre tâche' %}</span>{% endif %}
+                  <span id="mstatus-{{milestone.id}}" class="mrow-sbadge s-{{ milestone.status }}">{% if milestone.status == 'a_faire' %}{% trans 'À faire' %}{% elif milestone.status == 'en_cours' %}{% trans 'En cours' %}{% elif milestone.status == 'bloque' %}{% trans 'Bloqué' %}{% elif milestone.status == 'en_revision' %}{% trans 'En révision' %}{% elif milestone.status == 'termine' %}{% trans 'Terminé' %}{% endif %}</span>
                 </div>
                 <div class="mrow-meta">
                   {% if milestone.assigned_to.exists %}
@@ -307,26 +307,26 @@
                     {% for emp in milestone.assigned_to.all %}{{ emp.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
                   </span>
                   {% else %}
-                  <span id="maz-{{ milestone.id }}" class="mrow-unassigned">Non assigné</span>
+                  <span id="maz-{{ milestone.id }}" class="mrow-unassigned">{% trans 'Non assigné' %}</span>
                   {% endif %}
                   {% if can_add_milestones %}
                   <button class="qa-trigger" data-qa-type="milestone" data-qa-id="{{ milestone.id }}"
                           data-qa-emp-ids="{% for emp in milestone.assigned_to.all %}{{ emp.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
                           onclick="event.stopPropagation();qaOpen('milestone','{{ milestone.id }}',this.closest('[data-milestone-row]'),'{{ milestone.name|escapejs }}')">
                     <i data-lucide="user" width="10" height="10" ></i>
-                    Assigner
+                    {% trans 'Assigner' %}
                   </button>
                   {% endif %}
                   {% if milestone.due_date %}
                   {% with overdue=milestone.due_date|is_overdue %}
                   <span class="mrow-mi{% if not milestone.completed and overdue %} overdue{% endif %}">
                     <i data-lucide="calendar" ></i>
-                    {{ milestone.due_date|date:"d/m/Y" }}{% if not milestone.completed and overdue %} — En retard{% endif %}
+                    {{ milestone.due_date|date:"d/m/Y" }}{% if not milestone.completed and overdue %} — {% trans 'En retard' %}{% endif %}
                   </span>
                   {% endwith %}
                   {% endif %}
                   {% if sub_stats.total > 0 %}
-                  <span class="mrow-mi">{{ sub_stats.done }}/{{ sub_stats.total }} sous-étape{% if sub_stats.total != 1 %}s{% endif %}</span>
+                  <span class="mrow-mi">{{ sub_stats.done }}/{{ sub_stats.total }} {% blocktrans count count=sub_stats.total %}sous-étape{% plural %}sous-étapes{% endblocktrans %}</span>
                   {% endif %}
                   {% if milestone.completed and milestone.completed_at %}
                   <span class="mrow-mi success">
@@ -335,7 +335,7 @@
                   </span>
                   {% endif %}
                   {% if milestone.need %}
-                  <span class="mrow-mi need">Besoin</span>
+                  <span class="mrow-mi need">{% trans 'Besoin' %}</span>
                   {% endif %}
                 </div>
               </div>
@@ -353,21 +353,21 @@
               <div class="mrow-acts">
                 <form method="post" action="{% url 'core:milestone_update_status' milestone.id %}" style="display:inline;">
                   {% csrf_token %}
-                  <select name="status" onchange="onStatusChange({{milestone.id}}, this.value)" title="Changer le statut" class="mrow-status-sel">
-                    <option value="a_faire" {% if milestone.status == 'a_faire' %}selected{% endif %}>À faire</option>
-                    <option value="en_cours" {% if milestone.status == 'en_cours' %}selected{% endif %}>En cours</option>
-                    <option value="bloque" {% if milestone.status == 'bloque' %}selected{% endif %}>Bloqué</option>
-                    <option value="en_revision" {% if milestone.status == 'en_revision' %}selected{% endif %}>En révision</option>
-                    <option value="termine" {% if milestone.status == 'termine' %}selected{% endif %}>Terminé</option>
+                  <select name="status" onchange="onStatusChange({{milestone.id}}, this.value)" title="{% trans 'Changer le statut' %}" class="mrow-status-sel">
+                    <option value="a_faire" {% if milestone.status == 'a_faire' %}selected{% endif %}>{% trans 'À faire' %}</option>
+                    <option value="en_cours" {% if milestone.status == 'en_cours' %}selected{% endif %}>{% trans 'En cours' %}</option>
+                    <option value="bloque" {% if milestone.status == 'bloque' %}selected{% endif %}>{% trans 'Bloqué' %}</option>
+                    <option value="en_revision" {% if milestone.status == 'en_revision' %}selected{% endif %}>{% trans 'En révision' %}</option>
+                    <option value="termine" {% if milestone.status == 'termine' %}selected{% endif %}>{% trans 'Terminé' %}</option>
                   </select>
                 </form>
-                <a href="{% url 'core:sub_milestone_create' milestone.id %}" class="action-btn" title="Ajouter une sous-étape" style="font-weight:700;font-size:15px;color:#3b82f6;text-decoration:none;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;">+</a>
-                <a href="{% url 'core:milestone_edit' milestone.id %}" class="action-btn" title="Modifier">
+                <a href="{% url 'core:sub_milestone_create' milestone.id %}" class="action-btn" title="{% trans 'Ajouter une sous-étape' %}" style="font-weight:700;font-size:15px;color:#3b82f6;text-decoration:none;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;">+</a>
+                <a href="{% url 'core:milestone_edit' milestone.id %}" class="action-btn" title="{% trans 'Modifier' %}">
                   <i data-lucide="pencil" width="13" height="13" ></i>
                 </a>
-                <a href="#" class="action-btn danger" title="Supprimer"
+                <a href="#" class="action-btn danger" title="{% trans 'Supprimer' %}"
                    data-delete-url="{% url 'core:milestone_delete' milestone.id %}"
-                   data-delete-type="le jalon"
+                   data-delete-type="{% trans 'le jalon' %}"
                    data-delete-name="{{ milestone.name }}">
                   <i data-lucide="trash-2" width="13" height="13" ></i>
                 </a>
@@ -386,7 +386,7 @@
                 {% if can_add_milestones or is_my_sub %}
                 <a href="{% url 'core:sub_milestone_toggle' sub.id %}"
                    class="msub-check{% if sub.completed %} done{% endif %}"
-                   title="{% if sub.completed %}Marquer non terminée{% else %}Marquer terminée{% endif %}">
+                   title="{% if sub.completed %}{% trans 'Marquer non terminée' %}{% else %}{% trans 'Marquer terminée' %}{% endif %}">
                   {% if sub.completed %}✓{% endif %}
                 </a>
                 {% else %}
@@ -397,17 +397,17 @@
                 <span class="msub-name{% if sub.completed %} done{% endif %}">{{ sub.name }}</span>
                 {% if sub.assigned_to.exists %}
                 <span id="saz-{{ sub.id }}" class="msub-assignee{% if is_my_sub %} mine{% endif %}">
-                  — {% if is_my_sub %}Vous{% if sub.assigned_to.count > 1 %} +{{ sub.assigned_to.count|add:"-1" }}{% endif %}{% else %}{% for emp in sub.assigned_to.all %}{{ emp.name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% endif %}
+                  — {% if is_my_sub %}{% trans 'Vous' %}{% if sub.assigned_to.count > 1 %} +{{ sub.assigned_to.count|add:"-1" }}{% endif %}{% else %}{% for emp in sub.assigned_to.all %}{{ emp.name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% endif %}
                 </span>
                 {% else %}
-                <span id="saz-{{ sub.id }}" class="msub-unassigned">Non assigné</span>
+                <span id="saz-{{ sub.id }}" class="msub-unassigned">{% trans 'Non assigné' %}</span>
                 {% endif %}
                 {% if can_add_milestones %}
                 <button class="qa-trigger" data-qa-type="sub_milestone" data-qa-id="{{ sub.id }}"
                         data-qa-emp-ids="{% for emp in sub.assigned_to.all %}{{ emp.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
                         onclick="event.stopPropagation();qaOpen('sub_milestone','{{ sub.id }}',this.closest('[data-milestone-row]'),'{{ sub.name|escapejs }}')">
                   <i data-lucide="user" width="10" height="10" ></i>
-                  Assigner
+                  {% trans 'Assigner' %}
                 </button>
                 {% endif %}
                 {% if sub.due_date %}
@@ -418,12 +418,12 @@
               </div>
               {% if can_add_milestones %}
               <div class="msub-acts">
-                <a href="{% url 'core:sub_milestone_edit' sub.id %}" class="action-btn" title="Modifier">
+                <a href="{% url 'core:sub_milestone_edit' sub.id %}" class="action-btn" title="{% trans 'Modifier' %}">
                   <i data-lucide="pencil" width="12" height="12" ></i>
                 </a>
-                <a href="#" class="action-btn danger" title="Supprimer"
+                <a href="#" class="action-btn danger" title="{% trans 'Supprimer' %}"
                    data-delete-url="{% url 'core:sub_milestone_delete' sub.id %}"
-                   data-delete-type="la sous-étape"
+                   data-delete-type="{% trans 'la sous-étape' %}"
                    data-delete-name="{{ sub.name }}">
                   <i data-lucide="trash-2" width="12" height="12" ></i>
                 </a>
@@ -444,9 +444,9 @@
       {% else %}
       <div style="text-align:center;padding:48px 24px;">
         <i data-lucide="clipboard" width="40" height="40" style="color:#d1d5db;margin:0 auto 12px;" ></i>
-        <p class="text-gray-500" style="margin-bottom:16px;">Aucun jalon défini pour ce projet.</p>
+        <p class="text-gray-500" style="margin-bottom:16px;">{% trans 'Aucun jalon défini pour ce projet.' %}</p>
         {% if can_add_milestones %}
-        <a href="{% url 'core:milestone_create' project.id %}" class="btn btn-primary btn-sm">Ajouter le premier jalon</a>
+        <a href="{% url 'core:milestone_create' project.id %}" class="btn btn-primary btn-sm">{% trans 'Ajouter le premier jalon' %}</a>
         {% endif %}
       </div>
       {% endif %}
@@ -469,13 +469,13 @@
   <div class="card">
     <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
       <div>
-        <h3 class="card-title">Équipe du projet</h3>
-        <p class="text-sm text-gray-500">{{ members|length }} membre{% if members|length != 1 %}s{% endif %}</p>
+        <h3 class="card-title">{% trans 'Équipe du projet' %}</h3>
+        <p class="text-sm text-gray-500">{% with cnt=members|length %}{% blocktrans count count=cnt %}{{ count }} membre{% plural %}{{ count }} membres{% endblocktrans %}{% endwith %}</p>
       </div>
       {% if can_manage_members %}
       <a href="{% url 'core:project_member_add' project.id %}" class="btn btn-primary btn-sm" style="display:flex;align-items:center;gap:6px;">
         <i data-lucide="plus-circle" width="15" height="15" ></i>
-        Ajouter un membre
+        {% trans 'Ajouter un membre' %}
       </a>
       {% endif %}
     </div>
@@ -491,7 +491,7 @@
             <div style="min-width:0;">
               <div style="display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                 <span class="text-sm font-medium">{{ member.employee.name }}</span>
-                {% if member.employee.is_external %}<span style="font-size:10px;padding:1px 6px;border-radius:4px;background:var(--amber-100,#fef3c7);color:var(--amber-700,#b45309);font-weight:600;white-space:nowrap;flex-shrink:0;">Externe</span>{% endif %}
+                {% if member.employee.is_external %}<span style="font-size:10px;padding:1px 6px;border-radius:4px;background:var(--amber-100,#fef3c7);color:var(--amber-700,#b45309);font-weight:600;white-space:nowrap;flex-shrink:0;">{% trans 'Externe' %}</span>{% endif %}
               </div>
               <div class="text-xs text-gray-500">{{ member.employee.role }}{% if member.employee.organization %} · {{ member.employee.organization }}{% endif %}</div>
               {% if member.employee.email %}
@@ -500,7 +500,7 @@
               {% with stats=member_task_stats|get_item:member.employee_id %}
               {% if stats %}
               <div class="text-xs" style="margin-top:3px;color:#3b82f6;">
-                {{ stats.done }}/{{ stats.total }} tâche{% if stats.total != 1 %}s{% endif %}
+                {{ stats.done }}/{{ stats.total }} {% blocktrans count count=stats.total %}tâche{% plural %}tâches{% endblocktrans %}
                 {% if stats.total > 0 %}
                 <span style="color:#94a3b8;">({{ stats.done|stringformat:"d" }}/{{ stats.total|stringformat:"d" }})</span>
                 {% endif %}
@@ -515,12 +515,12 @@
             </span>
             {% if can_manage_members %}
             <div class="flex gap-1">
-              <a href="{% url 'core:project_member_edit' member.id %}" class="action-btn" title="Modifier le rôle">
+              <a href="{% url 'core:project_member_edit' member.id %}" class="action-btn" title="{% trans 'Modifier le rôle' %}">
                 <i data-lucide="pencil" width="13" height="13" ></i>
               </a>
-              <a href="#" class="action-btn danger" title="Retirer du projet"
+              <a href="#" class="action-btn danger" title="{% trans 'Retirer du projet' %}"
                  data-delete-url="{% url 'core:project_member_delete' member.id %}"
-                 data-delete-type="le membre"
+                 data-delete-type="{% trans 'le membre' %}"
                  data-delete-name="{{ member.employee.name }}">
                 <i data-lucide="trash-2" width="13" height="13" ></i>
               </a>
@@ -533,9 +533,9 @@
       {% else %}
       <div style="text-align:center;padding:48px 24px;">
         <i data-lucide="users" width="40" height="40" style="color:#d1d5db;margin:0 auto 12px;" ></i>
-        <p class="text-gray-500" style="margin-bottom:16px;">Aucun membre dans ce projet.</p>
+        <p class="text-gray-500" style="margin-bottom:16px;">{% trans 'Aucun membre dans ce projet.' %}</p>
         {% if can_manage_members %}
-        <a href="{% url 'core:project_member_add' project.id %}" class="btn btn-primary btn-sm">Ajouter le premier membre</a>
+        <a href="{% url 'core:project_member_add' project.id %}" class="btn btn-primary btn-sm">{% trans 'Ajouter le premier membre' %}</a>
         {% endif %}
       </div>
       {% endif %}
@@ -548,18 +548,18 @@
   <div class="card">
     <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
       <div>
-        <h3 class="card-title">Documents</h3>
-        <p class="text-sm text-gray-500">{% with f=project.folders.count d=project.project_documents.count %}{{ f }} dossier{% if f != 1 %}s{% endif %}, {{ d }} document{% if d != 1 %}s{% endif %}{% endwith %}</p>
+        <h3 class="card-title">{% trans 'Documents' %}</h3>
+        <p class="text-sm text-gray-500">{% with f=project.folders.count d=project.project_documents.count %}{% blocktrans count count=f %}{{ count }} dossier{% plural %}{{ count }} dossiers{% endblocktrans %}, {% blocktrans count count=d %}{{ count }} document{% plural %}{{ count }} documents{% endblocktrans %}{% endwith %}</p>
       </div>
       {% if can_add_documents %}
       <div class="flex gap-2">
         <a href="{% url 'core:project_folder_create' project.id %}" class="btn btn-outline btn-sm" style="display:flex;align-items:center;gap:5px;">
           <i data-lucide="folder" width="14" height="14" ></i>
-          Dossier
+          {% trans 'Dossier' %}
         </a>
         <a href="{% url 'core:project_document_create' project.id %}" class="btn btn-primary btn-sm" style="display:flex;align-items:center;gap:5px;">
           <i data-lucide="plus-circle" width="14" height="14" ></i>
-          Document
+          {% trans 'Document' %}
         </a>
       </div>
       {% endif %}
@@ -573,7 +573,7 @@
         <div>
           <h4 class="text-sm font-semibold" style="color:#374151;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
             <i data-lucide="folder" width="15" height="15" style="color:#3b82f6;" ></i>
-            Dossiers ({{ folders|length }})
+            {% trans 'Dossiers' %} ({{ folders|length }})
           </h4>
           {% if folders %}
           <div style="display:flex;flex-direction:column;gap:6px;">
@@ -586,18 +586,18 @@
               </div>
               {% if can_add_documents %}
               <div class="flex gap-1" style="flex-shrink:0;margin-left:6px;">
-                <a href="{% url 'core:project_folder_create' project.id %}?parent={{ folder.id }}" class="action-btn" title="Sous-dossier">
+                <a href="{% url 'core:project_folder_create' project.id %}?parent={{ folder.id }}" class="action-btn" title="{% trans 'Sous-dossier' %}">
                   <i data-lucide="plus-circle" width="12" height="12" ></i>
                 </a>
-                <a href="{% url 'core:project_document_create' project.id %}?folder={{ folder.id }}" class="action-btn" title="Ajouter document">
+                <a href="{% url 'core:project_document_create' project.id %}?folder={{ folder.id }}" class="action-btn" title="{% trans 'Ajouter document' %}">
                   <i data-lucide="file-text" width="12" height="12" ></i>
                 </a>
-                <a href="{% url 'core:project_folder_edit' folder.id %}" class="action-btn" title="Modifier">
+                <a href="{% url 'core:project_folder_edit' folder.id %}" class="action-btn" title="{% trans 'Modifier' %}">
                   <i data-lucide="pencil" width="12" height="12" ></i>
                 </a>
-                <a href="#" class="action-btn danger" title="Supprimer"
+                <a href="#" class="action-btn danger" title="{% trans 'Supprimer' %}"
                    data-delete-url="{% url 'core:project_folder_delete' folder.id %}"
-                   data-delete-type="le dossier"
+                   data-delete-type="{% trans 'le dossier' %}"
                    data-delete-name="{{ folder.name }}">
                   <i data-lucide="trash-2" width="12" height="12" ></i>
                 </a>
@@ -607,7 +607,7 @@
             {% endfor %}
           </div>
           {% else %}
-          <p class="text-sm text-gray-400">Aucun dossier.</p>
+          <p class="text-sm text-gray-400">{% trans 'Aucun dossier.' %}</p>
           {% endif %}
         </div>
 
@@ -630,17 +630,17 @@
               </div>
               <div class="flex gap-1" style="flex-shrink:0;margin-left:6px;">
                 {% if doc.file %}
-                <a href="{% url 'core:project_document_download' doc.id %}" class="action-btn" title="Télécharger">
+                <a href="{% url 'core:project_document_download' doc.id %}" class="action-btn" title="{% trans 'Télécharger' %}">
                   <i data-lucide="download" width="13" height="13" ></i>
                 </a>
                 {% endif %}
                 {% if can_add_documents %}
-                <a href="{% url 'core:project_document_edit' doc.id %}" class="action-btn" title="Modifier">
+                <a href="{% url 'core:project_document_edit' doc.id %}" class="action-btn" title="{% trans 'Modifier' %}">
                   <i data-lucide="pencil" width="13" height="13" ></i>
                 </a>
-                <a href="#" class="action-btn danger" title="Supprimer"
+                <a href="#" class="action-btn danger" title="{% trans 'Supprimer' %}"
                    data-delete-url="{% url 'core:project_document_delete' doc.id %}"
-                   data-delete-type="le document"
+                   data-delete-type="{% trans 'le document' %}"
                    data-delete-name="{{ doc.title }}">
                   <i data-lucide="trash-2" width="13" height="13" ></i>
                 </a>
@@ -650,7 +650,7 @@
             {% endfor %}
           </div>
           {% else %}
-          <p class="text-sm text-gray-400">Aucun document.</p>
+          <p class="text-sm text-gray-400">{% trans 'Aucun document.' %}</p>
           {% endif %}
         </div>
 
@@ -658,11 +658,11 @@
       {% else %}
       <div style="text-align:center;padding:48px 24px;">
         <i data-lucide="folder" width="40" height="40" style="color:#d1d5db;margin:0 auto 12px;" ></i>
-        <p class="text-gray-500" style="margin-bottom:16px;">Aucun dossier ni document.</p>
+        <p class="text-gray-500" style="margin-bottom:16px;">{% trans 'Aucun dossier ni document.' %}</p>
         {% if can_add_documents %}
         <div class="flex gap-2" style="justify-content:center;">
-          <a href="{% url 'core:project_folder_create' project.id %}" class="btn btn-outline btn-sm">Créer un dossier</a>
-          <a href="{% url 'core:project_document_create' project.id %}" class="btn btn-primary btn-sm">Ajouter un document</a>
+          <a href="{% url 'core:project_folder_create' project.id %}" class="btn btn-outline btn-sm">{% trans 'Créer un dossier' %}</a>
+          <a href="{% url 'core:project_document_create' project.id %}" class="btn btn-primary btn-sm">{% trans 'Ajouter un document' %}</a>
         </div>
         {% endif %}
       </div>
@@ -676,8 +676,8 @@
 <div class="pd-panel" id="panel-besoins" style="display:none;">
   <div class="card">
     <div class="card-header">
-      <h3 class="card-title">Besoins</h3>
-      <p class="text-sm text-gray-500">{{ needs|length }} besoin{% if needs|length != 1 %}s{% endif %}</p>
+      <h3 class="card-title">{% trans 'Besoins' %}</h3>
+      <p class="text-sm text-gray-500">{% with cnt=needs|length %}{% blocktrans count count=cnt %}{{ count }} besoin{% plural %}{{ count }} besoins{% endblocktrans %}{% endwith %}</p>
     </div>
     <div class="card-content">
       {% if needs %}
@@ -689,13 +689,13 @@
               <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px;">
                 <span class="text-sm font-medium" style="color:#1e3a5f;">{{ need.title }}</span>
                 {% if need.status == 'ouvert' %}
-                <span style="font-size:10px;background:#f1f5f9;color:#64748b;border-radius:4px;padding:1px 6px;">Ouvert</span>
+                <span style="font-size:10px;background:#f1f5f9;color:#64748b;border-radius:4px;padding:1px 6px;">{% trans 'Ouvert' %}</span>
                 {% elif need.status == 'en_cours' %}
-                <span style="font-size:10px;background:#dbeafe;color:#1d4ed8;border-radius:4px;padding:1px 6px;">En cours</span>
+                <span style="font-size:10px;background:#dbeafe;color:#1d4ed8;border-radius:4px;padding:1px 6px;">{% trans 'En cours' %}</span>
                 {% elif need.status == 'resolu' %}
-                <span style="font-size:10px;background:#dcfce7;color:#166534;border-radius:4px;padding:1px 6px;">Résolu</span>
+                <span style="font-size:10px;background:#dcfce7;color:#166534;border-radius:4px;padding:1px 6px;">{% trans 'Résolu' %}</span>
                 {% elif need.status == 'rejete' %}
-                <span style="font-size:10px;background:#fef2f2;color:#dc2626;border-radius:4px;padding:1px 6px;">Rejeté</span>
+                <span style="font-size:10px;background:#fef2f2;color:#dc2626;border-radius:4px;padding:1px 6px;">{% trans 'Rejeté' %}</span>
                 {% endif %}
               </div>
               {% if need.description %}<div class="text-xs text-gray-500" style="margin-bottom:4px;">{{ need.description }}</div>{% endif %}
@@ -709,15 +709,15 @@
               <div style="display:flex;gap:4px;">
                 <form method="post" action="{% url 'core:project_need_update_status' need.id %}" style="display:inline;">
                   {% csrf_token %}<input type="hidden" name="status" value="en_cours">
-                  <button type="submit" style="font-size:10px;padding:2px 8px;background:#dbeafe;color:#1d4ed8;border:none;border-radius:4px;cursor:pointer;" title="Marquer en cours">En cours</button>
+                  <button type="submit" style="font-size:10px;padding:2px 8px;background:#dbeafe;color:#1d4ed8;border:none;border-radius:4px;cursor:pointer;" title="{% trans 'Marquer en cours' %}">{% trans 'En cours' %}</button>
                 </form>
                 <form method="post" action="{% url 'core:project_need_update_status' need.id %}" style="display:inline;">
                   {% csrf_token %}<input type="hidden" name="status" value="resolu">
-                  <button type="submit" style="font-size:10px;padding:2px 8px;background:#dcfce7;color:#166534;border:none;border-radius:4px;cursor:pointer;" title="Marquer résolu">Résolu</button>
+                  <button type="submit" style="font-size:10px;padding:2px 8px;background:#dcfce7;color:#166534;border:none;border-radius:4px;cursor:pointer;" title="{% trans 'Marquer résolu' %}">{% trans 'Résolu' %}</button>
                 </form>
                 <form method="post" action="{% url 'core:project_need_update_status' need.id %}" style="display:inline;">
                   {% csrf_token %}<input type="hidden" name="status" value="rejete">
-                  <button type="submit" style="font-size:10px;padding:2px 8px;background:#fef2f2;color:#dc2626;border:none;border-radius:4px;cursor:pointer;" title="Rejeter">Rejeter</button>
+                  <button type="submit" style="font-size:10px;padding:2px 8px;background:#fef2f2;color:#dc2626;border:none;border-radius:4px;cursor:pointer;" title="{% trans 'Rejeter' %}">{% trans 'Rejeter' %}</button>
                 </form>
               </div>
               {% endif %}
@@ -727,25 +727,25 @@
         {% endfor %}
       </div>
       {% else %}
-      <p class="text-sm text-gray-400" style="margin-bottom:16px;">Aucun besoin enregistré.</p>
+      <p class="text-sm text-gray-400" style="margin-bottom:16px;">{% trans 'Aucun besoin enregistré.' %}</p>
       {% endif %}
 
       {% if can_perform_actions %}
       <form method="post" action="{% url 'core:project_need_create' project.id %}" style="border-top:1px solid #e5e7eb;padding-top:16px;">
         {% csrf_token %}
-        <p class="text-sm font-medium" style="color:#374151;margin-bottom:10px;">Ajouter un besoin</p>
+        <p class="text-sm font-medium" style="color:#374151;margin-bottom:10px;">{% trans 'Ajouter un besoin' %}</p>
         <div style="display:flex;flex-direction:column;gap:10px;">
-          <input class="form-control" type="text" name="title" placeholder="Titre du besoin" required />
+          <input class="form-control" type="text" name="title" placeholder="{% trans 'Titre du besoin' %}" required />
           <div class="grid grid-2" style="gap:10px;">
             <select class="form-control" name="priority">
-              <option value="basse">Basse</option>
-              <option value="moyenne" selected>Moyenne</option>
-              <option value="haute">Haute</option>
+              <option value="basse">{% trans 'Basse' %}</option>
+              <option value="moyenne" selected>{% trans 'Moyenne' %}</option>
+              <option value="haute">{% trans 'Haute' %}</option>
             </select>
           </div>
-          <textarea class="form-control" name="description" rows="2" placeholder="Description (facultatif)"></textarea>
+          <textarea class="form-control" name="description" rows="2" placeholder="{% trans 'Description (facultatif)' %}"></textarea>
           <div style="display:flex;justify-content:flex-end;">
-            <button type="submit" class="btn btn-primary btn-sm">Ajouter</button>
+            <button type="submit" class="btn btn-primary btn-sm">{% trans 'Ajouter' %}</button>
           </div>
         </div>
       </form>
@@ -758,8 +758,8 @@
 <div class="pd-panel" id="panel-commentaires" style="display:none;">
   <div class="card">
     <div class="card-header">
-      <h3 class="card-title">Commentaires</h3>
-      <p class="text-sm text-gray-500">{{ comments|length }} commentaire{% if comments|length != 1 %}s{% endif %}</p>
+      <h3 class="card-title">{% trans 'Commentaires' %}</h3>
+      <p class="text-sm text-gray-500">{% with cnt=comments|length %}{% blocktrans count count=cnt %}{{ count }} commentaire{% plural %}{{ count }} commentaires{% endblocktrans %}{% endwith %}</p>
     </div>
     <div class="card-content">
       {% if comments %}
@@ -780,16 +780,16 @@
         {% endfor %}
       </div>
       {% else %}
-      <p class="text-sm text-gray-400" style="margin-bottom:16px;">Aucun commentaire.</p>
+      <p class="text-sm text-gray-400" style="margin-bottom:16px;">{% trans 'Aucun commentaire.' %}</p>
       {% endif %}
 
       {% if can_perform_actions %}
       <form method="post" action="{% url 'core:project_comment_create' project.id %}" style="border-top:1px solid #e5e7eb;padding-top:16px;">
         {% csrf_token %}
-        <p class="text-sm font-medium" style="color:#374151;margin-bottom:10px;">Nouveau commentaire</p>
-        <textarea class="form-control" name="message" rows="3" placeholder="Votre commentaire…" required></textarea>
+        <p class="text-sm font-medium" style="color:#374151;margin-bottom:10px;">{% trans 'Nouveau commentaire' %}</p>
+        <textarea class="form-control" name="message" rows="3" placeholder="{% trans 'Votre commentaire…' %}" required></textarea>
         <div style="display:flex;justify-content:flex-end;margin-top:10px;">
-          <button type="submit" class="btn btn-primary btn-sm">Publier</button>
+          <button type="submit" class="btn btn-primary btn-sm">{% trans 'Publier' %}</button>
         </div>
       </form>
       {% endif %}
@@ -802,12 +802,12 @@
   <div class="card">
     <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
       <div>
-        <h3 class="card-title">Journal d'activité</h3>
-        <p class="text-sm text-gray-500">20 dernières actions</p>
+        <h3 class="card-title">{% trans "Journal d'activité" %}</h3>
+        <p class="text-sm text-gray-500">{% trans '20 dernières actions' %}</p>
       </div>
       <a href="{% url 'core:export_project_activities' project.id %}" class="btn btn-outline btn-sm" style="display:flex;align-items:center;gap:6px;">
         <i data-lucide="download" width="14" height="14" ></i>
-        Exporter PDF
+        {% trans 'Exporter PDF' %}
       </a>
     </div>
     <div class="card-content">
@@ -823,7 +823,7 @@
         {% endfor %}
       </div>
       {% else %}
-      <p class="text-gray-500">Aucune activité enregistrée pour ce projet.</p>
+      <p class="text-gray-500">{% trans 'Aucune activité enregistrée pour ce projet.' %}</p>
       {% endif %}
     </div>
   </div>
@@ -857,6 +857,26 @@
   }
   activate(validIds.includes(initial) ? initial : validIds[0]);
 })();
+</script>
+
+<script>
+var DETAIL_I18N = {
+  aFaire:       "{% trans 'À faire' %}",
+  enCours:      "{% trans 'En cours' %}",
+  bloque:       "{% trans 'Bloqué' %}",
+  enRevision:   "{% trans 'En révision' %}",
+  termine:      "{% trans 'Terminé' %}",
+  unassigned:   "{% trans 'Non assigné' %}",
+  assign:       "{% trans 'Assigner' %}",
+  updating:     "{% trans 'Mise à jour...' %}",
+  error:        "{% trans 'Erreur' %}",
+  networkError: "{% trans 'Erreur réseau' %}",
+  none:         "{% trans 'Aucun' %}",
+  ganttNoDates: "{% trans 'Dates de projet manquantes pour le Gantt.' %}",
+  noDeadline:   "{% trans "Sans date d'échéance" %}",
+  dayNames:     ["{% trans 'Lun' %}","{% trans 'Mar' %}","{% trans 'Mer' %}","{% trans 'Jeu' %}","{% trans 'Ven' %}","{% trans 'Sam' %}","{% trans 'Dim' %}"],
+  membresProjet:"{% trans 'Membres du projet' %}",
+};
 </script>
 
 {% if can_add_milestones and members_cards %}
@@ -904,19 +924,19 @@
 <div class="qa-overlay" id="qa-overlay" onclick="qaClose()"></div>
 <div class="qa-modal" id="qa-modal">
   <div class="qa-modal-hdr">
-    <p class="qa-modal-title" id="qa-modal-title">Assigner</p>
+    <p class="qa-modal-title" id="qa-modal-title">{% trans 'Assigner' %}</p>
     <button class="qa-close-btn" onclick="qaClose()">&times;</button>
   </div>
   <div class="qa-body">
     <div class="qa-search-wrap">
       <i data-lucide="search" width="15" height="15" ></i>
-      <input type="text" class="qa-search" id="qa-search" placeholder="Rechercher un membre..." autocomplete="off">
+      <input type="text" class="qa-search" id="qa-search" placeholder="{% trans 'Rechercher un membre...' %}" autocomplete="off">
     </div>
     <div class="qa-none" id="qa-none-opt" onclick="qaPickMember('')">
       <i data-lucide="ban" width="14" height="14" ></i>
-      Aucun responsable
+      {% trans 'Aucun responsable' %}
     </div>
-    <p class="qa-section">Membres du projet</p>
+    <p class="qa-section" id="qa-section-label">{% trans 'Membres du projet' %}</p>
     <div class="qa-grid" id="qa-cards">
       {% for m in members_cards %}
       <div class="qa-card" data-id="{{ m.id }}" data-search="{{ m.name|lower }} {{ m.direction|lower }}" onclick="qaPickMember('{{ m.id }}')">
@@ -929,7 +949,7 @@
           <div class="qa-chk">✓</div>
         </div>
         <div class="qa-badges">
-          {% if m.is_external %}<span class="qa-b" style="background:var(--amber-100,#fef3c7);color:var(--amber-700,#b45309);">Externe</span>{% endif %}
+          {% if m.is_external %}<span class="qa-b" style="background:var(--amber-100,#fef3c7);color:var(--amber-700,#b45309);">{% trans 'Externe' %}</span>{% endif %}
           {% if m.project_role %}<span class="qa-b qa-b-role">{{ m.project_role }}</span>{% endif %}
           <span class="qa-b {% if m.task_count >= 3 %}qa-b-busy{% else %}qa-b-t{% endif %}">{{ m.task_count }} tâche{% if m.task_count != 1 %}s{% endif %}</span>
         </div>
@@ -954,7 +974,7 @@
     var idsStr = trig ? (trig.dataset.qaEmpIds || '') : '';
     qaCurrentIds = new Set(idsStr ? idsStr.split(',').filter(Boolean) : []);
 
-    document.getElementById('qa-modal-title').textContent = 'Assigner : ' + (taskName || '');
+    document.getElementById('qa-modal-title').textContent = DETAIL_I18N.assign + ' : ' + (taskName || '');
     document.getElementById('qa-search').value = '';
     document.getElementById('qa-status').className = 'qa-status';
     document.getElementById('qa-status').textContent = '';
@@ -987,7 +1007,7 @@
     if (!qaType || !qaId) return;
     var url = (qaType === 'milestone' ? QA_M_URL : QA_S_URL).replace('__ID__', qaId);
     var st = document.getElementById('qa-status');
-    st.className = 'qa-status loading'; st.textContent = 'Mise à jour...';
+    st.className = 'qa-status loading'; st.textContent = DETAIL_I18N.updating;
     var fd = new FormData();
     fd.append('assigned_to', empId);
     fd.append('csrfmiddlewaretoken', CSRF);
@@ -1014,7 +1034,7 @@
             span.innerHTML = '<i data-lucide="user" width="11" height="11" ></i> ' + data.assigned_names.join(', ');
             span.style.cssText = 'font-size:10px;color:var(--gray-500);display:inline-flex;align-items:center;gap:3px;';
           } else {
-            span.textContent = 'Non assigné';
+            span.textContent = DETAIL_I18N.unassigned;
             span.style.cssText = 'font-size:10px;background:var(--amber-100);color:var(--amber-700);border-radius:4px;padding:1px 6px;';
           }
         }
@@ -1027,10 +1047,10 @@
 
         st.className = 'qa-status';
       } else {
-        st.className = 'qa-status error'; st.textContent = data.error || 'Erreur';
+        st.className = 'qa-status error'; st.textContent = data.error || DETAIL_I18N.error;
       }
     } catch(e) {
-      st.className = 'qa-status error'; st.textContent = 'Erreur réseau';
+      st.className = 'qa-status error'; st.textContent = DETAIL_I18N.networkError;
     }
   };
 
@@ -1065,14 +1085,14 @@ function detailUrl(id) { return _DETAIL_PARTS[0]+'/'+id+'/'+_DETAIL_PARTS[1]; }
 
 // ── Config statuts ──────────────────────────────────────────────────────────
 var STATUS_COLS = [
-  {key:'a_faire',    label:'À faire',     color:'#64748b', bg:'#f8fafc', border:'#e2e8f0'},
-  {key:'en_cours',   label:'En cours',    color:'#1d4ed8', bg:'#eff6ff', border:'#bfdbfe'},
-  {key:'bloque',     label:'Bloqué',      color:'#b45309', bg:'#fffbeb', border:'#fde68a'},
-  {key:'en_revision',label:'En révision', color:'#7c3aed', bg:'#f5f3ff', border:'#ddd6fe'},
-  {key:'termine',    label:'Terminé',     color:'#15803d', bg:'#f0fdf4', border:'#bbf7d0'},
+  {key:'a_faire',    label:DETAIL_I18N.aFaire,     color:'#64748b', bg:'#f8fafc', border:'#e2e8f0'},
+  {key:'en_cours',   label:DETAIL_I18N.enCours,    color:'#1d4ed8', bg:'#eff6ff', border:'#bfdbfe'},
+  {key:'bloque',     label:DETAIL_I18N.bloque,      color:'#b45309', bg:'#fffbeb', border:'#fde68a'},
+  {key:'en_revision',label:DETAIL_I18N.enRevision, color:'#7c3aed', bg:'#f5f3ff', border:'#ddd6fe'},
+  {key:'termine',    label:DETAIL_I18N.termine,     color:'#15803d', bg:'#f0fdf4', border:'#bbf7d0'},
 ];
 var STATUS_COLORS = {a_faire:'#94a3b8',en_cours:'#3b82f6',bloque:'#f59e0b',en_revision:'#8b5cf6',termine:'#22c55e'};
-var STATUS_LABELS = {a_faire:'À faire',en_cours:'En cours',bloque:'Bloqué',en_revision:'En révision',termine:'Terminé'};
+var STATUS_LABELS = {a_faire:DETAIL_I18N.aFaire,en_cours:DETAIL_I18N.enCours,bloque:DETAIL_I18N.bloque,en_revision:DETAIL_I18N.enRevision,termine:DETAIL_I18N.termine};
 var STATUS_BADGE  = {
   a_faire:    'background:#f1f5f9;color:#64748b;',
   en_cours:   'background:#dbeafe;color:#1d4ed8;',
@@ -1156,7 +1176,7 @@ function renderKanban() {
           + escH(col.label)
           + '<span style="background:'+col.border+';color:'+col.color+';border-radius:999px;padding:1px 8px;font-weight:600;">'+items.length+'</span></div>';
     if (items.length === 0) {
-      html += '<div style="border:2px dashed '+col.border+';border-radius:8px;height:60px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#94a3b8;">Aucun</div>';
+      html += '<div style="border:2px dashed '+col.border+';border-radius:8px;height:60px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#94a3b8;">'+DETAIL_I18N.none+'</div>';
     }
     items.forEach(function(m){ html += jkCard(m, col); });
     html += '</div>';
@@ -1171,7 +1191,7 @@ function jkCard(m, col) {
     : '';
   var asgn = m.assigned
     ? '<span style="font-size:10px;color:#64748b;overflow:hidden;text-overflow:ellipsis;max-width:110px;white-space:nowrap;">&#128100;&nbsp;'+escH(m.assigned)+'</span>'
-    : '<span style="font-size:10px;background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 5px;">Non assigné</span>';
+    : '<span style="font-size:10px;background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 5px;">'+DETAIL_I18N.unassigned+'</span>';
   return '<div draggable="true" ondragstart="jkDragStart(event,'+m.id+')" data-mid="'+m.id+'"'
        + ' style="background:#fff;border:1px solid '+col.border+';border-radius:8px;padding:10px;cursor:grab;'
        + 'box-shadow:0 1px 3px rgba(0,0,0,.06);transition:box-shadow .15s;"'
@@ -1212,7 +1232,7 @@ function renderGantt() {
     }
   }
   if (!pStart || !pEnd || pStart >= pEnd) {
-    el.innerHTML = '<p style="padding:32px;text-align:center;color:#94a3b8;">Dates de projet manquantes pour le Gantt.</p>';
+    el.innerHTML = '<p style="padding:32px;text-align:center;color:#94a3b8;">'+DETAIL_I18N.ganttNoDates+'</p>';
     return;
   }
 
@@ -1314,7 +1334,7 @@ function renderCalendar() {
 
   var today = new Date(); today = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   var monthFr = _calMonth.toLocaleDateString('fr-FR', {month:'long', year:'numeric'});
-  var DAY_NAMES = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+  var DAY_NAMES = DETAIL_I18N.dayNames;
 
   var html = '';
 
@@ -1384,7 +1404,7 @@ function renderCalendar() {
   // Jalons sans date
   if (noDates.length) {
     html += '<div style="margin-top:14px;padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">'
-          + '<p style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Sans date d\'échéance</p>'
+          + '<p style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">'+DETAIL_I18N.noDeadline+'</p>'
           + '<div style="display:flex;flex-wrap:wrap;gap:6px;">';
     noDates.forEach(function(m){
       var c = STATUS_COLORS[m.status] || '#94a3b8';

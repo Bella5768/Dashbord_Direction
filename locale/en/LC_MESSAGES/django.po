@@ -2942,3 +2942,1822 @@ msgstr " member"
 
 msgid " membres"
 msgstr " members"
+
+msgid "Ou copiez et collez ce lien dans votre navigateur :"
+msgstr "Or copy and paste this link in your browser:"
+
+msgid "Vous avez été ajouté au projet suivant :"
+msgstr "You have been added to the following project:"
+
+msgid "Aucun projet enregistré."
+msgstr "No projects registered."
+
+msgid "Faire une nouvelle demande"
+msgstr "Submit a new request"
+
+msgid "Terminée par"
+msgstr "Completed by"
+
+msgid "Sous-étape terminée mais notification email échouée : {msg}"
+msgstr "Sub-step completed but email notification failed: {msg}"
+
+msgid "Créer un projet"
+msgstr "Create a project"
+
+msgid "la sous-étape"
+msgstr "the sub-step"
+
+msgid "le partenaire"
+msgstr "the partner"
+
+msgid "Mot de passe actuel"
+msgstr "Current password"
+
+msgid "le jalon"
+msgstr "the milestone"
+
+msgid "Vérifiez votre email"
+msgstr "Check your email"
+
+msgid "%s participant"
+msgstr "%s participant"
+
+msgid "Accéder au projet"
+msgstr "View project"
+
+msgid ""
+"Si vous n'avez pas demandé cette inscription, vous pouvez ignorer cet email."
+msgstr "If you did not request this registration, you can ignore this email."
+
+msgid "Consulter la demande"
+msgstr "View request"
+
+msgid "Email automatique — merci de ne pas répondre."
+msgstr "Automated email — please do not reply."
+
+msgid "Votre mot de passe doit :"
+msgstr "Your password must:"
+
+msgid "Votre nouveau mot de passe prendra effet immédiatement"
+msgstr "Your new password will take effect immediately"
+
+msgid "Contenir une majuscule et une minuscule"
+msgstr "Contain an uppercase and a lowercase letter"
+
+msgid "Le compte de {username} est déjà actif."
+msgstr "The account of {username} is already active."
+
+msgid "Budget par projet"
+msgstr "Budget by project"
+
+msgid "Employé « {name} » supprimé."
+msgstr "Employee \"{name}\" deleted."
+
+msgid "Jalon marqué comme {label}."
+msgstr "Milestone marked as {label}."
+
+msgid "Activation de votre compte"
+msgstr "Account activation"
+
+msgid "Compte créé pour {name}. Invitation envoyée à {email}."
+msgstr "Account created for {name}. Invitation sent to {email}."
+
+msgid "Votre identifiant de connexion"
+msgstr "Your login identifier"
+
+msgid "Fort"
+msgstr "Strong"
+
+msgid "Très fort"
+msgstr "Very strong"
+
+msgid "Retour à la"
+msgstr "Back to"
+
+msgid ""
+"Pour activer votre compte et choisir votre mot de passe, cliquez sur le "
+"bouton ci-dessous :"
+msgstr ""
+"To activate your account and choose your password, click the button below:"
+
+msgid "Aucun projet n'a encore de budget renseigné."
+msgstr "No project has a budget entered yet."
+
+msgid ""
+"Si un compte actif correspond à cette adresse, un <strong>lien de "
+"réinitialisation</strong> vient d'être envoyé."
+msgstr ""
+"If an active account matches this address, a <strong>reset link</strong> has"
+" just been sent."
+
+msgid "responsable"
+msgstr "responsible"
+
+msgid "Cordialement,"
+msgstr "Best regards,"
+
+msgid ""
+"Saisissez l'adresse email de votre compte. Si elle existe, vous recevrez un "
+"lien pour choisir un nouveau mot de passe."
+msgstr ""
+"Enter your account email address. If it exists, you will receive a link to "
+"choose a new password."
+
+msgid "Correspondre à la confirmation"
+msgstr "Match the confirmation"
+
+msgid "Annuler la demande"
+msgstr "Cancel the request"
+
+msgid "la direction"
+msgstr "the department"
+
+msgid "Contenir au moins 8 caractères"
+msgstr "Contain at least 8 characters"
+
+msgid "le projet"
+msgstr "the project"
+
+msgid "Activer mon compte"
+msgstr "Activate my account"
+
+msgid "Contenir au moins un chiffre"
+msgstr "Contain at least one digit"
+
+msgid "Voir détail"
+msgstr "View details"
+
+msgid "a créé un compte pour vous sur le tableau de bord CSIG."
+msgstr "created an account for you on the CSIG Dashboard."
+
+msgid ""
+"Ce lien est valable <strong>3 jours</strong>. Si vous n'avez pas demandé "
+"cette réinitialisation, ignorez cet email — votre mot de passe reste "
+"inchangé."
+msgstr ""
+"This link is valid for <strong>3 days</strong>. If you did not request this "
+"reset, ignore this email — your password remains unchanged."
+
+msgid "l'événement"
+msgstr "the event"
+
+msgid "connexion"
+msgstr "login"
+
+msgid "Connectez-vous au tableau de bord CSIG pour consulter les détails."
+msgstr "Log in to the CSIG Dashboard to view the details."
+
+msgid ""
+"Ce lien est valable <strong>3 jours</strong>. Si vous n'avez pas demandé ce "
+"compte, ignorez cet email."
+msgstr ""
+"This link is valid for <strong>3 days</strong>. If you did not request this "
+"account, ignore this email."
+
+msgid "Suppression impossible : {err}"
+msgstr "Deletion failed: {err}"
+
+msgid "Envoyer le lien de réinitialisation"
+msgstr "Send reset link"
+
+msgid "Un compte a été créé pour vous sur le tableau de bord CSIG."
+msgstr "An account has been created for you on the CSIG Dashboard."
+
+msgid ""
+"Le lien sera valable <strong>3 jours</strong>. Vérifiez aussi vos spams."
+msgstr ""
+"The link will be valid for <strong>3 days</strong>. Also check your spam."
+
+msgid "Faible"
+msgstr "Weak"
+
+msgid "le budget"
+msgstr "the budget"
+
+msgid "Créer / éditer un projet"
+msgstr "Create / edit a project"
+
+msgid "choisissez un nouveau mot de passe sécurisé."
+msgstr "choose a secure new password."
+
+msgid ""
+"Il a peut-être <strong>déjà été utilisé</strong> ou il a "
+"<strong>expiré</strong> (validité : 3 jours)."
+msgstr ""
+"It may have <strong>already been used</strong> or it has "
+"<strong>expired</strong> (validity: 3 days)."
+
+msgid "L'équipe CSIG"
+msgstr "The CSIG Team"
+
+msgid "Enregistrer le nouveau mot de passe"
+msgstr "Save new password"
+
+msgid "Ce lien de réinitialisation n'est plus valide."
+msgstr "This reset link is no longer valid."
+
+msgid "le dossier"
+msgstr "the folder"
+
+msgid "le membre"
+msgstr "the member"
+
+msgid "Invitation renvoyée à {email}."
+msgstr "Invitation resent to {email}."
+
+msgid "Bienvenue {name} ! Votre compte est activé."
+msgstr "Welcome {name}! Your account is activated."
+
+msgid "Ou copiez ce lien dans votre navigateur :"
+msgstr "Or copy this link in your browser:"
+
+msgid ""
+"Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe :"
+msgstr "Click the button below to choose a new password:"
+
+msgid "Sous-étape marquée comme {status}."
+msgstr "Sub-step marked as {status}."
+
+msgid ""
+"Impossible de supprimer {name} : {count} demande(s) de congé sont liées à "
+"cette fiche."
+msgstr ""
+"Cannot delete {name}: {count} leave request(s) are linked to this record."
+
+msgid "Très faible"
+msgstr "Very weak"
+
+msgid "Lien invalide ou expiré"
+msgstr "Invalid or expired link"
+
+msgid "ANNULER"
+msgstr "CANCEL"
+
+msgid "Action requise"
+msgstr "Action required"
+
+msgid "Supprimer la pièce jointe"
+msgstr "Delete attachment"
+
+msgid "Réinitialiser mon mot de passe"
+msgstr "Reset my password"
+
+msgid "Confirmer le nouveau mot de passe"
+msgstr "Confirm new password"
+
+msgid "Bonjour"
+msgstr "Hello"
+
+msgid "Moyen"
+msgstr "Medium"
+
+msgid "Invitation envoyée à {email} (identifiant : {username})."
+msgstr "Invitation sent to {email} (username: {username})."
+
+msgid "Ajouté par"
+msgstr "Added by"
+
+msgid "Choisir un nouveau mot de passe"
+msgstr "Choose a new password"
+
+msgid "Ce lien expire dans 24 heures."
+msgstr "This link expires in 24 hours."
+
+msgid "Besoin marqué : {status}."
+msgstr "Need marked: {status}."
+
+msgid ""
+"Merci de vous être inscrit sur notre plateforme. Pour activer votre compte, "
+"veuillez cliquer sur le bouton ci-dessous :"
+msgstr ""
+"Thank you for registering on our platform. To activate your account, please "
+"click the button below:"
+
+msgid "Répartition des projets"
+msgstr "Project breakdown"
+
+msgid ""
+"Connectez-vous au tableau de bord CSIG pour mettre à jour l'avancement."
+msgstr "Log in to the CSIG Dashboard to update the progress."
+
+msgid "Cette pièce jointe sera supprimée définitivement."
+msgstr "This attachment will be permanently deleted."
+
+msgid "Jalon terminé mais notification email échouée : {msg}"
+msgstr "Milestone completed but email notification failed: {msg}"
+
+msgid "Alloué vs Consommé — Top 10 (en millions GNF)"
+msgstr "Allocated vs Consumed — Top 10 (in millions GNF)"
+
+msgid "Erreur : {err}"
+msgstr "Error: {err}"
+
+msgid "Oui, annuler"
+msgstr "Yes, cancel"
+
+msgid "Lien invalide"
+msgstr "Invalid link"
+
+msgid "Centre de Suivi et d'Information de Gestion"
+msgstr "Centre de Suivi et d'Information de Gestion"
+
+msgid "Changer mon mot de passe"
+msgstr "Change my password"
+
+msgid ""
+"Ce compte n'a pas encore été activé. Utilisez le lien d'activation qui vous "
+"a été envoyé par email."
+msgstr ""
+"This account has not been activated yet. Use the activation link sent to you"
+" by email."
+
+msgid "Email envoyé"
+msgstr "Email sent"
+
+msgid "Adresse email du compte"
+msgstr "Account email address"
+
+msgid "Utilisez l'adresse associée à votre compte CSIG."
+msgstr "Use the address associated with your CSIG account."
+
+msgid "Cette action est irréversible. La demande sera annulée définitivement."
+msgstr ""
+"This action is irreversible. The request will be permanently cancelled."
+
+msgid "SUPPRIMER"
+msgstr "DELETE"
+
+msgid "%s projet au total"
+msgstr "%s project total"
+
+msgid ""
+"Si vous ne recevez rien, votre adresse email est peut-être différente. "
+"Contactez votre administrateur si besoin."
+msgstr ""
+"If you receive nothing, your email address may be different. Contact your "
+"administrator if needed."
+
+msgid ""
+"Nous avons reçu une demande de réinitialisation du mot de passe pour le "
+"compte associé à votre adresse email."
+msgstr ""
+"We received a password reset request for the account associated with your "
+"email address."
+
+msgid "Statut mis à jour : {status}."
+msgstr "Status updated: {status}."
+
+msgid "le document"
+msgstr "the document"
+
+msgid "Afficher/masquer"
+msgstr "Show/hide"
+
+msgid "Renvoyer l'invitation à %s ?"
+msgstr "Resend invitation to %s?"
+
+msgid "Ce document sera supprimé définitivement."
+msgstr "This document will be permanently deleted."
+
+msgid "Supprimer le document"
+msgstr "Delete document"
+
+msgid "Renvoyer"
+msgstr "Resend"
+
+msgid "Renvoyer l'invitation"
+msgstr "Resend invitation to %s?"
+
+msgid "Rôle projet « {name} » créé."
+msgstr "Project role \"{name}\" created."
+
+msgid "Rôle projet « {name} » supprimé."
+msgstr "Project role \"{name}\" deleted."
+
+msgid "Rôle « {name} » supprimé."
+msgstr "Role \"{name}\" deleted."
+
+msgid "Rôle « {name} » créé à partir de « {source} »."
+msgstr "Role \"{name}\" created from \"{source}\"."
+
+msgid "Rôle « {name} » mis à jour."
+msgstr "Role \"{name}\" updated."
+
+msgid "Rôle projet « {name} » mis à jour."
+msgstr "Project role \"{name}\" updated."
+
+msgid "Rôle « {name} » créé avec succès."
+msgstr "Role \"{name}\" created successfully."
+
+msgid "Désactiver"
+msgstr "Deactivate"
+
+msgid "Non lié"
+msgstr "Not linked"
+
+msgid "Aucun employé lié à ce compte"
+msgstr "No employee linked to this account"
+
+msgid "Activer"
+msgstr "Activate"
+
+msgid "Email de confirmation envoyé."
+msgstr "Confirmation email sent."
+
+msgid "Titre du besoin"
+msgstr "Need title"
+
+msgid "Sous-dossier"
+msgstr "Sub-folder"
+
+msgid "Marquer résolu"
+msgstr "Mark resolved"
+
+msgid "Voir"
+msgstr "View"
+
+msgid "Ajouter document"
+msgstr "Add document"
+
+msgid "Changer le statut"
+msgstr "Change status"
+
+msgid "Ajouter une sous-étape"
+msgstr "Add a sub-step"
+
+msgid "Votre prénom"
+msgstr "Your first name"
+
+msgid "Marquer en cours"
+msgstr "Mark in progress"
+
+msgid "Modifier le rôle"
+msgstr "Edit role"
+
+msgid "Mon profil"
+msgstr "My profile"
+
+msgid "Ajouter un besoin"
+msgstr "Add a need"
+
+msgid "Suppression impossible : des congés sont liés à cet employé"
+msgstr "Cannot delete: leave requests are linked to this employee"
+
+msgid "Description (facultatif)"
+msgstr "Description (optional)"
+
+msgid "Votre nom"
+msgstr "Your last name"
+
+msgid "Retirer du projet"
+msgstr "Remove from project"
+
+msgid "Votre commentaire…"
+msgstr "Your comment…"
+
+msgid "Prédéfinies"
+msgstr "Preset"
+
+msgid "Envoyer le lien d'activation"
+msgstr "Send the activation link"
+
+msgid ""
+"Les permissions sont gérées par le rôle attribué. Pour modifier les "
+"permissions d'un rôle, rendez-vous sur"
+msgstr ""
+"Permissions are managed by the assigned role. To modify a role's "
+"permissions, go to"
+
+msgid "L'employé recevra un email pour définir lui-même son mot de passe"
+msgstr "The employee will receive an email to set their own password"
+
+msgid "Équivalent"
+msgstr "Equivalent"
+
+msgid "avant de créer son compte."
+msgstr "before creating their account."
+
+msgid "Attention :"
+msgstr "Warning:"
+
+msgid "Utilisez l'email avec lequel vous avez été invité(e)."
+msgstr "Use the email address with which you were invited."
+
+msgid "Personnalisé"
+msgstr "Custom"
+
+msgid "Créer mon mot de passe"
+msgstr "Create my password"
+
+msgid "Créer votre mot de passe"
+msgstr "Create your password"
+
+msgid "Demander un nouveau lien"
+msgstr "Request a new link"
+
+msgid "Email d'invitation"
+msgstr "Invitation email"
+
+msgid "Créer et envoyer l'invitation"
+msgstr "Create and send the invitation"
+
+msgid ""
+"Les permissions détaillées pourront être configurées après la création."
+msgstr "Detailed permissions can be configured after creation."
+
+msgid "Nouveau lien d'activation"
+msgstr "New activation link"
+
+msgid "Votre compte est peut-être déjà activé :"
+msgstr "Your account may already be activated:"
+
+msgid "Recevoir un nouveau lien d'activation"
+msgstr "Receive a new activation link"
+
+msgid "Ce rôle donne accès à"
+msgstr "This role gives access to"
+
+msgid ""
+"Optionnel pour une personne externe — mais nécessaire pour créer un compte."
+msgstr "Optional for an external person — but required to create an account."
+
+msgid "Inclus dans ce rôle"
+msgstr "Included in this role"
+
+msgid "Ce lien d'activation n'est plus valide."
+msgstr "This activation link is no longer valid."
+
+msgid "Flow d'invitation"
+msgstr "Invitation flow"
+
+msgid "Lien d'activation invalide"
+msgstr "Invalid activation link"
+
+msgid "Gérer les rôles"
+msgstr "Manage roles"
+
+msgid "Sélectionner un employé"
+msgstr "Select an employee"
+
+msgid ""
+"Si vous ne recevez rien dans quelques minutes, contactez votre "
+"administrateur pour qu'il renvoie l'invitation depuis le tableau de bord."
+msgstr ""
+"If you receive nothing within a few minutes, contact your administrator to "
+"resend the invitation from the dashboard."
+
+msgid "Vous avez déjà un compte ?"
+msgstr "Already have an account?"
+
+msgid "Nouveau compte utilisateur"
+msgstr "New user account"
+
+msgid "Gestion des rôles"
+msgstr "Role management"
+
+msgid "cet employé n'a pas d'adresse email."
+msgstr "this employee has no email address."
+
+msgid "Gérer"
+msgstr "Manage"
+
+msgid ""
+"Le lien sera valable <strong>3 jours</strong>. Pensez à vérifier vos spams."
+msgstr ""
+"The link will be valid for <strong>3 days</strong>. Remember to check your "
+"spam folder."
+
+msgid "Informations du compte à créer"
+msgstr "Account information to create"
+
+msgid "Ajouter un email à sa fiche"
+msgstr "Add an email to their record"
+
+msgid ""
+"Si un compte en attente est associé à cette adresse, un <strong>nouveau lien"
+" d'activation</strong> vient d'être envoyé."
+msgstr ""
+"If a pending account is associated with this address, a <strong>new "
+"activation link</strong> has just been sent."
+
+msgid "Gérer les fiches employés"
+msgstr "Manage employee records"
+
+msgid "Sans rôle"
+msgstr "No role"
+
+msgid ""
+"Invitation en attente — le compte s'activera automatiquement quand l'employé"
+" définira son mot de passe."
+msgstr ""
+"Invitation pending — the account will activate automatically when the "
+"employee sets their password."
+
+msgid "fiche employé"
+msgstr "employee record"
+
+msgid ""
+"le compte est créé inactif. L'employé reçoit un email avec un lien sécurisé "
+"pour définir lui-même son mot de passe (lien valable 3 jours)."
+msgstr ""
+"the account is created inactive. The employee receives an email with a "
+"secure link to set their own password (link valid for 3 days)."
+
+msgid ""
+"Le compte sera créé inactif. Un email d'invitation sera envoyé à la personne"
+" pour qu'elle définisse elle-même son mot de passe."
+msgstr ""
+"The account will be created inactive. An invitation email will be sent to "
+"the person so they can set their own password."
+
+msgid "Identifiant (username)"
+msgstr "Username (login ID)"
+
+msgid "Définir les permissions"
+msgstr "Define permissions"
+
+msgid ""
+"Si votre lien d'invitation a expiré ou a été perdu, saisissez l'adresse "
+"email associée à votre compte. Un nouveau lien vous sera envoyé."
+msgstr ""
+"If your invitation link has expired or been lost, enter the email address "
+"associated with your account. A new link will be sent to you."
+
+msgid ""
+"choisissez un mot de passe sécurisé pour activer votre accès au tableau de "
+"bord."
+msgstr "choose a secure password to activate your dashboard access."
+
+msgid "Non inclus dans ce rôle"
+msgstr "Not included in this role"
+
+msgid "Les permissions sont définies par le rôle."
+msgstr "Permissions are defined by the role."
+
+msgid "Seuls les employés sans compte sont disponibles."
+msgstr "Only employees without an account are available."
+
+msgid "Pour modifier ces informations, mettez à jour la"
+msgstr "To modify this information, update the"
+
+msgid "Assigner"
+msgstr "Assign"
+
+msgid "Aucun besoin enregistré."
+msgstr "No needs recorded."
+
+msgid "%s dossier"
+msgstr "%s folder"
+
+msgid "Équipe du projet"
+msgstr "Project team"
+
+msgid "Aucun dossier."
+msgstr "No folder."
+
+msgid "Aucun document."
+msgstr "No document."
+
+msgid "← Retour au projet"
+msgstr "← Back to project"
+
+msgid "20 dernières actions"
+msgstr "Last 20 actions"
+
+msgid "Marquer terminée"
+msgstr "Mark as complete"
+
+msgid "sous-étape"
+msgstr "sub-step"
+
+msgid "Erreur réseau"
+msgstr "Network error"
+
+msgid "Assignés"
+msgstr "Assigned"
+
+msgid "Erreur"
+msgstr "Error"
+
+msgid "Mise à jour..."
+msgstr "Updating..."
+
+msgid "Dossiers"
+msgstr "Folders"
+
+msgid "Ajouter la première sous-étape"
+msgstr "Add the first sub-step"
+
+msgid "Liste"
+msgstr "List"
+
+msgid "Aucune activité enregistrée pour ce projet."
+msgstr "No activity recorded for this project."
+
+msgid "Marquer non terminée"
+msgstr "Mark as incomplete"
+
+msgid "Échéance :"
+msgstr "Due date:"
+
+msgid "Activité"
+msgstr "Activity"
+
+msgid "Créer un dossier"
+msgstr "Create a folder"
+
+msgid "Aucun commentaire."
+msgstr "No comments."
+
+msgid "Description / Besoin"
+msgstr "Description / Need"
+
+msgid "← Retour"
+msgstr "← Back"
+
+msgid "Gantt"
+msgstr "Gantt"
+
+msgid "Ajouter le premier jalon"
+msgstr "Add the first milestone"
+
+msgid "Aucun"
+msgstr "None"
+
+msgid "Journal d'activité"
+msgstr "Activity log"
+
+msgid "Aucun dossier ni document."
+msgstr "No folders or documents."
+
+msgid "Équipe"
+msgstr "Team"
+
+msgid "%s document"
+msgstr "%s document"
+
+msgid "Dates de projet manquantes pour le Gantt."
+msgstr "Project dates missing for Gantt."
+
+msgid "%s commentaire"
+msgstr "%s comment"
+
+msgid "Kanban"
+msgstr "Kanban"
+
+msgid "%s membre"
+msgstr "%s member"
+
+msgid "Non assigné"
+msgstr "Unassigned"
+
+msgid "complétée"
+msgstr "completed"
+
+msgid "Aucune sous-étape définie."
+msgstr "No sub-steps defined."
+
+msgid "Gérer les assignés"
+msgstr "Manage assignees"
+
+msgid "Aucun membre assigné"
+msgstr "No member assigned"
+
+msgid "le"
+msgstr "on"
+
+msgid "%s étape définie"
+msgstr "%s step defined"
+
+msgid "Votre tâche"
+msgstr "Your task"
+
+msgid "%s besoin"
+msgstr "%s need"
+
+msgid "Vous"
+msgstr "You"
+
+msgid "Ajouter le premier membre"
+msgstr "Add the first member"
+
+msgid "Sans date d'échéance"
+msgstr "No deadline"
+
+msgid "Chef de projet sur %s projet :"
+msgstr "Project manager for %s project:"
+
+msgid "Membre de %s projet — les appartenances seront supprimées"
+msgstr "Member of %s project — memberships will be deleted"
+
+msgid "le lien responsable sera effacé"
+msgstr "the manager link will be removed"
+
+msgid "Gérez vos informations personnelles et vos accès"
+msgstr "Manage your personal information and access"
+
+msgid "Dépendances détectées :"
+msgstr "Dependencies detected:"
+
+msgid "%s tâche"
+msgstr "%s task"
+
+msgid "A un compte utilisateur — le lien sera retiré (le compte reste)"
+msgstr "Has a user account — the link will be removed (the account stays)"
+
+msgid "Sélectionner des directions..."
+msgstr "Select departments..."
+
+msgid "%s demande de congé liée — la suppression est bloquée"
+msgstr "%s leave request linked — deletion is blocked"
+
+msgid "Adresse email"
+msgstr "Email address"
+
+msgid ""
+"Cet email est utilisé pour recevoir les notifications et les liens "
+"d'invitation."
+msgstr "This email is used to receive notifications and invitation links."
+
+msgid "Optionnel."
+msgstr "Optional."
+
+msgid "%s terminée"
+msgstr "%s completed"
+
+msgid "Compte inactif"
+msgstr "Inactive account"
+
+msgid "Cet employé (%(name)s) est déjà lié au compte %(u)s."
+msgstr "This employee (%(name)s) is already linked to account %(u)s."
+
+msgid "-- Sélectionner un employé --"
+msgstr "-- Select an employee --"
+
+msgid "%(name)s a déjà un compte utilisateur."
+msgstr "%(name)s already has a user account."
+
+msgid "Veuillez sélectionner un employé."
+msgstr "Please select an employee."
+
+msgid "-- Aucune direction --"
+msgstr "-- No department --"
+
+msgid "-- Aucun employé --"
+msgstr "-- No employee --"
+
+msgid "La date ne peut pas être dans le passé."
+msgstr "The date cannot be in the past."
+
+msgid "-- Sans rôle --"
+msgstr "-- No role --"
+
+msgid "-- Sélectionner un rôle --"
+msgstr "-- Select a role --"
+
+msgid "La durée minimale est de 5 minutes."
+msgstr "The minimum duration is 5 minutes."
+
+msgid "La durée maximale est de 24h (1440 min)."
+msgstr "The maximum duration is 24h (1440 min)."
+
+msgid ""
+"Pour des raisons de sécurité, vous ne pouvez pas modifier le mot de passe "
+"d'un autre utilisateur. Utilisez « Renvoyer l'invitation » pour lui "
+"permettre de définir lui-même son mot de passe."
+msgstr ""
+"For security reasons, you cannot change another user's password. “Resend "
+"invitation” to let them set their own password."
+
+msgid "L'adresse email n'est pas valide."
+msgstr "The email address is not valid."
+
+msgid "Un employé avec l’email « %(email)s » existe déjà."
+msgstr "An employee with email «%(email)s» already exists."
+
+msgid ""
+"La fiche de %(name)s n'a pas d'adresse email. Ajoutez-en une avant de créer "
+"un compte."
+msgstr ""
+"%(name)s's record has no email address. Add one before creating an account."
+
+msgid "Le nom d'utilisateur « %(u)s » est déjà utilisé."
+msgstr "The username «%(u)s» is already taken."
+
+msgid "Document de projet"
+msgstr "Project document"
+
+msgid "Document de congé"
+msgstr "Leave document"
+
+msgid "Documents de congé"
+msgstr "Leave documents"
+
+msgid "Commentaires de projet"
+msgstr "Project comments"
+
+msgid "Activité de projet"
+msgstr "Project activity"
+
+msgid "Activité utilisateur"
+msgstr "User activity"
+
+msgid "Besoins de projet"
+msgstr "Project needs"
+
+msgid "Dossiers de projet"
+msgstr "Project folders"
+
+msgid "Profil utilisateur"
+msgstr "User profile"
+
+msgid "Activités utilisateurs"
+msgstr "User activities"
+
+msgid "Commentaire de projet"
+msgstr "Project comment"
+
+msgid "Besoin de projet"
+msgstr "Project need"
+
+msgid "Partenaire"
+msgstr "Partner"
+
+msgid "Documents de projet"
+msgstr "Project documents"
+
+msgid "Profils utilisateurs"
+msgstr "User profiles"
+
+msgid "Permission"
+msgstr "Permission"
+
+msgid "Membre de projet"
+msgstr "Project member"
+
+msgid "Activités de projet"
+msgstr "Project activities"
+
+msgid "Dossier de projet"
+msgstr "Project folder"
+
+msgid "OMR - Rial Omanais"
+msgstr "OMR - Omani Rial"
+
+msgid "UYU - Peso Uruguayen"
+msgstr "UYU - Uruguayan Peso"
+
+msgid "Pièces justificatives"
+msgstr "Supporting documents"
+
+msgid "Nouvelle attribution"
+msgstr "New assignment"
+
+msgid "QAR - Riyal Qatari"
+msgstr "QAR - Qatari Riyal"
+
+msgid "Vérification RH enregistrée sur votre demande :"
+msgstr "HR review recorded on your request:"
+
+msgid "La date de fin doit être postérieure ou égale à la date de début."
+msgstr "The end date must be after or equal to the start date."
+
+msgid "attribué"
+msgstr "assigned"
+
+msgid "SEK - Couronne Suédoise"
+msgstr "SEK - Swedish Krona"
+
+msgid "BBD - Dollar Barbadien"
+msgstr "BBD - Barbadian Dollar"
+
+msgid "UZS - Sum Ouzbek"
+msgstr "UZS - Uzbekistan Som"
+
+msgid "Validateur"
+msgstr "Approver"
+
+msgid "ZMW - Kwacha Zambien"
+msgstr "ZMW - Zambian Kwacha"
+
+msgid "Confirmation de soumission de votre demande de congé :"
+msgstr "Confirmation of your leave request submission:"
+
+msgid "XPF - Franc CFP"
+msgstr "XPF - CFP Franc"
+
+msgid "Un congé annuel doit être demandé au moins 15 jours avant le départ."
+msgstr "Annual leave must be requested at least 15 days before departure."
+
+msgid "Équivalent: %(amount)s"
+msgstr "Equivalent: %(amount)s"
+
+msgid "NZD - Dollar Néo-Zélandais"
+msgstr "NZD - New Zealand Dollar"
+
+msgid "Code (ex: DG, DSI, DRH)"
+msgstr "Code (e.g., DG, DSI, DRH)"
+
+msgid "[CSIG] {type} {status} : {task}"
+msgstr "[CSIG] {type} {status}: {task}"
+
+msgid "Demande de congé à valider (Direction Générale) :"
+msgstr "Leave request to approve (General Management):"
+
+msgid "CLP - Peso Chilien"
+msgstr "CLP - Chilean Peso"
+
+msgid "Verrouillé sur votre direction."
+msgstr "Locked to your department."
+
+msgid "Avis hierarchique"
+msgstr "Hierarchical Review"
+
+msgid "un nouveau"
+msgstr "a new"
+
+msgid "Décision finale enregistrée (copie équipe RH) :"
+msgstr "Final decision recorded (CC: HR team):"
+
+msgid "CZK - Couronne Tchèque"
+msgstr "CZK - Czech Koruna"
+
+msgid "CVE - Escudo Cap-Verdien"
+msgstr "CVE - Cape Verdean Escudo"
+
+msgid "TTD - Dollar Trinidadien"
+msgstr "TTD - Trinidad and Tobago Dollar"
+
+msgid "approuvée"
+msgstr "approved"
+
+msgid "{type} {status}"
+msgstr "{type} {status}"
+
+msgid "TZS - Shilling Tanzanien"
+msgstr "TZS - Tanzanian Shilling"
+
+msgid "-- Sélectionner un responsable --"
+msgstr "-- Select a manager --"
+
+msgid "AWG - Florin Arubais"
+msgstr "AWG - Aruban Florin"
+
+msgid "Décision finale enregistrée (copie Direction Générale) :"
+msgstr "Final decision recorded (CC: General Management):"
+
+msgid "Direction Generale - CSIG"
+msgstr "General Management - CSIG"
+
+msgid "Alertes envoyées à : {emails} (échecs : {count})"
+msgstr "Alerts sent to: {emails} (failures: {count})"
+
+msgid "VND - Dong Vietnamien"
+msgstr "VND - Vietnamese Dong"
+
+msgid "0"
+msgstr "0"
+
+msgid "PEN - Sol Péruvien"
+msgstr "PEN - Peruvian Sol"
+
+msgid "SSP - Livre Sud-Soudanaise"
+msgstr "SSP - South Sudanese Pound"
+
+msgid "Avis hiérarchique : {decision}"
+msgstr "Hierarchical review: {decision}"
+
+msgid "cette"
+msgstr "this"
+
+msgid "RON - Leu Roumain"
+msgstr "RON - Romanian Leu"
+
+msgid "Demande refusée par la hiérarchie"
+msgstr "Request rejected by hierarchy"
+
+msgid "PAB - Balboa Panaméen"
+msgstr "PAB - Panamanian Balboa"
+
+msgid "DZD - Dinar Algérien"
+msgstr "DZD - Algerian Dinar"
+
+msgid "VUV - Vatu Vanuatais"
+msgstr "VUV - Vanuatu Vatu"
+
+msgid "FJD - Dollar Fidjien"
+msgstr "FJD - Fijian Dollar"
+
+msgid "ALERTE ÉCHÉANCE DÉPASSÉE"
+msgstr "OVERDUE ALERT"
+
+msgid "de ce document aupres de la Direction Generale CSIG."
+msgstr "of this document by the CSIG General Management."
+
+msgid "JMD - Dollar Jamaïcain"
+msgstr "JMD - Jamaican Dollar"
+
+msgid "VES - Bolívar Vénézuélien"
+msgstr "VES - Venezuelan Bolívar"
+
+msgid "SOS - Shilling Somalien"
+msgstr "SOS - Somali Shilling"
+
+msgid "Bienvenue sur CSIG Dashboard"
+msgstr "Welcome to CSIG Dashboard"
+
+msgid "conforme"
+msgstr "compliant"
+
+msgid "Email envoyé à {email}"
+msgstr "Email sent to {email}"
+
+msgid "USD - Dollar Américain"
+msgstr "USD - US Dollar"
+
+msgid "CDF - Franc Congolais"
+msgstr "CDF - Congolese Franc"
+
+msgid "BDT - Taka Bangladais"
+msgstr "BDT - Bangladeshi Taka"
+
+msgid "AED - Dirham Émirats"
+msgstr "AED - UAE Dirham"
+
+msgid "KMF - Franc Comorien"
+msgstr "KMF - Comorian Franc"
+
+msgid "LYD - Dinar Libyen"
+msgstr "LYD - Libyan Dinar"
+
+msgid "TMT - Manat Turkmène"
+msgstr "TMT - Turkmenistani Manat"
+
+msgid ""
+"En tant que personne ayant attribué cette tâche, vous êtes informé que :"
+msgstr "As the person who assigned this task, you are notified that:"
+
+msgid "XOF - Franc CFA BCEAO"
+msgstr "XOF - CFA Franc BCEAO"
+
+msgid "SBD - Dollar des Îles Salomon"
+msgstr "SBD - Solomon Islands Dollar"
+
+msgid "Conakry, le {date}"
+msgstr "Conakry, {date}"
+
+msgid "Réinitialisation de votre mot de passe"
+msgstr "Password reset"
+
+msgid "En tant que responsable de cette tâche, vous êtes informé que :"
+msgstr "As the person responsible for this task, you are notified that:"
+
+msgid "IRR - Rial Iranien"
+msgstr "IRR - Iranian Rial"
+
+msgid "[CSIG] Réinitialisation de votre mot de passe"
+msgstr "[CSIG] Reset your password"
+
+msgid "CAD - Dollar Canadien"
+msgstr "CAD - Canadian Dollar"
+
+msgid "MUR - Roupie Mauricienne"
+msgstr "MUR - Mauritian Rupee"
+
+msgid "MXN - Peso Mexicain"
+msgstr "MXN - Mexican Peso"
+
+msgid "-- Sélectionner un projet --"
+msgstr "-- Select a project --"
+
+msgid "terminé"
+msgstr "completed"
+
+msgid "KYD - Dollar des Îles Caïmans"
+msgstr "KYD - Cayman Islands Dollar"
+
+msgid "Duree"
+msgstr "Duration"
+
+msgid "BAM - Mark Convertible"
+msgstr "BAM - Bosnia-Herzegovina Convertible Mark"
+
+msgid "EGP - Livre Égyptienne"
+msgstr "EGP - Egyptian Pound"
+
+msgid "DJF - Franc Djiboutien"
+msgstr "DJF - Djiboutian Franc"
+
+msgid "Aucun destinataire"
+msgstr "No recipients"
+
+msgid "En tant que chef de projet, vous êtes informé en copie :"
+msgstr "As project manager, you are notified in CC:"
+
+msgid "RUB - Rouble Russe"
+msgstr "RUB - Russian Ruble"
+
+msgid "LBP - Livre Libanaise"
+msgstr "LBP - Lebanese Pound"
+
+msgid "ISK - Couronne Islandaise"
+msgstr "ISK - Icelandic Króna"
+
+msgid "GYD - Dollar Guyanien"
+msgstr "GYD - Guyanaese Dollar"
+
+msgid "une nouvelle"
+msgstr "a new"
+
+msgid "PHP - Peso Philippin"
+msgstr "PHP - Philippine Peso"
+
+msgid "Notification officielle CSIG"
+msgstr "Official CSIG Notification"
+
+msgid "AFN - Afghani"
+msgstr "AFN - Afghan Afghani"
+
+msgid "XCD - Dollar des Caraïbes Orientales"
+msgstr "XCD - East Caribbean Dollar"
+
+msgid "ATTESTATION DE CONGE"
+msgstr "LEAVE CERTIFICATE"
+
+msgid "XAF - Franc CFA BEAC"
+msgstr "XAF - CFA Franc BEAC"
+
+msgid "Envoyé à : {emails} (échecs : {count})"
+msgstr "Sent to: {emails} (failures: {count})"
+
+msgid "KZT - Tenge Kazakh"
+msgstr "KZT - Kazakhstani Tenge"
+
+msgid "UGX - Shilling Ougandais"
+msgstr "UGX - Ugandan Shilling"
+
+msgid "STN - Dobra Santoméen"
+msgstr "STN - São Tomé and Príncipe Dobra"
+
+msgid "NAD - Dollar Namibien"
+msgstr "NAD - Namibian Dollar"
+
+msgid "Email envoyé à : {emails} (échecs : {count})"
+msgstr "Email sent to: {emails} (failures: {count})"
+
+msgid "Suppleant"
+msgstr "Substitute"
+
+msgid "SLL - Leone Sierra-Léonais"
+msgstr "SLL - Sierra Leonean Leone"
+
+msgid "DOP - Peso Dominicain"
+msgstr "DOP - Dominican Peso"
+
+msgid "Décision finale enregistrée (copie hiérarchie) :"
+msgstr "Final decision recorded (CC: hierarchy):"
+
+msgid "MDL - Leu Moldave"
+msgstr "MDL - Moldovan Leu"
+
+msgid "COP - Peso Colombien"
+msgstr "COP - Colombian Peso"
+
+msgid "SAR - Riyal Saoudien"
+msgstr "SAR - Saudi Riyal"
+
+msgid "Dashboard CSIG – Direction Générale"
+msgstr "CSIG Dashboard – General Management"
+
+msgid "Vérification RH enregistrée (copie équipe RH) :"
+msgstr "HR review recorded (CC: HR team):"
+
+msgid "BHD - Dinar Bahreïni"
+msgstr "BHD - Bahraini Dinar"
+
+msgid "AUD - Dollar Australien"
+msgstr "AUD - Australian Dollar"
+
+msgid "MVR - Rufiyaa Maldivienne"
+msgstr "MVR - Maldivian Rufiyaa"
+
+msgid "SYP - Livre Syrienne"
+msgstr "SYP - Syrian Pound"
+
+msgid ""
+"Demande de congé soumise par un membre de votre équipe (avis hiérarchique "
+"requis) :"
+msgstr ""
+"Leave request submitted by a team member (hierarchical review required):"
+
+msgid "PKR - Roupie Pakistanaise"
+msgstr "PKR - Pakistani Rupee"
+
+msgid "AOA - Kwanza Angolais"
+msgstr "AOA - Angolan Kwanza"
+
+msgid "MNT - Tugrik Mongol"
+msgstr "MNT - Mongolian Tugrik"
+
+msgid "VALIDE PAR"
+msgstr "APPROVED BY"
+
+msgid "KPW - Won Nord-Coréen"
+msgstr "KPW - North Korean Won"
+
+msgid "La"
+msgstr "The"
+
+msgid "KGS - Som Kirghiz"
+msgstr "KGS - Kyrgystani Som"
+
+msgid "Le"
+msgstr "The"
+
+msgid "HKD - Dollar Hong-Kongais"
+msgstr "HKD - Hong Kong Dollar"
+
+msgid "[RAPPEL]"
+msgstr "[REMINDER]"
+
+msgid "Avis hiérarchique défavorable enregistré (information RH) :"
+msgstr "Unfavourable hierarchical review recorded (HR notification):"
+
+msgid "Travail - Justice - Solidarite"
+msgstr "Travail - Justice - Solidarite"
+
+msgid "attribuée"
+msgstr "assigned"
+
+msgid "CUP - Peso Cubain"
+msgstr "CUP - Cuban Peso"
+
+msgid "MRU - Ouguiya Mauritanien"
+msgstr "MRU - Mauritanian Ouguiya"
+
+msgid "favorable"
+msgstr "favourable"
+
+msgid "ERN - Nakfa Érythréen"
+msgstr "ERN - Eritrean Nakfa"
+
+msgid "PLN - Zloty Polonais"
+msgstr "PLN - Polish Zloty"
+
+msgid "PGK - Kina Papou"
+msgstr "PGK - Papua New Guinean Kina"
+
+msgid "GTQ - Quetzal Guatémaltèque"
+msgstr "GTQ - Guatemalan Quetzal"
+
+msgid "Decision"
+msgstr "Decision"
+
+msgid "NOK - Couronne Norvégienne"
+msgstr "NOK - Norwegian Krone"
+
+msgid "GHS - Cedi Ghanéen"
+msgstr "GHS - Ghanaian Cedi"
+
+msgid "KES - Shilling Kényan"
+msgstr "KES - Kenyan Shilling"
+
+msgid "Identifiants email non configurés"
+msgstr "Email credentials not configured"
+
+msgid "Étape 3/3 – Décision Direction"
+msgstr "Step 3/3 – Management decision"
+
+msgid "ETB - Birr Éthiopien"
+msgstr "ETB - Ethiopian Birr"
+
+msgid "ZAR - Rand Sud-Africain"
+msgstr "ZAR - South African Rand"
+
+msgid "Periode"
+msgstr "Period"
+
+msgid "Demande non conforme"
+msgstr "Non-compliant request"
+
+msgid "Vérification RH : {decision}"
+msgstr "HR review: {decision}"
+
+msgid "SRD - Dollar Surinamais"
+msgstr "SRD - Surinamese Dollar"
+
+msgid "HTG - Gourde Haïtienne"
+msgstr "HTG - Haitian Gourde"
+
+msgid "[URGENT - RETARD]"
+msgstr "[URGENT - OVERDUE]"
+
+msgid "Étape 1/3 – Avis hiérarchique requis"
+msgstr "Step 1/3 – Hierarchical review required"
+
+msgid "GEL - Lari Géorgien"
+msgstr "GEL - Georgian Lari"
+
+msgid "Email envoyé à : {email}"
+msgstr "Email sent to: {email}"
+
+msgid "Cachet"
+msgstr "Stamp"
+
+msgid "BWP - Pula Botswanais"
+msgstr "BWP - Botswanan Pula"
+
+msgid "REPUBLIQUE DE GUINEE"
+msgstr "REPUBLIQUE DE GUINEE"
+
+msgid "BOB - Boliviano"
+msgstr "BOB - Bolivian Boliviano"
+
+msgid "[CSIG] {title} – {employee}"
+msgstr "[CSIG] {title} – {employee}"
+
+msgid "Rechercher un employé..."
+msgstr "Search for an employee..."
+
+msgid "Aucun destinataire avec email pour cette notification"
+msgstr "No recipients with email for this notification"
+
+msgid "UAH - Hryvnia Ukrainienne"
+msgstr "UAH - Ukrainian Hryvnia"
+
+msgid "En tant que chef de projet, vous êtes informé que :"
+msgstr "As project manager, you are notified that:"
+
+msgid "LSL - Loti Lesothan"
+msgstr "LSL - Lesotho Loti"
+
+msgid "FKP - Livre des Malouines"
+msgstr "FKP - Falkland Islands Pound"
+
+msgid "Demande de congé à vérifier (RH) :"
+msgstr "Leave request to review (HR):"
+
+msgid "MYR - Ringgit Malaisien"
+msgstr "MYR - Malaysian Ringgit"
+
+msgid ""
+"Vous avez demandé la réinitialisation de votre mot de passe. Cliquez sur le "
+"bouton ci-dessous pour définir un nouveau mot de passe :"
+msgstr ""
+"You requested a password reset. Click the button below to set a new "
+"password:"
+
+msgid "MKD - Denar Macédonien"
+msgstr "MKD - Macedonian Denar"
+
+msgid "BTN - Ngultrum Bhoutanais"
+msgstr "BTN - Bhutanese Ngultrum"
+
+msgid "Decision finale"
+msgstr "Final Decision"
+
+msgid "[CSIG] Nouvelle attribution : {task}"
+msgstr "[CSIG] New assignment: {task}"
+
+msgid "Verification RH"
+msgstr "HR Review"
+
+msgid "BND - Dollar Brunéien"
+msgstr "BND - Brunei Dollar"
+
+msgid "ALL - Lek Albanais"
+msgstr "ALL - Albanian Lek"
+
+msgid "YER - Rial Yéménite"
+msgstr "YER - Yemeni Rial"
+
+msgid "LKR - Roupie Sri-Lankaise"
+msgstr "LKR - Sri Lankan Rupee"
+
+msgid "Details du conge"
+msgstr "Leave details"
+
+msgid "SZL - Lilangeni Swazi"
+msgstr "SZL - Swazi Lilangeni"
+
+msgid "HUF - Forint Hongrois"
+msgstr "HUF - Hungarian Forint"
+
+msgid "Avis hiérarchique enregistré sur votre demande :"
+msgstr "Hierarchical review recorded on your request:"
+
+msgid "AZN - Manat Azerbaïdjanais"
+msgstr "AZN - Azerbaijani Manat"
+
+msgid "ZWL - Dollar Zimbabwéen"
+msgstr "ZWL - Zimbabwean Dollar"
+
+msgid "DECISION FINALE  -  {label}"
+msgstr "FINAL DECISION  -  {label}"
+
+msgid "KRW - Won Sud-Coréen"
+msgstr "KRW - South Korean Won"
+
+msgid "Décrivez le besoin lié à cette étape..."
+msgstr "Describe the need related to this step..."
+
+msgid "ARS - Peso Argentin"
+msgstr "ARS - Argentine Peso"
+
+msgid "Décision finale : {decision}"
+msgstr "Final decision: {decision}"
+
+msgid "LRD - Dollar Libérien"
+msgstr "LRD - Liberian Dollar"
+
+msgid "MMK - Kyat Birman"
+msgstr "MMK - Myanmar Kyat"
+
+msgid "MZN - Metical Mozambicain"
+msgstr "MZN - Mozambican Metical"
+
+msgid "MWK - Kwacha Malawite"
+msgstr "MWK - Malawian Kwacha"
+
+msgid "Du {start} au {end}"
+msgstr "From {start} to {end}"
+
+msgid "ce"
+msgstr "this"
+
+msgid "Code unique :"
+msgstr "Unique code:"
+
+msgid "[CSIG] Ajout au projet : {project}"
+msgstr "[CSIG] Added to project: {project}"
+
+msgid "RSD - Dinar Serbe"
+msgstr "RSD - Serbian Dinar"
+
+msgid "Avis hiérarchique enregistré (copie hiérarchie) :"
+msgstr "Hierarchical review recorded (CC: hierarchy):"
+
+msgid "Fonction"
+msgstr "Position"
+
+msgid "Ce lien expire dans 1 heure."
+msgstr "This link expires in 1 hour."
+
+msgid ""
+"Document officiel genere par le systeme de gestion des conges - CSIG "
+"Dashboard"
+msgstr ""
+"Official document generated by the leave management system - CSIG Dashboard"
+
+msgid "[CSIG] Créez votre mot de passe – Accès au tableau de bord"
+msgstr "[CSIG] Create your password – Dashboard access"
+
+msgid "NPR - Roupie Népalaise"
+msgstr "NPR - Nepalese Rupee"
+
+msgid "Emails envoyés à : {emails}"
+msgstr "Emails sent to: {emails}"
+
+msgid "Envoyé à : {emails}"
+msgstr "Sent to: {emails}"
+
+msgid "NIO - Córdoba Nicaraguayen"
+msgstr "NIO - Nicaraguan Córdoba"
+
+msgid "Vérification RH enregistrée (copie hiérarchie) :"
+msgstr "HR review recorded (CC: hierarchy):"
+
+msgid "AMD - Dram Arménien"
+msgstr "AMD - Armenian Dram"
+
+msgid "Page 1/1  -  {code}"
+msgstr "Page 1/1  -  {code}"
+
+msgid "Attestation de conge - {name} - {id}"
+msgstr "Leave Certificate - {name} - {id}"
+
+msgid "Emails envoyés à : {emails} (échecs : {count})"
+msgstr "Emails sent to: {emails} (failures: {count})"
+
+msgid "DKK - Couronne Danoise"
+msgstr "DKK - Danish Krone"
+
+msgid "Etape"
+msgstr "Step"
+
+msgid "GMD - Dalasi Gambien"
+msgstr "GMD - Gambian Dalasi"
+
+msgid "MOP - Pataca Macanaise"
+msgstr "MOP - Macanese Pataca"
+
+msgid "CNY - Yuan Chinois"
+msgstr "CNY - Chinese Yuan"
+
+msgid "BSD - Dollar Bahaméen"
+msgstr "BSD - Bahamian Dollar"
+
+msgid "TRY - Livre Turque"
+msgstr "TRY - Turkish Lira"
+
+msgid "BIF - Franc Burundais"
+msgstr "BIF - Burundian Franc"
+
+msgid "--- Sélectionner un employé ---"
+msgstr "--- Select an employee ---"
+
+msgid "Alertes envoyées à : {emails}"
+msgstr "Alerts sent to: {emails}"
+
+msgid "JPY - Yen Japonais"
+msgstr "JPY - Japanese Yen"
+
+msgid "JOD - Dinar Jordanien"
+msgstr "JOD - Jordanian Dinar"
+
+msgid "Une pièce justificative est requise pour ce type de congé."
+msgstr "A supporting document is required for this type of leave."
+
+msgid "EUR - Euro"
+msgstr "EUR - Euro"
+
+msgid "[URGENT]"
+msgstr "[URGENT]"
+
+msgid "HNL - Lempira Hondurien"
+msgstr "HNL - Honduran Lempira"
+
+msgid "HRK - Kuna Croate"
+msgstr "HRK - Croatian Kuna"
+
+msgid ""
+"En tant que responsable, vous devez traiter {demonstrative} {type} "
+"impérativement :"
+msgstr "As the approver, you must process {demonstrative} {type} urgently:"
+
+msgid "CHF - Franc Suisse"
+msgstr "CHF - Swiss Franc"
+
+msgid "ANG - Florin Antillais"
+msgstr "ANG - Netherlands Antillean Guilder"
+
+msgid "TND - Dinar Tunisien"
+msgstr "TND - Tunisian Dinar"
+
+msgid "BYN - Rouble Biélorusse"
+msgstr "BYN - Belarusian Ruble"
+
+msgid "TJS - Somoni Tadjik"
+msgstr "TJS - Tajikistani Somoni"
+
+msgid "INR - Roupie Indienne"
+msgstr "INR - Indian Rupee"
+
+msgid "Activez votre compte en créant votre mot de passe"
+msgstr "Activate your account by creating your password"
+
+msgid "LAK - Kip Laotien"
+msgstr "LAK - Laotian Kip"
+
+msgid "défavorable"
+msgstr "unfavourable"
+
+msgid "Ajout au projet"
+msgstr "Added to project"
+
+msgid "{article} {type} vous est {past_participle} :"
+msgstr "{article} {type} has been {past_participle}:"
+
+msgid "Le {date}"
+msgstr "{date}"
+
+msgid "Invitation envoyée à {email}"
+msgstr "Invitation sent to {email}"
+
+msgid "TWD - Dollar Taïwanais"
+msgstr "TWD - New Taiwan Dollar"
+
+msgid "IDR - Roupie Indonésienne"
+msgstr "IDR - Indonesian Rupiah"
+
+msgid "rejetée"
+msgstr "rejected"
+
+msgid "Email non configuré"
+msgstr "Email not configured"
+
+msgid "Compétences séparées par des virgules"
+msgstr "Skills separated by commas"
+
+msgid "{prefix} {task} - échéance {date}"
+msgstr "{prefix} {task} - Due {date}"
+
+msgid "SCR - Roupie Seychelloise"
+msgstr "SCR - Seychellois Rupee"
+
+msgid "KWD - Dinar Koweïtien"
+msgstr "KWD - Kuwaiti Dinar"
+
+msgid "BZD - Dollar Bélizien"
+msgstr "BZD - Belize Dollar"
+
+msgid ""
+"Si vous n'avez pas demandé cette réinitialisation, vous pouvez ignorer cet "
+"email et votre mot de passe restera inchangé."
+msgstr ""
+"If you did not request this reset, you can ignore this email and your "
+"password will remain unchanged."
+
+msgid "IQD - Dinar Irakien"
+msgstr "IQD - Iraqi Dinar"
+
+msgid "SDG - Livre Soudanaise"
+msgstr "SDG - Sudanese Pound"
+
+msgid "ILS - Shekel Israélien"
+msgstr "ILS - Israeli Shekel"
+
+msgid "Réinitialisation du mot de passe"
+msgstr "Password reset"
+
+msgid "GBP - Livre Sterling"
+msgstr "GBP - British Pound Sterling"
+
+msgid "NGN - Naira Nigérian"
+msgstr "NGN - Nigerian Naira"
+
+msgid "BGN - Lev Bulgare"
+msgstr "BGN - Bulgarian Lev"
+
+msgid "Décision finale sur votre demande de congé :"
+msgstr "Final decision on your leave request:"
+
+msgid "SGD - Dollar Singapourien"
+msgstr "SGD - Singapore Dollar"
+
+msgid "PYG - Guaraní Paraguayen"
+msgstr "PYG - Paraguayan Guarani"
+
+msgid "Verification"
+msgstr "Verification"
+
+msgid "Décision finale (en copie - hiérarchie) :"
+msgstr "Final decision (CC - hierarchy):"
+
+msgid "Nouvelle demande de congé"
+msgstr "New leave request"
+
+msgid "KHR - Riel Cambodgien"
+msgstr "KHR - Cambodian Riel"
+
+msgid "MAD - Dirham Marocain"
+msgstr "MAD - Moroccan Dirham"
+
+msgid "Nouvelle demande de congé soumise (information RH) :"
+msgstr "New leave request submitted (HR notification):"
+
+msgid "Étape 2/3 – Vérification RH"
+msgstr "Step 2/3 – HR review"
+
+msgid "WST - Tala Samoan"
+msgstr "WST - Samoan Tala"
+
+msgid "THB - Baht Thaïlandais"
+msgstr "THB - Thai Baht"
+
+msgid "GNF - Franc Guinéen"
+msgstr "GNF - Guinean Franc"
+
+msgid ""
+"Vous pouvez sélectionner plusieurs fichiers à la fois (Ctrl/Cmd + clic) ou "
+"les glisser-déposer."
+msgstr ""
+"You can select multiple files at once (Ctrl/Cmd + click) or drag and drop "
+"them."
+
+msgid "BRL - Réal Brésilien"
+msgstr "BRL - Brazilian Real"
+
+msgid "Email envoyé à : {emails}"
+msgstr "Email sent to: {emails}"
+
+msgid "MGA - Ariary Malgache"
+msgstr "MGA - Malagasy Ariary"
+
+msgid "non conforme"
+msgstr "non-compliant"
+
+msgid "CRC - Colón Costaricain"
+msgstr "CRC - Costa Rican Colón"
+
+msgid "Attestation officielle de conge"
+msgstr "Official leave certificate"
+
+msgid "CSIG - Direction Generale"
+msgstr "CSIG - General Management"
+
+msgid "Associe un employé interne comme responsable du projet."
+msgstr "Links an internal employee as project manager."
+
+msgid "RWF - Franc Rwandais"
+msgstr "RWF - Rwandan Franc"

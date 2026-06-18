@@ -1,6 +1,7 @@
 """Formulaires pour la gestion des demandes de conge CSIG."""
 from django import forms
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from .models import LeaveRequest, LeaveDocument, Employee, Direction
 
@@ -37,8 +38,8 @@ class LeaveRequestForm(forms.ModelForm):
 
     extra_documents = MultipleFileField(
         required=False,
-        label="Pièces justificatives",
-        help_text="Vous pouvez sélectionner plusieurs fichiers à la fois (Ctrl/Cmd + clic) ou les glisser-déposer.",
+        label=_("Pièces justificatives"),
+        help_text=_("Vous pouvez sélectionner plusieurs fichiers à la fois (Ctrl/Cmd + clic) ou les glisser-déposer."),
     )
 
     class Meta:
@@ -92,17 +93,17 @@ class LeaveRequestForm(forms.ModelForm):
         has_any_doc = bool(new_files) or has_existing_docs
 
         if start and end and end < start:
-            self.add_error('end_date', "La date de fin doit être postérieure ou égale à la date de début.")
+            self.add_error('end_date', _("La date de fin doit être postérieure ou égale à la date de début."))
 
         if start and leave_type == 'annuel':
             min_delay = (start - timezone.now().date()).days
             if min_delay < 15:
-                self.add_error('start_date', "Un congé annuel doit être demandé au moins 15 jours avant le départ.")
+                self.add_error('start_date', _("Un congé annuel doit être demandé au moins 15 jours avant le départ."))
 
         # Certains types exigent au moins une piece justificative
         types_requiring_doc = {'maladie', 'maternite', 'formation'}
         if leave_type in types_requiring_doc and not has_any_doc:
-            self.add_error('extra_documents', "Une pièce justificative est requise pour ce type de congé.")
+            self.add_error('extra_documents', _("Une pièce justificative est requise pour ce type de congé."))
 
         return cleaned
 
@@ -121,8 +122,8 @@ class LeaveManagerDecisionForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['manager_decision'].choices = [
-            ('favorable', 'Favorable'),
-            ('defavorable', 'Défavorable'),
+            ('favorable', _('Favorable')),
+            ('defavorable', _('Défavorable')),
         ]
         self.fields['manager_decision'].required = True
 
@@ -141,8 +142,8 @@ class LeaveHRDecisionForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['hr_decision'].choices = [
-            ('conforme', 'Conforme'),
-            ('non_conforme', 'Non conforme'),
+            ('conforme', _('Conforme')),
+            ('non_conforme', _('Non conforme')),
         ]
         self.fields['hr_decision'].required = True
 
@@ -161,8 +162,8 @@ class LeaveFinalDecisionForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['final_decision'].choices = [
-            ('approuve', 'Approuvée'),
-            ('rejete', 'Rejetée'),
+            ('approuve', _('Approuvée')),
+            ('rejete', _('Rejetée')),
         ]
         self.fields['final_decision'].required = True
 

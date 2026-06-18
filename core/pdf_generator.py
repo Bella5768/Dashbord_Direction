@@ -13,6 +13,7 @@ from reportlab.lib.utils import ImageReader
 from reportlab.graphics.barcode.qr import QrCodeWidget
 from reportlab.graphics.shapes import Drawing
 from reportlab.graphics import renderPDF
+from django.utils.translation import gettext as _, ngettext
 
 
 # --- Constantes design ------------------------------------------------------
@@ -75,17 +76,17 @@ def _draw_state_header(c):
     # Republique au centre / droite
     c.setFillColor(colors.white)
     c.setFont('Helvetica-Bold', 11)
-    c.drawString(MARGIN_X + 28 * mm, PAGE_H - 11 * mm, "REPUBLIQUE DE GUINEE")
+    c.drawString(MARGIN_X + 28 * mm, PAGE_H - 11 * mm, _("REPUBLIQUE DE GUINEE"))
     c.setFont('Helvetica-Oblique', 8)
-    c.drawString(MARGIN_X + 28 * mm, PAGE_H - 15 * mm, "Travail - Justice - Solidarite")
+    c.drawString(MARGIN_X + 28 * mm, PAGE_H - 15 * mm, _("Travail - Justice - Solidarite"))
 
     c.setFont('Helvetica-Bold', 12)
     c.drawString(MARGIN_X + 28 * mm, PAGE_H - 21 * mm,
-                 "CITE DES SCIENCES ET DE L'INNOVATION DE GUINEE")
+                 _("CITE DES SCIENCES ET DE L'INNOVATION DE GUINEE"))
     c.setFont('Helvetica', 8)
     c.setFillColor(colors.HexColor('#cbd5e1'))
     c.drawString(MARGIN_X + 28 * mm, PAGE_H - 25 * mm,
-                 "Direction Generale - Centre de Suivi et d'Information de Gestion")
+                 _("Direction Generale - Centre de Suivi et d'Information de Gestion"))
 
     # Reference a droite
     c.setFillColor(colors.white)
@@ -102,7 +103,7 @@ def _draw_title_band(c, leave):
 
     c.setFillColor(NAVY)
     c.setFont('Helvetica-Bold', 18)
-    c.drawCentredString(PAGE_W / 2, y - 4 * mm, "ATTESTATION DE CONGE")
+    c.drawCentredString(PAGE_W / 2, y - 4 * mm, _("ATTESTATION DE CONGE"))
 
     c.setFillColor(GOLD)
     c.setLineWidth(1.2)
@@ -113,15 +114,15 @@ def _draw_title_band(c, leave):
     ref = generate_unique_code(leave)
     c.setFillColor(GREY_TEXT)
     c.setFont('Helvetica-Bold', 9)
-    c.drawString(MARGIN_X, y - 14 * mm, "Code unique : ")
-    label_w = c.stringWidth("Code unique : ", 'Helvetica-Bold', 9)
+    c.drawString(MARGIN_X, y - 14 * mm, _("Code unique : "))
+    label_w = c.stringWidth(_("Code unique : "), 'Helvetica-Bold', 9)
     c.setFillColor(NAVY)
     c.setFont('Courier-Bold', 9)
     c.drawString(MARGIN_X + label_w, y - 14 * mm, ref)
     c.setFillColor(GREY_TEXT)
     c.setFont('Helvetica', 9)
     c.drawRightString(PAGE_W - MARGIN_X, y - 14 * mm,
-                      f"Conakry, le {datetime.now().strftime('%d/%m/%Y')}")
+                      _("Conakry, le {date}").format(date=datetime.now().strftime('%d/%m/%Y')))
 
 
 def _wrap_text(c, text, font_name, font_size, max_width):
@@ -218,20 +219,20 @@ def _draw_info_box(c, leave):
     c.setLineWidth(0.5)
     c.roundRect(x1, top - box_h, col_w, box_h, 3, fill=1, stroke=1)
 
-    _draw_section_title(c, x1 + 4 * mm, top - 6 * mm, "Demandeur")
+    _draw_section_title(c, x1 + 4 * mm, top - 6 * mm, _("Demandeur"))
     yy = top - 13 * mm
     label_w1 = 28 * mm
     value_w1 = col_w - 4 * mm - label_w1 - 4 * mm  # padding gauche + label + padding droite
     direction_name = leave.direction.name if leave.direction else '-'
 
     rows1 = [
-        ("Nom complet", leave.employee.name),
-        ("Direction", direction_name),
+        (_("Nom complet"), leave.employee.name),
+        (_("Direction"), direction_name),
     ]
     if getattr(leave.employee, 'role', None):
-        rows1.append(("Fonction", leave.employee.role))
+        rows1.append((_("Fonction"), leave.employee.role))
     if getattr(leave.employee, 'email', None):
-        rows1.append(("Email", leave.employee.email))
+        rows1.append((_("Email"), leave.employee.email))
 
     for label, value in rows1:
         n = _draw_kv_row(c, x1 + 4 * mm, yy, label, value, label_w1, value_max_w=value_w1, max_lines=2)
@@ -242,19 +243,19 @@ def _draw_info_box(c, leave):
     c.setFillColor(GREY_BG)
     c.roundRect(x2, top - box_h, col_w, box_h, 3, fill=1, stroke=1)
 
-    _draw_section_title(c, x2 + 4 * mm, top - 6 * mm, "Details du conge")
+    _draw_section_title(c, x2 + 4 * mm, top - 6 * mm, _("Details du conge"))
     yy = top - 13 * mm
     label_w2 = 22 * mm
     value_w2 = col_w - 4 * mm - label_w2 - 4 * mm
-    period = f"Du {leave.start_date.strftime('%d/%m/%Y')} au {leave.end_date.strftime('%d/%m/%Y')}"
+    period = _("Du {start} au {end}").format(start=leave.start_date.strftime('%d/%m/%Y'), end=leave.end_date.strftime('%d/%m/%Y'))
 
     rows2 = [
-        ("Type", leave.get_leave_type_display()),
-        ("Periode", period),
-        ("Duree", f"{leave.days_count} jour(s)"),
+        (_("Type"), leave.get_leave_type_display()),
+        (_("Periode"), period),
+        (_("Duree"), ngettext("%(days)s jour", "%(days)s jours", leave.days_count) % {"days": leave.days_count}),
     ]
     if leave.replacement:
-        rows2.append(("Suppleant", leave.replacement))
+        rows2.append((_("Suppleant"), leave.replacement))
 
     for label, value in rows2:
         n = _draw_kv_row(c, x2 + 4 * mm, yy, label, value, label_w2, value_max_w=value_w2, max_lines=2)
@@ -270,7 +271,7 @@ def _draw_motif(c, leave):
     c.setLineWidth(0.5)
     c.roundRect(MARGIN_X, top - h, PAGE_W - 2 * MARGIN_X, h, 3, fill=1, stroke=1)
 
-    _draw_section_title(c, MARGIN_X + 4 * mm, top - 6 * mm, "Motif")
+    _draw_section_title(c, MARGIN_X + 4 * mm, top - 6 * mm, _("Motif"))
     c.setFillColor(GREY_TEXT)
     motif = leave.reason or '-'
     _draw_wrapped_string(
@@ -286,7 +287,7 @@ def _draw_workflow(c, leave):
     inner_x = MARGIN_X
     inner_w = PAGE_W - 2 * MARGIN_X
 
-    _draw_section_title(c, inner_x, top, "Circuit de validation")
+    _draw_section_title(c, inner_x, top, _("Circuit de validation"))
 
     # Header tableau
     header_y = top - 4 * mm
@@ -301,7 +302,7 @@ def _draw_workflow(c, leave):
     c.rect(inner_x, header_y - row_h, inner_w, row_h, fill=1, stroke=0)
     c.setFillColor(colors.white)
     c.setFont('Helvetica-Bold', 9)
-    headers = ["Etape", "Validateur", "Date", "Decision"]
+    headers = [_("Etape"), _("Validateur"), _("Date"), _("Decision")]
     for i, h in enumerate(headers):
         c.drawString(col_x[i] + 3 * mm, header_y - row_h + 2.2 * mm, h)
 
@@ -309,7 +310,7 @@ def _draw_workflow(c, leave):
     rows = []
     if leave.manager_user:
         rows.append((
-            "Avis hierarchique",
+            _("Avis hierarchique"),
             leave.manager_user.get_full_name() or leave.manager_user.username,
             leave.manager_decision_at.strftime('%d/%m/%Y %H:%M') if leave.manager_decision_at else '-',
             leave.get_manager_decision_display() if leave.manager_decision else '-',
@@ -317,7 +318,7 @@ def _draw_workflow(c, leave):
         ))
     if leave.hr_user:
         rows.append((
-            "Verification RH",
+            _("Verification RH"),
             leave.hr_user.get_full_name() or leave.hr_user.username,
             leave.hr_decision_at.strftime('%d/%m/%Y %H:%M') if leave.hr_decision_at else '-',
             leave.get_hr_decision_display() if leave.hr_decision else '-',
@@ -325,7 +326,7 @@ def _draw_workflow(c, leave):
         ))
     if leave.final_user:
         rows.append((
-            "Decision finale",
+            _("Decision finale"),
             leave.final_user.get_full_name() or leave.final_user.username,
             leave.final_decision_at.strftime('%d/%m/%Y %H:%M') if leave.final_decision_at else '-',
             leave.get_final_decision_display() if leave.final_decision else '-',
@@ -381,7 +382,7 @@ def _draw_decision_stamp(c, leave, table_bottom_y):
     c.setFillColor(colors.white)
     c.setFont('Helvetica-Bold', 14)
     c.drawCentredString(PAGE_W / 2, band_top - band_h / 2 - 1.5 * mm,
-                        f"DECISION FINALE  -  {label}")
+                        _("DECISION FINALE  -  {label}").format(label=label))
 
     # Bloc signature (a droite)
     sig_top = band_top - band_h - 6 * mm
@@ -395,7 +396,7 @@ def _draw_decision_stamp(c, leave, table_bottom_y):
 
     c.setFillColor(NAVY)
     c.setFont('Helvetica-Bold', 9)
-    c.drawString(sig_x + 3 * mm, sig_top - 5 * mm, "VALIDE PAR")
+    c.drawString(sig_x + 3 * mm, sig_top - 5 * mm, _("VALIDE PAR"))
     c.setFillColor(GREY_TEXT)
     c.setFont('Helvetica', 9)
     if leave.final_user:
@@ -403,10 +404,10 @@ def _draw_decision_stamp(c, leave, table_bottom_y):
         c.drawString(sig_x + 3 * mm, sig_top - 10 * mm, name)
         c.setFillColor(GREY_LIGHT)
         c.setFont('Helvetica-Oblique', 8)
-        c.drawString(sig_x + 3 * mm, sig_top - 14 * mm, "Direction Generale - CSIG")
+        c.drawString(sig_x + 3 * mm, sig_top - 14 * mm, _("Direction Generale - CSIG"))
         if leave.final_decision_at:
             c.drawString(sig_x + 3 * mm, sig_top - 18 * mm,
-                         f"Le {leave.final_decision_at.strftime('%d/%m/%Y a %H:%M')}")
+                         _("Le {date}").format(date=leave.final_decision_at.strftime('%d/%m/%Y a %H:%M')))
 
     # Zone reservee au cachet (a apposer manuellement apres impression)
     c.setStrokeColor(GREY_BORDER)
@@ -418,7 +419,7 @@ def _draw_decision_stamp(c, leave, table_bottom_y):
     c.setDash()
     c.setFillColor(GREY_LIGHT)
     c.setFont('Helvetica-Oblique', 6)
-    c.drawCentredString(cx, cy - 0.5 * mm, "Cachet")
+    c.drawCentredString(cx, cy - 0.5 * mm, _("Cachet"))
 
 
 def _draw_qr_code(c, leave):
@@ -439,16 +440,16 @@ def _draw_qr_code(c, leave):
     # Label sous le QR
     c.setFillColor(GREY_LIGHT)
     c.setFont('Helvetica-Oblique', 6.5)
-    c.drawString(qr_x + qr_size + 3 * mm, qr_y + qr_size - 3 * mm, "Verification")
+    c.drawString(qr_x + qr_size + 3 * mm, qr_y + qr_size - 3 * mm, _("Verification"))
     c.setFillColor(NAVY)
     c.setFont('Courier-Bold', 7)
     c.drawString(qr_x + qr_size + 3 * mm, qr_y + qr_size - 7 * mm, code)
     c.setFillColor(GREY_LIGHT)
     c.setFont('Helvetica', 6.5)
     c.drawString(qr_x + qr_size + 3 * mm, qr_y + qr_size - 11 * mm,
-                 "Scannez le QR code pour verifier l'authenticite")
+                 _("Scannez le QR code pour verifier l'authenticite"))
     c.drawString(qr_x + qr_size + 3 * mm, qr_y + qr_size - 14 * mm,
-                 "de ce document aupres de la Direction Generale CSIG.")
+                 _("de ce document aupres de la Direction Generale CSIG."))
 
 
 def _draw_footer(c, leave):
@@ -461,16 +462,16 @@ def _draw_footer(c, leave):
 
     c.setFillColor(colors.white)
     c.setFont('Helvetica-Bold', 8)
-    c.drawString(MARGIN_X, 7 * mm, "Cite des Sciences et de l'Innovation de Guinee (CSIG)")
+    c.drawString(MARGIN_X, 7 * mm, _("Cite des Sciences et de l'Innovation de Guinee (CSIG)"))
     c.setFont('Helvetica', 7.5)
     c.setFillColor(colors.HexColor('#cbd5e1'))
     c.drawString(MARGIN_X, 3.5 * mm,
-                 "Document officiel genere par le systeme de gestion des conges - CSIG Dashboard")
+                 _("Document officiel genere par le systeme de gestion des conges - CSIG Dashboard"))
 
     c.setFillColor(colors.white)
     c.setFont('Helvetica-Oblique', 7.5)
     c.drawRightString(PAGE_W - MARGIN_X, 5 * mm,
-                      f"Page 1/1  -  {generate_unique_code(leave)}")
+                      _("Page 1/1  -  {code}").format(code=generate_unique_code(leave)))
 
 
 def _draw_watermark(c, leave):
@@ -494,9 +495,9 @@ def generate_leave_approval_pdf(leave, output_path=None):
     else:
         c = canvas.Canvas(output_path, pagesize=A4)
 
-    c.setTitle(f"Attestation de conge - {leave.employee.name} - {leave.id}")
-    c.setAuthor("CSIG - Direction Generale")
-    c.setSubject("Attestation officielle de conge")
+    c.setTitle(_("Attestation de conge - {name} - {id}").format(name=leave.employee.name, id=leave.id))
+    c.setAuthor(_("CSIG - Direction Generale"))
+    c.setSubject(_("Attestation officielle de conge"))
 
     # Watermark en fond
     _draw_watermark(c, leave)

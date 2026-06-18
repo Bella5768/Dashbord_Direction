@@ -2,6 +2,7 @@ from django import forms
 from django.db.models import Q
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import SetPasswordForm  # noqa: F401  (réexporté pour les vues)
+from django.utils.translation import gettext_lazy as _
 from .models import UserProfile, Direction, Employee, Event, Role
 
 
@@ -11,14 +12,14 @@ class DirectionForm(forms.ModelForm):
         model = Direction
         fields = ['name', 'code', 'color']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nom de la direction'}),
-            'code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Code (ex: DG, DSI, DRH)'}),
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': _('Nom de la direction')}),
+            'code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': _('Code (ex: DG, DSI, DRH)')}),
             'color': forms.TextInput(attrs={'type': 'color', 'class': 'form-control', 'style': 'height: 40px; padding: 5px;'}),
         }
         labels = {
-            'name': 'Nom de la direction',
-            'code': 'Code',
-            'color': 'Couleur',
+            'name': _('Nom de la direction'),
+            'code': _('Code'),
+            'color': _('Couleur'),
         }
 
 
@@ -27,15 +28,15 @@ class UserCreateForm(forms.Form):
     employee = forms.ModelChoiceField(
         queryset=Employee.objects.none(),
         required=True,
-        label="Employé",
-        empty_label="-- Sélectionner un employé --",
+        label=_("Employé"),
+        empty_label=_("-- Sélectionner un employé --"),
         widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_employee'}),
     )
     role = forms.ModelChoiceField(
         queryset=Role.objects.all(),
         required=False,
-        label="Rôle",
-        empty_label="-- Sélectionner un rôle --",
+        label=_("Rôle"),
+        empty_label=_("-- Sélectionner un rôle --"),
         widget=forms.Select(attrs={'class': 'form-control'}),
     )
 
@@ -53,41 +54,40 @@ class UserCreateForm(forms.Form):
         if emp:
             if not emp.email:
                 raise forms.ValidationError(
-                    f"La fiche de {emp.name} n'a pas d'adresse email. "
-                    "Ajoutez-en une avant de créer un compte."
+                    _("La fiche de %(name)s n'a pas d'adresse email. Ajoutez-en une avant de créer un compte.") % {'name': emp.name}
                 )
             if UserProfile.objects.filter(employee=emp).exists():
-                raise forms.ValidationError(f"{emp.name} a déjà un compte utilisateur.")
+                raise forms.ValidationError(_("%(name)s a déjà un compte utilisateur.") % {'name': emp.name})
         return emp
 
 
 class UserUpdateForm(forms.ModelForm):
     """Formulaire de modification d'utilisateur."""
-    email = forms.EmailField(required=True, label="Email")
-    first_name = forms.CharField(max_length=100, required=False, label="Prénom")
-    last_name = forms.CharField(max_length=100, required=False, label="Nom")
-    is_active = forms.BooleanField(required=False, label="Compte actif")
+    email = forms.EmailField(required=True, label=_("Email"))
+    first_name = forms.CharField(max_length=100, required=False, label=_("Prénom"))
+    last_name = forms.CharField(max_length=100, required=False, label=_("Nom"))
+    is_active = forms.BooleanField(required=False, label=_("Compte actif"))
 
     role = forms.ModelChoiceField(
         queryset=Role.objects.all(),
         required=False,
-        label="Rôle",
-        empty_label="-- Sans rôle --",
+        label=_("Rôle"),
+        empty_label=_("-- Sans rôle --"),
         widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_role'}),
     )
     direction = forms.ModelChoiceField(
         queryset=Direction.objects.all(),
         required=False,
-        label="Direction",
-        empty_label="-- Aucune direction --",
+        label=_("Direction"),
+        empty_label=_("-- Aucune direction --"),
     )
     employee = forms.ModelChoiceField(
         queryset=Employee.objects.all(),
         required=False,
-        label="Employé",
-        empty_label="-- Aucun employé --",
+        label=_("Employé"),
+        empty_label=_("-- Aucun employé --"),
     )
-    phone = forms.CharField(max_length=20, required=False, label="Téléphone")
+    phone = forms.CharField(max_length=20, required=False, label=_("Téléphone"))
 
     class Meta:
         model = User
@@ -117,7 +117,7 @@ class UserUpdateForm(forms.ModelForm):
     def clean_username(self):
         username = self.cleaned_data.get('username', '').strip()
         if self.instance and User.objects.filter(username=username).exclude(pk=self.instance.pk).exists():
-            raise forms.ValidationError(f"Le nom d'utilisateur « {username} » est déjà utilisé.")
+            raise forms.ValidationError(_("Le nom d'utilisateur « %(u)s » est déjà utilisé.") % {'u': username})
         return username
 
     def clean(self):
@@ -127,7 +127,7 @@ class UserUpdateForm(forms.ModelForm):
             existing = UserProfile.objects.filter(employee=employee).exclude(user=self.instance).first()
             if existing:
                 self.add_error('employee',
-                    f"Cet employé ({employee.name}) est déjà lié au compte {existing.user.username}.")
+                    _("Cet employé (%(name)s) est déjà lié au compte %(u)s.") % {'name': employee.name, 'u': existing.user.username})
         return cleaned_data
 
     def save(self, commit=True):
@@ -167,13 +167,13 @@ class EventForm(forms.ModelForm):
         date = self.cleaned_data.get('date')
         # En édition, on autorise la date existante même si elle est passée
         if date and not self.instance.pk and date < timezone.now().date():
-            raise forms.ValidationError("La date ne peut pas être dans le passé.")
+            raise forms.ValidationError(_("La date ne peut pas être dans le passé."))
         return date
 
     def clean_duration(self):
         duration = self.cleaned_data.get('duration')
         if duration is not None and duration < 5:
-            raise forms.ValidationError("La durée minimale est de 5 minutes.")
+            raise forms.ValidationError(_("La durée minimale est de 5 minutes."))
         if duration is not None and duration > 1440:
-            raise forms.ValidationError("La durée maximale est de 24h (1440 min).")
+            raise forms.ValidationError(_("La durée maximale est de 24h (1440 min)."))
         return duration

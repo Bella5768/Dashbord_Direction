@@ -116,6 +116,7 @@
 </div>
 
 <script>
+var PROJ_I18N = { equivalent: "{% trans 'Équivalent' %}" };
 // Taux de change simplifiés (pour démo)
 const exchangeRates = {
     'USD': 1.0,
@@ -303,7 +304,7 @@ function updateConversions() {
         const consumedGNF = convertCurrency(consumed, currency, 'GNF');
 
         document.getElementById('budget-conversion').innerHTML =
-            `<i data-lucide="arrow-up-down" width="12" height="12" style="display: inline-block; vertical-align: middle;" ></i> Équivalent: ${formatCurrency(budgetGNF, 'GNF')}`;
+            `<i data-lucide="arrow-up-down" width="12" height="12" style="display: inline-block; vertical-align: middle;" ></i> ${PROJ_I18N.equivalent}: ${formatCurrency(budgetGNF, 'GNF')}`;
 
         if (consumed > 0) {
             document.getElementById('consumed-conversion').innerHTML =

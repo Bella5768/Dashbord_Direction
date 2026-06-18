@@ -116,7 +116,7 @@
                     </a>
                     <a href="#" class="action-btn danger" title="{% trans 'Supprimer' %}"
                        data-delete-url="{% url 'core:partner_delete' partner.id %}"
-                       data-delete-type="le partenaire"
+                       data-delete-type="{% trans 'le partenaire' %}"
                        data-delete-name="{{ partner.name }}">
                         <i data-lucide="trash-2" width="14" height="14"></i>
                     </a>

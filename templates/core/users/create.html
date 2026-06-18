@@ -1,15 +1,15 @@
 {% extends 'base.html' %}
 {% load i18n %}
 
-{% block title %}Nouveau compte utilisateur{% endblock %}
-{% block page_title %}Nouveau compte utilisateur{% endblock %}
-{% block page_subtitle %}L'employé recevra un email pour définir lui-même son mot de passe{% endblock %}
+{% block title %}{% trans 'Nouveau compte utilisateur' %}{% endblock %}
+{% block page_title %}{% trans 'Nouveau compte utilisateur' %}{% endblock %}
+{% block page_subtitle %}{% trans "L'employé recevra un email pour définir lui-même son mot de passe" %}{% endblock %}
 
 {% block content %}
 <div style="max-width:600px;margin:0 auto;">
 <div class="card">
   <div class="card-header">
-    <h3 class="card-title">Créer un compte</h3>
+    <h3 class="card-title">{% trans 'Créer un compte' %}</h3>
   </div>
   <div class="card-content">
 
@@ -17,7 +17,7 @@
     <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:14px 16px;margin-bottom:24px;display:flex;gap:12px;align-items:flex-start;">
       <i data-lucide="info" width="20" height="20" stroke="#1e40af" style="flex-shrink:0;margin-top:1px;" ></i>
       <div style="font-size:13px;color:#1e40af;line-height:1.5;">
-        <strong>Flow d'invitation</strong> : le compte est créé inactif. L'employé reçoit un email avec un lien sécurisé pour définir lui-même son mot de passe (lien valable 3 jours).
+        <strong>{% trans "Flow d'invitation" %}</strong> : {% trans "le compte est créé inactif. L'employé reçoit un email avec un lien sécurisé pour définir lui-même son mot de passe (lien valable 3 jours)." %}
       </div>
     </div>
 
@@ -26,38 +26,38 @@
 
       <!-- Sélection employé -->
       <div class="form-group">
-        <label class="form-label" for="id_employee">Employé <span class="required">*</span></label>
+        <label class="form-label" for="id_employee">{% trans 'Employé' %} <span class="required">*</span></label>
         <select name="employee" id="id_employee" class="form-control" required onchange="onEmployeeChange(this)">
-          <option value="">-- Sélectionner un employé --</option>
+          <option value="">-- {% trans 'Sélectionner un employé' %} --</option>
           {% for emp in form.employee.field.queryset %}
           <option value="{{ emp.id }}"
             {% if form.employee.value|stringformat:"s" == emp.id|stringformat:"s" %}selected{% endif %}>
-            {{ emp.name }}{% if emp.is_external %} (Externe){% endif %}
+            {{ emp.name }}{% if emp.is_external %} ({% trans 'Externe' %}){% endif %}
             {% if emp.direction %} — {{ emp.direction.code }}{% endif %}
           </option>
           {% endfor %}
         </select>
         {% if form.employee.errors %}<p class="form-error">{{ form.employee.errors.0 }}</p>{% endif %}
         <span class="form-help">
-          Seuls les employés sans compte sont disponibles.
-          <a href="{% url 'core:resources' %}?tab=rh" style="color:#1e3a5f;">Gérer les fiches employés</a>
+          {% trans 'Seuls les employés sans compte sont disponibles.' %}
+          <a href="{% url 'core:resources' %}?tab=rh" style="color:#1e3a5f;">{% trans 'Gérer les fiches employés' %}</a>
         </span>
       </div>
 
       <!-- Prévisualisation (se remplit via JS) -->
       <div id="preview_block" style="display:none;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-bottom:20px;">
-        <p style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin:0 0 10px;">Informations du compte à créer</p>
+        <p style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin:0 0 10px;">{% trans 'Informations du compte à créer' %}</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
           <div>
-            <span style="font-size:11px;color:#9ca3af;display:block;">Identifiant (username)</span>
+            <span style="font-size:11px;color:#9ca3af;display:block;">{% trans 'Identifiant (username)' %}</span>
             <strong id="prev_username" style="font-size:14px;color:#1e3a5f;"></strong>
           </div>
           <div>
-            <span style="font-size:11px;color:#9ca3af;display:block;">Direction</span>
+            <span style="font-size:11px;color:#9ca3af;display:block;">{% trans 'Direction' %}</span>
             <strong id="prev_direction" style="font-size:14px;color:#374151;"></strong>
           </div>
           <div style="grid-column:1/-1;">
-            <span style="font-size:11px;color:#9ca3af;display:block;">Email d'invitation</span>
+            <span style="font-size:11px;color:#9ca3af;display:block;">{% trans "Email d'invitation" %}</span>
             <strong id="prev_email" style="font-size:14px;color:#374151;"></strong>
           </div>
         </div>
@@ -65,28 +65,28 @@
 
       <!-- Alerte email manquant -->
       <div id="no_email_alert" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:12px 14px;margin-bottom:20px;font-size:13px;color:#b91c1c;">
-        <strong>Attention :</strong> cet employé n'a pas d'adresse email.
-        <a href="{% url 'core:resources' %}?tab=rh" style="color:#b91c1c;font-weight:600;">Ajouter un email à sa fiche</a> avant de créer son compte.
+        <strong>{% trans 'Attention :' %}</strong> {% trans "cet employé n'a pas d'adresse email." %}
+        <a href="{% url 'core:resources' %}?tab=rh" style="color:#b91c1c;font-weight:600;">{% trans 'Ajouter un email à sa fiche' %}</a> {% trans 'avant de créer son compte.' %}
       </div>
 
       <!-- Rôle -->
       <div class="form-group">
-        <label class="form-label" for="id_role">Rôle <span class="required">*</span></label>
+        <label class="form-label" for="id_role">{% trans 'Rôle' %} <span class="required">*</span></label>
         <select name="role" id="id_role" class="form-control">
           {% for value, label in form.role.field.choices %}
           <option value="{{ value }}" {% if form.role.value == value %}selected{% endif %}>{{ label }}</option>
           {% endfor %}
         </select>
         {% if form.role.errors %}<p class="form-error">{{ form.role.errors.0 }}</p>{% endif %}
-        <span class="form-help">Les permissions détaillées pourront être configurées après la création.</span>
+        <span class="form-help">{% trans 'Les permissions détaillées pourront être configurées après la création.' %}</span>
       </div>
 
       <div class="flex gap-3">
         <button type="submit" id="submitBtn" class="btn btn-primary" disabled>
           <i data-lucide="mail" width="16" height="16" ></i>
-          Créer et envoyer l'invitation
+          {% trans "Créer et envoyer l'invitation" %}
         </button>
-        <a href="{% url 'core:users_list' %}" class="btn btn-outline">Annuler</a>
+        <a href="{% url 'core:users_list' %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
       </div>
     </form>
   </div>

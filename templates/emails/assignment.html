@@ -1,12 +1,13 @@
 {% extends "emails/base_email.html" %}
+{% load i18n %}
 {% block content %}
-<p style="margin:0 0 10px;">Bonjour <strong>{{ recipient_name }}</strong>,</p>
+<p style="margin:0 0 10px;">{% trans 'Bonjour' %} <strong>{{ recipient_name }}</strong>,</p>
 <p style="margin:0 0 14px;color:{{ banner_color|default:'#1e3a5f' }};">{{ role_label }}</p>
 <p style="margin:0 0 14px;">{{ task_article_indef|capfirst }} <strong>{{ task_type }}</strong> a été {{ task_pp_attribue }} à <strong>{{ employee_name }}</strong>&nbsp;:</p>
 
 <table style="width:100%;border-collapse:collapse;margin:0 0 18px;font-size:14px;">
   <tr>
-    <td style="padding:10px;border:1px solid #e5e7eb;background:white;font-weight:bold;width:140px;">Projet</td>
+    <td style="padding:10px;border:1px solid #e5e7eb;background:white;font-weight:bold;width:140px;">{% trans 'Projet' %}</td>
     <td style="padding:10px;border:1px solid #e5e7eb;background:white;">{{ project_name }}</td>
   </tr>
   <tr>
@@ -14,20 +15,20 @@
     <td style="padding:10px;border:1px solid #e5e7eb;background:#eff6ff;color:#1e3a5f;font-weight:bold;">{{ task_name }}</td>
   </tr>
   <tr>
-    <td style="padding:10px;border:1px solid #e5e7eb;background:white;font-weight:bold;">Responsable</td>
+    <td style="padding:10px;border:1px solid #e5e7eb;background:white;font-weight:bold;">{% trans 'Responsable' %}</td>
     <td style="padding:10px;border:1px solid #e5e7eb;background:white;">{{ employee_name }}</td>
   </tr>
   {% if due_date %}
   <tr>
-    <td style="padding:10px;border:1px solid #e5e7eb;background:white;font-weight:bold;">Échéance</td>
+    <td style="padding:10px;border:1px solid #e5e7eb;background:white;font-weight:bold;">{% trans 'Échéance' %}</td>
     <td style="padding:10px;border:1px solid #e5e7eb;background:white;">{{ due_date|date:"d/m/Y" }}</td>
   </tr>
   {% endif %}
   <tr>
-    <td style="padding:10px;border:1px solid #e5e7eb;background:white;font-weight:bold;">Attribué par</td>
+    <td style="padding:10px;border:1px solid #e5e7eb;background:white;font-weight:bold;">{% trans 'Attribué par' %}</td>
     <td style="padding:10px;border:1px solid #e5e7eb;background:white;">{{ assigned_by }}</td>
   </tr>
 </table>
 
-<p style="margin:0;color:#6b7280;font-size:13px;">Connectez-vous au tableau de bord CSIG pour consulter les détails.</p>
+<p style="margin:0;color:#6b7280;font-size:13px;">{% trans 'Connectez-vous au tableau de bord CSIG pour consulter les détails.' %}</p>
 {% endblock %}

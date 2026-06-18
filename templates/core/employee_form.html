@@ -38,7 +38,7 @@
                 {{ field }}
                 {% if field.errors %}<p class="form-error">{{ field.errors.0 }}</p>{% endif %}
                 <span id="email_hint" class="form-help" style="display:none;">
-                    Optionnel pour une personne externe — mais nécessaire pour créer un compte.
+                    {% trans "Optionnel pour une personne externe — mais nécessaire pour créer un compte." %}
                 </span>
             </div>
             {% else %}

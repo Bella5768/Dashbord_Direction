@@ -49,12 +49,12 @@
                             {{ sub.name }}
                         </a>
                         <div class="flex gap-1">
-                            <a href="{% url 'core:project_folder_edit' sub.id %}" class="action-btn" title="Modifier">
+                            <a href="{% url 'core:project_folder_edit' sub.id %}" class="action-btn" title="{% trans 'Modifier' %}">
                                 <i data-lucide="pencil" width="14" height="14" ></i>
                             </a>
-                            <a href="#" class="action-btn danger" title="Supprimer"
+                            <a href="#" class="action-btn danger" title="{% trans 'Supprimer' %}"
                                data-delete-url="{% url 'core:project_folder_delete' sub.id %}"
-                               data-delete-type="le dossier"
+                               data-delete-type="{% trans 'le dossier' %}"
                                data-delete-name="{{ sub.name }}">
                                 <i data-lucide="trash-2" width="14" height="14" ></i>
                             </a>
@@ -70,7 +70,7 @@
             <div>
                 <h4 class="text-sm font-semibold text-gray-700 mb-3" style="display: flex; align-items: center; gap: 6px;">
                     <i data-lucide="file-text" width="16" height="16" ></i>
-                    Documents ({{ documents|length }})
+                    {% trans 'Documents' %} ({{ documents|length }})
                 </h4>
 
                 {% if documents %}
@@ -81,21 +81,21 @@
                             <i data-lucide="file-text" width="16" height="16" style="color: #6b7280;" ></i>
                             <div>
                                 <div class="text-sm font-medium">{{ doc.title }}</div>
-                                <div class="text-xs text-gray-500">par {{ doc.uploaded_by }} • {{ doc.uploaded_at|date:"d/m/Y" }}</div>
+                                <div class="text-xs text-gray-500">{% trans 'par' %} {{ doc.uploaded_by }} • {{ doc.uploaded_at|date:"d/m/Y" }}</div>
                             </div>
                         </div>
                         <div class="flex gap-1">
                             {% if doc.file %}
-                            <a href="{{ doc.file.url }}" target="_blank" class="action-btn" title="Télécharger">
+                            <a href="{{ doc.file.url }}" target="_blank" class="action-btn" title="{% trans 'Télécharger' %}">
                                 <i data-lucide="download" width="14" height="14" ></i>
                             </a>
                             {% endif %}
-                            <a href="{% url 'core:project_document_edit' doc.id %}" class="action-btn" title="Modifier">
+                            <a href="{% url 'core:project_document_edit' doc.id %}" class="action-btn" title="{% trans 'Modifier' %}">
                                 <i data-lucide="pencil" width="14" height="14" ></i>
                             </a>
-                            <a href="#" class="action-btn danger" title="Supprimer"
+                            <a href="#" class="action-btn danger" title="{% trans 'Supprimer' %}"
                                data-delete-url="{% url 'core:project_document_delete' doc.id %}"
-                               data-delete-type="le document"
+                               data-delete-type="{% trans 'le document' %}"
                                data-delete-name="{{ doc.title }}">
                                 <i data-lucide="trash-2" width="14" height="14" ></i>
                             </a>

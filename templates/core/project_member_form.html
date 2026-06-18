@@ -265,7 +265,7 @@
         <div id="create_user_fields" class="mt-create-account-fields" style="display:none;">
           <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:#1e40af;display:flex;gap:10px;align-items:flex-start;">
             <i data-lucide="mail" width="16" height="16" style="flex-shrink:0;margin-top:1px;" ></i>
-            <span>Le compte sera créé inactif. Un email d'invitation sera envoyé à la personne pour qu'elle définisse elle-même son mot de passe.</span>
+            <span>{% trans "Le compte sera créé inactif. Un email d'invitation sera envoyé à la personne pour qu'elle définisse elle-même son mot de passe." %}</span>
           </div>
           <div class="form-group">
             <label class="form-label" for="new_user_role">{% trans 'Rôle système' %}</label>
@@ -293,6 +293,16 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+var MEMBER_I18N = {
+  roleGivesAccessTo: "{% trans 'Ce rôle donne accès à' %}",
+  definePermissions:  "{% trans 'Définir les permissions' %}",
+  preset:             "{% trans 'Prédéfinies' %}",
+  custom:             "{% trans 'Personnalisé' %}",
+  includedInRole:     "{% trans 'Inclus dans ce rôle' %}",
+  notIncluded:        "{% trans 'Non inclus dans ce rôle' %}"
+};
+</script>
 <script>
 (function() {
   var radios = document.querySelectorAll('input[name="member_type"]');
@@ -412,12 +422,12 @@
     // Titre + badge
     if (permSectionTitle) {
       permSectionTitle.textContent = isSystem
-        ? 'Ce rôle donne accès à'
-        : 'Définir les permissions';
+        ? MEMBER_I18N.roleGivesAccessTo
+        : MEMBER_I18N.definePermissions;
     }
     if (permPresetNote) {
       permPresetNote.className = 'mt-perm-note ' + (isSystem ? 'preset' : 'custom');
-      permPresetNote.textContent = isSystem ? 'Prédéfinies' : 'Personnalisé';
+      permPresetNote.textContent = isSystem ? MEMBER_I18N.preset : MEMBER_I18N.custom;
     }
     if (customHint) customHint.style.display = isSystem ? 'none' : '';
 
@@ -434,7 +444,7 @@
         if (lbl) {
           lbl.className = 'mt-perm-label ' + (hasPerm ? 'perm-on' : 'perm-off');
           lbl.style.opacity = '';
-          lbl.title = hasPerm ? 'Inclus dans ce rôle' : 'Non inclus dans ce rôle';
+          lbl.title = hasPerm ? MEMBER_I18N.includedInRole : MEMBER_I18N.notIncluded;
         }
       } else {
         chk.disabled = false;

@@ -1,9 +1,9 @@
 {% load i18n %}<!DOCTYPE html>
-<html lang="fr">
+<html lang="{{ LANGUAGE_CODE|default:'fr' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nouveau lien d'activation – CSIG Dashboard</title>
+  <title>{% trans "Nouveau lien d'activation" %} – CSIG Dashboard</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     body { margin: 0; font-family: Arial, sans-serif; background: #f3f4f6; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 16px; }
@@ -56,7 +56,7 @@
 <div class="card">
   <div class="banner">
     <h1>CSIG Dashboard</h1>
-    <p>{% if sent %}Email envoyé{% else %}Demander un nouveau lien{% endif %}</p>
+    <p>{% if sent %}{% trans 'Email envoyé' %}{% else %}{% trans 'Demander un nouveau lien' %}{% endif %}</p>
   </div>
 
   <div class="body">
@@ -70,20 +70,18 @@
         <rect width="20" height="16" x="2" y="4" rx="2"/>
         <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
       </svg>
-      <h2>Vérifiez votre email</h2>
+      <h2>{% trans 'Vérifiez votre email' %}</h2>
       <p>
-        Si un compte en attente est associé à cette adresse,
-        un <strong>nouveau lien d'activation</strong> vient d'être envoyé.
+        {% blocktrans %}Si un compte en attente est associé à cette adresse, un <strong>nouveau lien d'activation</strong> vient d'être envoyé.{% endblocktrans %}
       </p>
-      <p class="detail">Le lien sera valable <strong>3 jours</strong>. Pensez à vérifier vos spams.</p>
+      <p class="detail">{% blocktrans %}Le lien sera valable <strong>3 jours</strong>. Pensez à vérifier vos spams.{% endblocktrans %}</p>
 
       <div class="alert-notice">
-        Si vous ne recevez rien dans quelques minutes, contactez votre administrateur
-        pour qu'il renvoie l'invitation depuis le tableau de bord.
+        {% trans "Si vous ne recevez rien dans quelques minutes, contactez votre administrateur pour qu'il renvoie l'invitation depuis le tableau de bord." %}
       </div>
 
       <a href="{% url 'core:login' %}" style="display:inline-block;margin-top:22px;padding:10px 28px;background:#1e3a5f;color:white;border-radius:6px;font-size:14px;font-weight:600;text-decoration:none;">
-        Retour à la connexion
+        {% trans 'Retour à la connexion' %}
       </a>
     </div>
 
@@ -95,15 +93,14 @@
         <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
       </svg>
       <p>
-        Si votre lien d'invitation a expiré ou a été perdu, saisissez
-        l'adresse email associée à votre compte. Un nouveau lien vous sera envoyé.
+        {% trans "Si votre lien d'invitation a expiré ou a été perdu, saisissez l'adresse email associée à votre compte. Un nouveau lien vous sera envoyé." %}
       </p>
     </div>
 
     <form method="post" novalidate>
       {% csrf_token %}
       <div class="form-group">
-        <label for="email">Adresse email du compte</label>
+        <label for="email">{% trans 'Adresse email du compte' %}</label>
         <input
           type="email"
           name="email"
@@ -124,7 +121,7 @@
           {{ form_error }}
         </span>
         {% else %}
-        <span class="form-help">Utilisez l'email avec lequel vous avez été invité(e).</span>
+        <span class="form-help">{% trans "Utilisez l'email avec lequel vous avez été invité(e)." %}</span>
         {% endif %}
       </div>
 
@@ -134,18 +131,18 @@
           <rect width="20" height="16" x="2" y="4" rx="2"/>
           <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
         </svg>
-        Envoyer le lien d'activation
+        {% trans "Envoyer le lien d'activation" %}
       </button>
     </form>
 
     <a href="{% url 'core:login' %}" class="back-link">
-      Vous avez déjà un compte ? <strong>Se connecter</strong>
+      {% trans 'Vous avez déjà un compte ?' %} <strong>{% trans 'Se connecter' %}</strong>
     </a>
     {% endif %}
 
   </div>
 
-  <div class="footer">© {% now "Y" %} CSIG – Centre de Suivi et d'Information de Gestion</div>
+  <div class="footer">© {% now "Y" %} {% trans 'CSIG – Centre de Suivi et d\'Information de Gestion' %}</div>
 </div>
 </body>
 </html>

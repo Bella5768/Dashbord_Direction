@@ -1,12 +1,13 @@
 {% extends "emails/base_email.html" %}
+{% load i18n %}
 {% block content %}
-<p style="margin:0 0 10px;">Bonjour <strong>{{ recipient_name }}</strong>,</p>
+<p style="margin:0 0 10px;">{% trans 'Bonjour' %} <strong>{{ recipient_name }}</strong>,</p>
 <p style="margin:0 0 14px;color:#065f46;">{{ role_label }}</p>
 <p style="margin:0 0 14px;">{{ task_article_def }} {{ task_type }} <strong>« {{ task_name }} »</strong> est maintenant {{ task_pp_termine }}.</p>
 
 <table style="width:100%;border-collapse:collapse;margin:0 0 18px;font-size:14px;">
   <tr>
-    <td style="padding:10px;border:1px solid #e5e7eb;background:white;font-weight:bold;width:140px;">Projet</td>
+    <td style="padding:10px;border:1px solid #e5e7eb;background:white;font-weight:bold;width:140px;">{% trans 'Projet' %}</td>
     <td style="padding:10px;border:1px solid #e5e7eb;background:white;">{{ project_name }}</td>
   </tr>
   <tr>
@@ -14,10 +15,10 @@
     <td style="padding:10px;border:1px solid #e5e7eb;background:#ecfdf5;color:#065f46;font-weight:bold;">{{ task_name }}</td>
   </tr>
   <tr>
-    <td style="padding:10px;border:1px solid #e5e7eb;background:white;font-weight:bold;">Terminée par</td>
+    <td style="padding:10px;border:1px solid #e5e7eb;background:white;font-weight:bold;">{% trans 'Terminée par' %}</td>
     <td style="padding:10px;border:1px solid #e5e7eb;background:white;">{{ completed_by_name }}</td>
   </tr>
 </table>
 
-<p style="margin:0;color:#6b7280;font-size:13px;">Connectez-vous au tableau de bord CSIG pour consulter les détails.</p>
+<p style="margin:0;color:#6b7280;font-size:13px;">{% trans 'Connectez-vous au tableau de bord CSIG pour consulter les détails.' %}</p>
 {% endblock %}

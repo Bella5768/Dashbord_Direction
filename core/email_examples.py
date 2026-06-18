@@ -5,6 +5,7 @@ Ce fichier montre comment utiliser les fonctions d'envoi d'emails
 définies dans core/email_backend.py
 """
 
+from django.utils.translation import gettext as _
 from core.email_backend import send_email, send_html_email, send_email_with_attachments
 
 
@@ -139,9 +140,9 @@ def example_in_view(request):
             recipient_list=[request.user.email],
             fail_silently=False
         )
-        messages.success(request, "Email de confirmation envoyé.")
+        messages.success(request, _("Email de confirmation envoyé."))
     except Exception as e:
-        messages.error(request, f"Erreur lors de l'envoi de l'email: {e}")
+        messages.error(request, _("Erreur lors de l'envoi de l'email: {err}").format(err=e))
 
 
 if __name__ == "__main__":

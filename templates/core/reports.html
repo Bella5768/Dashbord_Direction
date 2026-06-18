@@ -606,7 +606,7 @@ function initBudgetCharts() {
             ...CHART_OPTS,
             plugins: {
                 legend: { position: 'right', labels: { boxWidth: 12, font: { size: 12 } } },
-                tooltip: { callbacks: { label: ctx => ctx.label + ' : ' + ctx.raw + '% consommé' } }
+                tooltip: { callbacks: { label: ctx => ctx.label + ' : ' + ctx.raw + '% {% trans "consommé" %}' } }
             },
             cutout: '65%'
         }

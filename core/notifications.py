@@ -2,6 +2,7 @@ from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+from django.utils.translation import gettext as _, ngettext
 from django.db.models import Q
 from django.urls import reverse
 from email.mime.image import MIMEImage
@@ -66,10 +67,10 @@ def _task_gender_ctx(task_type):
     """Retourne les variables de genre grammatical pour task_type ('jalon', 'tâche', 'sous-étape')."""
     masculine = task_type in ('jalon',)
     return {
-        'task_article_indef': 'un nouveau' if masculine else 'une nouvelle',
-        'task_article_def': 'Le' if masculine else 'La',
-        'task_pp_attribue': 'attribué' if masculine else 'attribuée',
-        'task_pp_termine': 'terminé' if masculine else 'terminée',
+        'task_article_indef': _('un nouveau') if masculine else _('une nouvelle'),
+        'task_article_def': _('Le') if masculine else _('La'),
+        'task_pp_attribue': _('attribué') if masculine else _('attribuée'),
+        'task_pp_termine': _('terminé') if masculine else _('terminée'),
     }
 
 
@@ -109,24 +110,24 @@ def notify_account_invitation(user, activation_link, invited_by=None):
     """Envoie l'email d'invitation pour que l'utilisateur définisse son mot de passe."""
     if not _is_email_configured():
         logger.warning("Invitation non envoyée : email non configuré")
-        return (False, "Email non configuré")
+        return (False, _("Email non configuré"))
     if not user.email:
-        return (False, "Cet utilisateur n'a pas d'adresse email")
+        return (False, _("Cet utilisateur n'a pas d'adresse email"))
 
-    subject = "[CSIG] Créez votre mot de passe – Accès au tableau de bord"
+    subject = _("[CSIG] Créez votre mot de passe – Accès au tableau de bord")
     text, html = _render_email('account_invitation.html', {
         'recipient_name': user.get_full_name() or user.username,
         'username': user.username,
         'activation_link': activation_link,
         'invited_by': invited_by,
         'banner_color': '#1e3a5f',
-        'banner_title': 'Bienvenue sur CSIG Dashboard',
-        'banner_subtitle': 'Activez votre compte en créant votre mot de passe',
+        'banner_title': _('Bienvenue sur CSIG Dashboard'),
+        'banner_subtitle': _('Activez votre compte en créant votre mot de passe'),
     })
     try:
         _send(subject, text, html, user.email)
         logger.info(f"Invitation envoyée à {user.email}")
-        return (True, f"Invitation envoyée à {user.email}")
+        return (True, _("Invitation envoyée à {email}").format(email=user.email))
     except Exception as e:
         err = str(e)
         logger.error(f"Echec invitation {user.email}: {err}")
@@ -141,23 +142,23 @@ def notify_password_reset(user, reset_link):
     """Envoie l'email de réinitialisation de mot de passe."""
     if not _is_email_configured():
         logger.warning("Reset non envoyé : email non configuré")
-        return (False, "Email non configuré")
+        return (False, _("Email non configuré"))
     if not user.email:
-        return (False, "Cet utilisateur n'a pas d'adresse email")
+        return (False, _("Cet utilisateur n'a pas d'adresse email"))
 
-    subject = "[CSIG] Réinitialisation de votre mot de passe"
+    subject = _("[CSIG] Réinitialisation de votre mot de passe")
     text, html = _render_email('password_reset_email.html', {
         'recipient_name': user.get_full_name() or user.username,
         'username': user.username,
         'reset_link': reset_link,
         'banner_color': '#1e3a5f',
-        'banner_title': 'Réinitialisation du mot de passe',
-        'banner_subtitle': 'Dashboard CSIG – Direction Générale',
+        'banner_title': _('Réinitialisation du mot de passe'),
+        'banner_subtitle': _('Dashboard CSIG – Direction Générale'),
     })
     try:
         _send(subject, text, html, user.email)
         logger.info(f"Email reset envoyé à {user.email}")
-        return (True, f"Email envoyé à {user.email}")
+        return (True, _("Email envoyé à {email}").format(email=user.email))
     except Exception as e:
         err = str(e)
         logger.error(f"Echec reset {user.email}: {err}")
@@ -172,24 +173,24 @@ def notify_assignment(employee, task_type, task_name, project_name, assigned_by,
     """Notifie l'attribution d'une tâche au responsable (+ chef de projet en CC)."""
     if not _is_email_configured():
         logger.warning("Notification non envoyée : identifiants email non configurés")
-        return (False, "Identifiants email non configurés")
+        return (False, _("Identifiants email non configurés"))
 
     if not employee or not employee.email:
         logger.warning(f"Notification non envoyée : pas d'email pour {employee}")
-        return (False, "Pas d'email pour cet employé")
+        return (False, _("Pas d'email pour cet employé"))
 
     employee_name = employee.name
     _gctx = _task_gender_ctx(task_type)
     _art = _gctx['task_article_indef']
     _pp = _gctx['task_pp_attribue']
-    recipients = [(employee_name, employee.email, f"{_art.capitalize()} {task_type} vous est {_pp} :")]
+    recipients = [(employee_name, employee.email, _("{article} {type} vous est {past_participle} :").format(article=_art.capitalize(), type=task_type, past_participle=_pp))]
 
     if project is not None:
         manager_name, manager_email = _resolve_manager_email(project)
         if manager_email and manager_email.lower() != employee.email.lower():
-            recipients.append((manager_name, manager_email, "En tant que chef de projet, vous êtes informé en copie :"))
+            recipients.append((manager_name, manager_email, _("En tant que chef de projet, vous êtes informé en copie :")))
 
-    subject = f"[CSIG] Nouvelle attribution : {task_name}"
+    subject = _("[CSIG] Nouvelle attribution : {task}").format(task=task_name)
     sent_emails, errors = [], []
     for rec_name, rec_email, role_label in recipients:
         text, html = _render_email('assignment.html', {
@@ -202,8 +203,8 @@ def notify_assignment(employee, task_type, task_name, project_name, assigned_by,
             'assigned_by': assigned_by,
             'due_date': due_date,
             'banner_color': '#1e3a5f',
-            'banner_title': 'Nouvelle attribution',
-            'banner_subtitle': 'Dashboard CSIG – Direction Générale',
+            'banner_title': _('Nouvelle attribution'),
+            'banner_subtitle': _('Dashboard CSIG – Direction Générale'),
             **_gctx,
         })
         try:
@@ -216,10 +217,10 @@ def notify_assignment(employee, task_type, task_name, project_name, assigned_by,
             errors.append(err)
 
     if sent_emails and not errors:
-        return (True, f"Email envoyé à : {', '.join(sent_emails)}")
+        return (True, _("Email envoyé à : {emails}").format(emails=', '.join(sent_emails)))
     if sent_emails and errors:
-        return (True, f"Email envoyé à : {', '.join(sent_emails)} (échecs : {len(errors)})")
-    return (False, "; ".join(errors) or "Échec d'envoi")
+        return (True, _("Email envoyé à : {emails} (échecs : {count})").format(emails=', '.join(sent_emails), count=len(errors)))
+    return (False, "; ".join(errors) or _("Échec d'envoi"))
 
 
 # =====================================================================
@@ -229,19 +230,19 @@ def notify_assignment(employee, task_type, task_name, project_name, assigned_by,
 def notify_project_member_added(member, added_by_user):
     if not _is_email_configured():
         logger.warning("Notification non envoyée : identifiants email non configurés")
-        return (False, "Identifiants email non configurés")
+        return (False, _("Identifiants email non configurés"))
 
     employee = member.employee
     if not employee or not employee.email:
         logger.warning(f"Notification non envoyée : pas d'email pour {employee}")
-        return (False, "Pas d'email pour ce membre")
+        return (False, _("Pas d'email pour ce membre"))
 
     added_by = added_by_user.get_full_name() or added_by_user.username
-    role_label = member.project_role.name if member.project_role else 'Membre'
-    subject = f"[CSIG] Ajout au projet : {member.project.name}"
+    role_label = member.project_role.name if member.project_role else _('Membre')
+    subject = _("[CSIG] Ajout au projet : {project}").format(project=member.project.name)
 
     site_url = getattr(settings, 'SITE_URL', '').rstrip('/')
-    project_url = f"{site_url}{reverse('project_detail', args=[member.project.id])}" if site_url else ''
+    project_url = f"{site_url}{reverse('core:project_detail', args=[member.project.id])}" if site_url else ''
     text, html = _render_email('project_member_added.html', {
         'employee_name': employee.name,
         'project_name': member.project.name,
@@ -249,13 +250,13 @@ def notify_project_member_added(member, added_by_user):
         'added_by': added_by,
         'project_url': project_url,
         'banner_color': '#1e3a5f',
-        'banner_title': 'Ajout au projet',
-        'banner_subtitle': 'Dashboard CSIG – Direction Générale',
+        'banner_title': _('Ajout au projet'),
+        'banner_subtitle': _('Dashboard CSIG – Direction Générale'),
     })
     try:
         _send(subject, text, html, employee.email)
         logger.info(f"Email ajout membre projet envoyé à {employee.email}")
-        return (True, f"Email envoyé à : {employee.email}")
+        return (True, _("Email envoyé à : {email}").format(email=employee.email))
     except Exception as e:
         err = f"Erreur envoi à {employee.email}: {e}"
         logger.error(err)
@@ -270,7 +271,7 @@ def notify_task_completed(task_type, task_name, project, assigned_employee, assi
     """Notifie la fin d'une tâche : chef de projet, responsable, et personne ayant affecté."""
     if not _is_email_configured():
         logger.warning("Notification non envoyée : identifiants email non configurés")
-        return (False, "Identifiants email non configurés")
+        return (False, _("Identifiants email non configurés"))
 
     completed_by_name = completed_by_user.get_full_name() or completed_by_user.username
     project_name = project.name
@@ -278,14 +279,14 @@ def notify_task_completed(task_type, task_name, project, assigned_employee, assi
     recipients = []
     manager_name, manager_email = _resolve_manager_email(project)
     if manager_email:
-        recipients.append((manager_name, manager_email, "En tant que chef de projet, vous êtes informé que :"))
+        recipients.append((manager_name, manager_email, _("En tant que chef de projet, vous êtes informé que :")))
 
     if assigned_employee and assigned_employee.email:
-        recipients.append((assigned_employee.name, assigned_employee.email, "En tant que responsable de cette tâche, vous êtes informé que :"))
+        recipients.append((assigned_employee.name, assigned_employee.email, _("En tant que responsable de cette tâche, vous êtes informé que :")))
 
     if assigned_by_user and assigned_by_user.email:
         assigned_by_name = assigned_by_user.get_full_name() or assigned_by_user.username
-        recipients.append((assigned_by_name, assigned_by_user.email, "En tant que personne ayant attribué cette tâche, vous êtes informé que :"))
+        recipients.append((assigned_by_name, assigned_by_user.email, _("En tant que personne ayant attribué cette tâche, vous êtes informé que :")))
 
     completed_by_email = (completed_by_user.email or '').lower().strip() if completed_by_user else ''
     seen = set()
@@ -299,11 +300,11 @@ def notify_task_completed(task_type, task_name, project, assigned_employee, assi
 
     if not unique_recipients:
         logger.warning(f"Aucun destinataire pour notification de fin de {task_type} {task_name}")
-        return (False, "Aucun destinataire avec email pour cette notification")
+        return (False, _("Aucun destinataire avec email pour cette notification"))
 
     _gctx_tc = _task_gender_ctx(task_type)
     _pp_t = _gctx_tc['task_pp_termine']
-    subject = f"[CSIG] {task_type.capitalize()} {_pp_t} : {task_name}"
+    subject = _("[CSIG] {type} {status} : {task}").format(type=task_type.capitalize(), status=_pp_t, task=task_name)
     sent_emails, errors = [], []
     for name, email, role_label in unique_recipients:
         text, html = _render_email('task_completed.html', {
@@ -314,8 +315,8 @@ def notify_task_completed(task_type, task_name, project, assigned_employee, assi
             'project_name': project_name,
             'completed_by_name': completed_by_name,
             'banner_color': '#047857',
-            'banner_title': f'{task_type.capitalize()} {_pp_t}',
-            'banner_subtitle': 'Dashboard CSIG – Direction Générale',
+            'banner_title': _('{type} {status}').format(type=task_type.capitalize(), status=_pp_t),
+            'banner_subtitle': _('Dashboard CSIG – Direction Générale'),
             **_gctx_tc,
         })
         try:
@@ -328,10 +329,10 @@ def notify_task_completed(task_type, task_name, project, assigned_employee, assi
             errors.append(err)
 
     if sent_emails and not errors:
-        return (True, f"Emails envoyés à : {', '.join(sent_emails)}")
+        return (True, _("Emails envoyés à : {emails}").format(emails=', '.join(sent_emails)))
     if sent_emails and errors:
-        return (True, f"Emails envoyés à : {', '.join(sent_emails)} (échecs : {len(errors)})")
-    return (False, "; ".join(errors) or "Échec d'envoi")
+        return (True, _("Emails envoyés à : {emails} (échecs : {count})").format(emails=', '.join(sent_emails), count=len(errors)))
+    return (False, "; ".join(errors) or _("Échec d'envoi"))
 
 
 # =====================================================================
@@ -345,37 +346,37 @@ def notify_due_date_alert(employee, task_type, task_name, project_name, due_date
     Destinataires : responsable (employee) + chef de projet en CC.
     """
     if not _is_email_configured():
-        return (False, "Identifiants email non configurés")
+        return (False, _("Identifiants email non configurés"))
 
     if not employee or not employee.email:
         return (False, f"Pas d'email pour {employee}")
 
     if days_diff < 0:
-        urgency_label = f"EN RETARD de {abs(days_diff)} jour{'s' if abs(days_diff) > 1 else ''}"
+        urgency_label = ngettext('EN RETARD de %(days)s jour', 'EN RETARD de %(days)s jours', abs(days_diff)) % {'days': abs(days_diff)}
         banner_color = '#b91c1c'
-        banner_text = 'ALERTE ÉCHÉANCE DÉPASSÉE'
-        subject_prefix = '[URGENT - RETARD]'
+        banner_text = _('ALERTE ÉCHÉANCE DÉPASSÉE')
+        subject_prefix = _('[URGENT - RETARD]')
     elif days_diff == 0:
-        urgency_label = "À FAIRE AUJOURD'HUI"
+        urgency_label = _("À FAIRE AUJOURD'HUI")
         banner_color = '#dc2626'
-        banner_text = "ALERTE : ÉCHÉANCE AUJOURD'HUI"
-        subject_prefix = '[URGENT]'
+        banner_text = _("ALERTE : ÉCHÉANCE AUJOURD'HUI")
+        subject_prefix = _('[URGENT]')
     else:
-        urgency_label = f"À faire dans {days_diff} jour{'s' if days_diff > 1 else ''}"
+        urgency_label = ngettext('À faire dans %(days)s jour', 'À faire dans %(days)s jours', days_diff) % {'days': days_diff}
         banner_color = '#ea580c'
-        banner_text = "RAPPEL D'ÉCHÉANCE"
-        subject_prefix = '[RAPPEL]'
+        banner_text = _("RAPPEL D'ÉCHÉANCE")
+        subject_prefix = _('[RAPPEL]')
 
     employee_name = employee.name
     _gctx_dd = _task_gender_ctx(task_type)
-    _dem = 'ce' if task_type in ('jalon',) else 'cette'
-    recipients = [(employee_name, employee.email, f"En tant que responsable, vous devez traiter {_dem} {task_type} impérativement :")]
+    _dem = _('ce') if task_type in ('jalon',) else _('cette')
+    recipients = [(employee_name, employee.email, _("En tant que responsable, vous devez traiter {demonstrative} {type} impérativement :").format(demonstrative=_dem, type=task_type))]
     if project is not None:
         manager_name, manager_email = _resolve_manager_email(project)
         if manager_email and manager_email.lower() != employee.email.lower():
-            recipients.append((manager_name, manager_email, "En tant que chef de projet, vous êtes informé en copie :"))
+            recipients.append((manager_name, manager_email, _("En tant que chef de projet, vous êtes informé en copie :")))
 
-    subject = f"{subject_prefix} {task_name} - échéance {due_date.strftime('%d/%m/%Y')}"
+    subject = _("{prefix} {task} - échéance {date}").format(prefix=subject_prefix, task=task_name, date=due_date.strftime('%d/%m/%Y'))
     sent_emails, errors = [], []
     for rec_name, rec_email, role_label in recipients:
         text, html = _render_email('due_date_alert.html', {
@@ -402,10 +403,10 @@ def notify_due_date_alert(employee, task_type, task_name, project_name, due_date
             errors.append(err)
 
     if sent_emails and not errors:
-        return (True, f"Alertes envoyées à : {', '.join(sent_emails)}")
+        return (True, _("Alertes envoyées à : {emails}").format(emails=', '.join(sent_emails)))
     if sent_emails and errors:
-        return (True, f"Alertes envoyées à : {', '.join(sent_emails)} (échecs : {len(errors)})")
-    return (False, "; ".join(errors) or "Échec d'envoi")
+        return (True, _("Alertes envoyées à : {emails} (échecs : {count})").format(emails=', '.join(sent_emails), count=len(errors)))
+    return (False, "; ".join(errors) or _("Échec d'envoi"))
 
 
 # =====================================================================
@@ -426,7 +427,7 @@ def _leave_recipients_step(leave, step):
         if key in seen:
             return
         seen.add(key)
-        recipients.append((name or 'Utilisateur', email, role))
+        recipients.append((name or _('Utilisateur'), email, role))
 
     employee_email = leave.employee.email if leave.employee else None
     employee_name = leave.employee.name if leave.employee else 'Demandeur'
@@ -459,17 +460,17 @@ def _leave_recipients_step(leave, step):
             add(u.get_full_name() or u.username, u.email, role_label)
 
     if step == 'submitted':
-        _add_managers("Demande de congé soumise par un membre de votre équipe (avis hiérarchique requis) :")
-        add(employee_name, employee_email, "Confirmation de soumission de votre demande de congé :")
-        _add_hr("Nouvelle demande de congé soumise (information RH) :")
+        _add_managers(_("Demande de congé soumise par un membre de votre équipe (avis hiérarchique requis) :"))
+        add(employee_name, employee_email, _("Confirmation de soumission de votre demande de congé :"))
+        _add_hr(_("Nouvelle demande de congé soumise (information RH) :"))
 
     elif step == 'manager':
         if leave.manager_decision == 'favorable':
-            _add_hr("Demande de congé à vérifier (RH) :")
+            _add_hr(_("Demande de congé à vérifier (RH) :"))
         else:
-            _add_hr("Avis hiérarchique défavorable enregistré (information RH) :")
-        add(employee_name, employee_email, "Avis hiérarchique enregistré sur votre demande :")
-        _add_managers("Avis hiérarchique enregistré (copie hiérarchie) :")
+            _add_hr(_("Avis hiérarchique défavorable enregistré (information RH) :"))
+        add(employee_name, employee_email, _("Avis hiérarchique enregistré sur votre demande :"))
+        _add_managers(_("Avis hiérarchique enregistré (copie hiérarchie) :"))
 
     elif step == 'hr':
         if leave.hr_decision == 'conforme':
@@ -479,26 +480,26 @@ def _leave_recipients_step(leave, step):
                     is_active=True,
                 ).exclude(email='')
                 for u in dg_users:
-                    add(u.get_full_name() or u.username, u.email, "Demande de congé à valider (Direction Générale) :")
+                    add(u.get_full_name() or u.username, u.email, _("Demande de congé à valider (Direction Générale) :"))
             except Exception:
                 pass
-        add(employee_name, employee_email, "Vérification RH enregistrée sur votre demande :")
-        _add_hr("Vérification RH enregistrée (copie équipe RH) :")
-        _add_managers("Vérification RH enregistrée (copie hiérarchie) :")
+        add(employee_name, employee_email, _("Vérification RH enregistrée sur votre demande :"))
+        _add_hr(_("Vérification RH enregistrée (copie équipe RH) :"))
+        _add_managers(_("Vérification RH enregistrée (copie hiérarchie) :"))
 
     elif step == 'final':
-        add(employee_name, employee_email, "Décision finale sur votre demande de congé :")
-        _add_managers("Décision finale enregistrée (copie hiérarchie) :")
+        add(employee_name, employee_email, _("Décision finale sur votre demande de congé :"))
+        _add_managers(_("Décision finale enregistrée (copie hiérarchie) :"))
         if leave.manager_user and leave.manager_user.email:
-            add(leave.manager_user.get_full_name() or leave.manager_user.username, leave.manager_user.email, "Décision finale (en copie - hiérarchie) :")
-        _add_hr("Décision finale enregistrée (copie équipe RH) :")
+            add(leave.manager_user.get_full_name() or leave.manager_user.username, leave.manager_user.email, _("Décision finale (en copie - hiérarchie) :"))
+        _add_hr(_("Décision finale enregistrée (copie équipe RH) :"))
         try:
             dg_users = User_.objects.filter(
                 profile__role__slug__in=['directeur_general', 'admin'],
                 is_active=True,
             ).exclude(email='')
             for u in dg_users:
-                add(u.get_full_name() or u.username, u.email, "Décision finale enregistrée (copie Direction Générale) :")
+                add(u.get_full_name() or u.username, u.email, _("Décision finale enregistrée (copie Direction Générale) :"))
         except Exception:
             pass
 
@@ -510,11 +511,11 @@ def _dispatch_leave_emails(leave, step, banner_color, banner_title, banner_subti
     sent, errors = [], []
     employee_email = leave.employee.email if leave.employee else None
     type_label = leave.get_leave_type_display()
-    period = f"{leave.start_date.strftime('%d/%m/%Y')} au {leave.end_date.strftime('%d/%m/%Y')} ({leave.days_count} jour(s))"
+    period = ngettext('%(start)s au %(end)s (%(days)s jour)', '%(start)s au %(end)s (%(days)s jours)', leave.days_count) % {'start': leave.start_date.strftime('%d/%m/%Y'), 'end': leave.end_date.strftime('%d/%m/%Y'), 'days': leave.days_count}
     status_label = leave.get_status_display()
 
     site_url = getattr(settings, 'SITE_URL', '').rstrip('/')
-    leave_url = f"{site_url}{reverse('leave_detail', args=[leave.id])}" if site_url else ''
+    leave_url = f"{site_url}{reverse('core:leave_detail', args=[leave.id])}" if site_url else ''
     for name, email, role in recipients:
         text, html = _render_email('leave.html', {
             'recipient_name': name,
@@ -533,7 +534,7 @@ def _dispatch_leave_emails(leave, step, banner_color, banner_title, banner_subti
             'banner_title': banner_title,
             'banner_subtitle': banner_subtitle,
         })
-        subject = f"[CSIG] {banner_title} – {leave.employee.name if leave.employee else 'Demandeur'}"
+        subject = _('[CSIG] {title} – {employee}').format(title=banner_title, employee=leave.employee.name if leave.employee else _('Demandeur'))
         attachment = pdf_attachment if email == employee_email else None
         attachment_filename = f"attestation_conge_{leave.id}.pdf" if attachment else None
         try:
@@ -544,18 +545,18 @@ def _dispatch_leave_emails(leave, step, banner_color, banner_title, banner_subti
             logger.error(f"Echec envoi conge a {email}: {e}")
 
     if sent and not errors:
-        return True, f"Envoyé à : {', '.join(sent)}"
+        return True, _("Envoyé à : {emails}").format(emails=', '.join(sent))
     if sent:
-        return True, f"Envoyé à : {', '.join(sent)} (échecs : {len(errors)})"
-    return False, '; '.join(errors) or 'Aucun destinataire'
+        return True, _("Envoyé à : {emails} (échecs : {count})").format(emails=', '.join(sent), count=len(errors))
+    return False, '; '.join(errors) or _('Aucun destinataire')
 
 
 def notify_leave_submitted(leave):
     return _dispatch_leave_emails(
         leave, 'submitted',
         banner_color='#f59e0b',
-        banner_title='Nouvelle demande de congé',
-        banner_subtitle='Étape 1/3 – Avis hiérarchique requis',
+        banner_title=_('Nouvelle demande de congé'),
+        banner_subtitle=_('Étape 1/3 – Avis hiérarchique requis'),
     )
 
 
@@ -564,8 +565,8 @@ def notify_leave_manager_decided(leave):
     return _dispatch_leave_emails(
         leave, 'manager',
         banner_color='#3b82f6' if favorable else '#ef4444',
-        banner_title='Avis hiérarchique : ' + ('favorable' if favorable else 'défavorable'),
-        banner_subtitle='Étape 2/3 – Vérification RH' if favorable else 'Demande refusée par la hiérarchie',
+        banner_title=_('Avis hiérarchique : {decision}').format(decision=_('favorable') if favorable else _('défavorable')),
+        banner_subtitle=_('Étape 2/3 – Vérification RH') if favorable else _('Demande refusée par la hiérarchie'),
     )
 
 
@@ -574,8 +575,8 @@ def notify_leave_hr_decided(leave):
     return _dispatch_leave_emails(
         leave, 'hr',
         banner_color='#6366f1' if conforme else '#ef4444',
-        banner_title='Vérification RH : ' + ('conforme' if conforme else 'non conforme'),
-        banner_subtitle='Étape 3/3 – Décision Direction' if conforme else 'Demande non conforme',
+        banner_title=_('Vérification RH : {decision}').format(decision=_('conforme') if conforme else _('non conforme')),
+        banner_subtitle=_('Étape 3/3 – Décision Direction') if conforme else _('Demande non conforme'),
     )
 
 
@@ -584,7 +585,7 @@ def notify_leave_final_decided(leave, pdf_attachment=None):
     return _dispatch_leave_emails(
         leave, 'final',
         banner_color='#16a34a' if approved else '#ef4444',
-        banner_title='Décision finale : ' + ('approuvée' if approved else 'rejetée'),
-        banner_subtitle='Notification officielle CSIG',
+        banner_title=_('Décision finale : {decision}').format(decision=_('approuvée') if approved else _('rejetée')),
+        banner_subtitle=_('Notification officielle CSIG'),
         pdf_attachment=pdf_attachment,
     )

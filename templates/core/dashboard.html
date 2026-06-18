@@ -2,9 +2,9 @@
 {% load custom_filters %}
 {% load i18n %}
 
-{% block title %}Tableau de bord{% endblock %}
-{% block page_title %}Tableau de bord{% endblock %}
-{% block page_subtitle %}Vue d'ensemble des activités de la CSIG{% endblock %}
+{% block title %}{% trans 'Tableau de bord' %}{% endblock %}
+{% block page_title %}{% trans 'Tableau de bord' %}{% endblock %}
+{% block page_subtitle %}{% trans "Vue d'ensemble des activités de la CSIG" %}{% endblock %}
 
 {% block content %}
 
@@ -13,9 +13,9 @@
   <a class="stat-card stat-card-blue stat-card-link" href="{% url 'core:projects' %}">
     <div class="stat-card-header">
       <div>
-        <p class="stat-card-label">Projets en cours</p>
+        <p class="stat-card-label">{% trans 'Projets en cours' %}</p>
         <p class="stat-card-value">{{ projects_in_progress }}</p>
-        <p class="stat-card-subtitle">{{ total_projects }} projet{{ total_projects|pluralize }} au total</p>
+        <p class="stat-card-subtitle">{% blocktrans count n=total_projects %}{{ n }} projet au total{% plural %}{{ n }} projets au total{% endblocktrans %}</p>
       </div>
       <div class="stat-card-icon blue">
         <i data-lucide="folder" ></i>
@@ -26,7 +26,7 @@
   <a class="stat-card stat-card-amber stat-card-link" href="{% url 'core:resources' %}">
     <div class="stat-card-header">
       <div>
-        <p class="stat-card-label">Budget consommé</p>
+        <p class="stat-card-label">{% trans 'Budget consommé' %}</p>
         <p class="stat-card-value">{{ budget_percentage }}%</p>
         <p class="stat-card-subtitle">{{ total_consumed|number_format }} GNF</p>
       </div>
@@ -39,9 +39,9 @@
   <a class="stat-card stat-card-green stat-card-link" href="{% url 'core:partners' %}">
     <div class="stat-card-header">
       <div>
-        <p class="stat-card-label">Partenaires actifs</p>
+        <p class="stat-card-label">{% trans 'Partenaires actifs' %}</p>
         <p class="stat-card-value">{{ active_partners }}</p>
-        <p class="stat-card-subtitle">Collaborations en cours</p>
+        <p class="stat-card-subtitle">{% trans 'Collaborations en cours' %}</p>
       </div>
       <div class="stat-card-icon green">
         <i data-lucide="users" ></i>
@@ -57,17 +57,17 @@
 <div class="card mb-6">
   <div class="card-header">
     <div>
-      <h3 class="card-title">Budget par projet</h3>
-      <span class="card-subtitle" style="font-size:12px;color:#6b7280;">Alloué vs Consommé — Top 10 (en millions GNF)</span>
+      <h3 class="card-title">{% trans 'Budget par projet' %}</h3>
+      <span class="card-subtitle" style="font-size:12px;color:#6b7280;">{% trans 'Alloué vs Consommé — Top 10 (en millions GNF)' %}</span>
     </div>
-    <a href="{% url 'core:resources' %}" class="card-link">Voir détail →</a>
+    <a href="{% url 'core:resources' %}" class="card-link">{% trans 'Voir détail' %} →</a>
   </div>
   <div class="card-content">
     <div class="chart-container" style="position:relative;height:260px;">
       <canvas id="budgetChart"></canvas>
       <div id="budgetEmpty" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;color:#9ca3af;font-size:14px;text-align:center;">
-        Aucun projet n'a encore de budget renseigné.<br>
-        <a href="{% url 'core:projects' %}" style="color:#3b82f6;">Créer / éditer un projet →</a>
+        {% trans "Aucun projet n'a encore de budget renseigné." %}<br>
+        <a href="{% url 'core:projects' %}" style="color:#3b82f6;">{% trans 'Créer / éditer un projet' %} →</a>
       </div>
     </div>
   </div>
@@ -79,8 +79,8 @@
   <!-- Projets en cours -->
   <div class="card">
     <div class="card-header">
-      <h3 class="card-title">Projets en cours</h3>
-      <a href="{% url 'core:projects' %}" class="card-link">Voir tout →</a>
+      <h3 class="card-title">{% trans 'Projets en cours' %}</h3>
+      <a href="{% url 'core:projects' %}" class="card-link">{% trans 'Voir tout' %} →</a>
     </div>
     <div class="card-content">
       {% if active_projects %}
@@ -92,7 +92,7 @@
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px;">
             <div style="display:flex;gap:6px;flex-wrap:wrap;">
               <span class="badge {% if project.computed_status == 'en_retard' %}badge-danger{% elif project.computed_status == 'en_cours' %}badge-info{% elif project.computed_status == 'planifie' %}badge-warning{% else %}badge-success{% endif %}">
-                {% if project.computed_status == 'en_retard' %}En retard{% else %}{{ project.get_status_display }}{% endif %}
+                {% if project.computed_status == 'en_retard' %}{% trans 'En retard' %}{% else %}{{ project.get_status_display }}{% endif %}
               </span>
               <span class="badge {% if project.priority == 'haute' %}badge-danger{% elif project.priority == 'moyenne' %}badge-warning{% else %}badge-secondary{% endif %}">
                 {{ project.get_priority_display }}
@@ -113,14 +113,14 @@
           </div>
           <!-- Méta -->
           <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;font-size:11px;color:#64748b;flex-wrap:wrap;gap:4px;">
-            <span>Fin : {{ project.end_date|date:"d/m/Y" }}</span>
-            <span>Budget consommé : {{ project.budget_percentage }}%</span>
+            <span>{% trans 'Fin' %} : {{ project.end_date|date:"d/m/Y" }}</span>
+            <span>{% trans 'Budget consommé' %} : {{ project.budget_percentage }}%</span>
           </div>
         </a>
         {% endfor %}
       </div>
       {% else %}
-      <p class="text-gray-500" style="padding:24px 0;text-align:center;">Aucun projet en cours</p>
+      <p class="text-gray-500" style="padding:24px 0;text-align:center;">{% trans 'Aucun projet en cours' %}</p>
       {% endif %}
     </div>
   </div>
@@ -129,31 +129,31 @@
   <div class="card">
     <div class="card-header">
       <div>
-        <h3 class="card-title">Répartition des projets</h3>
-        <span class="card-subtitle" style="font-size:12px;color:#6b7280;">{{ total_projects }} projet{{ total_projects|pluralize }} au total</span>
+        <h3 class="card-title">{% trans 'Répartition des projets' %}</h3>
+        <span class="card-subtitle" style="font-size:12px;color:#6b7280;">{% blocktrans count n=total_projects %}{{ n }} projet au total{% plural %}{{ n }} projets au total{% endblocktrans %}</span>
       </div>
     </div>
     <div class="card-content">
       <div class="chart-container" style="position:relative;height:260px;">
         <canvas id="progressChart"></canvas>
         <div id="progressEmpty" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;color:#9ca3af;font-size:14px;text-align:center;">
-          Aucun projet enregistré.<br>
-          <a href="{% url 'core:projects' %}" style="color:#3b82f6;">Créer un projet →</a>
+          {% trans 'Aucun projet enregistré.' %}<br>
+          <a href="{% url 'core:projects' %}" style="color:#3b82f6;">{% trans 'Créer un projet' %} →</a>
         </div>
       </div>
       <!-- Compteurs sous le donut -->
       <div style="display:flex;justify-content:center;gap:24px;margin-top:16px;padding-top:14px;border-top:1px solid #f1f5f9;">
         <div style="text-align:center;">
           <p style="font-size:22px;font-weight:700;color:#3b82f6;">{{ projects_in_progress }}</p>
-          <p style="font-size:11px;color:#64748b;">En cours</p>
+          <p style="font-size:11px;color:#64748b;">{% trans 'En cours' %}</p>
         </div>
         <div style="text-align:center;">
           <p style="font-size:22px;font-weight:700;color:#10b981;">{{ projects_completed }}</p>
-          <p style="font-size:11px;color:#64748b;">Terminés</p>
+          <p style="font-size:11px;color:#64748b;">{% trans 'Terminés' %}</p>
         </div>
         <div style="text-align:center;">
           <p style="font-size:22px;font-weight:700;color:#f59e0b;">{{ projects_planned }}</p>
-          <p style="font-size:11px;color:#64748b;">Planifiés</p>
+          <p style="font-size:11px;color:#64748b;">{% trans 'Planifiés' %}</p>
         </div>
       </div>
     </div>
@@ -166,8 +166,8 @@
 
   <div class="card">
     <div class="card-header">
-      <h3 class="card-title">Demandes des directions</h3>
-      <a href="{% url 'core:requests' %}" class="card-link">Voir tout →</a>
+      <h3 class="card-title">{% trans 'Demandes des directions' %}</h3>
+      <a href="{% url 'core:requests' %}" class="card-link">{% trans 'Voir tout' %} →</a>
     </div>
     <div class="card-content">
       <div class="item-list">
@@ -183,7 +183,7 @@
           <h4 class="request-title">{{ req.title }}</h4>
           <p class="request-description">{{ req.description }}</p>
           <div class="request-footer">
-            <span>Par {{ req.created_by }}</span>
+            <span>{% trans 'Par' %} {{ req.created_by }}</span>
             <span class="request-footer-item">
               <i data-lucide="clock" ></i>
               {{ req.created_at|date:"d/m/Y" }}
@@ -191,7 +191,7 @@
           </div>
         </div>
         {% empty %}
-        <p class="text-gray-500">Aucune demande en attente</p>
+        <p class="text-gray-500">{% trans 'Aucune demande en attente' %}</p>
         {% endfor %}
       </div>
     </div>
@@ -199,8 +199,8 @@
 
   <div class="card">
     <div class="card-header">
-      <h3 class="card-title">Événements à venir</h3>
-      <a href="{% url 'core:calendar' %}" class="card-link">Voir tout →</a>
+      <h3 class="card-title">{% trans 'Événements à venir' %}</h3>
+      <a href="{% url 'core:calendar' %}" class="card-link">{% trans 'Voir tout' %} →</a>
     </div>
     <div class="card-content">
       <div class="item-list">
@@ -231,13 +231,13 @@
               {% endif %}
               <span class="event-meta-item">
                 <i data-lucide="user-cog" ></i>
-                {{ event.participants.count }} participants
+                {% blocktrans count n=event.participants.count %}{{ n }} participant{% plural %}{{ n }} participants{% endblocktrans %}
               </span>
             </div>
           </div>
         </div>
         {% empty %}
-        <p class="text-gray-500">Aucun événement à venir</p>
+        <p class="text-gray-500">{% trans 'Aucun événement à venir' %}</p>
         {% endfor %}
       </div>
     </div>
@@ -249,11 +249,20 @@
 
 {% block extra_js %}
 <script>
+var DASH_I18N = {
+  allocated:   "{% trans 'Alloué' %}",
+  consumed:    "{% trans 'Consommé' %}",
+  inProgress:  "{% trans 'En cours' %}",
+  completed:   "{% trans 'Terminés' %}",
+  planned:     "{% trans 'Planifiés' %}",
+  millionsGNF: "{% trans 'Millions GNF' %}",
+  mGNF:        "M GNF",
+};
 (function () {
   const budgetData = JSON.parse(document.getElementById('budget-data-json').textContent || '[]');
   const counts = JSON.parse(document.getElementById('dashboard-counts').textContent || '{}');
 
-  // ── Budget Chart (pleine largeur) ──────────────────────────────────────
+  // ── Budget Chart ──────────────────────────────────────────────────────
   const budgetCanvas = document.getElementById('budgetChart');
   const budgetEmpty  = document.getElementById('budgetEmpty');
   const hasBudget    = budgetData.some(d => (d.allocated || 0) > 0 || (d.consumed || 0) > 0);
@@ -267,8 +276,8 @@
       data: {
         labels: budgetData.map(d => d.direction),
         datasets: [
-          {label:'Alloué',   data: budgetData.map(d => d.allocated), backgroundColor:'#3b82f6', borderRadius:5, borderSkipped:false},
-          {label:'Consommé', data: budgetData.map(d => d.consumed),  backgroundColor:'#10b981', borderRadius:5, borderSkipped:false},
+          {label:DASH_I18N.allocated, data: budgetData.map(d => d.allocated), backgroundColor:'#3b82f6', borderRadius:5, borderSkipped:false},
+          {label:DASH_I18N.consumed,  data: budgetData.map(d => d.consumed),  backgroundColor:'#10b981', borderRadius:5, borderSkipped:false},
         ]
       },
       options: {
@@ -280,7 +289,7 @@
             callbacks: {
               label: ctx => {
                 const v = (ctx.parsed.y || 0).toLocaleString('fr-FR', {maximumFractionDigits:2});
-                return ctx.dataset.label + ' : ' + v + ' M GNF';
+                return ctx.dataset.label + ' : ' + v + ' ' + DASH_I18N.mGNF;
               }
             }
           }
@@ -289,7 +298,7 @@
           x: {grid:{display:false}},
           y: {
             beginAtZero: true,
-            title: {display:true, text:'Millions GNF', font:{size:11}},
+            title: {display:true, text:DASH_I18N.millionsGNF, font:{size:11}},
             ticks: {callback: v => v + ' M'}
           }
         }
@@ -309,7 +318,7 @@
     new Chart(progressCanvas.getContext('2d'), {
       type: 'doughnut',
       data: {
-        labels: ['En cours','Terminés','Planifiés'],
+        labels: [DASH_I18N.inProgress, DASH_I18N.completed, DASH_I18N.planned],
         datasets: [{
           data: [counts.in_progress, counts.completed, counts.planned],
           backgroundColor: ['#3b82f6','#10b981','#f59e0b'],

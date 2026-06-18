@@ -13,7 +13,7 @@
             <div class="stat-box-icon"><i data-lucide="building-2" width="20" height="20"></i></div>
             <div class="stat-box-body">
                 <p class="stat-box-value">{{ directions|length }}</p>
-                <p class="stat-box-label">Directions</p>
+                <p class="stat-box-label">{% trans 'Directions' %}</p>
             </div>
         </div>
     </div>
@@ -61,12 +61,12 @@
                         </td>
                         <td style="text-align: right;">
                             <div class="flex justify-end gap-2">
-                                <a href="{% url 'core:direction_edit' direction.id %}" class="btn btn-outline btn-sm" title="Modifier">
+                                <a href="{% url 'core:direction_edit' direction.id %}" class="btn btn-outline btn-sm" title="{% trans 'Modifier' %}">
                                     <i data-lucide="pencil" width="16" height="16" ></i>
                                 </a>
-                                <a href="#" class="btn btn-danger btn-sm" title="Supprimer"
+                                <a href="#" class="btn btn-danger btn-sm" title="{% trans 'Supprimer' %}"
                                    data-delete-url="{% url 'core:direction_delete' direction.id %}"
-                                   data-delete-type="la direction"
+                                   data-delete-type="{% trans 'la direction' %}"
                                    data-delete-name="{{ direction.name }}">
                                     <i data-lucide="trash-2" width="16" height="16" ></i>
                                 </a>

@@ -88,7 +88,7 @@
           <a href="{% url 'core:project_detail' group.project.id %}" class="mt-project-link">{{ group.project.name }}</a>
         </h3>
         <p class="mt-summary">
-          {{ group.total }} {% trans 'tâche' %}{% if group.total != 1 %}s{% endif %} — {{ group.done }} {% trans 'terminée' %}{% if group.done != 1 %}s{% endif %}
+          {% blocktrans count count=group.total %}{{ count }} tâche{% plural %}{{ count }} tâches{% endblocktrans %} — {% blocktrans count count=group.done %}{{ count }} terminée{% plural %}{{ count }} terminées{% endblocktrans %}
           {% if group.project.end_date %}
           · {% trans 'Fin' %} : <span {% if group.project.end_date|is_overdue and group.project.computed_status != 'termine' %}class="overdue-date"{% endif %}>{{ group.project.end_date|date:"d/m/Y" }}</span>
           {% endif %}
@@ -128,7 +128,7 @@
           </div>
 
           {% if item.type == 'jalon' and item.status %}
-          <span class="mt-sbadge s-{{ item.status }}">{{ item.status|title }}</span>
+          <span class="mt-sbadge s-{{ item.status }}">{% if item.status == 'a_faire' %}{% trans 'À faire' %}{% elif item.status == 'en_cours' %}{% trans 'En cours' %}{% elif item.status == 'bloque' %}{% trans 'Bloqué' %}{% elif item.status == 'en_revision' %}{% trans 'En révision' %}{% elif item.status == 'termine' %}{% trans 'Terminé' %}{% else %}{{ item.status }}{% endif %}</span>
           {% endif %}
 
           {% if item.due_date %}

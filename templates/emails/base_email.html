@@ -1,5 +1,5 @@
 {% load i18n %}<!DOCTYPE html>
-<html lang="fr">
+<html lang="{{ LANGUAGE_CODE|default:'fr' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,8 +21,8 @@
 
   <!-- Footer -->
   <div style="background:#f3f4f6;padding:14px 20px;text-align:center;font-size:12px;color:#6b7280;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px;">
-    <p style="margin:0;">© {% now "Y" %} CSIG &ndash; Centre de Suivi et d'Information de Gestion</p>
-    <p style="margin:4px 0 0;font-size:11px;">Email automatique &mdash; merci de ne pas répondre.</p>
+    <p style="margin:0;">© {% now "Y" %} CSIG &ndash; {% trans "Centre de Suivi et d'Information de Gestion" %}</p>
+    <p style="margin:4px 0 0;font-size:11px;">{% trans "Email automatique — merci de ne pas répondre." %}</p>
   </div>
 
 </div>

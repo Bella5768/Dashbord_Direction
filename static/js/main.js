@@ -5,6 +5,10 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
 });
 
+function getUserLocale() {
+    return document.documentElement.lang || 'fr';
+}
+
 function initializeApp() {
     // Add active class to current nav item
     highlightActiveNav();
@@ -95,19 +99,20 @@ function initializeClickableCards() {
 
 // Format currency in GNF
 function formatCurrency(value) {
+    const locale = getUserLocale();
     if (value >= 1000000000) {
-        return (value / 1000000000).toFixed(1) + ' Md GNF';
+        return (value / 1000000000).toFixed(1) + gettext(' Md GNF');
     }
     if (value >= 1000000) {
-        return (value / 1000000).toFixed(0) + ' M GNF';
+        return (value / 1000000).toFixed(0) + gettext(' M GNF');
     }
-    return value.toLocaleString('fr-FR') + ' GNF';
+    return value.toLocaleString(locale) + gettext(' GNF');
 }
 
-// Format date in French
+// Format date
 function formatDate(dateStr) {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('fr-FR', {
+    return date.toLocaleDateString(getUserLocale(), {
         day: 'numeric',
         month: 'long',
         year: 'numeric'
@@ -152,7 +157,7 @@ function showNotification(message, type = 'info') {
 
 // Confirm action
 function confirmAction(message, callback) {
-    window.csigConfirm({ title: 'Confirmation', message: message, label: 'Confirmer' })
+    window.csigConfirm({ title: gettext('Confirmation'), message: message, label: gettext('Confirmer') })
         .then(function(ok){ if(ok) callback(); });
 }
 
@@ -233,12 +238,12 @@ function switchTab(tabName) {
 
 // Export functionality
 function exportToPDF() {
-    showNotification('Export PDF en cours...', 'info');
+    showNotification(gettext('Export PDF en cours...'), 'info');
     window.location.href = '/rapports/export/pdf/';
 }
 
 function exportToExcel() {
-    showNotification('Export Excel en cours...', 'info');
+    showNotification(gettext('Export Excel en cours...'), 'info');
     // Implement Excel export logic
 }
 
@@ -259,7 +264,7 @@ function initSearchableSelects() {
         const searchInput = document.createElement('input');
         searchInput.type = 'text';
         searchInput.className = 'search-input';
-        searchInput.placeholder = 'Rechercher une devise...';
+        searchInput.placeholder = gettext('Rechercher une devise...');
         
         // Get selected option text
         const selectedOption = select.options[select.selectedIndex];
@@ -335,7 +340,7 @@ function initSearchableSelects() {
                 if (!noResults) {
                     noResults = document.createElement('div');
                     noResults.className = 'no-results';
-                    noResults.textContent = 'Aucun résultat trouvé';
+                    noResults.textContent = gettext('Aucun résultat trouvé');
                     dropdown.appendChild(noResults);
                 }
                 noResults.style.display = 'block';

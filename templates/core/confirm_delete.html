@@ -20,22 +20,26 @@
 
         {% if has_account or managed_projects or memberships or leave_count %}
         <div style="background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:14px 16px;margin-bottom:20px;text-align:left;">
-            <p style="font-weight:600;font-size:13px;color:#854d0e;margin:0 0 8px;">Dépendances détectées :</p>
+            <p style="font-weight:600;font-size:13px;color:#854d0e;margin:0 0 8px;">{% trans 'Dépendances détectées :' %}</p>
             <ul style="margin:0;padding:0 0 0 18px;font-size:13px;color:#713f12;line-height:1.8;">
                 {% if has_account %}
-                <li>A un compte utilisateur — le lien sera retiré (le compte reste)</li>
+                <li>{% trans "A un compte utilisateur — le lien sera retiré (le compte reste)" %}</li>
                 {% endif %}
                 {% if managed_projects %}
-                <li>Chef de projet sur {{ managed_projects|length }} projet(s) :
+                {% with cnt=managed_projects|length %}
+                <li>{% blocktrans count count=cnt %}Chef de projet sur {{ count }} projet :{% plural %}Chef de projet sur {{ count }} projets :{% endblocktrans %}
                     {% for p in managed_projects %}<strong>{{ p.name }}</strong>{% if not forloop.last %}, {% endif %}{% endfor %}
-                    — le lien responsable sera effacé</li>
+                    — {% trans "le lien responsable sera effacé" %}</li>
+                {% endwith %}
                 {% endif %}
                 {% if memberships %}
-                <li>Membre de {{ memberships|length }} projet(s) — les appartenances seront supprimées</li>
+                {% with cnt=memberships|length %}
+                <li>{% blocktrans count count=cnt %}Membre de {{ count }} projet — les appartenances seront supprimées{% plural %}Membre de {{ count }} projets — les appartenances seront supprimées{% endblocktrans %}</li>
+                {% endwith %}
                 {% endif %}
                 {% if leave_count %}
                 <li style="color:#b91c1c;font-weight:600;">
-                    {{ leave_count }} demande(s) de congé liée(s) — la suppression est <u>bloquée</u>
+                    {% blocktrans count count=leave_count %}{{ count }} demande de congé liée — la suppression est bloquée{% plural %}{{ count }} demandes de congé liées — la suppression est bloquée{% endblocktrans %}
                 </li>
                 {% endif %}
             </ul>
@@ -50,7 +54,7 @@
             <a href="{% url back_url %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
             {% endif %}
             <button type="submit" class="btn" style="background: #dc2626; color: white;"
-                {% if leave_count %}disabled title="Suppression impossible : des congés sont liés à cet employé"{% endif %}>
+                {% if leave_count %}disabled title="{% trans 'Suppression impossible : des congés sont liés à cet employé' %}"{% endif %}>
                 {% trans 'Supprimer' %}
             </button>
         </form>

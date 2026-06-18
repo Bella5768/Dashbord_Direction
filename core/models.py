@@ -53,8 +53,8 @@ class Permission(models.Model):
 
     class Meta:
         unique_together = ['action', 'subject', 'condition']
-        verbose_name = "Permission"
-        verbose_name_plural = "Permissions"
+        verbose_name = _("Permission")
+        verbose_name_plural = _("Permissions")
         ordering = ['subject', 'action']
 
     def __str__(self):
@@ -71,8 +71,8 @@ class Role(models.Model):
     created_at  = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = "Rôle"
-        verbose_name_plural = "Rôles"
+        verbose_name = _("Rôle")
+        verbose_name_plural = _("Rôles")
         ordering = ['name']
 
     def __str__(self):
@@ -88,8 +88,8 @@ class ProjectRole(models.Model):
     created_at  = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = "Rôle projet"
-        verbose_name_plural = "Rôles projet"
+        verbose_name = _("Rôle projet")
+        verbose_name_plural = _("Rôles projet")
         ordering = ['name']
 
     def __str__(self):
@@ -113,8 +113,8 @@ class UserProfile(models.Model):
     updated_at          = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = "Profil utilisateur"
-        verbose_name_plural = "Profils utilisateurs"
+        verbose_name = _("Profil utilisateur")
+        verbose_name_plural = _("Profils utilisateurs")
 
     def __str__(self):
         role_name = self.role.name if self.role else "Sans rôle"
@@ -328,8 +328,8 @@ class Direction(models.Model):
     color = models.CharField(max_length=7, default="#3b82f6", verbose_name=_("Couleur"))
     
     class Meta:
-        verbose_name = "Direction"
-        verbose_name_plural = "Directions"
+        verbose_name = _("Direction")
+        verbose_name_plural = _("Directions")
         ordering = ['name']
     
     def __str__(self):
@@ -369,8 +369,8 @@ class Project(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        verbose_name = "Projet"
-        verbose_name_plural = "Projets"
+        verbose_name = _("Projet")
+        verbose_name_plural = _("Projets")
         ordering = ['-created_at']
     
     def __str__(self):
@@ -437,11 +437,11 @@ class ProjectMember(models.Model):
     project      = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='members', verbose_name=_("Projet"))
     employee     = models.ForeignKey('Employee', on_delete=models.CASCADE, related_name='project_memberships', verbose_name=_("Employé"))
     project_role = models.ForeignKey(ProjectRole, on_delete=models.SET_NULL, null=True, blank=True, related_name='memberships', verbose_name=_("Rôle projet"))
-    joined_at    = models.DateTimeField(auto_now_add=True, verbose_name="Date d'ajout")
+    joined_at    = models.DateTimeField(auto_now_add=True, verbose_name=_("Date d'ajout"))
 
     class Meta:
-        verbose_name = "Membre de projet"
-        verbose_name_plural = "Membres de projet"
+        verbose_name = _("Membre de projet")
+        verbose_name_plural = _("Membres de projet")
         unique_together = ['project', 'employee']
         ordering = ['joined_at']
 
@@ -514,8 +514,8 @@ class Milestone(models.Model):
     order = models.IntegerField(default=0, verbose_name=_("Ordre"))
     
     class Meta:
-        verbose_name = "Jalon"
-        verbose_name_plural = "Jalons"
+        verbose_name = _("Jalon")
+        verbose_name_plural = _("Jalons")
         ordering = ['order']
     
     def __str__(self):
@@ -573,8 +573,8 @@ class SubMilestone(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
-        verbose_name = "Sous-étape"
-        verbose_name_plural = "Sous-étapes"
+        verbose_name = _("Sous-étape")
+        verbose_name_plural = _("Sous-étapes")
         ordering = ['order', 'created_at']
     
     def __str__(self):
@@ -613,8 +613,8 @@ class ProjectNeed(models.Model):
     resolved_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Traité le"))
 
     class Meta:
-        verbose_name = "Besoin de projet"
-        verbose_name_plural = "Besoins de projet"
+        verbose_name = _("Besoin de projet")
+        verbose_name_plural = _("Besoins de projet")
         ordering = ['status', '-created_at']
 
     def __str__(self):
@@ -632,8 +632,8 @@ class ProjectComment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = "Commentaire de projet"
-        verbose_name_plural = "Commentaires de projet"
+        verbose_name = _("Commentaire de projet")
+        verbose_name_plural = _("Commentaires de projet")
         ordering = ['created_at']
 
     def __str__(self):
@@ -674,8 +674,8 @@ class ProjectActivity(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
-        verbose_name = "Activité de projet"
-        verbose_name_plural = "Activités de projet"
+        verbose_name = _("Activité de projet")
+        verbose_name_plural = _("Activités de projet")
         ordering = ['-created_at']
     
     def __str__(self):
@@ -714,8 +714,8 @@ class ProjectFolder(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
-        verbose_name = "Dossier de projet"
-        verbose_name_plural = "Dossiers de projet"
+        verbose_name = _("Dossier de projet")
+        verbose_name_plural = _("Dossiers de projet")
         ordering = ['name']
     
     def __str__(self):
@@ -740,8 +740,8 @@ class ProjectDocument(models.Model):
     uploaded_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
-        verbose_name = "Document de projet"
-        verbose_name_plural = "Documents de projet"
+        verbose_name = _("Document de projet")
+        verbose_name_plural = _("Documents de projet")
         ordering = ['-uploaded_at']
     
     def __str__(self):
@@ -778,8 +778,8 @@ class Document(models.Model):
     file = models.FileField(upload_to='documents/', null=True, blank=True, verbose_name=_("Fichier"))
     
     class Meta:
-        verbose_name = "Document"
-        verbose_name_plural = "Documents"
+        verbose_name = _("Document")
+        verbose_name_plural = _("Documents")
         ordering = ['-created_at']
     
     def __str__(self):
@@ -809,8 +809,8 @@ class Partner(models.Model):
     logo = models.ImageField(upload_to='partners/', null=True, blank=True, verbose_name=_("Logo"))
     
     class Meta:
-        verbose_name = "Partenaire"
-        verbose_name_plural = "Partenaires"
+        verbose_name = _("Partenaire")
+        verbose_name_plural = _("Partenaires")
         ordering = ['name']
     
     def __str__(self):
@@ -837,8 +837,8 @@ class Event(models.Model):
     updated_at = models.DateTimeField(null=True, blank=True, auto_now=True, verbose_name=_("Modifié le"))
 
     class Meta:
-        verbose_name = "Événement"
-        verbose_name_plural = "Événements"
+        verbose_name = _("Événement")
+        verbose_name_plural = _("Événements")
         ordering = ['date', 'time']
 
     def __str__(self):
@@ -880,11 +880,11 @@ class Request(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='en_attente', verbose_name=_("Statut"))
     created_by = models.CharField(max_length=100, verbose_name=_("Créé par"))
     created_at = models.DateField(auto_now_add=True, verbose_name=_("Date de création"))
-    approved_at = models.DateField(null=True, blank=True, verbose_name="Date d'approbation")
+    approved_at = models.DateField(null=True, blank=True, verbose_name=_("Date d'approbation"))
     
     class Meta:
-        verbose_name = "Demande"
-        verbose_name_plural = "Demandes"
+        verbose_name = _("Demande")
+        verbose_name_plural = _("Demandes")
         ordering = ['-created_at']
     
     def __str__(self):
@@ -903,8 +903,8 @@ class Employee(models.Model):
     organization = models.CharField(max_length=150, blank=True, verbose_name=_("Organisation / Entreprise"))
     
     class Meta:
-        verbose_name = "Employé"
-        verbose_name_plural = "Employés"
+        verbose_name = _("Employé")
+        verbose_name_plural = _("Employés")
         ordering = ['name']
     
     def __str__(self):
@@ -935,8 +935,8 @@ class UserActivity(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Date"))
     
     class Meta:
-        verbose_name = "Activité utilisateur"
-        verbose_name_plural = "Activités utilisateurs"
+        verbose_name = _("Activité utilisateur")
+        verbose_name_plural = _("Activités utilisateurs")
         ordering = ['-created_at']
     
     def __str__(self):
@@ -951,8 +951,8 @@ class Budget(models.Model):
     currency = models.CharField(max_length=3, default='GNF', verbose_name=_("Devise"))
     
     class Meta:
-        verbose_name = "Budget"
-        verbose_name_plural = "Budgets"
+        verbose_name = _("Budget")
+        verbose_name_plural = _("Budgets")
     
     def __str__(self):
         if self.project:
@@ -1060,8 +1060,8 @@ class LeaveRequest(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = "Demande de congé"
-        verbose_name_plural = "Demandes de congé"
+        verbose_name = _("Demande de congé")
+        verbose_name_plural = _("Demandes de congé")
         ordering = ['-created_at']
 
     def __str__(self):
@@ -1124,8 +1124,8 @@ class LeaveDocument(models.Model):
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = "Document de congé"
-        verbose_name_plural = "Documents de congé"
+        verbose_name = _("Document de congé")
+        verbose_name_plural = _("Documents de congé")
         ordering = ['-uploaded_at']
 
     def __str__(self):

@@ -89,7 +89,7 @@ def role_create(request):
         else:
             role = Role.objects.create(name=name, slug=slug, description=description)
             role.permissions.set(Permission.objects.filter(id__in=perm_ids))
-            messages.success(request, f"Rôle « {name} » créé avec succès.")
+            messages.success(request, _("Rôle « {name} » créé avec succès.").format(name=name))
             return redirect('core:role_detail', role_id=role.pk)
 
     context = {'subjects': subjects, 'role_perm_ids': set()}
@@ -114,7 +114,7 @@ def role_edit(request, role_id):
         perm_ids = request.POST.getlist('permissions')
         role.permissions.set(Permission.objects.filter(id__in=perm_ids))
         role.save()
-        messages.success(request, f"Rôle « {role.name} » mis à jour.")
+        messages.success(request, _("Rôle « {name} » mis à jour.").format(name=role.name))
         return redirect('core:role_detail', role_id=role.pk)
 
     context = {
@@ -146,7 +146,7 @@ def role_duplicate(request, role_id):
         is_system=False,
     )
     new_role.permissions.set(source.permissions.all())
-    messages.success(request, f"Rôle « {new_role.name} » créé à partir de « {source.name} ».")
+    messages.success(request, _("Rôle « {name} » créé à partir de « {source} ».").format(name=new_role.name, source=source.name))
     return redirect('core:role_edit', role_id=new_role.pk)
 
 
@@ -161,12 +161,12 @@ def role_delete(request, role_id):
         messages.error(request, _("Les rôles système ne peuvent pas être supprimés."))
         return redirect('core:roles_list')
     if role.users.exists():
-        messages.error(request, f"Ce rôle est assigné à {role.users.count()} utilisateur(s). Réassignez-les d'abord.")
+        messages.error(request, _("Ce rôle est assigné à {count} utilisateur(s). Réassignez-les d'abord.").format(count=role.users.count()))
         return redirect('core:role_detail', role_id=role.pk)
     if request.method == 'POST':
         name = role.name
         role.delete()
-        messages.success(request, f"Rôle « {name} » supprimé.")
+        messages.success(request, _("Rôle « {name} » supprimé.").format(name=name))
         return redirect('core:roles_list')
     return render(request, 'core/roles/role_confirm_delete.html', {'role': role})
 
@@ -215,7 +215,7 @@ def project_role_create(request):
         else:
             pr = ProjectRole.objects.create(name=name, slug=slug, description=description)
             pr.permissions.set(Permission.objects.filter(id__in=perm_ids))
-            messages.success(request, f"Rôle projet « {name} » créé.")
+            messages.success(request, _("Rôle projet « {name} » créé.").format(name=name))
             return redirect('core:project_roles_list')
 
     context = {'subjects': subjects, 'role_perm_ids': set(), 'is_project': True}
@@ -240,7 +240,7 @@ def project_role_edit(request, role_id):
         perm_ids = request.POST.getlist('permissions')
         role.permissions.set(Permission.objects.filter(id__in=perm_ids))
         role.save()
-        messages.success(request, f"Rôle projet « {role.name} » mis à jour.")
+        messages.success(request, _("Rôle projet « {name} » mis à jour.").format(name=role.name))
         return redirect('core:project_roles_list')
 
     context = {
@@ -273,7 +273,7 @@ def project_role_duplicate(request, role_id):
         is_system=False,
     )
     new_role.permissions.set(source.permissions.all())
-    messages.success(request, f"Rôle projet « {new_role.name} » créé.")
+    messages.success(request, _("Rôle projet « {name} » créé.").format(name=new_role.name))
     return redirect('core:project_role_edit', role_id=new_role.pk)
 
 
@@ -290,6 +290,6 @@ def project_role_delete(request, role_id):
     if request.method == 'POST':
         name = role.name
         role.delete()
-        messages.success(request, f"Rôle projet « {name} » supprimé.")
+        messages.success(request, _("Rôle projet « {name} » supprimé.").format(name=name))
         return redirect('core:project_roles_list')
     return render(request, 'core/roles/role_confirm_delete.html', {'role': role, 'is_project': True})

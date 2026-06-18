@@ -1,12 +1,13 @@
 from django import forms
 from django.db.models import Max
+from django.utils.translation import gettext_lazy as _
 from .models import Project, Document, Request, Partner, Event, Direction, Budget, Employee, Milestone, SubMilestone, ProjectFolder, ProjectDocument, ProjectMember, ProjectNeed, ProjectComment, ProjectRole
 from .currencies import CURRENCY_CHOICES, convert_currency, format_currency
 
 
 class ProjectForm(forms.ModelForm):
     """Formulaire pour les projets"""
-    currency = forms.ChoiceField(choices=CURRENCY_CHOICES, initial='GNF', label="Devise")
+    currency = forms.ChoiceField(choices=CURRENCY_CHOICES, initial='GNF', label=_("Devise"))
 
     class Meta:
         model = Project
@@ -27,19 +28,19 @@ class ProjectForm(forms.ModelForm):
         self.fields['currency'].widget.attrs['class'] = 'form-control select-searchable'
         # Direction optionnelle
         self.fields['direction'].required = False
-        self.fields['direction'].empty_label = "-- Aucune direction --"
+        self.fields['direction'].empty_label = _("-- Aucune direction --")
         # manager_employee : filtrer les internes uniquement
         self.fields['manager_employee'].queryset = Employee.objects.filter(is_external=False).order_by('name')
         self.fields['manager_employee'].required = True
-        self.fields['manager_employee'].empty_label = "-- Sélectionner un responsable --"
-        self.fields['manager_employee'].label = "Responsable du projet"
-        self.fields['manager_employee'].help_text = "Associe un employé interne comme responsable du projet."
+        self.fields['manager_employee'].empty_label = _("-- Sélectionner un responsable --")
+        self.fields['manager_employee'].label = _("Responsable du projet")
+        self.fields['manager_employee'].help_text = _("Associe un employé interne comme responsable du projet.")
 
         # Budget et budget consomme optionnels (valeur par defaut 0 si vide)
         self.fields['budget'].required = False
         self.fields['budget_consumed'].required = False
-        self.fields['budget'].widget.attrs['placeholder'] = '0'
-        self.fields['budget_consumed'].widget.attrs['placeholder'] = '0'
+        self.fields['budget'].widget.attrs['placeholder'] = _('0')
+        self.fields['budget_consumed'].widget.attrs['placeholder'] = _('0')
         
         # Si c'est une édition (projet existant), les dates ne sont pas obligatoires
         if self.instance and self.instance.pk:
@@ -51,10 +52,10 @@ class ProjectForm(forms.ModelForm):
             current_currency = self.instance.currency
             if current_currency != 'GNF':
                 gnf_equivalent = convert_currency(float(self.instance.budget), current_currency, 'GNF')
-                self.fields['budget'].help_text = f"Équivalent: {format_currency(gnf_equivalent, 'GNF')}"
+                self.fields['budget'].help_text = _("Équivalent: %(amount)s") % {'amount': format_currency(gnf_equivalent, 'GNF')}
                 if self.instance.budget_consumed:
                     consumed_gnf = convert_currency(float(self.instance.budget_consumed), current_currency, 'GNF')
-                    self.fields['budget_consumed'].help_text = f"Équivalent: {format_currency(consumed_gnf, 'GNF')}"
+                    self.fields['budget_consumed'].help_text = _("Équivalent: %(amount)s") % {'amount': format_currency(consumed_gnf, 'GNF')}
     
     def clean_budget(self):
         """Budget optionnel : valeur par defaut 0 si vide"""
@@ -105,7 +106,7 @@ class MilestoneForm(forms.ModelForm):
             'order': forms.HiddenInput(),
             'manual_progress': forms.NumberInput(attrs={'min': 0, 'max': 100, 'style': 'width: 100px;'}),
             'due_date': forms.DateInput(attrs={'type': 'date'}),
-            'need': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Décrivez le besoin lié à cette étape...'}),
+            'need': forms.Textarea(attrs={'rows': 3, 'placeholder': _('Décrivez le besoin lié à cette étape...')}),
             'status': forms.Select(attrs={'class': 'form-control'}),
         }
     
@@ -114,8 +115,8 @@ class MilestoneForm(forms.ModelForm):
         self.project = project
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
-        self.fields['manual_progress'].label = 'Progression (%)'
-        self.fields['manual_progress'].help_text = 'Utilisé uniquement si le jalon n\'a pas de sous-étapes'
+        self.fields['manual_progress'].label = _('Progression (%)')
+        self.fields['manual_progress'].help_text = _("Utilisé uniquement si le jalon n'a pas de sous-étapes")
         if project:
             # Auto-incrémenter l'ordre si nouveau jalon
             if not self.instance.pk:
@@ -131,7 +132,7 @@ class SubMilestoneForm(forms.ModelForm):
         widgets = {
             'order': forms.HiddenInput(),
             'due_date': forms.DateInput(attrs={'type': 'date'}),
-            'need': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Décrivez le besoin lié à cette sous-étape...'}),
+            'need': forms.Textarea(attrs={'rows': 3, 'placeholder': _('Décrivez le besoin lié à cette sous-étape...')}),
         }
 
     def __init__(self, milestone=None, *args, **kwargs):
@@ -202,7 +203,7 @@ class ProjectMemberForm(forms.ModelForm):
         # Employee obligatoire à la création, optionnel en édition (déjà fixé)
         self.fields['employee'].required = not self._is_edit
         self.fields['project_role'].required = False
-        self.fields['project_role'].label = "Rôle projet"
+        self.fields['project_role'].label = _("Rôle projet")
 
         if self._is_edit:
             existing_members = project.members.exclude(pk=self.instance.pk)
@@ -212,7 +213,7 @@ class ProjectMemberForm(forms.ModelForm):
         employee_ids = existing_members.values_list('employee_id', flat=True)
         available_employees = Employee.objects.exclude(id__in=employee_ids).order_by('name')
 
-        employee_choices = [('', '--- Sélectionner un employé ---')]
+        employee_choices = [('', _('--- Sélectionner un employé ---'))]
         for emp in available_employees:
             display_text = emp.name
             if emp.role:
@@ -223,7 +224,7 @@ class ProjectMemberForm(forms.ModelForm):
 
         self.fields['employee'].choices = employee_choices
         self.fields['employee'].widget.attrs.update({
-            'data-placeholder': 'Rechercher un employé...',
+            'data-placeholder': _('Rechercher un employé...'),
             'data-allow-clear': 'true',
         })
 
@@ -237,7 +238,7 @@ class ProjectMemberForm(forms.ModelForm):
     def clean_employee(self):
         employee = self.cleaned_data.get('employee')
         if not self._is_edit and not employee:
-            raise forms.ValidationError("Veuillez sélectionner un employé.")
+            raise forms.ValidationError(_("Veuillez sélectionner un employé."))
         return employee
 
 
@@ -322,7 +323,7 @@ class EventForm(forms.ModelForm):
 
 class BudgetForm(forms.ModelForm):
     """Formulaire pour les budgets"""
-    currency = forms.ChoiceField(choices=CURRENCY_CHOICES, initial='GNF', label="Devise")
+    currency = forms.ChoiceField(choices=CURRENCY_CHOICES, initial='GNF', label=_("Devise"))
     
     class Meta:
         model = Budget
@@ -336,12 +337,12 @@ class BudgetForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
-        self.fields['allocated'].label = 'Budget alloué'
-        self.fields['consumed'].label = 'Budget consommé'
+        self.fields['allocated'].label = _('Budget alloué')
+        self.fields['consumed'].label = _('Budget consommé')
         self.fields['project'].required = False
-        self.fields['project'].empty_label = "-- Sélectionner un projet --"
+        self.fields['project'].empty_label = _("-- Sélectionner un projet --")
         self.fields['direction'].required = False
-        self.fields['direction'].empty_label = "-- Aucune direction --"
+        self.fields['direction'].empty_label = _("-- Aucune direction --")
         self.fields['currency'].widget.attrs['class'] = 'form-control select-searchable'
 
 
@@ -352,8 +353,8 @@ class EmployeeForm(forms.ModelForm):
         fields = ['name', 'direction', 'role', 'phone', 'email', 'workload', 'skills', 'is_external', 'organization']
         widgets = {
             'workload': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'max': 100}),
-            'skills': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Compétences séparées par des virgules'}),
-            'organization': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex : Cabinet XYZ, ONG Alpha…'}),
+            'skills': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': _('Compétences séparées par des virgules')}),
+            'organization': forms.TextInput(attrs={'class': 'form-control', 'placeholder': _('Ex : Cabinet XYZ, ONG Alpha…')}),
         }
 
     def __init__(self, *args, user=None, **kwargs):
@@ -361,9 +362,9 @@ class EmployeeForm(forms.ModelForm):
         for field_name, field in self.fields.items():
             if field_name not in ('workload', 'skills', 'is_external', 'organization'):
                 field.widget.attrs['class'] = 'form-control'
-        self.fields['name'].label = 'Nom complet'
-        self.fields['phone'].label = 'Téléphone'
-        self.fields['email'].label = 'Email'
+        self.fields['name'].label = _('Nom complet')
+        self.fields['phone'].label = _('Téléphone')
+        self.fields['email'].label = _('Email')
         self.fields['direction'].required = False
         self.fields['organization'].required = False
         self.fields['email'].required = False
@@ -375,7 +376,7 @@ class EmployeeForm(forms.ModelForm):
             self.fields['direction'].queryset = Direction.objects.filter(id=profile.direction_id)
             self.fields['direction'].initial = profile.direction_id
             self.fields['direction'].disabled = True
-            self.fields['direction'].help_text = "Verrouillé sur votre direction."
+            self.fields['direction'].help_text = _("Verrouillé sur votre direction.")
 
     def clean_email(self):
         email = self.cleaned_data.get('email', '').strip()
@@ -385,7 +386,7 @@ class EmployeeForm(forms.ModelForm):
                 qs = qs.exclude(pk=self.instance.pk)
             if qs.exists():
                 other = qs.first()
-                raise forms.ValidationError(f"L'email « {email} » est déjà utilisé par {other.name}.")
+                raise forms.ValidationError(_("L'email « %(email)s » est déjà utilisé par %(name)s.") % {'email': email, 'name': other.name})
         return email
 
     def clean(self):
@@ -395,9 +396,9 @@ class EmployeeForm(forms.ModelForm):
         email = cleaned.get('email', '').strip()
 
         if is_external and not organization:
-            self.add_error('organization', "L'organisation est obligatoire pour une personne externe.")
+            self.add_error('organization', _("L'organisation est obligatoire pour une personne externe."))
 
         if not is_external and not email:
-            self.add_error('email', "L'email est obligatoire pour un employé interne (nécessaire pour la création de compte).")
+            self.add_error('email', _("L'email est obligatoire pour un employé interne (nécessaire pour la création de compte)."))
 
         return cleaned

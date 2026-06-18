@@ -1,9 +1,9 @@
 {% load i18n %}<!DOCTYPE html>
-<html lang="fr">
+<html lang="{{ LANGUAGE_CODE|default:'fr' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% if valid %}Créer mon mot de passe{% else %}Lien invalide{% endif %} – CSIG Dashboard</title>
+  <title>{% if valid %}{% trans 'Créer mon mot de passe' %}{% else %}{% trans 'Lien invalide' %}{% endif %} – CSIG Dashboard</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     body { margin: 0; font-family: Arial, sans-serif; background: #f3f4f6; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 16px; }
@@ -77,8 +77,8 @@
   <div class="banner">
     <h1>CSIG Dashboard</h1>
     <p>
-      {% if valid %}Créer votre mot de passe
-      {% else %}Lien d'activation invalide
+      {% if valid %}{% trans 'Créer votre mot de passe' %}
+      {% else %}{% trans "Lien d'activation invalide" %}
       {% endif %}
     </p>
   </div>
@@ -88,45 +88,45 @@
     {% if valid %}
     <!-- ── Formulaire création mot de passe ── -->
     <p style="margin:0 0 16px;font-size:14px;color:#374151;line-height:1.5;">
-      Bonjour{% if full_name %} <strong>{{ full_name }}</strong>{% endif %},
-      choisissez un mot de passe sécurisé pour activer votre accès au tableau de bord.
+      {% trans 'Bonjour' %}{% if full_name %} <strong>{{ full_name }}</strong>{% endif %},
+      {% trans 'choisissez un mot de passe sécurisé pour activer votre accès au tableau de bord.' %}
     </p>
 
     <div class="username-chip">
-      <span>Votre identifiant de connexion</span>
+      <span>{% trans 'Votre identifiant de connexion' %}</span>
       <strong>{{ username }}</strong>
     </div>
 
     <!-- Règles visuelles -->
     <div class="rules-box">
-      <p>Votre mot de passe doit :</p>
+      <p>{% trans 'Votre mot de passe doit :' %}</p>
       <div class="rule" id="rule-len">
         <svg id="icon-len" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
              fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"/>
         </svg>
-        Contenir au moins 8 caractères
+        {% trans 'Contenir au moins 8 caractères' %}
       </div>
       <div class="rule" id="rule-upper">
         <svg id="icon-upper" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
              fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"/>
         </svg>
-        Contenir une majuscule et une minuscule
+        {% trans 'Contenir une majuscule et une minuscule' %}
       </div>
       <div class="rule" id="rule-digit">
         <svg id="icon-digit" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
              fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"/>
         </svg>
-        Contenir au moins un chiffre
+        {% trans 'Contenir au moins un chiffre' %}
       </div>
       <div class="rule" id="rule-match">
         <svg id="icon-match" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
              fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"/>
         </svg>
-        Correspondre à la confirmation
+        {% trans 'Correspondre à la confirmation' %}
       </div>
     </div>
 
@@ -135,13 +135,13 @@
 
       <!-- Champ nouveau mot de passe -->
       <div class="form-group">
-        <label for="id_new_password1">Nouveau mot de passe</label>
+        <label for="id_new_password1">{% trans 'Nouveau mot de passe' %}</label>
         <div class="input-wrap">
           <input type="password" name="new_password1" id="id_new_password1"
                  autocomplete="new-password" autofocus
                  class="{% if form.new_password1.errors %}input-error{% endif %}"
                  oninput="onPassword1(this.value)">
-          <button type="button" class="toggle-eye" onclick="toggleEye('id_new_password1', this)" aria-label="Afficher/masquer">
+          <button type="button" class="toggle-eye" onclick="toggleEye('id_new_password1', this)" aria-label="{% trans 'Afficher/masquer' %}">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
                  fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
@@ -158,13 +158,13 @@
 
       <!-- Champ confirmation -->
       <div class="form-group">
-        <label for="id_new_password2">Confirmer le mot de passe</label>
+        <label for="id_new_password2">{% trans 'Confirmer le mot de passe' %}</label>
         <div class="input-wrap">
           <input type="password" name="new_password2" id="id_new_password2"
                  autocomplete="new-password"
                  class="{% if form.new_password2.errors %}input-error{% endif %}"
                  oninput="onPassword2(this.value)">
-          <button type="button" class="toggle-eye" onclick="toggleEye('id_new_password2', this)" aria-label="Afficher/masquer">
+          <button type="button" class="toggle-eye" onclick="toggleEye('id_new_password2', this)" aria-label="{% trans 'Afficher/masquer' %}">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
                  fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
@@ -187,7 +187,7 @@
              fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>
         </svg>
-        Activer mon compte
+        {% trans 'Activer mon compte' %}
       </button>
     </form>
 
@@ -199,28 +199,38 @@
         <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
         <path d="M12 9v4"/><path d="M12 17h.01"/>
       </svg>
-      <h2>Lien invalide ou expiré</h2>
-      <p>Ce lien d'activation n'est plus valide.</p>
-      <p style="font-size:13px;">Il a peut-être <strong>déjà été utilisé</strong> ou il a <strong>expiré</strong> (validité : 3 jours).</p>
+      <h2>{% trans 'Lien invalide ou expiré' %}</h2>
+      <p>{% trans "Ce lien d'activation n'est plus valide." %}</p>
+      <p style="font-size:13px;">{% blocktrans %}Il a peut-être <strong>déjà été utilisé</strong> ou il a <strong>expiré</strong> (validité : 3 jours).{% endblocktrans %}</p>
 
       <hr class="divider">
 
-      <p style="font-size:13px;color:#374151;margin-bottom:4px;">Votre compte est peut-être déjà activé :</p>
-      <a href="{% url 'core:login' %}" class="link-secondary">→ Se connecter</a>
+      <p style="font-size:13px;color:#374151;margin-bottom:4px;">{% trans 'Votre compte est peut-être déjà activé :' %}</p>
+      <a href="{% url 'core:login' %}" class="link-secondary">→ {% trans 'Se connecter' %}</a>
 
       <a href="{% url 'core:request_new_activation' %}" class="btn-outline" style="margin-top:16px;">
-        Recevoir un nouveau lien d'activation
+        {% trans "Recevoir un nouveau lien d'activation" %}
       </a>
     </div>
     {% endif %}
 
   </div>
 
-  <div class="footer">© {% now "Y" %} CSIG – Centre de Suivi et d'Information de Gestion</div>
+  <div class="footer">© {% now "Y" %} {% trans 'CSIG – Centre de Suivi et d\'Information de Gestion' %}</div>
 </div>
 
 {% if valid %}
 <script>
+  var ACT_I18N = {
+    levels: [
+      "{% trans 'Très faible' %}",
+      "{% trans 'Faible' %}",
+      "{% trans 'Moyen' %}",
+      "{% trans 'Fort' %}",
+      "{% trans 'Très fort' %}"
+    ]
+  };
+
   let p1 = '', p2 = '';
 
   const ICON_CIRCLE = `<circle cx="12" cy="12" r="10"/>`;
@@ -263,11 +273,11 @@
     if (/[^a-zA-Z0-9]/.test(v)) score++;
 
     const levels = [
-      { pct: '20%', color: '#ef4444', text: 'Très faible' },
-      { pct: '40%', color: '#f97316', text: 'Faible' },
-      { pct: '60%', color: '#eab308', text: 'Moyen' },
-      { pct: '80%', color: '#22c55e', text: 'Fort' },
-      { pct: '100%',color: '#16a34a', text: 'Très fort' },
+      { pct: '20%', color: '#ef4444', text: ACT_I18N.levels[0] },
+      { pct: '40%', color: '#f97316', text: ACT_I18N.levels[1] },
+      { pct: '60%', color: '#eab308', text: ACT_I18N.levels[2] },
+      { pct: '80%', color: '#22c55e', text: ACT_I18N.levels[3] },
+      { pct: '100%',color: '#16a34a', text: ACT_I18N.levels[4] },
     ];
     const lvl = levels[Math.min(score, 4)];
     fill.style.width = lvl.pct;

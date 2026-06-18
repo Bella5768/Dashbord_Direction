@@ -6,6 +6,7 @@
 {% block page_subtitle %}{% if user_obj %}{% trans 'Modifier les informations de' %} {{ user_obj.username }}{% else %}{% trans 'Créer un nouveau compte utilisateur' %}{% endif %}{% endblock %}
 
 {% block content %}
+{% trans 'Jamais' as jamais_label %}
 <div class="grid" style="grid-template-columns: 2fr 1fr; gap: 24px;">
     <!-- Form -->
     <div class="card">
@@ -15,7 +16,7 @@
         <div class="card-content">
             <form method="post">
                 {% csrf_token %}
-                
+
                 <!-- Username -->
                 <div class="grid grid-2" style="gap:16px;margin-bottom:16px;">
                     <div class="form-group">
@@ -44,11 +45,11 @@
                         </div>
                     </div>
                     <p style="font-size:11px;color:var(--gray-400);margin:10px 0 0;">
-                        Pour modifier ces informations, mettez à jour la
+                        {% trans 'Pour modifier ces informations, mettez à jour la' %}
                         {% if user_obj.profile.employee %}
-                        <a href="{% url 'core:employee_edit' user_obj.profile.employee.id %}" style="color:var(--primary-600);">fiche employé</a>.
+                        <a href="{% url 'core:employee_edit' user_obj.profile.employee.id %}" style="color:var(--primary-600);">{% trans 'fiche employé' %}</a>.
                         {% else %}
-                        fiche employé.
+                        {% trans 'fiche employé' %}.
                         {% endif %}
                     </p>
                 </div>
@@ -76,8 +77,8 @@
                     </div>
                 </div>
                 {% endif %}
-                
-                
+
+
                 <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
                 <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">{% trans 'Rôle et direction' %}</h4>
 
@@ -85,15 +86,15 @@
                     <div class="form-group">
                         <label class="form-label" for="id_role">{% trans 'Rôle' %}</label>
                         <select name="role" id="id_role" class="form-control">
-                            <option value="">-- Sans rôle --</option>
+                            <option value="">-- {% trans 'Sans rôle' %} --</option>
                             {% for role_obj in form.role.field.queryset %}
                             <option value="{{ role_obj.pk }}" {% if form.role.value|stringformat:"s" == role_obj.pk|stringformat:"s" %}selected{% endif %}>{{ role_obj.name }}</option>
                             {% endfor %}
                         </select>
-                        <span class="form-help">Les permissions sont définies par le rôle. <a href="{% url 'core:roles_list' %}">Gérer les rôles →</a></span>
+                        <span class="form-help">{% trans 'Les permissions sont définies par le rôle.' %} <a href="{% url 'core:roles_list' %}">{% trans 'Gérer les rôles' %} →</a></span>
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="id_direction">Direction</label>
+                        <label class="form-label" for="id_direction">{% trans 'Direction' %}</label>
                         <select name="direction" id="id_direction" class="form-control">
                             <option value="">-- {% trans 'Aucune direction' %} --</option>
                             {% for dir in form.direction.field.queryset %}
@@ -110,8 +111,9 @@
                         <select name="employee" id="id_employee" class="form-control">
                             <option value="">-- {% trans 'Aucun employé lié' %} --</option>
                             {% for emp in form.employee.field.queryset %}
+                            {% trans 'Sans direction' as sans_dir_label %}
                             <option value="{{ emp.id }}" {% if form.employee.value|stringformat:"s" == emp.id|stringformat:"s" %}selected{% endif %}>
-                                {{ emp.name }}{% if emp.is_external %} (Externe — {{ emp.organization }}){% else %} — {{ emp.direction.code|default:"Sans direction" }}{% endif %}
+                                {{ emp.name }}{% if emp.is_external %} ({% trans 'Externe' %} — {{ emp.organization }}){% else %} — {{ emp.direction.code|default:sans_dir_label }}{% endif %}
                             </option>
                             {% endfor %}
                         </select>
@@ -131,7 +133,7 @@
                         {% if not user_obj.is_active and not user_obj.has_usable_password %}
                         <div style="background:#fef9c3;border:1px solid #fde047;border-radius:6px;padding:10px 12px;font-size:12px;color:#854d0e;display:flex;gap:8px;align-items:flex-start;">
                             <i data-lucide="triangle-alert" width="15" height="15" style="flex-shrink:0;margin-top:1px;" ></i>
-                            <span>Invitation en attente — le compte s'activera automatiquement quand l'employé définira son mot de passe.</span>
+                            <span>{% trans "Invitation en attente — le compte s'activera automatiquement quand l'employé définira son mot de passe." %}</span>
                         </div>
                         {% else %}
                         <label class="remember-me" style="cursor: pointer;">
@@ -142,11 +144,11 @@
                     </div>
                     {% endif %}
                 </div>
-                
+
                 <div style="background:var(--primary-50,#eff6ff);border:1px solid var(--primary-100,#dbeafe);border-radius:6px;padding:12px 16px;margin-bottom:8px;font-size:12px;color:var(--primary-700,#1d4ed8);">
-                    Les permissions sont gérées par le rôle attribué. Pour modifier les permissions d'un rôle, rendez-vous sur <a href="{% url 'core:roles_list' %}" style="font-weight:600;">Gestion des rôles</a>.
+                    {% trans "Les permissions sont gérées par le rôle attribué. Pour modifier les permissions d'un rôle, rendez-vous sur" %} <a href="{% url 'core:roles_list' %}" style="font-weight:600;">{% trans 'Gestion des rôles' %}</a>.
                 </div>
-                
+
                 <div class="flex gap-3" style="margin-top: 32px;">
                     <button type="submit" class="btn btn-primary">
                         <i data-lucide="check" width="16" height="16" ></i>
@@ -157,14 +159,14 @@
             </form>
         </div>
     </div>
-    
+
     <!-- Sidebar -->
     <div>
         <!-- Role Info -->
         <div class="card mb-6">
             <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
                 <h3 class="card-title">{% trans 'Rôles disponibles' %}</h3>
-                <a href="{% url 'core:roles_list' %}" class="card-link" style="font-size:11px;">Gérer →</a>
+                <a href="{% url 'core:roles_list' %}" class="card-link" style="font-size:11px;">{% trans 'Gérer' %} →</a>
             </div>
             <div class="card-content">
                 <div class="item-list" style="gap:8px;">
@@ -180,7 +182,7 @@
                 </div>
             </div>
         </div>
-        
+
         {% if user_obj %}
         <!-- User Info -->
         <div class="card">
@@ -195,14 +197,14 @@
                     </div>
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-500">{% trans 'Dernière connexion' %}</span>
-                        <span class="font-medium">{{ user_obj.last_login|date:"d/m/Y H:i"|default:"Jamais" }}</span>
+                        <span class="font-medium">{{ user_obj.last_login|date:"d/m/Y H:i"|default:jamais_label }}</span>
                     </div>
                     <div class="flex justify-between text-sm">
-                        <span class="text-gray-500">Statut</span>
+                        <span class="text-gray-500">{% trans 'Statut' %}</span>
                         {% if user_obj.is_active %}
                         <span class="badge badge-success">{% trans 'Actif' %}</span>
                         {% elif not user_obj.has_usable_password %}
-                        <span class="badge badge-warning">En attente</span>
+                        <span class="badge badge-warning">{% trans 'En attente' %}</span>
                         {% else %}
                         <span class="badge badge-danger">{% trans 'Inactif' %}</span>
                         {% endif %}

@@ -40,7 +40,7 @@
                     {% if form.contact_person.errors %}<p class="form-error">{{ form.contact_person.errors.0 }}</p>{% endif %}
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="id_email">Email <span class="required">*</span></label>
+                    <label class="form-label" for="id_email">{% trans 'Email' %} <span class="required">*</span></label>
                     {{ form.email }}
                     {% if form.email.errors %}<p class="form-error">{{ form.email.errors.0 }}</p>{% endif %}
                 </div>

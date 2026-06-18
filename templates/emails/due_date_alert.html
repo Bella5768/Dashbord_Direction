@@ -1,14 +1,15 @@
 {% extends "emails/base_email.html" %}
+{% load i18n %}
 {% block content %}
-<p style="margin:0 0 10px;">Bonjour <strong>{{ recipient_name }}</strong>,</p>
+<p style="margin:0 0 10px;">{% trans 'Bonjour' %} <strong>{{ recipient_name }}</strong>,</p>
 <p style="margin:0 0 10px;color:{{ banner_color }};font-weight:bold;font-size:14px;">{{ role_label }}</p>
 <p style="margin:0 0 16px;color:{{ banner_color }};font-weight:bold;">
-  {{ task_article_def }} {{ task_type }} ci-dessous (responsable&nbsp;: <strong>{{ employee_name }}</strong>) n'est pas encore {{ task_pp_termine }}.
+  {{ task_article_def }} {{ task_type }} ci-dessous ({% trans 'responsable' %}&nbsp;: <strong>{{ employee_name }}</strong>) n'est pas encore {{ task_pp_termine }}.
 </p>
 
 <table style="width:100%;border-collapse:collapse;margin:0 0 16px;font-size:14px;">
   <tr>
-    <td style="padding:10px;border:1px solid #e5e7eb;background:#fef2f2;font-weight:bold;width:140px;">Projet</td>
+    <td style="padding:10px;border:1px solid #e5e7eb;background:#fef2f2;font-weight:bold;width:140px;">{% trans 'Projet' %}</td>
     <td style="padding:10px;border:1px solid #e5e7eb;">{{ project_name }}</td>
   </tr>
   <tr>
@@ -16,20 +17,20 @@
     <td style="padding:10px;border:1px solid #e5e7eb;">{{ task_name }}</td>
   </tr>
   <tr>
-    <td style="padding:10px;border:1px solid #e5e7eb;background:#fef2f2;font-weight:bold;">Responsable</td>
+    <td style="padding:10px;border:1px solid #e5e7eb;background:#fef2f2;font-weight:bold;">{% trans 'Responsable' %}</td>
     <td style="padding:10px;border:1px solid #e5e7eb;">{{ employee_name }}</td>
   </tr>
   <tr>
-    <td style="padding:10px;border:1px solid #e5e7eb;background:#fef2f2;font-weight:bold;">Échéance</td>
+    <td style="padding:10px;border:1px solid #e5e7eb;background:#fef2f2;font-weight:bold;">{% trans 'Échéance' %}</td>
     <td style="padding:10px;border:1px solid #e5e7eb;color:{{ banner_color }};font-weight:bold;">{{ due_date|date:"d/m/Y" }}</td>
   </tr>
   <tr>
-    <td style="padding:10px;border:1px solid #e5e7eb;background:#fef2f2;font-weight:bold;">Statut</td>
+    <td style="padding:10px;border:1px solid #e5e7eb;background:#fef2f2;font-weight:bold;">{% trans 'Statut' %}</td>
     <td style="padding:10px;border:1px solid #e5e7eb;color:{{ banner_color }};font-weight:bold;">{{ urgency_label }}</td>
   </tr>
 </table>
 
 <p style="margin:0;background:#fef2f2;padding:12px 14px;border-left:4px solid {{ banner_color }};color:#7f1d1d;font-size:13px;">
-  <strong>Action requise&nbsp;:</strong> connectez-vous au tableau de bord CSIG pour mettre à jour l'avancement.
+  <strong>{% trans 'Action requise' %}&nbsp;:</strong> {% trans "Connectez-vous au tableau de bord CSIG pour mettre à jour l'avancement." %}
 </p>
 {% endblock %}

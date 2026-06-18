@@ -89,7 +89,7 @@
         {% if can_delete %}
         <a href="#" class="btn btn-danger"
            data-delete-url="{% url 'core:event_delete' event.id %}"
-           data-delete-type="l'événement"
+           data-delete-type="{% trans "l'événement" %}"
            data-delete-name="{{ event.title }}">
             <i data-lucide="trash-2" width="14" height="14"></i>
             {% trans 'Supprimer' %}
