@@ -23,3 +23,8 @@ Thumbs.db
 
 # Node
 node_modules/
+
+# Rapports
+RAPPORT_*.md
+#ai
+.claude/
