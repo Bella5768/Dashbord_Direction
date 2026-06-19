@@ -6,7 +6,7 @@
 {% block page_subtitle %}{% trans 'Gérer les ressources humaines' %}{% endblock %}
 
 {% block content %}
-<div class="card" style="max-width: 900px;">
+<div class="card" style="max-width: 900px; margin: 0 auto;">
     <div class="card-header">
         <h3 class="card-title">{{ title }}</h3>
     </div>
@@ -92,13 +92,23 @@
                         {% if form.role.errors %}<p class="form-error">{{ form.role.errors.0 }}</p>{% endif %}
                     </div>
                 </div>
-                <div class="form-group" style="margin-top: 16px;">
-                    <label for="{{ form.workload.id_for_label }}" class="form-label">{{ form.workload.label }}</label>
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        {{ form.workload }}
-                        <span style="font-size: 13px; color: #64748b; white-space: nowrap;">%</span>
+                <div class="grid grid-2" style="gap: 16px; margin-top: 16px;">
+                    <div class="form-group">
+                        <label for="{{ form.workload.id_for_label }}" class="form-label">{{ form.workload.label }}</label>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            {{ form.workload }}
+                            <span style="font-size: 13px; color: #64748b; white-space: nowrap;">%</span>
+                        </div>
+                        {% if form.workload.errors %}<p class="form-error">{{ form.workload.errors.0 }}</p>{% endif %}
                     </div>
-                    {% if form.workload.errors %}<p class="form-error">{{ form.workload.errors.0 }}</p>{% endif %}
+                    <div class="form-group">
+                        <label for="{{ form.system_role.id_for_label }}" class="form-label">
+                            {{ form.system_role.label }}
+                        </label>
+                        {{ form.system_role }}
+                        {% if form.system_role.errors %}<p class="form-error">{{ form.system_role.errors.0 }}</p>{% endif %}
+                        <span class="form-help">{% trans "Sélectionnez un rôle pour créer automatiquement un compte utilisateur." %}</span>
+                    </div>
                 </div>
             </div>
 

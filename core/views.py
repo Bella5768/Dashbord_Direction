@@ -198,6 +198,60 @@ def _generate_username(full_name):
     return username
 
 
+def _create_or_update_user_for_employee(request, employee, system_role):
+    """Crée ou met à jour le compte utilisateur lié à un employé et envoie l'invitation."""
+    from django.contrib.auth.models import User as DjangoUser
+    from .models import UserProfile
+
+    if not employee.email:
+        return False, _("L'employé n'a pas d'adresse email.")
+
+    try:
+        linked_profile = employee.user_profile
+        linked_profile.role = system_role
+        linked_profile.direction = employee.direction
+        linked_profile.save(update_fields=['role', 'direction', 'updated_at'])
+        return True, _("Le rôle système du compte lié a été mis à jour.")
+    except Exception:
+        pass
+
+    username = _generate_username(employee.name)
+    name_parts = employee.name.strip().split()
+
+    user = DjangoUser(
+        username=username,
+        email=employee.email,
+        first_name=name_parts[0] if name_parts else '',
+        last_name=' '.join(name_parts[1:]) if len(name_parts) > 1 else '',
+        is_active=False,
+    )
+    user.set_unusable_password()
+    user.save()
+
+    profile, created = UserProfile.objects.get_or_create(user=user)
+    profile.role = system_role
+    profile.direction = employee.direction
+    profile.employee = employee
+    profile.save()
+
+    activation_link = _build_activation_link(request, user)
+    invited_by = request.user.get_full_name() or request.user.username
+    from .notifications import notify_account_invitation
+    email_ok, email_msg = notify_account_invitation(user, activation_link, invited_by)
+
+    UserActivity.objects.create(
+        user=request.user,
+        action='create',
+        description=f"Création du compte {username} pour {employee.name}",
+        ip_address=get_client_ip(request),
+        user_agent=request.META.get('HTTP_USER_AGENT', '')[:500],
+    )
+
+    if email_ok:
+        return True, _("Compte créé pour {name}. Invitation envoyée à {email}.").format(name=employee.name, email=employee.email)
+    return True, _("Compte créé (identifiant : {username}) mais l'email n'a pas pu être envoyé : {msg}").format(username=username, msg=email_msg)
+
+
 def _build_reset_link(request, user):
     """Génère le lien de réinitialisation de mot de passe (uid + token Django, valable 3 jours)."""
     from django.contrib.auth.tokens import default_token_generator
@@ -3772,7 +3826,16 @@ def employee_create(request):
             if profile.role_slug == 'directeur' and profile.direction_id:
                 employee.direction_id = profile.direction_id
             employee.save()
-            messages.success(request, _("Employé créé avec succès."))
+
+            system_role = form.cleaned_data.get('system_role')
+            if system_role:
+                ok, msg = _create_or_update_user_for_employee(request, employee, system_role)
+                if ok:
+                    messages.success(request, msg)
+                else:
+                    messages.warning(request, msg)
+            else:
+                messages.success(request, _("Employé créé avec succès."))
             return redirect('core:resources')
     else:
         form = EmployeeForm(user=request.user)
@@ -3814,7 +3877,15 @@ def employee_edit(request, employee_id):
             except Exception:
                 pass  # pas de compte lié
 
-            messages.success(request, _("Employé modifié avec succès."))
+            system_role = form.cleaned_data.get('system_role')
+            if system_role:
+                ok, msg = _create_or_update_user_for_employee(request, obj, system_role)
+                if ok:
+                    messages.success(request, msg)
+                else:
+                    messages.warning(request, msg)
+            else:
+                messages.success(request, _("Employé modifié avec succès."))
             return redirect('core:resources')
     else:
         form = EmployeeForm(instance=employee, user=request.user)

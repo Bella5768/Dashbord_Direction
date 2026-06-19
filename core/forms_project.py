@@ -1,7 +1,7 @@
 from django import forms
 from django.db.models import Max
 from django.utils.translation import gettext_lazy as _
-from .models import Project, Document, Request, Partner, Event, Direction, Budget, Employee, Milestone, SubMilestone, ProjectFolder, ProjectDocument, ProjectMember, ProjectNeed, ProjectComment, ProjectRole
+from .models import Project, Document, Request, Partner, Event, Direction, Budget, Employee, Milestone, SubMilestone, ProjectFolder, ProjectDocument, ProjectMember, ProjectNeed, ProjectComment, ProjectRole, Role
 from .currencies import CURRENCY_CHOICES, convert_currency, format_currency
 from .fields import IntlPhoneField
 
@@ -427,6 +427,13 @@ class BudgetForm(forms.ModelForm):
 class EmployeeForm(forms.ModelForm):
     """Formulaire pour les employés"""
     phone = IntlPhoneField(label=_("Téléphone"), required=False)
+    system_role = forms.ModelChoiceField(
+        queryset=Role.objects.all().order_by('name'),
+        required=False,
+        label=_("Rôle système (compte utilisateur)"),
+        empty_label=_("-- Ne pas créer de compte --"),
+        widget=forms.Select(attrs={'class': 'form-control'}),
+    )
 
     class Meta:
         model = Employee
@@ -443,11 +450,19 @@ class EmployeeForm(forms.ModelForm):
             if field_name not in ('workload', 'skills', 'is_external', 'organization'):
                 field.widget.attrs['class'] = 'form-control'
         self.fields['name'].label = _('Nom complet')
+        self.fields['role'].label = _('Fonction / Poste')
         self.fields['phone'].label = _('Téléphone')
         self.fields['email'].label = _('Email')
         self.fields['direction'].required = False
         self.fields['organization'].required = False
         self.fields['email'].required = False
+
+        # Pré-remplir le rôle système si l'employé a déjà un compte
+        if self.instance and self.instance.pk:
+            try:
+                self.fields['system_role'].initial = self.instance.user_profile.role
+            except Exception:
+                pass
 
         # Restriction : un directeur ne peut creer/modifier que des employes de sa direction
         profile = getattr(user, 'profile', None) if user else None
@@ -474,11 +489,15 @@ class EmployeeForm(forms.ModelForm):
         is_external = cleaned.get('is_external', False)
         organization = cleaned.get('organization', '').strip()
         email = cleaned.get('email', '').strip()
+        system_role = cleaned.get('system_role')
 
         if is_external and not organization:
             self.add_error('organization', _("L'organisation est obligatoire pour une personne externe."))
 
         if not is_external and not email:
             self.add_error('email', _("L'email est obligatoire pour un employé interne (nécessaire pour la création de compte)."))
+
+        if system_role and not email:
+            self.add_error('system_role', _("Un email est requis pour créer un compte utilisateur."))
 
         return cleaned
