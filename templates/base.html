@@ -214,7 +214,7 @@
                         </div>
                         <div class="topbar-user-info">
                             <span class="topbar-user-name">{{ user.get_full_name|default:user.username }}</span>
-                            <span class="topbar-user-role">{{ user.profile.get_role_display|default:"Utilisateur" }}</span>
+                            <span class="topbar-user-role">{{ user.profile.role.name|default:"Utilisateur" }}</span>
                         </div>
                         <i data-lucide="chevron-down" class="topbar-user-chevron" width="14" height="14"></i>
                         <div class="topbar-user-menu" id="topbar-user-menu">
@@ -224,7 +224,7 @@
                                 </div>
                                 <div>
                                     <p class="topbar-menu-name">{{ user.get_full_name|default:user.username }}</p>
-                                    <p class="topbar-menu-role">{{ user.profile.get_role_display|default:"Utilisateur" }}</p>
+                                    <p class="topbar-menu-role">{{ user.profile.role.name|default:"Utilisateur" }}</p>
                                 </div>
                             </div>
                             <div class="topbar-user-menu-body">

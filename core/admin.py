@@ -17,8 +17,8 @@ class UserAdmin(BaseUserAdmin):
     list_filter = BaseUserAdmin.list_filter + ('profile__role', 'profile__direction')
     
     def get_role(self, obj):
-        if hasattr(obj, 'profile'):
-            return obj.profile.get_role_display()
+        if hasattr(obj, 'profile') and obj.profile.role:
+            return obj.profile.role.name
         return '-'
     get_role.short_description = 'Rôle'
     
