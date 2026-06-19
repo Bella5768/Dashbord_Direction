@@ -8,28 +8,28 @@
 {% block content %}
 <!-- Stats -->
 <div class="stats-row">
-    <a class="stat-box" href="{% url 'core:documents' %}?status=all">
+    <a class="stat-box {% if current_status == 'all' %}active{% endif %}" href="{% url 'core:documents' %}?status=all">
         <div class="stat-box-icon"><i data-lucide="file-text" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.total }}</p>
             <p class="stat-box-label">{% trans 'Total documents' %}</p>
         </div>
     </a>
-    <a class="stat-box red" href="{% url 'core:documents' %}?status=a_signer">
+    <a class="stat-box red {% if current_status == 'a_signer' %}active{% endif %}" href="{% url 'core:documents' %}?status=a_signer">
         <div class="stat-box-icon"><i data-lucide="pen-line" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.a_signer }}</p>
             <p class="stat-box-label">{% trans 'À signer' %}</p>
         </div>
     </a>
-    <a class="stat-box amber" href="{% url 'core:documents' %}?status=a_valider">
+    <a class="stat-box amber {% if current_status == 'a_valider' %}active{% endif %}" href="{% url 'core:documents' %}?status=a_valider">
         <div class="stat-box-icon"><i data-lucide="clock" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.a_valider }}</p>
             <p class="stat-box-label">{% trans 'À valider' %}</p>
         </div>
     </a>
-    <a class="stat-box green" href="{% url 'core:documents' %}?status=signe">
+    <a class="stat-box green {% if current_status == 'signe' %}active{% endif %}" href="{% url 'core:documents' %}?status=signe">
         <div class="stat-box-icon"><i data-lucide="file-check" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.signe }}</p>

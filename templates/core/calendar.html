@@ -10,13 +10,13 @@
 
 <!-- Stats Row -->
 <div class="stats-row">
-    <a class="stat-box blue" href="{% url 'core:calendar' %}">
+    <div class="stat-box blue stat-box-static">
         <div class="stat-box-icon"><i data-lucide="video" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.reunions }}</p>
             <p class="stat-box-label">{% trans 'Réunions ce mois' %}</p>
         </div>
-    </a>
+    </div>
     <a class="stat-box green" href="{% url 'core:calendar' %}#upcoming">
         <div class="stat-box-icon"><i data-lucide="calendar" width="20" height="20"></i></div>
         <div class="stat-box-body">
@@ -31,12 +31,19 @@
             <p class="stat-box-label">{% trans 'Deadlines' %}</p>
         </div>
     </a>
-    <a class="stat-box amber" href="{% url 'core:calendar' %}">
+    <div class="stat-box amber stat-box-static">
         <div class="stat-box-icon"><i data-lucide="calendar-days" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.total }}</p>
             <p class="stat-box-label">{% trans 'Total ce mois' %}</p>
         </div>
+    </div>
+</div>
+
+<div class="flex justify-end mb-4">
+    <a href="{% url 'core:event_create' %}" class="btn btn-primary">
+        <i data-lucide="plus-circle" width="16" height="16"></i>
+        {% trans 'Nouvel événement' %}
     </a>
 </div>
 
@@ -56,10 +63,6 @@
                         </a>
                     </div>
                 </div>
-                <a href="{% url 'core:event_create' %}" class="btn btn-primary">
-                    <i data-lucide="plus-circle" width="16" height="16" ></i>
-                    {% trans 'Nouvel événement' %}
-                </a>
             </div>
             <div class="card-content">
                 <!-- Days header -->

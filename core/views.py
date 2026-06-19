@@ -666,12 +666,25 @@ def resources(request):
     if profile.role_slug == 'directeur' and profile.direction_id:
         employees = employees.filter(direction_id=profile.direction_id)
     elif profile.role_slug not in ['admin', 'directeur_general'] and not profile.can_view_all_budget_directions():
-        # Autres roles : limites a leur direction si definie
         if profile.direction_id:
             employees = employees.filter(direction_id=profile.direction_id)
+
+    # Stats globales calculées avant les filtres de recherche
     avg_workload = employees.aggregate(avg=Avg('workload'))['avg'] or 0
     overloaded = employees.filter(workload__gte=85).count()
-    
+    employees_count = employees.count()
+
+    # Filtres de recherche RH (n'affectent que la liste, pas les stats)
+    rh_search  = request.GET.get('search', '').strip()
+    rh_dir     = request.GET.get('dir', '').strip()
+    rh_workload = request.GET.get('workload', '').strip()
+    if rh_search:
+        employees = employees.filter(name__icontains=rh_search)
+    if rh_dir:
+        employees = employees.filter(direction_id=rh_dir)
+    if rh_workload == 'surcharge':
+        employees = employees.filter(workload__gte=85)
+
     directions = Direction.objects.all()
     
     # Employees linked to a user account (for badge display in template)
@@ -690,10 +703,14 @@ def resources(request):
         'can_manage_budgets': can_manage_budgets,
         'can_view_all_budget_directions': can_view_all_budget_directions,
         'employees': employees,
+        'employees_count': employees_count,
         'avg_workload': round(avg_workload),
         'overloaded': overloaded,
         'directions': directions,
         'employees_with_profile': employees_with_profile,
+        'rh_search': rh_search,
+        'rh_dir': rh_dir,
+        'rh_workload': rh_workload,
     }
     return render(request, 'core/resources.html', context)
 
@@ -1375,12 +1392,19 @@ def directions_list(request):
         return redirect('core:dashboard')
     
     directions = Direction.objects.annotate(
-        projects_count=Count('projects'),
-        users_count=Count('users')
+        projects_count=Count('projects', distinct=True),
+        users_count=Count('users', distinct=True)
     ).order_by('name')
-    
+
+    totals = directions.aggregate(
+        total_projects=Sum('projects_count'),
+        total_users=Sum('users_count'),
+    )
+
     context = {
         'directions': directions,
+        'total_projects': totals['total_projects'] or 0,
+        'total_users': totals['total_users'] or 0,
     }
     return render(request, 'core/directions_list.html', context)
 
@@ -1956,9 +1980,37 @@ def project_detail(request, project_id):
             'direction': emp.direction.code if emp.direction else '',
             'task_count': task_info['total'],
             'task_done': task_info['done'],
+            'task_remaining': task_info['total'] - task_info['done'],
             'initials': initials,
             'color': _AVATAR_COLORS[sum(ord(c) for c in emp.name) % len(_AVATAR_COLORS)],
         })
+
+    # Dashboard stats
+    from datetime import date, timedelta
+    _today = date.today()
+    _ml = list(milestones_qs)
+    _sc = {}
+    _en_retard = 0
+    for _m in _ml:
+        _key = 'termine' if _m.completed else _m.status
+        _sc[_key] = _sc.get(_key, 0) + 1
+        if not _m.completed and _m.due_date and _m.due_date < _today:
+            _en_retard += 1
+    dashboard_stats = {
+        'total': len(_ml),
+        'termine': _sc.get('termine', 0),
+        'en_cours': _sc.get('en_cours', 0),
+        'bloque': _sc.get('bloque', 0),
+        'en_revision': _sc.get('en_revision', 0),
+        'a_faire': _sc.get('a_faire', 0),
+        'en_retard': _en_retard,
+    }
+    overdue_milestones = [m for m in _ml if not m.completed and m.due_date and m.due_date < _today]
+    upcoming_milestones = sorted(
+        [m for m in _ml if not m.completed and m.due_date and _today <= m.due_date <= _today + timedelta(days=14)],
+        key=lambda m: m.due_date,
+    )
+    open_needs_count = project.needs.filter(status='ouvert').count()
 
     context = {
         'project': project,
@@ -1977,6 +2029,10 @@ def project_detail(request, project_id):
         'user_employee': user_employee,
         'member_task_stats': member_task_stats,
         'members_cards': members_cards,
+        'dashboard_stats': dashboard_stats,
+        'overdue_milestones': overdue_milestones,
+        'upcoming_milestones': upcoming_milestones,
+        'open_needs_count': open_needs_count,
     }
     return render(request, 'core/project_detail.html', context)
 
@@ -2784,7 +2840,27 @@ def my_tasks(request):
         )
 
     task_groups = sorted(by_project.values(), key=lambda e: e['project'].name)
-    return render(request, 'core/my_tasks.html', {'task_groups': task_groups, 'user_employee': user_employee})
+
+    from datetime import date as _date
+    today = _date.today()
+    total_tasks = sum(e['total'] for e in by_project.values())
+    tasks_done  = sum(e['done']  for e in by_project.values())
+    tasks_overdue = sum(
+        1 for e in by_project.values()
+        for item in e['milestones']
+        if not item['completed'] and item['due_date'] and item['due_date'] < today
+    )
+
+    return render(request, 'core/my_tasks.html', {
+        'task_groups': task_groups,
+        'user_employee': user_employee,
+        'task_stats': {
+            'total': total_tasks,
+            'done': tasks_done,
+            'pending': total_tasks - tasks_done - tasks_overdue,
+            'overdue': tasks_overdue,
+        },
+    })
 
 
 @login_required

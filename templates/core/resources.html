@@ -22,34 +22,34 @@
 {% if tab == 'budget' %}
 <!-- Budget Stats -->
 <div class="stats-row">
-    <a class="stat-box" href="{% url 'core:resources' %}?tab=budget">
+    <div class="stat-box stat-box-static">
         <div class="stat-box-icon"><i data-lucide="wallet" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ total_allocated|number_format }}</p>
             <p class="stat-box-label">{% trans 'Budget total (GNF)' %}</p>
         </div>
-    </a>
-    <a class="stat-box amber" href="{% url 'core:resources' %}?tab=budget">
+    </div>
+    <div class="stat-box amber stat-box-static">
         <div class="stat-box-icon"><i data-lucide="trending-up" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ total_consumed|number_format }}</p>
             <p class="stat-box-label">{% trans 'Consommé (GNF)' %}</p>
         </div>
-    </a>
-    <a class="stat-box green" href="{% url 'core:resources' %}?tab=budget">
+    </div>
+    <div class="stat-box green stat-box-static">
         <div class="stat-box-icon"><i data-lucide="circle-dollar-sign" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ total_available|number_format }}</p>
             <p class="stat-box-label">{% trans 'Disponible (GNF)' %}</p>
         </div>
-    </a>
-    <a class="stat-box blue" href="{% url 'core:resources' %}?tab=budget">
+    </div>
+    <div class="stat-box blue stat-box-static">
         <div class="stat-box-icon"><i data-lucide="percent" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ consumption_rate }}%</p>
             <p class="stat-box-label">{% trans 'Taux de consommation' %}</p>
         </div>
-    </a>
+    </div>
 </div>
 
 <!-- Budget Charts -->
@@ -183,53 +183,71 @@
 {% else %}
 <!-- HR Stats -->
 <div class="stats-row">
-    <a class="stat-box" href="{% url 'core:resources' %}?tab=rh">
+    <a class="stat-box {% if not rh_workload %}active{% endif %}" href="?tab=rh">
         <div class="stat-box-icon"><i data-lucide="users" width="20" height="20"></i></div>
         <div class="stat-box-body">
-            <p class="stat-box-value">{{ employees.count }}</p>
+            <p class="stat-box-value">{{ employees_count }}</p>
             <p class="stat-box-label">{% trans 'Effectif total' %}</p>
         </div>
     </a>
-    <a class="stat-box blue" href="{% url 'core:resources' %}?tab=rh">
+    <div class="stat-box blue stat-box-static">
         <div class="stat-box-icon"><i data-lucide="bar-chart-2" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ avg_workload }}%</p>
             <p class="stat-box-label">{% trans 'Charge moyenne' %}</p>
         </div>
-    </a>
-    <a class="stat-box amber" href="{% url 'core:resources' %}?tab=rh">
+    </div>
+    <a class="stat-box amber {% if rh_workload == 'surcharge' %}active{% endif %}" href="?tab=rh&workload=surcharge">
         <div class="stat-box-icon"><i data-lucide="alert-circle" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ overloaded }}</p>
             <p class="stat-box-label">{% trans 'En surcharge' %}</p>
         </div>
     </a>
-    <a class="stat-box green" href="{% url 'core:resources' %}?tab=rh">
+    <div class="stat-box green stat-box-static">
         <div class="stat-box-icon"><i data-lucide="building-2" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ directions.count }}</p>
             <p class="stat-box-label">{% trans 'Directions' %}</p>
         </div>
-    </a>
+    </div>
 </div>
 
-<!-- Employees Header -->
-<div class="flex justify-between items-center mb-4">
-    <h3 class="text-lg font-semibold">{% trans 'Liste des employés' %}</h3>
+<!-- Employees Header + Filtres -->
+<div class="flex justify-between items-center mb-3" style="flex-wrap:wrap;gap:12px;">
+    <form method="get" class="filters-bar" style="margin-bottom:0;flex:1;">
+        <input type="hidden" name="tab" value="rh">
+        {% if rh_workload %}<input type="hidden" name="workload" value="{{ rh_workload }}">{% endif %}
+        <input type="text" name="search" value="{{ rh_search }}"
+               placeholder="{% trans 'Rechercher un employé...' %}"
+               style="height:36px;padding:0 12px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;min-width:220px;">
+        <select name="dir" onchange="this.form.submit()"
+                style="height:36px;padding:0 10px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;color:#374151;background:white;cursor:pointer;">
+            <option value="">{% trans 'Toutes les directions' %}</option>
+            {% for dir in directions %}
+            <option value="{{ dir.id }}" {% if rh_dir == dir.id|stringformat:"s" %}selected{% endif %}>{{ dir.code }} — {{ dir.name }}</option>
+            {% endfor %}
+        </select>
+        {% if rh_search or rh_dir %}
+        <a href="?tab=rh" class="btn btn-outline btn-sm" style="color:#6b7280;">
+            <i data-lucide="x" width="14" height="14"></i>
+        </a>
+        {% endif %}
+    </form>
     <div class="flex gap-2">
         <a href="{% url 'core:export_employees_pdf' %}" class="btn btn-outline btn-sm">
-            <i data-lucide="file-down" width="16" height="16" ></i>
+            <i data-lucide="file-down" width="16" height="16"></i>
             {% trans 'Exporter PDF' %}
         </a>
         <a href="{% url 'core:employee_create' %}" class="btn btn-primary">
-            <i data-lucide="plus-circle" width="16" height="16" ></i>
+            <i data-lucide="plus-circle" width="16" height="16"></i>
             {% trans 'Nouvel employé' %}
         </a>
     </div>
 </div>
 
 <!-- Employees Grid -->
-<div class="grid grid-3">
+<div class="grid grid-3" style="margin-top:20px;">
     {% for employee in employees %}
     <div class="employee-card {% if employee.workload >= 85 %}workload-high{% elif employee.workload >= 70 %}workload-medium{% else %}workload-low{% endif %}" data-href="{% url 'core:employee_edit' employee.id %}">
 

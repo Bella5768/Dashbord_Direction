@@ -7,34 +7,55 @@
 
 {% block content %}
 
-<!-- Stats -->
-<div class="stats-row mb-4">
-    <div class="stat-box indigo">
+<div style="background:linear-gradient(135deg,#1c3550 0%,#2a4a6f 60%,#3b82f6 100%);color:white;border-radius:14px;padding:24px 30px;margin-bottom:24px;position:relative;overflow:hidden;">
+    <div style="position:absolute;right:-40px;top:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(255,255,255,.15),transparent 70%);border-radius:50%;pointer-events:none;"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;position:relative;z-index:1;">
+        <div>
+            <h2 style="margin:0;font-size:20px;font-weight:700;">{% trans 'Rôles & Permissions' %}</h2>
+            <p style="margin:6px 0 0;opacity:.85;font-size:13px;">{% trans "Gérez les rôles globaux et les permissions associées à chaque profil." %}</p>
+        </div>
+        <div style="display:flex;gap:10px;">
+            <a href="{% url 'core:project_roles_list' %}" class="btn" style="background:rgba(255,255,255,.15);color:white;border:1px solid rgba(255,255,255,.3);font-weight:600;">
+                <i data-lucide="folder" width="16" height="16"></i>
+                {% trans "Rôles projet" %}
+            </a>
+            <a href="{% url 'core:role_create' %}" class="btn" style="background:white;color:#1c3550;font-weight:700;border:none;box-shadow:0 4px 12px rgba(0,0,0,.15);">
+                <i data-lucide="plus-circle" width="16" height="16"></i>
+                {% trans "Nouveau rôle" %}
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="stats-row">
+    <div class="stat-box indigo stat-box-static">
         <div class="stat-box-icon"><i data-lucide="shield-check" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ roles|length }}</p>
             <p class="stat-box-label">{% trans "Rôles globaux" %}</p>
         </div>
     </div>
-    <div class="stat-box">
+    <div class="stat-box stat-box-static">
         <div class="stat-box-icon"><i data-lucide="key-round" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ permission_count }}</p>
             <p class="stat-box-label">{% trans "Permissions" %}</p>
         </div>
     </div>
-</div>
-
-<!-- Barre d'actions -->
-<div class="flex justify-between items-center mb-6">
-    <a href="{% url 'core:project_roles_list' %}" class="btn btn-outline">
-        <i data-lucide="folder" width="16" height="16"></i>
-        {% trans "Rôles projet" %}
-    </a>
-    <a href="{% url 'core:role_create' %}" class="btn btn-primary">
-        <i data-lucide="plus" width="16" height="16"></i>
-        {% trans "Nouveau rôle" %}
-    </a>
+    <div class="stat-box blue stat-box-static">
+        <div class="stat-box-icon"><i data-lucide="lock" width="20" height="20"></i></div>
+        <div class="stat-box-body">
+            <p class="stat-box-value">{{ system_roles_count }}</p>
+            <p class="stat-box-label">{% trans "Rôles système" %}</p>
+        </div>
+    </div>
+    <div class="stat-box green stat-box-static">
+        <div class="stat-box-icon"><i data-lucide="sliders-horizontal" width="20" height="20"></i></div>
+        <div class="stat-box-body">
+            <p class="stat-box-value">{{ custom_roles_count }}</p>
+            <p class="stat-box-label">{% trans "Rôles personnalisés" %}</p>
+        </div>
+    </div>
 </div>
 
 <!-- Grille de cartes -->

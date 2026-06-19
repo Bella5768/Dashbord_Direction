@@ -36,7 +36,7 @@
         <aside class="sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-logo">
-                    <img src="{% static 'logocsig.jpg' %}" alt="CSIG" style="width: 36px; height: 36px; border-radius: 8px; object-fit: cover;">
+                    <img src="{% static 'logocsig.jpg' %}" alt="CSIG">
                 </div>
                 <div class="sidebar-title">
                     <h1>CSIG</h1>
@@ -45,177 +45,118 @@
             </div>
 
             <nav class="sidebar-nav">
-                <ul>
-                    <!-- Tableau de bord - Visible par tous -->
+
+                <!-- Groupe : Principal -->
+                <ul class="sidebar-group">
                     <li>
                         <a href="{% url 'core:dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>
-                            <i data-lucide="layout-dashboard" ></i>
-                            {% trans 'Tableau de bord' %}
+                            <i data-lucide="layout-dashboard"></i>{% trans 'Tableau de bord' %}
                         </a>
                     </li>
-                    
-                    <!-- Projets - Employés et plus -->
                     {% if user.profile.can_manage_projects or user.profile.employee %}
                     <li>
                         <a href="{% url 'core:projects' %}" {% if request.resolver_match.url_name == 'projects' %}class="active"{% endif %}>
-                            <i data-lucide="folder" ></i>
-                            {% trans 'Projets' %}
+                            <i data-lucide="folder"></i>{% trans 'Projets' %}
                         </a>
                     </li>
                     {% endif %}
-                    
-                    <!-- Ressources - Directeurs et plus -->
-                    {% if user.profile.can_manage_budgets %}
-                    <li>
-                        <a href="{% url 'core:resources' %}" {% if request.resolver_match.url_name == 'resources' %}class="active"{% endif %}>
-                            <i data-lucide="credit-card" ></i>
-                            {% trans 'Ressources' %}
-                        </a>
-                    </li>
-                    {% endif %}
-                    
-                    <!-- Demandes - DG et Admin seulement -->
-                    {% if user.profile.can_approve_requests %}
-                    <li>
-                        <a href="{% url 'core:requests' %}" {% if request.resolver_match.url_name == 'requests' %}class="active"{% endif %}>
-                            <i data-lucide="message-square" ></i>
-                            {% trans 'Demandes' %}
-                        </a>
-                    </li>
-                    {% endif %}
-                    
-                    <!-- Mes tâches - Visible si l'utilisateur est lié à un employé -->
                     {% if user.profile.employee %}
                     <li>
                         <a href="{% url 'core:my_tasks' %}" {% if request.resolver_match.url_name == 'my_tasks' %}class="active"{% endif %}>
-                            <i data-lucide="clipboard-check" ></i>
-                            {% trans 'Mes tâches' %}
+                            <i data-lucide="clipboard-check"></i>{% trans 'Mes tâches' %}
                         </a>
                     </li>
                     {% endif %}
-
-                    <!-- Calendrier - Visible par tous -->
                     <li>
                         <a href="{% url 'core:calendar' %}" {% if request.resolver_match.url_name == 'calendar' %}class="active"{% endif %}>
-                            <i data-lucide="calendar" ></i>
-                            {% trans 'Calendrier' %}
+                            <i data-lucide="calendar"></i>{% trans 'Calendrier' %}
                         </a>
                     </li>
-
-                    <!-- Conges - Visible par tous les utilisateurs authentifies -->
                     <li>
                         <a href="{% url 'core:leave_list' %}" {% if 'conges' in request.path %}class="active"{% endif %}>
-                            <i data-lucide="file-text" ></i>
-                            {% trans 'Congés' %}
+                            <i data-lucide="plane"></i>{% trans 'Congés' %}
                         </a>
                     </li>
-                    
-                    <!-- Rapports - Directeur Général uniquement -->
-                    {% if user.profile.is_directeur_general or user.is_staff %}
+                </ul>
+
+                <!-- Groupe : Gestion -->
+                {% if user.profile.can_manage_budgets or user.profile.can_approve_requests or user.profile.is_directeur or user.profile.can_manage_partners or user.profile.is_directeur_general or user.is_staff %}
+                <p class="sidebar-section-label">{% trans 'Gestion' %}</p>
+                <ul class="sidebar-group">
+                    {% if user.profile.can_manage_budgets %}
                     <li>
-                        <a href="{% url 'core:reports' %}" {% if request.resolver_match.url_name == 'reports' %}class="active"{% endif %}>
-                            <i data-lucide="bar-chart-2" ></i>
-                            {% trans 'Rapports' %}
+                        <a href="{% url 'core:resources' %}" {% if request.resolver_match.url_name == 'resources' %}class="active"{% endif %}>
+                            <i data-lucide="credit-card"></i>{% trans 'Ressources' %}
                         </a>
                     </li>
                     {% endif %}
-                    
-                    <!-- Documents - Directeurs et plus -->
+                    {% if user.profile.can_approve_requests %}
+                    <li>
+                        <a href="{% url 'core:requests' %}" {% if request.resolver_match.url_name == 'requests' %}class="active"{% endif %}>
+                            <i data-lucide="message-square"></i>{% trans 'Demandes' %}
+                        </a>
+                    </li>
+                    {% endif %}
                     {% if user.profile.is_directeur %}
                     <li>
                         <a href="{% url 'core:documents' %}" {% if request.resolver_match.url_name == 'documents' %}class="active"{% endif %}>
-                            <i data-lucide="file-text" ></i>
-                            {% trans 'Documents' %}
+                            <i data-lucide="file-text"></i>{% trans 'Documents' %}
                         </a>
                     </li>
                     {% endif %}
-
-                    <!-- Partenaires - Directeurs et plus -->
                     {% if user.profile.can_manage_partners %}
                     <li>
                         <a href="{% url 'core:partners' %}" {% if request.resolver_match.url_name == 'partners' %}class="active"{% endif %}>
-                            <i data-lucide="users" ></i>
-                            {% trans 'Partenaires' %}
+                            <i data-lucide="handshake"></i>{% trans 'Partenaires' %}
                         </a>
                     </li>
                     {% endif %}
-                    
-                    <!-- Gestion des utilisateurs - Admin et DG -->
+                    {% if user.profile.is_directeur_general or user.is_staff %}
+                    <li>
+                        <a href="{% url 'core:reports' %}" {% if request.resolver_match.url_name == 'reports' %}class="active"{% endif %}>
+                            <i data-lucide="bar-chart-2"></i>{% trans 'Rapports' %}
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+                {% endif %}
+
+                <!-- Groupe : Administration -->
+                {% if user.profile.can_manage_users or user.profile.is_directeur_general or user.is_staff %}
+                <p class="sidebar-section-label">{% trans 'Administration' %}</p>
+                <ul class="sidebar-group">
                     {% if user.profile.can_manage_users %}
-                    <li style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <li>
                         <a href="{% url 'core:users_list' %}" {% if 'users' in request.path %}class="active"{% endif %}>
-                            <i data-lucide="user-cog" ></i>
-                            {% trans 'Utilisateurs' %}
+                            <i data-lucide="user-cog"></i>{% trans 'Utilisateurs' %}
                         </a>
                     </li>
                     {% endif %}
-                    
-                    <!-- Gestion des directions - Admin et DG -->
                     {% if user.profile.is_directeur_general or user.is_staff %}
                     <li>
                         <a href="{% url 'core:directions_list' %}" {% if 'directions' in request.path %}class="active"{% endif %}>
-                            <i data-lucide="building-2" ></i>
-                            {% trans 'Directions' %}
+                            <i data-lucide="building-2"></i>{% trans 'Directions' %}
                         </a>
                     </li>
                     {% endif %}
-                    
-                    <!-- Rôles & Permissions - Admin et DG -->
                     {% if user.profile.can_manage_users %}
                     <li>
                         <a href="{% url 'core:roles_list' %}" {% if 'roles' in request.path %}class="active"{% endif %}>
-                            <i data-lucide="shield-check" ></i>
-                            {% trans 'Rôles' %}
+                            <i data-lucide="shield-check"></i>{% trans 'Rôles' %}
                         </a>
                     </li>
                     {% endif %}
-
-                    <!-- Administration - Admin seulement -->
                     {% if user.profile.is_admin or user.is_superuser %}
                     <li>
                         <a href="/admin/" target="_blank">
-                            <i data-lucide="settings" ></i>
-                            {% trans 'Administration' %}
+                            <i data-lucide="settings"></i>{% trans 'Administration' %}
                         </a>
                     </li>
                     {% endif %}
-
                 </ul>
+                {% endif %}
+
             </nav>
-<div class="sidebar-copyright" style="padding: 8px 16px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1);">
-                <p style="font-size: 11px; color: rgba(255,255,255,0.5); margin: 0;">&copy; {% now "Y" %} {% trans 'CSIG' %} - {% trans 'Tous droits réservés' %}</p>
-            </div>
-            <div class="sidebar-footer">
-                <div class="sidebar-user">
-                    <div class="sidebar-avatar">
-                        {% if user.is_authenticated and user.profile %}
-                            {{ user.profile.get_initials }}
-                        {% else %}
-                            DG
-                        {% endif %}
-                    </div>
-                    <div class="sidebar-user-info">
-                        {% if user.is_authenticated %}
-                            <p>{{ user.get_full_name|default:user.username }}</p>
-                            <span>{{ user.profile.get_role_display|default:"Utilisateur" }}</span>
-                        {% else %}
-                            <p>{% trans 'Non connecté' %}</p>
-                            <span>-</span>
-                        {% endif %}
-                    </div>
-                    {% if user.is_authenticated %}
-                    <a href="{% url 'core:profile' %}" class="sidebar-logout" title="{% trans 'Mon profil' %}" style="display:inline-flex;align-items:center;color:inherit;margin-right:4px;">
-                        <i data-lucide="user-round" width="18" height="18" ></i>
-                    </a>
-                    <form method="post" action="{% url 'core:logout' %}" style="display:inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="sidebar-logout" title="{% trans 'Déconnexion' %}" style="background:none;border:none;padding:0;cursor:pointer;">
-                            <i data-lucide="log-out" width="20" height="20" ></i>
-                        </button>
-                    </form>
-                    {% endif %}
-                </div>
-            </div>
         </aside>
 
         <!-- Main Content -->
@@ -264,6 +205,43 @@
                             document.getElementById('header-date').textContent = txt;
                         })();
                     </script>
+                    {% if user.is_authenticated %}
+                    <div class="topbar-divider"></div>
+                    <div class="topbar-user" id="topbar-user-widget">
+                        <div class="topbar-avatar">
+                            {% if user.profile %}{{ user.profile.get_initials }}{% else %}{{ user.username|slice:":2"|upper }}{% endif %}
+                        </div>
+                        <div class="topbar-user-info">
+                            <span class="topbar-user-name">{{ user.get_full_name|default:user.username }}</span>
+                            <span class="topbar-user-role">{{ user.profile.get_role_display|default:"Utilisateur" }}</span>
+                        </div>
+                        <i data-lucide="chevron-down" class="topbar-user-chevron" width="14" height="14"></i>
+                        <div class="topbar-user-menu" id="topbar-user-menu">
+                            <div class="topbar-user-menu-header">
+                                <div class="topbar-avatar topbar-avatar-lg">
+                                    {% if user.profile %}{{ user.profile.get_initials }}{% else %}{{ user.username|slice:":2"|upper }}{% endif %}
+                                </div>
+                                <div>
+                                    <p class="topbar-menu-name">{{ user.get_full_name|default:user.username }}</p>
+                                    <p class="topbar-menu-role">{{ user.profile.get_role_display|default:"Utilisateur" }}</p>
+                                </div>
+                            </div>
+                            <div class="topbar-user-menu-body">
+                                <a href="{% url 'core:profile' %}" class="topbar-menu-item">
+                                    <i data-lucide="user-round" width="15" height="15"></i>
+                                    {% trans "Mon profil" %}
+                                </a>
+                                <form method="post" action="{% url 'core:logout' %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="topbar-menu-item topbar-menu-logout">
+                                        <i data-lucide="log-out" width="15" height="15"></i>
+                                        {% trans "Déconnexion" %}
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </header>
 
@@ -539,12 +517,24 @@
     (function(){
       var btn  = document.getElementById('lang-btn');
       var menu = document.getElementById('lang-menu');
-      if(!btn || !menu) return;
-      btn.addEventListener('click', function(e){
-        e.stopPropagation();
-        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+      if(btn && menu){
+        btn.addEventListener('click', function(e){
+          e.stopPropagation();
+          menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        });
+      }
+      var userWidget = document.getElementById('topbar-user-widget');
+      var userMenu   = document.getElementById('topbar-user-menu');
+      if(userWidget && userMenu){
+        userWidget.addEventListener('click', function(e){
+          e.stopPropagation();
+          var open = userWidget.classList.toggle('open');
+        });
+      }
+      document.addEventListener('click', function(){
+        if(menu) menu.style.display = 'none';
+        if(userWidget) userWidget.classList.remove('open');
       });
-      document.addEventListener('click', function(){ if(menu) menu.style.display = 'none'; });
     })();
     </script>
 </body>

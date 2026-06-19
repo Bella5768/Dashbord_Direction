@@ -4767,3 +4767,63 @@ msgstr "View details of"
 
 msgid "Tout décocher"
 msgstr "Uncheck all"
+
+msgid "Voir l'équipe complète"
+msgstr "View full team"
+
+msgid "Charge équipe"
+msgstr "Team workload"
+
+msgid "Terminées"
+msgstr "Completed"
+
+msgid "Voir les besoins"
+msgstr "View needs"
+
+msgid "Restantes"
+msgstr "Remaining"
+
+msgid "besoin ouvert"
+msgstr "open need"
+
+msgid "Bloqués"
+msgstr "Blocked"
+
+msgid "Aucun besoin ouvert"
+msgstr "No open needs"
+
+msgid "avancement"
+msgstr "progress"
+
+msgid "Aucun retard — bonne cadence !"
+msgstr "No delays — great pace!"
+
+msgid "Tout voir"
+msgstr "View all"
+
+msgid "Jalons total"
+msgstr "Total milestones"
+
+msgid "Activité récente"
+msgstr "Recent activity"
+
+msgid "Statut des jalons"
+msgstr "Milestone status"
+
+msgid "Prochaines échéances"
+msgstr "Upcoming deadlines"
+
+msgid "14 jours"
+msgstr "14 days"
+
+msgid "Jalons en retard"
+msgstr "Overdue milestones"
+
+msgid "Aucune échéance dans les 14 prochains jours."
+msgstr "No deadlines in the next 14 days."
+
+msgid "de plus"
+msgstr "more"
+
+msgid "Voir les jalons"
+msgstr "View milestones"

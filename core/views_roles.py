@@ -38,6 +38,8 @@ def roles_list(request):
         'roles': roles,
         'subjects': subjects,
         'permission_count': permissions.count(),
+        'system_roles_count': roles.filter(is_system=True).count(),
+        'custom_roles_count': roles.filter(is_system=False).count(),
     }
     return render(request, 'core/roles/roles_list.html', context)
 

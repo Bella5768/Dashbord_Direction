@@ -8,21 +8,21 @@
 {% block content %}
 <!-- Stats -->
 <div class="stats-row">
-    <a class="stat-box" href="{% url 'core:partners' %}?status=all&type=all">
+    <a class="stat-box {% if current_status == 'all' or not current_status %}active{% endif %}" href="{% url 'core:partners' %}?status=all&type=all">
         <div class="stat-box-icon"><i data-lucide="handshake" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.total }}</p>
             <p class="stat-box-label">{% trans 'Total partenaires' %}</p>
         </div>
     </a>
-    <a class="stat-box green" href="{% url 'core:partners' %}?status=actif&type=all">
+    <a class="stat-box green {% if current_status == 'actif' %}active{% endif %}" href="{% url 'core:partners' %}?status=actif&type=all">
         <div class="stat-box-icon"><i data-lucide="circle-check" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.actif }}</p>
             <p class="stat-box-label">{% trans 'Partenariats actifs' %}</p>
         </div>
     </a>
-    <a class="stat-box amber" href="{% url 'core:partners' %}?status=en_discussion&type=all">
+    <a class="stat-box amber {% if current_status == 'en_discussion' %}active{% endif %}" href="{% url 'core:partners' %}?status=en_discussion&type=all">
         <div class="stat-box-icon"><i data-lucide="message-circle" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.en_discussion }}</p>
@@ -38,33 +38,33 @@
     </a>
 </div>
 
-<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+<!-- Filters - full width, above the grid -->
+<form method="get" class="filters-bar" style="margin-bottom:16px;">
+    <div class="search-box">
+        <i data-lucide="search"></i>
+        <input type="text" name="search" placeholder="{% trans 'Rechercher un partenaire...' %}" value="{{ search }}" class="form-control">
+    </div>
+    <select name="type" class="form-control" onchange="this.form.submit()">
+        <option value="all" {% if current_type == 'all' %}selected{% endif %}>{% trans 'Tous les types' %}</option>
+        <option value="entreprise" {% if current_type == 'entreprise' %}selected{% endif %}>{% trans 'Entreprise' %}</option>
+        <option value="universite" {% if current_type == 'universite' %}selected{% endif %}>{% trans 'Université' %}</option>
+        <option value="institution" {% if current_type == 'institution' %}selected{% endif %}>{% trans 'Institution' %}</option>
+        <option value="ong" {% if current_type == 'ong' %}selected{% endif %}>{% trans 'ONG' %}</option>
+    </select>
+    <select name="status" class="form-control" onchange="this.form.submit()">
+        <option value="all" {% if current_status == 'all' %}selected{% endif %}>{% trans 'Tous les statuts' %}</option>
+        <option value="actif" {% if current_status == 'actif' %}selected{% endif %}>{% trans 'Actif' %}</option>
+        <option value="en_discussion" {% if current_status == 'en_discussion' %}selected{% endif %}>{% trans 'En discussion' %}</option>
+    </select>
+    <a href="{% url 'core:partner_create' %}" class="btn btn-primary" style="margin-left:auto;flex-shrink:0;">
+        <i data-lucide="plus-circle" width="16" height="16"></i>
+        {% trans 'Nouveau partenaire' %}
+    </a>
+</form>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: start;">
     <!-- Partners List -->
     <div>
-        <!-- Filters -->
-        <form method="get" class="filters-bar">
-            <div class="search-box">
-                <i data-lucide="search" ></i>
-                <input type="text" name="search" placeholder="{% trans 'Rechercher un partenaire...' %}" value="{{ search }}" class="form-control">
-            </div>
-            <select name="type" class="form-control" onchange="this.form.submit()">
-                <option value="all" {% if current_type == 'all' %}selected{% endif %}>{% trans 'Tous les types' %}</option>
-                <option value="entreprise" {% if current_type == 'entreprise' %}selected{% endif %}>{% trans 'Entreprise' %}</option>
-                <option value="universite" {% if current_type == 'universite' %}selected{% endif %}>{% trans 'Université' %}</option>
-                <option value="institution" {% if current_type == 'institution' %}selected{% endif %}>{% trans 'Institution' %}</option>
-                <option value="ong" {% if current_type == 'ong' %}selected{% endif %}>{% trans 'ONG' %}</option>
-            </select>
-            <select name="status" class="form-control" onchange="this.form.submit()">
-                <option value="all" {% if current_status == 'all' %}selected{% endif %}>{% trans 'Tous les statuts' %}</option>
-                <option value="actif" {% if current_status == 'actif' %}selected{% endif %}>{% trans 'Actif' %}</option>
-                <option value="en_discussion" {% if current_status == 'en_discussion' %}selected{% endif %}>{% trans 'En discussion' %}</option>
-            </select>
-            <a href="{% url 'core:partner_create' %}" class="btn btn-primary">
-                <i data-lucide="plus-circle" width="16" height="16" ></i>
-                {% trans 'Nouveau' %}
-            </a>
-        </form>
-        
         <!-- Partners Grid -->
         <div class="grid grid-2">
             {% for partner in partners %}
@@ -133,54 +133,54 @@
             {% endfor %}
         </div>
     </div>
-    
+
     <!-- Sidebar -->
     <div>
         <!-- Upcoming Events -->
         <div class="card mb-6">
-            <div class="card-header">
-                <h3 class="card-title flex items-center gap-2">
-                    <i data-lucide="calendar" width="20" height="20" ></i>
+            <div class="card-header" style="padding:14px 16px;">
+                <h3 class="card-title flex items-center gap-2" style="font-size:14px;">
+                    <i data-lucide="calendar" width="16" height="16"></i>
                     {% trans 'Événements à venir' %}
                 </h3>
             </div>
-            <div class="card-content">
-                <div class="item-list">
+            <div class="card-content" style="padding:12px;">
+                <div class="item-list" style="gap:8px;">
                     {% for event in upcoming_events %}
-                    <div class="event-item">
-                        <div class="event-date-box" style="background-color: #dcfce7;">
-                            <span class="event-date-month" style="color: #16a34a;">{{ event.date|date:"M" }}</span>
-                            <span class="event-date-day" style="color: #15803d;">{{ event.date|date:"d" }}</span>
+                    <div class="event-item" style="gap:10px;padding:10px;">
+                        <div class="event-date-box" style="background-color:#dcfce7;min-width:44px;padding:6px;">
+                            <span class="event-date-month" style="color:#16a34a;font-size:10px;">{{ event.date|date:"M" }}</span>
+                            <span class="event-date-day" style="color:#15803d;font-size:16px;">{{ event.date|date:"d" }}</span>
                         </div>
                         <div class="event-info">
-                            <h4 class="event-title" style="font-size: 14px;">{{ event.title }}</h4>
-                            <p class="text-xs text-gray-500 mt-1">{{ event.description }}</p>
-                            <div class="event-meta">
-                                <span class="event-meta-item">
-                                    <i data-lucide="user-cog" ></i>
+                            <h4 class="event-title" style="font-size:13px;">{{ event.title }}</h4>
+                            <p class="text-xs text-gray-500 mt-1" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ event.description }}</p>
+                            <div class="event-meta" style="margin-top:4px;">
+                                <span class="event-meta-item" style="font-size:11px;">
+                                    <i data-lucide="user-cog" width="11" height="11"></i>
                                     {{ event.participants.count }} {% trans 'participants' %}
                                 </span>
                             </div>
                         </div>
                     </div>
                     {% empty %}
-                    <p class="text-gray-500">{% trans 'Aucun événement à venir' %}</p>
+                    <p class="text-gray-500" style="font-size:13px;">{% trans 'Aucun événement à venir' %}</p>
                     {% endfor %}
                 </div>
             </div>
         </div>
-        
+
         <!-- Partner Types Legend -->
         <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">{% trans 'Types de partenaires' %}</h3>
+            <div class="card-header" style="padding:14px 16px;">
+                <h3 class="card-title" style="font-size:14px;">{% trans 'Types de partenaires' %}</h3>
             </div>
-            <div class="card-content">
-                <div class="item-list" style="gap: 8px;">
+            <div class="card-content" style="padding:12px;">
+                <div class="item-list" style="gap:6px;">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <div class="partner-icon entreprise" style="width: 32px; height: 32px;">
-                                <i data-lucide="building-2" width="16" height="16" ></i>
+                            <div class="partner-icon entreprise" style="width:28px;height:28px;flex-shrink:0;">
+                                <i data-lucide="building-2" width="14" height="14"></i>
                             </div>
                             <span class="text-sm text-gray-600">{% trans 'Entreprise' %}</span>
                         </div>
@@ -188,8 +188,8 @@
                     </div>
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <div class="partner-icon universite" style="width: 32px; height: 32px;">
-                                <i data-lucide="graduation-cap" width="16" height="16" ></i>
+                            <div class="partner-icon universite" style="width:28px;height:28px;flex-shrink:0;">
+                                <i data-lucide="graduation-cap" width="14" height="14"></i>
                             </div>
                             <span class="text-sm text-gray-600">{% trans 'Université' %}</span>
                         </div>
@@ -197,8 +197,8 @@
                     </div>
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <div class="partner-icon institution" style="width: 32px; height: 32px;">
-                                <i data-lucide="landmark" width="16" height="16" ></i>
+                            <div class="partner-icon institution" style="width:28px;height:28px;flex-shrink:0;">
+                                <i data-lucide="landmark" width="14" height="14"></i>
                             </div>
                             <span class="text-sm text-gray-600">{% trans 'Institution' %}</span>
                         </div>
@@ -206,8 +206,8 @@
                     </div>
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <div class="partner-icon ong" style="width: 32px; height: 32px;">
-                                <i data-lucide="heart" width="16" height="16" ></i>
+                            <div class="partner-icon ong" style="width:28px;height:28px;flex-shrink:0;">
+                                <i data-lucide="heart" width="14" height="14"></i>
                             </div>
                             <span class="text-sm text-gray-600">{% trans 'ONG' %}</span>
                         </div>

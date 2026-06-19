@@ -8,28 +8,28 @@
 {% block content %}
 <!-- Stats -->
 <div class="stats-row">
-    <a class="stat-box" href="{% url 'core:requests' %}?status=all">
+    <a class="stat-box {% if current_status == 'all' %}active{% endif %}" href="{% url 'core:requests' %}?status=all">
         <div class="stat-box-icon"><i data-lucide="message-square" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.total }}</p>
             <p class="stat-box-label">{% trans 'Total demandes' %}</p>
         </div>
     </a>
-    <a class="stat-box amber" href="{% url 'core:requests' %}?status=en_attente">
+    <a class="stat-box amber {% if current_status == 'en_attente' %}active{% endif %}" href="{% url 'core:requests' %}?status=en_attente">
         <div class="stat-box-icon"><i data-lucide="clock" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.en_attente }}</p>
             <p class="stat-box-label">{% trans 'En attente' %}</p>
         </div>
     </a>
-    <a class="stat-box green" href="{% url 'core:requests' %}?status=approuve">
+    <a class="stat-box green {% if current_status == 'approuve' %}active{% endif %}" href="{% url 'core:requests' %}?status=approuve">
         <div class="stat-box-icon"><i data-lucide="circle-check" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.approuve }}</p>
             <p class="stat-box-label">{% trans 'Approuvées' %}</p>
         </div>
     </a>
-    <a class="stat-box red" href="{% url 'core:requests' %}?status=rejete">
+    <a class="stat-box red {% if current_status == 'rejete' %}active{% endif %}" href="{% url 'core:requests' %}?status=rejete">
         <div class="stat-box-icon"><i data-lucide="circle-x" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.rejete }}</p>

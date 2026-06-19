@@ -114,37 +114,37 @@
 
 {# ── Stats ── #}
 <div class="stats-row mb-6">
-    <div class="stat-box">
+    <a class="stat-box {% if tab == 'mine' and not status_filter %}active{% endif %}" href="?tab=mine">
         <div class="stat-box-icon"><i data-lucide="clipboard-list" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ my_stats.total }}</p>
             <p class="stat-box-label">{% trans 'Total demandes' %}</p>
         </div>
-    </div>
-    <div class="stat-box amber">
+    </a>
+    <a class="stat-box amber {% if tab == 'mine' and status_filter in 'soumise,avis_favorable,rh_conforme' %}active{% endif %}" href="?tab=mine&status=soumise">
         <div class="stat-box-icon"><i data-lucide="clock" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ my_stats.pending }}</p>
             <p class="stat-box-label">{% trans 'En cours de validation' %}</p>
         </div>
-    </div>
-    <div class="stat-box green">
+    </a>
+    <a class="stat-box green {% if tab == 'mine' and status_filter == 'approuvee' %}active{% endif %}" href="?tab=mine&status=approuvee">
         <div class="stat-box-icon"><i data-lucide="circle-check" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ my_stats.approved }}</p>
             <p class="stat-box-label">{% trans 'Approuvées' %}</p>
         </div>
-    </div>
-    <div class="stat-box red">
+    </a>
+    <a class="stat-box red {% if tab == 'mine' and status_filter == 'rejetee' %}active{% endif %}" href="?tab=mine&status=rejetee">
         <div class="stat-box-icon"><i data-lucide="circle-x" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ my_stats.rejected }}</p>
             <p class="stat-box-label">{% trans 'Refusées' %}</p>
         </div>
-    </div>
+    </a>
 </div>
 
-{# ── Tabs ── #}
+{# ── Tabs + filtre statut ── #}
 <div class="flex justify-between items-center mb-4" style="flex-wrap:wrap; gap:12px;">
     <div class="tabs" style="flex-wrap:wrap; margin-bottom:0;">
         <a href="?tab=mine" class="tab-btn {% if tab == 'mine' %}active{% endif %}">
@@ -189,7 +189,21 @@
         </a>
         {% endif %}
     </div>
-
+    <form method="get" style="display:flex;align-items:center;gap:8px;">
+        <input type="hidden" name="tab" value="{{ tab }}">
+        <select name="status" onchange="this.form.submit()"
+                style="height:36px;padding:0 10px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;color:#374151;background:white;cursor:pointer;">
+            <option value="">{% trans 'Tous les statuts' %}</option>
+            <option value="soumise"          {% if status_filter == 'soumise' %}selected{% endif %}>{% trans 'Soumise' %}</option>
+            <option value="avis_favorable"   {% if status_filter == 'avis_favorable' %}selected{% endif %}>{% trans 'Avis favorable' %}</option>
+            <option value="avis_defavorable" {% if status_filter == 'avis_defavorable' %}selected{% endif %}>{% trans 'Avis défavorable' %}</option>
+            <option value="rh_conforme"      {% if status_filter == 'rh_conforme' %}selected{% endif %}>{% trans 'Vérifiée RH' %}</option>
+            <option value="rh_non_conforme"  {% if status_filter == 'rh_non_conforme' %}selected{% endif %}>{% trans 'Non conforme RH' %}</option>
+            <option value="approuvee"        {% if status_filter == 'approuvee' %}selected{% endif %}>{% trans 'Approuvée' %}</option>
+            <option value="rejetee"          {% if status_filter == 'rejetee' %}selected{% endif %}>{% trans 'Rejetée' %}</option>
+            <option value="annulee"          {% if status_filter == 'annulee' %}selected{% endif %}>{% trans 'Annulée' %}</option>
+        </select>
+    </form>
 </div>
 
 {# ── Table ── #}

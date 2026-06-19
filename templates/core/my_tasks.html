@@ -70,6 +70,39 @@
 
 {% block content %}
 
+{% if task_stats.total %}
+<div class="stats-row mb-6">
+    <div class="stat-box">
+        <div class="stat-box-icon"><i data-lucide="clipboard-list" width="20" height="20"></i></div>
+        <div class="stat-box-body">
+            <p class="stat-box-value">{{ task_stats.total }}</p>
+            <p class="stat-box-label">{% trans 'Tâches assignées' %}</p>
+        </div>
+    </div>
+    <div class="stat-box green">
+        <div class="stat-box-icon"><i data-lucide="circle-check" width="20" height="20"></i></div>
+        <div class="stat-box-body">
+            <p class="stat-box-value">{{ task_stats.done }}</p>
+            <p class="stat-box-label">{% trans 'Terminées' %}</p>
+        </div>
+    </div>
+    <div class="stat-box blue">
+        <div class="stat-box-icon"><i data-lucide="loader-circle" width="20" height="20"></i></div>
+        <div class="stat-box-body">
+            <p class="stat-box-value">{{ task_stats.pending }}</p>
+            <p class="stat-box-label">{% trans 'En cours' %}</p>
+        </div>
+    </div>
+    <div class="stat-box red">
+        <div class="stat-box-icon"><i data-lucide="alarm-clock" width="20" height="20"></i></div>
+        <div class="stat-box-body">
+            <p class="stat-box-value">{{ task_stats.overdue }}</p>
+            <p class="stat-box-label">{% trans 'En retard' %}</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 {% if not task_groups %}
 <div class="card">
   <div class="card-content mt-empty">
