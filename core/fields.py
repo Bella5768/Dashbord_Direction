@@ -33,6 +33,7 @@ def validate_phone_number(value, default_region='GN'):
 
 class IntlTelInputWidget(forms.TextInput):
     """Widget qui affiche un sélecteur de téléphone international (drapeau + indicatif)."""
+    input_type = 'tel'
 
     def __init__(self, attrs=None, default_region='GN'):
         self.default_region = default_region
@@ -40,7 +41,6 @@ class IntlTelInputWidget(forms.TextInput):
 
     def build_attrs(self, base_attrs, extra_attrs=None):
         attrs = super().build_attrs(base_attrs, extra_attrs)
-        attrs['type'] = 'tel'
         attrs.setdefault('class', '')
         attrs['class'] += ' intl-tel-input'
         attrs['data-default-region'] = self.default_region
