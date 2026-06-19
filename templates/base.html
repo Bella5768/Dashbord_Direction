@@ -10,6 +10,7 @@
     <link rel="icon" type="image/jpeg" href="{% static 'logocsig.jpg' %}">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@23.9.3/build/css/intlTelInput.min.css">
     {% block extra_css %}{% endblock %}
     <style>
         .toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;max-width:380px;pointer-events:none}
@@ -534,6 +535,57 @@
       document.addEventListener('click', function(){
         if(menu) menu.style.display = 'none';
         if(userWidget) userWidget.classList.remove('open');
+      });
+    })();
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@23.9.3/build/js/intlTelInput.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@23.9.3/build/js/utils.js"></script>
+    <style>
+      .iti { width: 100%; }
+      .iti__flag-container { z-index: 10; }
+      .iti__tel-input { padding-left: 52px !important; }
+    </style>
+    <script>
+    (function(){
+      var inputs = document.querySelectorAll('input.intl-tel-input[type="tel"]');
+      var itiInstances = [];
+      inputs.forEach(function(input){
+        var defaultRegion = (input.getAttribute('data-default-region') || 'gn').toLowerCase();
+        var iti = window.intlTelInput(input, {
+          initialCountry: defaultRegion,
+          preferredCountries: ['gn', 'fr', 'us', 'gb', 'de', 'sn', 'ci', 'ml'],
+          separateDialCode: true,
+          utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@23.9.3/build/js/utils.js",
+        });
+        itiInstances.push({input: input, iti: iti});
+      });
+
+      // Avant soumission, remplacer la valeur par le numéro complet E.164
+      document.querySelectorAll('form').forEach(function(form){
+        form.addEventListener('submit', function(e){
+          var telInputs = form.querySelectorAll('input.intl-tel-input[type="tel"]');
+          if(!telInputs.length) return;
+          telInputs.forEach(function(telInput){
+            var found = null;
+            for(var i=0; i<itiInstances.length; i++){
+              if(itiInstances[i].input === telInput){ found = itiInstances[i]; break; }
+            }
+            if(!found) return;
+            var number = found.iti.getNumber();
+            // Validation stricte seulement si le champ est requis ou contient du texte
+            if(telInput.value.replace(/\s/g, '') !== '' || telInput.required){
+              if(typeof found.iti.isValidNumber === 'function' && !found.iti.isValidNumber()){
+                e.preventDefault();
+                var errorMsg = telInput.getAttribute('data-invalid-msg') || "Le numéro de téléphone n'est pas valide.";
+                alert(errorMsg);
+                telInput.focus();
+                return;
+              }
+            }
+            telInput.value = number;
+          });
+        });
       });
     })();
     </script>

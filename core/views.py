@@ -405,12 +405,21 @@ def profile(request):
             if DjangoUser.objects.filter(email__iexact=email).exclude(pk=user.pk).exists():
                 errors['email'] = "Cette adresse email est déjà utilisée par un autre compte."
 
+        # Validation du téléphone (format international)
+        normalized_phone = phone
+        if phone:
+            from core.fields import validate_phone_number
+            try:
+                normalized_phone = validate_phone_number(phone)
+            except Exception as exc:
+                errors['phone'] = str(exc)
+
         if not errors:
             user.first_name = first_name
             user.last_name  = last_name
             user.email      = email
             user.save(update_fields=['first_name', 'last_name', 'email'])
-            prof.phone = phone
+            prof.phone = normalized_phone
             prof.save(update_fields=['phone', 'updated_at'])
             UserActivity.objects.create(
                 user=user,
@@ -3288,6 +3297,15 @@ def project_member_add(request, project_id):
                 project_role_obj = ProjectRole.objects.filter(pk=project_role_id).first()
 
             errors = []
+            # Validation/normalisation du téléphone
+            normalized_phone = new_phone
+            if new_phone:
+                from core.fields import validate_phone_number
+                try:
+                    normalized_phone = validate_phone_number(new_phone)
+                except Exception as exc:
+                    errors.append(str(exc))
+
             if not new_name:
                 errors.append("Le nom est requis.")
             if not new_role_val:
@@ -3330,7 +3348,7 @@ def project_member_add(request, project_id):
                         name=new_name,
                         direction=project.direction if not is_external else None,
                         role=new_role_val,
-                        phone=new_phone,
+                        phone=normalized_phone,
                         email=new_email,
                         is_external=is_external,
                         organization=new_org if is_external else '',

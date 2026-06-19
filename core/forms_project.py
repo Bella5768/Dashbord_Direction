@@ -3,6 +3,7 @@ from django.db.models import Max
 from django.utils.translation import gettext_lazy as _
 from .models import Project, Document, Request, Partner, Event, Direction, Budget, Employee, Milestone, SubMilestone, ProjectFolder, ProjectDocument, ProjectMember, ProjectNeed, ProjectComment, ProjectRole
 from .currencies import CURRENCY_CHOICES, convert_currency, format_currency
+from .fields import IntlPhoneField
 
 
 class ProjectForm(forms.ModelForm):
@@ -348,13 +349,15 @@ class RequestForm(forms.ModelForm):
 
 class PartnerForm(forms.ModelForm):
     """Formulaire pour les partenaires"""
+    phone = IntlPhoneField(label=_("Téléphone"), required=True)
+
     class Meta:
         model = Partner
         fields = ['name', 'partner_type', 'status', 'contact_person', 'email', 'phone', 'start_date', 'logo']
         widgets = {
             'start_date': forms.DateInput(attrs={'type': 'date'}),
         }
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
@@ -423,6 +426,8 @@ class BudgetForm(forms.ModelForm):
 
 class EmployeeForm(forms.ModelForm):
     """Formulaire pour les employés"""
+    phone = IntlPhoneField(label=_("Téléphone"), required=False)
+
     class Meta:
         model = Employee
         fields = ['name', 'direction', 'role', 'phone', 'email', 'workload', 'skills', 'is_external', 'organization']

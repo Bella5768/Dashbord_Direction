@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.forms import SetPasswordForm  # noqa: F401  (réexporté pour les vues)
 from django.utils.translation import gettext_lazy as _
 from .models import UserProfile, Direction, Employee, Event, Role
+from core.fields import IntlPhoneField
 
 
 class DirectionForm(forms.ModelForm):
@@ -87,7 +88,7 @@ class UserUpdateForm(forms.ModelForm):
         label=_("Employé"),
         empty_label=_("-- Aucun employé --"),
     )
-    phone = forms.CharField(max_length=20, required=False, label=_("Téléphone"))
+    phone = IntlPhoneField(required=False, label=_("Téléphone"))
 
     class Meta:
         model = User

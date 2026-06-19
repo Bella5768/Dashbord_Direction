@@ -99,8 +99,9 @@
           <!-- Téléphone -->
           <div class="form-group" style="grid-column:1/-1;">
             <label class="form-label" for="phone">{% trans 'Téléphone' %}</label>
-            <input type="text" name="phone" id="phone"
-                   class="form-control"
+            <input type="tel" name="phone" id="phone"
+                   class="form-control intl-tel-input"
+                   data-default-region="gn"
                    value="{{ fd.phone|default:prof.phone }}"
                    placeholder="+224 6xx xx xx xx">
             <p style="font-size:12px;color:#6b7280;margin-top:4px;">{% trans 'Optionnel.' %}</p>
