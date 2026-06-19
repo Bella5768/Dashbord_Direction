@@ -81,6 +81,14 @@ class ProjectForm(forms.ModelForm):
             return self.instance.end_date
         return date
 
+    def clean(self):
+        cleaned = super().clean()
+        start = cleaned.get('start_date')
+        end = cleaned.get('end_date')
+        if start and end and end < start:
+            self.add_error('end_date', _("La date de fin doit être postérieure ou égale à la date de début."))
+        return cleaned
+
 
 class DocumentForm(forms.ModelForm):
     """Formulaire pour les documents"""
@@ -95,6 +103,18 @@ class DocumentForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
+
+    def clean(self):
+        cleaned = super().clean()
+        due = cleaned.get('due_date')
+        if self.instance and self.instance.pk and self.instance.created_at:
+            created = self.instance.created_at
+        else:
+            from datetime import date
+            created = date.today()
+        if due and due < created:
+            self.add_error('due_date', _("La date limite doit être postérieure ou égale à la date de création."))
+        return cleaned
 
 
 class MilestoneForm(forms.ModelForm):
@@ -123,6 +143,21 @@ class MilestoneForm(forms.ModelForm):
                 max_order = project.milestones.aggregate(Max('order'))['order__max']
                 self.fields['order'].initial = (max_order or 0) + 1
 
+    def clean(self):
+        cleaned = super().clean()
+        due = cleaned.get('due_date')
+        project = self.project
+        if due and project and project.start_date and project.end_date:
+            if due < project.start_date or due > project.end_date:
+                self.add_error(
+                    'due_date',
+                    _("La date du jalon doit être comprise entre %(start)s et %(end)s.") % {
+                        'start': project.start_date,
+                        'end': project.end_date,
+                    }
+                )
+        return cleaned
+
 
 class SubMilestoneForm(forms.ModelForm):
     """Formulaire pour les sous-étapes"""
@@ -145,6 +180,30 @@ class SubMilestoneForm(forms.ModelForm):
             if not self.instance.pk:
                 max_order = milestone.sub_milestones.aggregate(Max('order'))['order__max']
                 self.fields['order'].initial = (max_order or 0) + 1
+
+    def clean(self):
+        cleaned = super().clean()
+        due = cleaned.get('due_date')
+        milestone = self.milestone
+        if due and milestone:
+            if milestone.due_date and due > milestone.due_date:
+                self.add_error(
+                    'due_date',
+                    _("La date de la sous-étape doit être antérieure ou égale à celle du jalon (%(date)s).") % {
+                        'date': milestone.due_date,
+                    }
+                )
+            project = milestone.project
+            if project and project.start_date and project.end_date:
+                if due < project.start_date or due > project.end_date:
+                    self.add_error(
+                        'due_date',
+                        _("La date de la sous-étape doit être comprise entre %(start)s et %(end)s.") % {
+                            'start': project.start_date,
+                            'end': project.end_date,
+                        }
+                    )
+        return cleaned
 
 
 class ProjectFolderForm(forms.ModelForm):
@@ -301,6 +360,15 @@ class PartnerForm(forms.ModelForm):
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
 
+    def clean(self):
+        cleaned = super().clean()
+        start = cleaned.get('start_date')
+        if start:
+            from datetime import date
+            if start > date.today():
+                self.add_error('start_date', _("La date de début de collaboration ne peut pas être dans le futur."))
+        return cleaned
+
 
 class EventForm(forms.ModelForm):
     """Formulaire pour les événements"""
@@ -319,6 +387,13 @@ class EventForm(forms.ModelForm):
         for field_name, field in self.fields.items():
             if field_name != 'participants':
                 field.widget.attrs['class'] = 'form-control'
+
+    def clean(self):
+        cleaned = super().clean()
+        duration = cleaned.get('duration')
+        if duration is not None and duration <= 0:
+            self.add_error('duration', _("La durée doit être positive."))
+        return cleaned
 
 
 class BudgetForm(forms.ModelForm):

@@ -16,7 +16,7 @@ from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
 from reportlab.pdfgen import canvas
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
-from .models import Direction, Project, Document, Partner, Event, Request, Employee, Budget, UserProfile, UserActivity, ProjectMember, Milestone, SubMilestone, ProjectNeed, ProjectComment, ProjectDocument, ProjectFolder, ProjectActivity, Role
+from .models import Direction, Project, Document, Partner, Event, Request, Employee, Budget, UserProfile, UserActivity, ProjectMember, Milestone, SubMilestone, ProjectNeed, ProjectComment, ProjectDocument, ProjectFolder, ProjectActivity, Role, ProjectRole
 
 
 def log_project_activity(project, action, description, user):
@@ -28,6 +28,41 @@ def log_project_activity(project, action, description, user):
         description=description,
         user=username
     )
+
+
+def _ensure_manager_in_team(project, user=None):
+    """S'assure que le responsable (manager_employee) fait partie de l'équipe projet."""
+    manager = project.manager_employee
+    if not manager:
+        return None
+
+    manager_role, __ = ProjectRole.objects.get_or_create(
+        slug='responsable',
+        defaults={
+            'name': _('Responsable'),
+            'description': _('Responsable du projet'),
+            'is_system': True,
+        }
+    )
+
+    member, created = ProjectMember.objects.get_or_create(
+        project=project,
+        employee=manager,
+        defaults={'project_role': manager_role}
+    )
+
+    if not created and member.project_role_id != manager_role.id:
+        member.project_role = manager_role
+        member.save(update_fields=['project_role'])
+
+    if created and user:
+        log_project_activity(
+            project, 'ajout_membre',
+            _("Ajout automatique du responsable '%(name)s' à l'équipe") % {'name': manager.name},
+            user
+        )
+
+    return member
 
 
 _AVATAR_COLORS = [
@@ -2191,6 +2226,8 @@ def project_create(request):
                 project.manager = project.manager_employee.name
             project.save()
             form.save_m2m()
+            # Le responsable choisi doit faire partie de l'équipe projet
+            _ensure_manager_in_team(project, request.user)
             log_project_activity(project, 'creation', f"Création du projet '{project.name}'", request.user)
             messages.success(request, _("Projet créé avec succès."))
             return redirect('core:project_detail', project_id=project.id)
@@ -2222,12 +2259,16 @@ def project_edit(request, project_id):
     if request.method == 'POST':
         form = ProjectForm(request.POST, instance=project)
         if form.is_valid():
+            old_manager_id = project.manager_employee_id
             project = form.save(commit=False)
             # Sync manager string from manager_employee FK
             if project.manager_employee:
                 project.manager = project.manager_employee.name
             project.save()
             form.save_m2m()
+            # Si le responsable a changé, l'ajouter automatiquement à l'équipe
+            if project.manager_employee_id != old_manager_id:
+                _ensure_manager_in_team(project, request.user)
             log_project_activity(project, 'modification', "Modification des informations du projet", request.user)
             messages.success(request, _("Projet modifié avec succès."))
             return redirect('core:project_detail', project_id=project.id)

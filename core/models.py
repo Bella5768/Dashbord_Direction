@@ -3,6 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
+from django.core.exceptions import ValidationError
 
 
 # =====================================================================
@@ -383,6 +384,13 @@ class Project(models.Model):
             self.original_end_date = self.end_date
         super().save(*args, **kwargs)
 
+    def clean(self):
+        super().clean()
+        if self.start_date and self.end_date and self.end_date < self.start_date:
+            raise ValidationError({
+                'end_date': _("La date de fin doit être postérieure ou égale à la date de début.")
+            })
+
     @property
     def computed_status(self):
         """Retourne 'en_retard' si la date est dépassée et le projet non terminé, sinon le statut stocké."""
@@ -520,7 +528,20 @@ class Milestone(models.Model):
     
     def __str__(self):
         return f"{self.project.name} - {self.name}"
-    
+
+    def clean(self):
+        super().clean()
+        if self.due_date and self.project_id:
+            project = self.project
+            if project.start_date and project.end_date:
+                if self.due_date < project.start_date or self.due_date > project.end_date:
+                    raise ValidationError({
+                        'due_date': _("La date du jalon doit être comprise entre %(start)s et %(end)s.") % {
+                            'start': project.start_date,
+                            'end': project.end_date,
+                        }
+                    })
+
     @property
     def progress(self):
         """Calcule le pourcentage de progression basé sur les sous-étapes ou la progression manuelle"""
@@ -579,7 +600,27 @@ class SubMilestone(models.Model):
     
     def __str__(self):
         return f"{self.milestone.name} - {self.name}"
-    
+
+    def clean(self):
+        super().clean()
+        if self.due_date and self.milestone_id:
+            milestone = self.milestone
+            if milestone.due_date and self.due_date > milestone.due_date:
+                raise ValidationError({
+                    'due_date': _("La date de la sous-étape doit être antérieure ou égale à celle du jalon (%(date)s).") % {
+                        'date': milestone.due_date,
+                    }
+                })
+            project = milestone.project
+            if project and project.start_date and project.end_date:
+                if self.due_date < project.start_date or self.due_date > project.end_date:
+                    raise ValidationError({
+                        'due_date': _("La date de la sous-étape doit être comprise entre %(start)s et %(end)s.") % {
+                            'start': project.start_date,
+                            'end': project.end_date,
+                        }
+                    })
+
     def save(self, *args, **kwargs):
         from django.utils import timezone
         if self.completed and not self.completed_at:
@@ -781,9 +822,20 @@ class Document(models.Model):
         verbose_name = _("Document")
         verbose_name_plural = _("Documents")
         ordering = ['-created_at']
-    
+
     def __str__(self):
         return self.title
+
+    def clean(self):
+        super().clean()
+        if self.due_date and self.signed_at and self.signed_at > self.due_date:
+            raise ValidationError({
+                'signed_at': _("La date de signature ne peut pas être postérieure à la date limite.")
+            })
+        if self.due_date and self.created_at and self.due_date < self.created_at:
+            raise ValidationError({
+                'due_date': _("La date limite doit être postérieure ou égale à la date de création.")
+            })
 
 
 class Partner(models.Model):
@@ -812,9 +864,18 @@ class Partner(models.Model):
         verbose_name = _("Partenaire")
         verbose_name_plural = _("Partenaires")
         ordering = ['name']
-    
+
     def __str__(self):
         return self.name
+
+    def clean(self):
+        super().clean()
+        if self.start_date:
+            from datetime import date
+            if self.start_date > date.today():
+                raise ValidationError({
+                    'start_date': _("La date de début de collaboration ne peut pas être dans le futur.")
+                })
 
 
 class Event(models.Model):
@@ -843,6 +904,13 @@ class Event(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.date}"
+
+    def clean(self):
+        super().clean()
+        if self.duration is not None and self.duration <= 0:
+            raise ValidationError({
+                'duration': _("La durée doit être positive.")
+            })
 
     def is_past(self):
         from django.utils import timezone
@@ -886,9 +954,16 @@ class Request(models.Model):
         verbose_name = _("Demande")
         verbose_name_plural = _("Demandes")
         ordering = ['-created_at']
-    
+
     def __str__(self):
         return self.title
+
+    def clean(self):
+        super().clean()
+        if self.approved_at and self.created_at and self.approved_at < self.created_at:
+            raise ValidationError({
+                'approved_at': _("La date d'approbation ne peut pas être antérieure à la date de création.")
+            })
 
 
 class Employee(models.Model):
@@ -1079,6 +1154,20 @@ class LeaveRequest(models.Model):
         if self.start_date and self.end_date and not self.days_count:
             self.days_count = self.compute_days()
         super().save(*args, **kwargs)
+
+    def clean(self):
+        super().clean()
+        if self.start_date and self.end_date and self.end_date < self.start_date:
+            raise ValidationError({
+                'end_date': _("La date de fin doit être postérieure ou égale à la date de début.")
+            })
+        if self.start_date and self.leave_type == 'annuel':
+            from django.utils import timezone
+            min_delay = (self.start_date - timezone.now().date()).days
+            if min_delay < 15:
+                raise ValidationError({
+                    'start_date': _("Un congé annuel doit être demandé au moins 15 jours avant le départ.")
+                })
 
     @property
     def is_pending(self):
