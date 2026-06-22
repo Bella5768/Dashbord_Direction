@@ -535,7 +535,7 @@ const CHART_OPTS = {
 new Chart(document.getElementById('projectsByDirectionChart'), {
     type: 'bar',
     data: {
-        labels: [{% for item in projects_by_direction %}'{{ item.direction }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        labels: [{% for item in projects_by_direction %}'{{ item.direction|escapejs }}'{% if not forloop.last %},{% endif %}{% endfor %}],
         datasets: [
             {
                 label: '{% trans "En cours" %}',
@@ -576,7 +576,7 @@ function initBudgetCharts() {
     new Chart(document.getElementById('budgetByDirectionChart'), {
         type: 'bar',
         data: {
-            labels: [{% for item in budget_by_direction %}'{{ item.direction }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+            labels: [{% for item in budget_by_direction %}'{{ item.direction|escapejs }}'{% if not forloop.last %},{% endif %}{% endfor %}],
             datasets: [
                 {
                     label: '{% trans "Alloué" %}',
@@ -596,7 +596,7 @@ function initBudgetCharts() {
     new Chart(document.getElementById('budgetConsumptionChart'), {
         type: 'doughnut',
         data: {
-            labels: [{% for item in budget_by_direction %}'{{ item.direction }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+            labels: [{% for item in budget_by_direction %}'{{ item.direction|escapejs }}'{% if not forloop.last %},{% endif %}{% endfor %}],
             datasets: [{
                 data: [{% for item in budget_by_direction %}{{ item.rate }}{% if not forloop.last %},{% endif %}{% endfor %}],
                 backgroundColor: CHART_COLORS, borderWidth: 0, hoverOffset: 4,

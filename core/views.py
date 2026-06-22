@@ -816,6 +816,7 @@ def dashboard(request):
         'budget_data': budget_data,
         **project_stats,
         **role_context,
+        **rbac_context,
     }
     return render(request, 'core/dashboard.html', context)
 

@@ -312,14 +312,18 @@
 {% if tab == 'budget' %}
 <script>
 // Pie Chart
+const _PIE_PALETTE = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ec4899','#ef4444','#06b6d4','#64748b','#f97316','#84cc16'];
+const _pieLabels = [{% for b in budgets %}'{% if b.project %}{{ b.project.name|escapejs }}{% elif b.direction %}{{ b.direction.code|escapejs }}{% else %}{% trans "Sans affectation" %}{% endif %}'{% if not forloop.last %}, {% endif %}{% endfor %}];
+const _pieData   = [{% for b in budgets %}{{ b.allocated_gnf }}{% if not forloop.last %}, {% endif %}{% endfor %}];
+const _pieBg     = _pieLabels.map((_, i) => _PIE_PALETTE[i % _PIE_PALETTE.length]);
 const pieCtx = document.getElementById('budgetPieChart').getContext('2d');
 new Chart(pieCtx, {
     type: 'doughnut',
     data: {
-        labels: [{% for b in budgets %}'{% if b.project %}{{ b.project.name|escapejs }}{% elif b.direction %}{{ b.direction.code|escapejs }}{% else %}{% trans "Sans affectation" %}{% endif %}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+        labels: _pieLabels,
         datasets: [{
-            data: [{% for b in budgets %}{{ b.allocated_gnf }}{% if not forloop.last %}, {% endif %}{% endfor %}],
-            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'],
+            data: _pieData,
+            backgroundColor: _pieBg,
             borderWidth: 0,
         }]
     },
@@ -339,11 +343,11 @@ const consumptionCtx = document.getElementById('consumptionChart').getContext('2
 new Chart(consumptionCtx, {
     type: 'bar',
     data: {
-        labels: [{% for b in budgets %}'{% if b.project %}{{ b.project.name|escapejs }}{% elif b.direction %}{{ b.direction.code|escapejs }}{% else %}{% trans "Sans affectation" %}{% endif %}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+        labels: _pieLabels,
         datasets: [{
             label: '{% trans "Taux de consommation" %} (%)',
             data: [{% for b in budgets %}{{ b.consumption_rate }}{% if not forloop.last %}, {% endif %}{% endfor %}],
-            backgroundColor: '#3b82f6',
+            backgroundColor: _pieBg,
             borderRadius: 4,
         }]
     },
