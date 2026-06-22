@@ -166,10 +166,10 @@ class UserProfile(models.Model):
 
     # Budget
     def can_view_budgets(self):
-        return self.can('read', _('Budget')) or self.can('manage', _('Budget'))
+        return self.can('read', 'Budget') or self.can('manage', 'Budget')
 
     def can_manage_budgets(self):
-        return self.can('manage', _('Budget'))
+        return self.can('manage', 'Budget')
 
     def can_view_all_budget_directions(self):
         from .ability import Ability
@@ -178,52 +178,55 @@ class UserProfile(models.Model):
             action  = rule.get('action')       if isinstance(rule, dict) else rule.action
             subject = rule.get('subject')      if isinstance(rule, dict) else rule.subject
             cond    = rule.get('condition','') if isinstance(rule, dict) else rule.condition
-            if action in ('read', _('manage')) and subject in ('Budget', _('all')) and not cond:
+            if action in ('read', 'manage') and subject in ('Budget', 'all') and not cond:
                 return True
         return False
 
     # Utilisateurs
     def has_manage_users_permission(self):
-        return self.can('manage', _('User'))
+        return self.can('manage', 'User')
 
     def can_manage_users(self):
-        return self.can('manage', _('User'))
+        return self.can('manage', 'User')
 
     # Demandes
     def has_approve_requests_permission(self):
-        return self.can('approve', _('Request'))
+        return self.can('approve', 'Request')
 
     def can_approve_requests(self):
-        return self.can('approve', _('Request'))
+        return self.can('approve', 'Request')
 
     # Événements
     def has_create_events_permission(self):
-        return self.can('manage', _('Event'))
+        return self.can('manage', 'Event')
 
     def can_manage_events(self):
-        return self.can('manage', _('Event'))
+        return self.can('manage', 'Event')
 
     def can_read_events(self):
-        return self.can('read', _('Event')) or self.can('manage', _('Event'))
+        return self.can('read', 'Event') or self.can('manage', 'Event')
 
     # Rapports
     def can_view_reports(self):
-        return self.can('read', _('Report'))
+        return self.can('read', 'Report')
 
     # Partenaires
     def can_manage_partners(self):
-        return self.can('manage', _('Partner')) or self.can('read', _('Partner'))
+        return self.can('manage', 'Partner')
+
+    def can_read_partners(self):
+        return self.can('read', 'Partner') or self.can('manage', 'Partner')
 
     # Documents
     def can_approve_documents(self):
-        return self.can('approve', _('Document'))
+        return self.can('approve', 'Document')
 
     # Projets — globaux
     def can_create_projects(self):
-        return self.can('create', _('Project'))
+        return self.can('create', 'Project')
 
     def can_manage_projects(self):
-        return self.can('read', _('Project')) or self.can('manage', _('Project'))
+        return self.can('read', 'Project') or self.can('manage', 'Project')
 
     # Projets — niveau instance
     def can_view_project(self, project):
@@ -276,7 +279,7 @@ class UserProfile(models.Model):
 
     # Congés
     def can_give_final_approval(self):
-        return self.can('manage', _('LeaveRequest'))
+        return self.can('manage', 'LeaveRequest')
 
     def is_hr(self):
         from .ability import Ability
@@ -285,7 +288,7 @@ class UserProfile(models.Model):
             action  = rule.get('action')       if isinstance(rule, dict) else rule.action
             subject = rule.get('subject')      if isinstance(rule, dict) else rule.subject
             cond    = rule.get('condition','') if isinstance(rule, dict) else rule.condition
-            if action in ('approve', _('manage')) and subject in ('LeaveRequest', _('all')) and cond == 'hr_pipeline':
+            if action in ('approve', 'manage') and subject in ('LeaveRequest', 'all') and cond == 'hr_pipeline':
                 return True
         return False
 
@@ -302,13 +305,13 @@ class UserProfile(models.Model):
         for rule in ab.rules:
             action  = rule.get('action')       if isinstance(rule, dict) else rule.action
             subject = rule.get('subject')      if isinstance(rule, dict) else rule.subject
-            if action in ('approve', _('manage')) and subject in ('LeaveRequest', _('all')):
+            if action in ('approve', 'manage') and subject in ('LeaveRequest', 'all'):
                 return True
         return False
 
     # Calendrier
     def can_view_calendar(self):
-        return self.can('read', _('Event'))
+        return self.can('read', 'Event')
 
 
 @receiver(post_save, sender=User)
@@ -663,7 +666,7 @@ class ProjectNeed(models.Model):
 
     @property
     def is_open(self):
-        return self.status in ('ouvert', _('en_cours'))
+        return self.status in ('ouvert', 'en_cours')
 
 
 class ProjectComment(models.Model):
@@ -832,7 +835,9 @@ class Document(models.Model):
             raise ValidationError({
                 'signed_at': _("La date de signature ne peut pas être postérieure à la date limite.")
             })
-        if self.due_date and self.created_at and self.due_date < self.created_at:
+        from datetime import date as _date_cls
+        creation_ref = self.created_at if self.created_at else _date_cls.today()
+        if self.due_date and self.due_date < creation_ref:
             raise ValidationError({
                 'due_date': _("La date limite doit être postérieure ou égale à la date de création.")
             })

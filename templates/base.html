@@ -81,7 +81,7 @@
                 </ul>
 
                 <!-- Groupe : Gestion -->
-                {% if user.profile.can_manage_budgets or user.profile.can_approve_requests or user.profile.is_directeur or user.profile.can_manage_partners or user.profile.is_directeur_general or user.is_staff %}
+                {% if user.profile.can_manage_budgets or user.profile.can_approve_requests or user.profile.is_directeur or user.profile.can_read_partners or user.profile.is_directeur_general or user.is_staff %}
                 <p class="sidebar-section-label">{% trans 'Gestion' %}</p>
                 <ul class="sidebar-group">
                     {% if user.profile.can_manage_budgets %}
@@ -105,7 +105,7 @@
                         </a>
                     </li>
                     {% endif %}
-                    {% if user.profile.can_manage_partners %}
+                    {% if user.profile.can_read_partners %}
                     <li>
                         <a href="{% url 'core:partners' %}" {% if request.resolver_match.url_name == 'partners' %}class="active"{% endif %}>
                             <i data-lucide="handshake"></i>{% trans 'Partenaires' %}

@@ -16,7 +16,7 @@ from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
 from reportlab.pdfgen import canvas
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
-from .models import Direction, Project, Document, Partner, Event, Request, Employee, Budget, UserProfile, UserActivity, ProjectMember, Milestone, SubMilestone, ProjectNeed, ProjectComment, ProjectDocument, ProjectFolder, ProjectActivity, Role, ProjectRole
+from .models import Direction, Project, Document, Partner, Event, Request, Employee, Budget, UserProfile, UserActivity, ProjectMember, Milestone, SubMilestone, ProjectNeed, ProjectComment, ProjectDocument, ProjectFolder, ProjectActivity, Role, ProjectRole, LeaveRequest
 
 
 def log_project_activity(project, action, description, user):
@@ -553,70 +553,23 @@ def global_search(request):
     return render(request, 'core/global_search.html', context)
 
 
-@login_required
-def dashboard(request):
-    """Vue principale du tableau de bord"""
-    today = timezone.now().date()
-    
-    # KPIs
-    total_projects = Project.objects.count()
-    projects_in_progress = Project.objects.filter(status='en_cours').count()
-    projects_completed = Project.objects.filter(status='termine').count()
-    projects_planned = Project.objects.filter(status='planifie').count()
-    
-    # Budget : combiner table Budget (par direction ou projet) + Project.budget direct
-    budget_table_allocated = Budget.objects.aggregate(total=Sum('allocated'))['total'] or 0
-    budget_table_consumed = Budget.objects.aggregate(total=Sum('consumed'))['total'] or 0
-    # Projects.budget direct, en excluant ceux deja couverts par une ligne Budget(project=...)
-    project_ids_with_budget_row = set(
-        Budget.objects.filter(project__isnull=False).values_list('project_id', flat=True)
-    )
-    project_direct = Project.objects.exclude(id__in=project_ids_with_budget_row).aggregate(
-        total_allocated=Sum('budget'), total_consumed=Sum('budget_consumed'),
-    )
-    project_direct_allocated = project_direct['total_allocated'] or 0
-    project_direct_consumed = project_direct['total_consumed'] or 0
-    total_budget = float(budget_table_allocated) + float(project_direct_allocated)
-    total_consumed = float(budget_table_consumed) + float(project_direct_consumed)
-    budget_percentage = round((total_consumed / total_budget * 100), 1) if total_budget > 0 else 0
-    
-    # Documents et demandes
-    pending_documents = Document.objects.exclude(status='signe').count()
-    pending_requests = Request.objects.filter(status='en_attente').count()
-    
-    # Partenaires
-    active_partners = Partner.objects.filter(status='actif').count()
-    
-    # Projets en cours (filtrés par permissions)
-    active_projects = get_accessible_projects_qs(request.user).filter(status='en_cours')[:3]
-    
-    # Documents en attente
-    pending_docs = Document.objects.exclude(status='signe').select_related('direction')[:4]
-    
-    # Demandes en attente
-    pending_reqs = Request.objects.filter(status='en_attente').select_related('direction')[:4]
-    
-    # Événements à venir
-    upcoming_events = Event.objects.filter(date__gte=today).prefetch_related('participants')[:4]
-    
-    # Donnees pour le graphique Budget : budget PAR PROJET (independant de toute direction).
-    # Deux sources combinees :
-    #   1) Project.budget / Project.budget_consumed (saisis dans le formulaire projet)
-    #   2) Budget(project=...) (lignes budgetaires creees via "Affecter un budget")
-    budget_by_project = {}  # project_id -> {'name', 'allocated', 'consumed'}
+def _project_budget_data(project_qs):
+    """Calcule les données budget par projet pour un queryset de projets donné."""
+    budget_by_project = {}
+    project_ids = set(project_qs.values_list('id', flat=True))
 
     # Source 1 : champ budget directement sur le projet
-    for p in Project.objects.filter(Q(budget__gt=0) | Q(budget_consumed__gt=0)):
+    for p in project_qs.filter(Q(budget__gt=0) | Q(budget_consumed__gt=0)):
         budget_by_project[p.id] = {
             'name': p.name,
             'allocated': float(p.budget or 0),
             'consumed': float(p.budget_consumed or 0),
         }
 
-    # Source 2 : lignes budgetaires rattachees a un projet (somme)
+    # Source 2 : lignes budgétaires rattachées à un projet (somme)
     project_budget_rows = (
         Budget.objects
-        .filter(project__isnull=False)
+        .filter(project_id__in=project_ids)
         .values('project_id', 'project__name')
         .annotate(total_allocated=Sum('allocated'), total_consumed=Sum('consumed'))
     )
@@ -630,7 +583,6 @@ def dashboard(request):
         entry['allocated'] += float(row['total_allocated'] or 0)
         entry['consumed'] += float(row['total_consumed'] or 0)
 
-    # Tri par alloue desc, top 10, conversion en millions
     sorted_entries = sorted(budget_by_project.values(), key=lambda e: e['allocated'], reverse=True)[:10]
     budget_data = []
     for entry in sorted_entries:
@@ -642,23 +594,169 @@ def dashboard(request):
             'allocated': entry['allocated'] / 1000000,
             'consumed': entry['consumed'] / 1000000,
         })
-    
+    return budget_data
+
+
+def _project_stats(project_qs):
+    """Retourne les compteurs de projets pour un queryset."""
+    return {
+        'total_projects': project_qs.count(),
+        'projects_in_progress': project_qs.filter(status='en_cours').count(),
+        'projects_completed': project_qs.filter(status='termine').count(),
+        'projects_planned': project_qs.filter(status='planifie').count(),
+    }
+
+
+def _project_budget_totals(project_qs):
+    """Calcule budget total alloué / consommé pour un queryset de projets."""
+    project_ids = set(project_qs.values_list('id', flat=True))
+    budget_rows = Budget.objects.filter(project_id__in=project_ids).aggregate(
+        allocated=Sum('allocated'), consumed=Sum('consumed')
+    )
+    budget_table_allocated = budget_rows['allocated'] or 0
+    budget_table_consumed = budget_rows['consumed'] or 0
+
+    project_ids_with_budget_row = set(
+        Budget.objects.filter(project_id__in=project_ids).values_list('project_id', flat=True)
+    )
+    project_direct = project_qs.exclude(id__in=project_ids_with_budget_row).aggregate(
+        total_allocated=Sum('budget'), total_consumed=Sum('budget_consumed'),
+    )
+    project_direct_allocated = project_direct['total_allocated'] or 0
+    project_direct_consumed = project_direct['total_consumed'] or 0
+
+    total_budget = float(budget_table_allocated) + float(project_direct_allocated)
+    total_consumed = float(budget_table_consumed) + float(project_direct_consumed)
+    budget_percentage = round((total_consumed / total_budget * 100), 1) if total_budget > 0 else 0
+    return total_budget, total_consumed, budget_percentage
+
+
+@login_required
+def dashboard(request):
+    """Vue principale du tableau de bord, personnalisée selon le rôle."""
+    today = timezone.now().date()
+    user = request.user
+    profile = getattr(user, 'profile', None)
+    role_slug = profile.role_slug if profile else None
+    employee_id = getattr(profile, 'employee_id', None)
+    direction_id = getattr(profile, 'direction_id', None)
+
+    accessible_projects = get_accessible_projects_qs(user)
+    project_stats = _project_stats(accessible_projects)
+    total_budget, total_consumed, budget_percentage = _project_budget_totals(accessible_projects)
+    budget_data = _project_budget_data(accessible_projects)
+
+    # Documents et demandes filtrés par scope accessible
+    project_ids = set(accessible_projects.values_list('id', flat=True))
+    if role_slug in ('admin', 'directeur_general') or user.is_superuser:
+        docs_qs = Document.objects.exclude(status='signe')
+        reqs_qs = Request.objects.filter(status='en_attente')
+        partners_qs = Partner.objects.filter(status='actif')
+        events_qs = Event.objects.filter(date__gte=today)
+        employees_qs = Employee.objects.all()
+    elif role_slug == 'directeur' and direction_id:
+        docs_qs = Document.objects.exclude(status='signe').filter(direction_id=direction_id)
+        reqs_qs = Request.objects.filter(status='en_attente', direction_id=direction_id)
+        partners_qs = Partner.objects.filter(status='actif')
+        events_qs = Event.objects.filter(date__gte=today, participants__id=direction_id)
+        employees_qs = Employee.objects.filter(direction_id=direction_id)
+    else:
+        docs_qs = Document.objects.none()
+        reqs_qs = Request.objects.none()
+        partners_qs = Partner.objects.none()
+        events_qs = Event.objects.none()
+        employees_qs = Employee.objects.none()
+        if direction_id:
+            docs_qs = Document.objects.exclude(status='signe').filter(direction_id=direction_id)
+            events_qs = Event.objects.filter(date__gte=today, participants__id=direction_id)
+
+    active_projects = accessible_projects.filter(status='en_cours')[:3]
+    pending_docs = docs_qs.select_related('direction')[:4]
+    pending_reqs = reqs_qs.select_related('direction')[:4]
+    upcoming_events = events_qs.prefetch_related('participants')[:4]
+    active_partners = partners_qs.count()
+
+    # Données spécifiques selon le rôle
+    role_context = {}
+
+    if role_slug in ('admin', 'directeur_general') or user.is_superuser:
+        role_context['dashboard_title'] = _("Vue d'ensemble de la CSIG")
+        role_context['show_global_kpis'] = True
+        # Alertes : projets en retard (status != termine ET end_date < aujourd'hui)
+        role_context['late_projects'] = accessible_projects.filter(
+            ~Q(status='termine'), end_date__lt=today
+        ).order_by('end_date')[:5]
+        # Congés en attente de validation finale
+        role_context['pending_leaves'] = LeaveRequest.objects.filter(
+            status__in=['rh_conforme', 'avis_favorable']
+        ).select_related('employee', 'direction').order_by('-created_at')[:5]
+
+    elif role_slug == 'directeur':
+        role_context['dashboard_title'] = _("Vue de votre direction")
+        role_context['show_global_kpis'] = False
+        role_context['direction'] = profile.direction if profile else None
+        # Charge moyenne des employés de la direction
+        if employees_qs.exists():
+            avg_workload = employees_qs.aggregate(avg=Avg('workload'))['avg'] or 0
+            role_context['avg_workload'] = round(avg_workload, 1)
+            role_context['direction_employees_count'] = employees_qs.count()
+        # Congés en attente dans la direction
+        role_context['pending_leaves'] = LeaveRequest.objects.filter(
+            direction_id=direction_id,
+            status__in=['soumise', 'avis_favorable']
+        ).select_related('employee').order_by('-created_at')[:5]
+
+    else:
+        # Employé / chef de projet
+        role_context['dashboard_title'] = _("Votre espace de travail")
+        role_context['show_global_kpis'] = False
+
+        # Mes projets
+        role_context['my_projects_count'] = accessible_projects.count()
+
+        # Mes tâches (jalons et sous-jalons assignés)
+        if employee_id:
+            my_milestones = Milestone.objects.filter(
+                project__in=accessible_projects,
+                assigned_to__id=employee_id
+            ).exclude(status='termine').select_related('project').order_by('due_date')[:6]
+            my_submilestones = SubMilestone.objects.filter(
+                milestone__project__in=accessible_projects,
+                assigned_to__id=employee_id
+            ).exclude(status='termine').select_related('milestone', 'milestone__project').order_by('due_date')[:6]
+            role_context['my_milestones'] = my_milestones
+            role_context['my_submilestones'] = my_submilestones
+            role_context['my_tasks_count'] = my_milestones.count() + my_submilestones.count()
+
+            # Mes demandes de congé
+            role_context['my_leave_requests'] = LeaveRequest.objects.filter(
+                employee_id=employee_id
+            ).order_by('-created_at')[:5]
+        else:
+            role_context['my_milestones'] = Milestone.objects.none()
+            role_context['my_submilestones'] = SubMilestone.objects.none()
+            role_context['my_tasks_count'] = 0
+            role_context['my_leave_requests'] = LeaveRequest.objects.none()
+
     context = {
-        'total_projects': total_projects,
-        'projects_in_progress': projects_in_progress,
-        'projects_completed': projects_completed,
-        'projects_planned': projects_planned,
+        'today': today,
+        'role_slug': role_slug,
+        'is_admin_or_dg': role_slug in ('admin', 'directeur_general') or user.is_superuser,
+        'is_director': role_slug == 'directeur',
+        'is_employee_view': role_slug not in ('admin', 'directeur_general', 'directeur') and not user.is_superuser,
         'total_budget': total_budget,
         'total_consumed': total_consumed,
         'budget_percentage': budget_percentage,
-        'pending_documents': pending_documents,
-        'pending_requests': pending_requests,
+        'pending_documents': docs_qs.count(),
+        'pending_requests': reqs_qs.count(),
         'active_partners': active_partners,
         'active_projects': active_projects,
         'pending_docs': pending_docs,
         'pending_reqs': pending_reqs,
         'upcoming_events': upcoming_events,
         'budget_data': budget_data,
+        **project_stats,
+        **role_context,
     }
     return render(request, 'core/dashboard.html', context)
 
@@ -1432,7 +1530,7 @@ def export_reports_pdf(request):
 @login_required
 def partners(request):
     """Vue des partenaires"""
-    if not request.user.profile.can_manage_partners():
+    if not request.user.profile.can_read_partners():
         messages.error(request, _("Vous n'avez pas la permission de consulter les partenaires."))
         return redirect('core:dashboard')
     type_filter = request.GET.get('type', 'all')

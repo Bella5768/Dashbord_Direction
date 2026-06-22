@@ -93,12 +93,9 @@ class Ability:
     def _cond_same_direction(self, instance, profile) -> bool:
         if profile.direction_id is None:
             return False
-        # Projet
         direction_id = getattr(instance, 'direction_id', None)
-        if direction_id is not None:
-            return direction_id == profile.direction_id
-        # Congé
-        direction_id = getattr(instance, 'direction_id', None)
+        if direction_id is None:
+            return False
         return direction_id == profile.direction_id
 
     def _cond_is_project_manager(self, instance, profile) -> bool:

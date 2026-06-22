@@ -4,50 +4,106 @@
 
 {% block title %}{% trans 'Tableau de bord' %}{% endblock %}
 {% block page_title %}{% trans 'Tableau de bord' %}{% endblock %}
-{% block page_subtitle %}{% trans "Vue d'ensemble des activités de la CSIG" %}{% endblock %}
+{% block page_subtitle %}{{ dashboard_title|default:"Vue d'ensemble" }}{% endblock %}
 
 {% block content %}
 
 <!-- ── KPI Cards ─────────────────────────────────────────────────────────── -->
 <div class="stats-row">
-  <a class="stat-card stat-card-blue stat-card-link" href="{% url 'core:projects' %}">
-    <div class="stat-card-header">
-      <div>
-        <p class="stat-card-label">{% trans 'Projets en cours' %}</p>
-        <p class="stat-card-value">{{ projects_in_progress }}</p>
-        <p class="stat-card-subtitle">{% blocktrans count n=total_projects %}{{ n }} projet au total{% plural %}{{ n }} projets au total{% endblocktrans %}</p>
-      </div>
-      <div class="stat-card-icon blue">
-        <i data-lucide="folder" ></i>
-      </div>
-    </div>
-  </a>
-
-  <a class="stat-card stat-card-amber stat-card-link" href="{% url 'core:resources' %}">
-    <div class="stat-card-header">
-      <div>
-        <p class="stat-card-label">{% trans 'Budget consommé' %}</p>
-        <p class="stat-card-value">{{ budget_percentage }}%</p>
-        <p class="stat-card-subtitle">{{ total_consumed|number_format }} GNF</p>
-      </div>
-      <div class="stat-card-icon amber">
-        <i data-lucide="credit-card" ></i>
+  {% if is_employee_view %}
+    <div class="stat-card stat-card-blue">
+      <div class="stat-card-header">
+        <div>
+          <p class="stat-card-label">{% trans 'Mes projets' %}</p>
+          <p class="stat-card-value">{{ my_projects_count }}</p>
+          <p class="stat-card-subtitle">{% trans 'Projets auxquels vous participez' %}</p>
+        </div>
+        <div class="stat-card-icon blue"><i data-lucide="folder"></i></div>
       </div>
     </div>
-  </a>
-
-  <a class="stat-card stat-card-green stat-card-link" href="{% url 'core:partners' %}">
-    <div class="stat-card-header">
-      <div>
-        <p class="stat-card-label">{% trans 'Partenaires actifs' %}</p>
-        <p class="stat-card-value">{{ active_partners }}</p>
-        <p class="stat-card-subtitle">{% trans 'Collaborations en cours' %}</p>
-      </div>
-      <div class="stat-card-icon green">
-        <i data-lucide="users" ></i>
+    <div class="stat-card stat-card-amber">
+      <div class="stat-card-header">
+        <div>
+          <p class="stat-card-label">{% trans 'Mes tâches' %}</p>
+          <p class="stat-card-value">{{ my_tasks_count }}</p>
+          <p class="stat-card-subtitle">{% trans 'Jalons et sous-étapes en cours' %}</p>
+        </div>
+        <div class="stat-card-icon amber"><i data-lucide="list-checks"></i></div>
       </div>
     </div>
-  </a>
+    <a class="stat-card stat-card-green stat-card-link" href="{% url 'core:leave_list' %}">
+      <div class="stat-card-header">
+        <div>
+          <p class="stat-card-label">{% trans 'Mes congés' %}</p>
+          <p class="stat-card-value">{{ my_leave_requests|length }}</p>
+          <p class="stat-card-subtitle">{% trans 'Demandes récentes' %}</p>
+        </div>
+        <div class="stat-card-icon green"><i data-lucide="plane"></i></div>
+      </div>
+    </a>
+  {% elif is_director %}
+    <div class="stat-card stat-card-blue">
+      <div class="stat-card-header">
+        <div>
+          <p class="stat-card-label">{% trans 'Projets en cours' %}</p>
+          <p class="stat-card-value">{{ projects_in_progress }}</p>
+          <p class="stat-card-subtitle">{% blocktrans count n=total_projects %}{{ n }} projet dans votre direction{% plural %}{{ n }} projets dans votre direction{% endblocktrans %}</p>
+        </div>
+        <div class="stat-card-icon blue"><i data-lucide="folder"></i></div>
+      </div>
+    </div>
+    <div class="stat-card stat-card-amber">
+      <div class="stat-card-header">
+        <div>
+          <p class="stat-card-label">{% trans 'Budget consommé' %}</p>
+          <p class="stat-card-value">{{ budget_percentage }}%</p>
+          <p class="stat-card-subtitle">{{ total_consumed|number_format }} GNF</p>
+        </div>
+        <div class="stat-card-icon amber"><i data-lucide="credit-card"></i></div>
+      </div>
+    </div>
+    <div class="stat-card stat-card-green">
+      <div class="stat-card-header">
+        <div>
+          <p class="stat-card-label">{% trans 'Employés' %}</p>
+          <p class="stat-card-value">{{ direction_employees_count|default:0 }}</p>
+          <p class="stat-card-subtitle">{% trans 'Collaborateurs dans votre direction' %}</p>
+        </div>
+        <div class="stat-card-icon green"><i data-lucide="users"></i></div>
+      </div>
+    </div>
+  {% else %}
+    <a class="stat-card stat-card-blue stat-card-link" href="{% url 'core:projects' %}">
+      <div class="stat-card-header">
+        <div>
+          <p class="stat-card-label">{% trans 'Projets en cours' %}</p>
+          <p class="stat-card-value">{{ projects_in_progress }}</p>
+          <p class="stat-card-subtitle">{% blocktrans count n=total_projects %}{{ n }} projet au total{% plural %}{{ n }} projets au total{% endblocktrans %}</p>
+        </div>
+        <div class="stat-card-icon blue"><i data-lucide="folder"></i></div>
+      </div>
+    </a>
+    <a class="stat-card stat-card-amber stat-card-link" href="{% url 'core:resources' %}">
+      <div class="stat-card-header">
+        <div>
+          <p class="stat-card-label">{% trans 'Budget consommé' %}</p>
+          <p class="stat-card-value">{{ budget_percentage }}%</p>
+          <p class="stat-card-subtitle">{{ total_consumed|number_format }} GNF</p>
+        </div>
+        <div class="stat-card-icon amber"><i data-lucide="credit-card"></i></div>
+      </div>
+    </a>
+    <a class="stat-card stat-card-green stat-card-link" href="{% url 'core:partners' %}">
+      <div class="stat-card-header">
+        <div>
+          <p class="stat-card-label">{% trans 'Partenaires actifs' %}</p>
+          <p class="stat-card-value">{{ active_partners }}</p>
+          <p class="stat-card-subtitle">{% trans 'Collaborations en cours' %}</p>
+        </div>
+        <div class="stat-card-icon green"><i data-lucide="users"></i></div>
+      </div>
+    </a>
+  {% endif %}
 </div>
 
 {{ budget_data|json_script:"budget-data-json" }}
@@ -58,7 +114,7 @@
   <div class="card-header">
     <div>
       <h3 class="card-title">{% trans 'Budget par projet' %}</h3>
-      <span class="card-subtitle" style="font-size:12px;color:#6b7280;">{% trans 'Alloué vs Consommé — Top 10 (en millions GNF)' %}</span>
+      <span class="card-subtitle" style="font-size:12px;color:#6b7280;">{% if is_employee_view %}{% trans 'Alloué vs Consommé — Vos projets (en millions GNF)' %}{% else %}{% trans 'Alloué vs Consommé — Top 10 (en millions GNF)' %}{% endif %}</span>
     </div>
     <a href="{% url 'core:resources' %}" class="card-link">{% trans 'Voir détail' %} →</a>
   </div>
@@ -79,7 +135,7 @@
   <!-- Projets en cours -->
   <div class="card">
     <div class="card-header">
-      <h3 class="card-title">{% trans 'Projets en cours' %}</h3>
+      <h3 class="card-title">{% if is_employee_view %}{% trans 'Mes projets en cours' %}{% else %}{% trans 'Projets en cours' %}{% endif %}</h3>
       <a href="{% url 'core:projects' %}" class="card-link">{% trans 'Voir tout' %} →</a>
     </div>
     <div class="card-content">
@@ -88,7 +144,6 @@
         {% for project in active_projects %}
         <a href="{% url 'core:project_detail' project.id %}" style="text-decoration:none;display:block;padding:14px;border-radius:10px;border:1px solid #e2e8f0;background:#f8fafc;transition:box-shadow .15s;"
            onmouseenter="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseleave="this.style.boxShadow='none'">
-          <!-- Badges + direction -->
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px;">
             <div style="display:flex;gap:6px;flex-wrap:wrap;">
               <span class="badge {% if project.computed_status == 'en_retard' %}badge-danger{% elif project.computed_status == 'en_cours' %}badge-info{% elif project.computed_status == 'planifie' %}badge-warning{% else %}badge-success{% endif %}">
@@ -102,16 +157,13 @@
             <span style="font-size:11px;font-weight:600;color:#64748b;background:#f1f5f9;border-radius:4px;padding:1px 7px;">{{ project.direction.code }}</span>
             {% endif %}
           </div>
-          <!-- Nom -->
           <p style="font-size:14px;font-weight:600;color:#1e3a5f;margin-bottom:8px;line-height:1.3;">{{ project.name }}</p>
-          <!-- Progression -->
           <div style="display:flex;align-items:center;gap:10px;">
             <div class="progress" style="flex:1;height:6px;">
               <div class="progress-bar {% if project.progress >= 80 %}green{% elif project.progress >= 50 %}blue{% elif project.progress >= 25 %}amber{% else %}red{% endif %}" style="width:{{ project.progress }}%"></div>
             </div>
             <span style="font-size:12px;font-weight:600;color:#374151;white-space:nowrap;">{{ project.progress }}%</span>
           </div>
-          <!-- Méta -->
           <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;font-size:11px;color:#64748b;flex-wrap:wrap;gap:4px;">
             <span>{% trans 'Fin' %} : {{ project.end_date|date:"d/m/Y" }}</span>
             <span>{% trans 'Budget consommé' %} : {{ project.budget_percentage }}%</span>
@@ -141,7 +193,6 @@
           <a href="{% url 'core:projects' %}" style="color:#3b82f6;">{% trans 'Créer un projet' %} →</a>
         </div>
       </div>
-      <!-- Compteurs sous le donut -->
       <div style="display:flex;justify-content:center;gap:24px;margin-top:16px;padding-top:14px;border-top:1px solid #f1f5f9;">
         <div style="text-align:center;">
           <p style="font-size:22px;font-weight:700;color:#3b82f6;">{{ projects_in_progress }}</p>
@@ -161,9 +212,148 @@
 
 </div>
 
+<!-- ── Widgets spécifiques par rôle ──────────────────────────────────────── -->
+{% if is_admin_or_dg and late_projects %}
+<div class="card mb-6" style="border-left: 4px solid #ef4444;">
+  <div class="card-header">
+    <h3 class="card-title" style="color:#ef4444;">{% trans 'Alertes — projets en retard' %}</h3>
+    <a href="{% url 'core:projects' %}?status=en_retard" class="card-link">{% trans 'Voir tout' %} →</a>
+  </div>
+  <div class="card-content">
+    <div class="item-list">
+      {% for project in late_projects %}
+      <a href="{% url 'core:project_detail' project.id %}" class="request-item" style="text-decoration:none;">
+        <div class="request-header">
+          <span class="badge badge-danger">{% trans 'En retard' %}</span>
+          <span style="font-size:11px;color:#64748b;">{{ project.direction.code|default:"—" }}</span>
+        </div>
+        <h4 class="request-title">{{ project.name }}</h4>
+        <p class="request-description">{% trans 'Fin prévue le' %} {{ project.end_date|date:"d/m/Y" }} — {{ project.progress }}%</p>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% if pending_leaves %}
+<div class="card mb-6">
+  <div class="card-header">
+    <h3 class="card-title">
+      {% if is_admin_or_dg %}{% trans 'Congés en attente de validation finale' %}{% elif is_director %}{% trans 'Congés en attente dans votre direction' %}{% endif %}
+    </h3>
+    <a href="{% url 'core:leave_list' %}" class="card-link">{% trans 'Voir tout' %} →</a>
+  </div>
+  <div class="card-content">
+    <div class="item-list">
+      {% for leave in pending_leaves %}
+      <div class="request-item">
+        <div class="request-header">
+          <span class="badge badge-warning">{{ leave.get_status_display }}</span>
+          <span style="font-size:11px;color:#64748b;">{{ leave.direction.code|default:"—" }}</span>
+        </div>
+        <h4 class="request-title">{{ leave.employee.name }} — {{ leave.get_leave_type_display }}</h4>
+        <p class="request-description">{{ leave.start_date|date:"d/m/Y" }} → {{ leave.end_date|date:"d/m/Y" }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% if is_employee_view and my_milestones or my_submilestones %}
+<div class="card mb-6">
+  <div class="card-header">
+    <h3 class="card-title">{% trans 'Mes tâches en cours' %}</h3>
+  </div>
+  <div class="card-content">
+    <div class="item-list">
+      {% for task in my_milestones %}
+      <a href="{% url 'core:project_detail' task.project.id %}" class="request-item" style="text-decoration:none;">
+        <div class="request-header">
+          <span class="badge badge-info">{% trans 'Jalon' %}</span>
+          <span style="font-size:11px;color:#64748b;">{{ task.project.name }}</span>
+        </div>
+        <h4 class="request-title">{{ task.name }}</h4>
+        <p class="request-description">{% if task.due_date %}{% trans 'Échéance' %} {{ task.due_date|date:"d/m/Y" }}{% else %}{% trans 'Pas d\'échéance' %}{% endif %} — {{ task.progress }}%</p>
+      </a>
+      {% endfor %}
+      {% for task in my_submilestones %}
+      <a href="{% url 'core:project_detail' task.milestone.project.id %}" class="request-item" style="text-decoration:none;">
+        <div class="request-header">
+          <span class="badge badge-secondary">{% trans 'Sous-étape' %}</span>
+          <span style="font-size:11px;color:#64748b;">{{ task.milestone.project.name }}</span>
+        </div>
+        <h4 class="request-title">{{ task.name }}</h4>
+        <p class="request-description">{% if task.due_date %}{% trans 'Échéance' %} {{ task.due_date|date:"d/m/Y" }}{% else %}{% trans 'Pas d\'échéance' %}{% endif %} — {{ task.progress }}%</p>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% if is_employee_view %}
+<div class="grid grid-2">
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">{% trans 'Mes demandes de congé' %}</h3>
+      <a href="{% url 'core:leave_list' %}" class="card-link">{% trans 'Voir tout' %} →</a>
+    </div>
+    <div class="card-content">
+      <div class="item-list">
+        {% for leave in my_leave_requests %}
+        <div class="request-item">
+          <div class="request-header">
+            <span class="badge {% if leave.status == 'approuvee' %}badge-success{% elif leave.status == 'rejetee' %}badge-danger{% else %}badge-warning{% endif %}">{{ leave.get_status_display }}</span>
+          </div>
+          <h4 class="request-title">{{ leave.get_leave_type_display }}</h4>
+          <p class="request-description">{{ leave.start_date|date:"d/m/Y" }} → {{ leave.end_date|date:"d/m/Y" }}</p>
+        </div>
+        {% empty %}
+        <p class="text-gray-500">{% trans 'Aucune demande de congé' %}</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">{% trans 'Événements à venir' %}</h3>
+      <a href="{% url 'core:calendar' %}" class="card-link">{% trans 'Voir tout' %} →</a>
+    </div>
+    <div class="card-content">
+      <div class="item-list">
+        {% for event in upcoming_events %}
+        <div class="event-item">
+          <div class="event-date-box">
+            <span class="event-date-month">{{ event.date|date:"M" }}</span>
+            <span class="event-date-day">{{ event.date|date:"d" }}</span>
+          </div>
+          <div class="event-info">
+            <div class="event-type-indicator">
+              <span class="event-type-dot {{ event.event_type }}"></span>
+              <span class="badge {% if event.event_type == 'reunion' %}badge-info{% elif event.event_type == 'evenement' %}badge-success{% else %}badge-danger{% endif %}">
+                {{ event.get_event_type_display }}
+              </span>
+            </div>
+            <h4 class="event-title">{{ event.title }}</h4>
+            <div class="event-meta">
+              <span class="event-meta-item"><i data-lucide="clock"></i>{{ event.time|time:"H:i" }}</span>
+              {% if event.location %}<span class="event-meta-item"><i data-lucide="map-pin"></i>{{ event.location }}</span>{% endif %}
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <p class="text-gray-500">{% trans 'Aucun événement à venir' %}</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% else %}
 <!-- ── Demandes + Événements ─────────────────────────────────────────────── -->
 <div class="grid grid-2">
-
   <div class="card">
     <div class="card-header">
       <h3 class="card-title">{% trans 'Demandes des directions' %}</h3>
@@ -184,10 +374,7 @@
           <p class="request-description">{{ req.description }}</p>
           <div class="request-footer">
             <span>{% trans 'Par' %} {{ req.created_by }}</span>
-            <span class="request-footer-item">
-              <i data-lucide="clock" ></i>
-              {{ req.created_at|date:"d/m/Y" }}
-            </span>
+            <span class="request-footer-item"><i data-lucide="clock"></i>{{ req.created_at|date:"d/m/Y" }}</span>
           </div>
         </div>
         {% empty %}
@@ -219,20 +406,9 @@
             </div>
             <h4 class="event-title">{{ event.title }}</h4>
             <div class="event-meta">
-              <span class="event-meta-item">
-                <i data-lucide="clock" ></i>
-                {{ event.time|time:"H:i" }}
-              </span>
-              {% if event.location %}
-              <span class="event-meta-item">
-                <i data-lucide="map-pin" ></i>
-                {{ event.location }}
-              </span>
-              {% endif %}
-              <span class="event-meta-item">
-                <i data-lucide="user-cog" ></i>
-                {% blocktrans count n=event.participants.count %}{{ n }} participant{% plural %}{{ n }} participants{% endblocktrans %}
-              </span>
+              <span class="event-meta-item"><i data-lucide="clock"></i>{{ event.time|time:"H:i" }}</span>
+              {% if event.location %}<span class="event-meta-item"><i data-lucide="map-pin"></i>{{ event.location }}</span>{% endif %}
+              <span class="event-meta-item"><i data-lucide="user-cog"></i>{% blocktrans count n=event.participants.count %}{{ n }} participant{% plural %}{{ n }} participants{% endblocktrans %}</span>
             </div>
           </div>
         </div>
@@ -242,8 +418,8 @@
       </div>
     </div>
   </div>
-
 </div>
+{% endif %}
 
 {% endblock %}
 
@@ -262,7 +438,6 @@ var DASH_I18N = {
   const budgetData = JSON.parse(document.getElementById('budget-data-json').textContent || '[]');
   const counts = JSON.parse(document.getElementById('dashboard-counts').textContent || '{}');
 
-  // ── Budget Chart ──────────────────────────────────────────────────────
   const budgetCanvas = document.getElementById('budgetChart');
   const budgetEmpty  = document.getElementById('budgetEmpty');
   const hasBudget    = budgetData.some(d => (d.allocated || 0) > 0 || (d.consumed || 0) > 0);
@@ -306,7 +481,6 @@ var DASH_I18N = {
     });
   }
 
-  // ── Répartition donut ─────────────────────────────────────────────────
   const progressCanvas = document.getElementById('progressChart');
   const progressEmpty  = document.getElementById('progressEmpty');
   const totalProjects  = (counts.in_progress || 0) + (counts.completed || 0) + (counts.planned || 0);
