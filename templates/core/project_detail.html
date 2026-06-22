@@ -474,6 +474,7 @@
   <script>
   (function(){
     var _dashInited = false;
+    var _dashRetry = 0;
     var DS = {
       total:       {{ dashboard_stats.total }},
       termine:     {{ dashboard_stats.termine }},
@@ -482,7 +483,7 @@
       bloque:      {{ dashboard_stats.bloque }},
       a_faire:     {{ dashboard_stats.a_faire }}
     };
-    var BUDGET_PCT = {{ project.budget_percentage }};
+    var BUDGET_PCT = {{ project.budget_percentage|stringformat:".1f" }};
     var TEAM = [
       {% for mc in members_cards|dictsortreversed:"task_count"|slice:":6" %}{ name: '{{ mc.name|escapejs }}', done: {{ mc.task_done }}, remaining: {{ mc.task_remaining }} }{% if not forloop.last %},{% endif %}
       {% endfor %}
@@ -490,6 +491,13 @@
 
     function initDashboardCharts() {
       if (_dashInited) return;
+      if (typeof Chart === 'undefined') {
+        _dashRetry++;
+        if (_dashRetry <= 20) {
+          setTimeout(initDashboardCharts, 100);
+        }
+        return;
+      }
       _dashInited = true;
 
       /* ── Donut jalons ─────────────────────────────────────── */
@@ -589,22 +597,21 @@
       }
     }
 
-    /* Init si le panel est déjà visible au chargement */
-    setTimeout(function() {
-      var panel = document.getElementById('panel-dashboard');
-      if (panel && panel.style.display !== 'none') initDashboardCharts();
-    }, 80);
+    /* Exposé pour être déclenché par le gestionnaire d'onglets quand le dashboard devient visible */
+    window.initDashboardCharts = initDashboardCharts;
 
-    /* Init au clic sur l'onglet Tableau de bord */
-    var dashTab = document.querySelector('.pd-tab[data-tab="dashboard"]');
-    if (dashTab) dashTab.addEventListener('click', function(){ setTimeout(initDashboardCharts, 60); });
+    /* Initialisation au chargement si le panel est déjà visible */
+    var panel = document.getElementById('panel-dashboard');
+    if (panel && panel.style.display !== 'none') {
+      initDashboardCharts();
+    }
   })();
   </script>
 
 </div><!-- /panel-dashboard -->
 
 <!-- ==================== ONGLET JALONS ==================== -->
-<div class="pd-panel" id="panel-jalons">
+<div class="pd-panel" id="panel-jalons" style="display:none;">
   <div class="card">
     <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
       <div>
@@ -1217,6 +1224,15 @@
       p.style.display = p.id === 'panel-' + tabId ? '' : 'none';
     });
     try { localStorage.setItem(STORAGE_KEY, tabId); } catch (e) {}
+    // Initialiser les charts du dashboard quand cet onglet devient visible
+    // (requestAnimationFrame + setTimeout pour laisser le navigateur rendre le panel)
+    if (tabId === 'dashboard' && typeof window.initDashboardCharts === 'function') {
+      if (window.requestAnimationFrame) {
+        window.requestAnimationFrame(function() { setTimeout(window.initDashboardCharts, 100); });
+      } else {
+        setTimeout(window.initDashboardCharts, 150);
+      }
+    }
   }
 
   tabs.forEach(function (t) {
