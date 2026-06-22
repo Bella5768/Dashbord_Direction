@@ -147,6 +147,10 @@ def get_accessible_projects_qs(user):
             return qs.filter(direction_id=profile.direction_id)
         return qs.none()
 
+    # RBAC : permission globale de lecture sur tous les projets
+    if profile.can_view_all_projects():
+        return qs
+
     employee_id = getattr(profile, 'employee_id', None)
 
     # External users: only see projects where they are a ProjectMember
@@ -631,23 +635,13 @@ def _project_budget_totals(project_qs):
     return total_budget, total_consumed, budget_percentage
 
 
-@login_required
-def dashboard(request):
-    """Vue principale du tableau de bord, personnalisée selon le rôle."""
+def _dashboard_scope_qs(user, profile, accessible_projects):
+    """Retourne les querysets de documents, demandes, partenaires, événements et employés
+    visibles depuis le dashboard selon le rôle/direction de l'utilisateur."""
     today = timezone.now().date()
-    user = request.user
-    profile = getattr(user, 'profile', None)
     role_slug = profile.role_slug if profile else None
-    employee_id = getattr(profile, 'employee_id', None)
     direction_id = getattr(profile, 'direction_id', None)
 
-    accessible_projects = get_accessible_projects_qs(user)
-    project_stats = _project_stats(accessible_projects)
-    total_budget, total_consumed, budget_percentage = _project_budget_totals(accessible_projects)
-    budget_data = _project_budget_data(accessible_projects)
-
-    # Documents et demandes filtrés par scope accessible
-    project_ids = set(accessible_projects.values_list('id', flat=True))
     if role_slug in ('admin', 'directeur_general') or user.is_superuser:
         docs_qs = Document.objects.exclude(status='signe')
         reqs_qs = Request.objects.filter(status='en_attente')
@@ -670,6 +664,58 @@ def dashboard(request):
             docs_qs = Document.objects.exclude(status='signe').filter(direction_id=direction_id)
             events_qs = Event.objects.filter(date__gte=today, participants__id=direction_id)
 
+    return docs_qs, reqs_qs, partners_qs, events_qs, employees_qs
+
+
+def _dashboard_pending_leaves(user, profile, direction_id):
+    """Retourne les demandes de congé en attente visibles par l'utilisateur."""
+    role_slug = profile.role_slug if profile else None
+
+    # Admin / DG : validation finale
+    if (role_slug in ('admin', 'directeur_general')
+            or user.is_superuser
+            or (profile and profile.can_give_final_approval())):
+        return LeaveRequest.objects.filter(
+            status__in=['rh_conforme', 'avis_favorable']
+        ).select_related('employee', 'direction').order_by('-created_at')[:5]
+
+    # Directeur : congés de sa direction en attente d'avis
+    if role_slug == 'directeur' and direction_id:
+        return LeaveRequest.objects.filter(
+            direction_id=direction_id,
+            status__in=['soumise', 'avis_favorable']
+        ).select_related('employee').order_by('-created_at')[:5]
+
+    # Rôles personnalisés avec permission d'approbation manager
+    if profile and profile.can_give_manager_approval():
+        qs = LeaveRequest.objects.filter(status='soumise')
+        if direction_id:
+            qs = qs.filter(direction_id=direction_id)
+        return qs.select_related('employee', 'direction').order_by('-created_at')[:5]
+
+    return LeaveRequest.objects.none()
+
+
+@login_required
+def dashboard(request):
+    """Vue principale du tableau de bord, personnalisée selon le rôle."""
+    today = timezone.now().date()
+    user = request.user
+    profile = getattr(user, 'profile', None)
+    role_slug = profile.role_slug if profile else None
+    employee_id = getattr(profile, 'employee_id', None)
+    direction_id = getattr(profile, 'direction_id', None)
+
+    accessible_projects = get_accessible_projects_qs(user)
+    project_stats = _project_stats(accessible_projects)
+    total_budget, total_consumed, budget_percentage = _project_budget_totals(accessible_projects)
+    budget_data = _project_budget_data(accessible_projects)
+
+    # Documents et demandes filtrés par scope accessible
+    docs_qs, reqs_qs, partners_qs, events_qs, employees_qs = _dashboard_scope_qs(
+        user, profile, accessible_projects
+    )
+
     active_projects = accessible_projects.filter(status='en_cours')[:3]
     pending_docs = docs_qs.select_related('direction')[:4]
     pending_reqs = reqs_qs.select_related('direction')[:4]
@@ -682,14 +728,6 @@ def dashboard(request):
     if role_slug in ('admin', 'directeur_general') or user.is_superuser:
         role_context['dashboard_title'] = _("Vue d'ensemble de la CSIG")
         role_context['show_global_kpis'] = True
-        # Alertes : projets en retard (status != termine ET end_date < aujourd'hui)
-        role_context['late_projects'] = accessible_projects.filter(
-            ~Q(status='termine'), end_date__lt=today
-        ).order_by('end_date')[:5]
-        # Congés en attente de validation finale
-        role_context['pending_leaves'] = LeaveRequest.objects.filter(
-            status__in=['rh_conforme', 'avis_favorable']
-        ).select_related('employee', 'direction').order_by('-created_at')[:5]
 
     elif role_slug == 'directeur':
         role_context['dashboard_title'] = _("Vue de votre direction")
@@ -700,11 +738,6 @@ def dashboard(request):
             avg_workload = employees_qs.aggregate(avg=Avg('workload'))['avg'] or 0
             role_context['avg_workload'] = round(avg_workload, 1)
             role_context['direction_employees_count'] = employees_qs.count()
-        # Congés en attente dans la direction
-        role_context['pending_leaves'] = LeaveRequest.objects.filter(
-            direction_id=direction_id,
-            status__in=['soumise', 'avis_favorable']
-        ).select_related('employee').order_by('-created_at')[:5]
 
     else:
         # Employé / chef de projet
@@ -723,7 +756,7 @@ def dashboard(request):
             my_submilestones = SubMilestone.objects.filter(
                 milestone__project__in=accessible_projects,
                 assigned_to__id=employee_id
-            ).exclude(status='termine').select_related('milestone', 'milestone__project').order_by('due_date')[:6]
+            ).exclude(completed=True).select_related('milestone', 'milestone__project').order_by('due_date')[:6]
             role_context['my_milestones'] = my_milestones
             role_context['my_submilestones'] = my_submilestones
             role_context['my_tasks_count'] = my_milestones.count() + my_submilestones.count()
@@ -737,6 +770,32 @@ def dashboard(request):
             role_context['my_submilestones'] = SubMilestone.objects.none()
             role_context['my_tasks_count'] = 0
             role_context['my_leave_requests'] = LeaveRequest.objects.none()
+
+    # Alertes projets en retard (visible si scope global sur les projets)
+    if (role_slug in ('admin', 'directeur_general') or user.is_superuser
+            or (profile and profile.can_view_all_projects())):
+        role_context['late_projects'] = accessible_projects.filter(
+            ~Q(status='termine'), end_date__lt=today
+        ).order_by('end_date')[:5]
+
+    # Congés en attente (selon les permissions)
+    role_context['pending_leaves'] = _dashboard_pending_leaves(user, profile, direction_id)
+
+    # Permissions RBAC pour affichage conditionnel des widgets
+    rbac_context = {}
+    if profile:
+        rbac_context.update({
+            'can_view_budgets': profile.can_view_budgets(),
+            'can_read_partners': profile.can_read_partners(),
+            'can_approve_requests': profile.can_approve_requests(),
+            'can_give_final_approval': profile.can_give_final_approval(),
+            'can_give_hr_check': profile.can_give_hr_check(),
+            'can_view_reports': profile.can_view_reports(),
+            'can_manage_users': profile.can_manage_users(),
+            'can_manage_events': profile.can_manage_events(),
+            'can_approve_documents': profile.can_approve_documents(),
+            'can_view_all_projects': profile.can_view_all_projects(),
+        })
 
     context = {
         'today': today,
@@ -1149,41 +1208,57 @@ def reports(request):
         {'name': 'Planifiés', 'value': Project.objects.filter(status='planifie').count()},
     ]
     
-    # KPIs
+    # KPIs budget : Budget table + Project.budget direct (sans doublon)
     total_projects = Project.objects.count()
     projects_completed = Project.objects.filter(status='termine').count()
-    total_budget = Budget.objects.aggregate(total=Sum('allocated'))['total'] or 0
-    total_consumed = Budget.objects.aggregate(total=Sum('consumed'))['total'] or 0
-    budget_rate = round((float(total_consumed) / float(total_budget) * 100)) if total_budget > 0 else 0
+    budget_agg = Budget.objects.aggregate(alloc=Sum('allocated'), cons=Sum('consumed'))
+    _budget_table_alloc = float(budget_agg['alloc'] or 0)
+    _budget_table_cons  = float(budget_agg['cons']  or 0)
+    _project_ids_with_budget_row = set(Budget.objects.values_list('project_id', flat=True))
+    _project_direct = Project.objects.exclude(id__in=_project_ids_with_budget_row).aggregate(
+        a=Sum('budget'), c=Sum('budget_consumed')
+    )
+    total_budget   = _budget_table_alloc + float(_project_direct['a'] or 0)
+    total_consumed = _budget_table_cons  + float(_project_direct['c'] or 0)
+    budget_rate = round((total_consumed / total_budget * 100)) if total_budget > 0 else 0
     active_partners = Partner.objects.filter(status='actif').count()
     pending_docs = Document.objects.exclude(status='signe').count()
-    
+
     # Tous les projets pour le tableau
     all_projects = Project.objects.select_related('direction').all()
-    
-    # Budget par direction
+
+    # Budget par direction : Budget(direction) + Budget(project__direction) + Project.budget direct
     budget_by_direction = []
     for direction in directions:
-        budgets = direction.budgets.all()
-        if budgets.exists():
-            # Agréger tous les budgets de la direction
-            total_allocated = sum(b.allocated for b in budgets)
-            total_consumed = sum(b.consumed for b in budgets)
-            budget_by_direction.append({
-                'direction': direction.code,
-                'name': direction.name,
-                'allocated': float(total_allocated),
-                'consumed': float(total_consumed),
-                'rate': round((float(total_consumed) / float(total_allocated) * 100)) if total_allocated > 0 else 0,
-            })
-        else:
-            budget_by_direction.append({
-                'direction': direction.code,
-                'name': direction.name,
-                'allocated': 0,
-                'consumed': 0,
-                'rate': 0,
-            })
+        # Source 1 : Budget rows linked directly to the direction
+        dir_budget_agg = direction.budgets.aggregate(a=Sum('allocated'), c=Sum('consumed'))
+        dir_alloc = float(dir_budget_agg['a'] or 0)
+        dir_cons  = float(dir_budget_agg['c'] or 0)
+
+        # Source 2 : Budget rows linked to projects in this direction
+        proj_budget_agg = Budget.objects.filter(
+            project__direction=direction, project__isnull=False
+        ).aggregate(a=Sum('allocated'), c=Sum('consumed'))
+        dir_alloc += float(proj_budget_agg['a'] or 0)
+        dir_cons  += float(proj_budget_agg['c'] or 0)
+
+        # Source 3 : Project.budget for projects not covered by a Budget row
+        covered_ids = set(
+            Budget.objects.filter(project__direction=direction).values_list('project_id', flat=True)
+        )
+        proj_direct_agg = Project.objects.filter(direction=direction).exclude(
+            id__in=covered_ids
+        ).aggregate(a=Sum('budget'), c=Sum('budget_consumed'))
+        dir_alloc += float(proj_direct_agg['a'] or 0)
+        dir_cons  += float(proj_direct_agg['c'] or 0)
+
+        budget_by_direction.append({
+            'direction': direction.code,
+            'name': direction.name,
+            'allocated': round(dir_alloc),
+            'consumed': round(dir_cons),
+            'rate': round((dir_cons / dir_alloc * 100)) if dir_alloc > 0 else 0,
+        })
     
     # Performance par projet
     projects_en_retard = Project.objects.filter(

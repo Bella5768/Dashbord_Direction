@@ -41,6 +41,30 @@
         <div class="stat-card-icon green"><i data-lucide="plane"></i></div>
       </div>
     </a>
+    {% if can_view_budgets %}
+    <a class="stat-card stat-card-amber stat-card-link" href="{% url 'core:resources' %}">
+      <div class="stat-card-header">
+        <div>
+          <p class="stat-card-label">{% trans 'Budget consommé' %}</p>
+          <p class="stat-card-value">{{ budget_percentage }}%</p>
+          <p class="stat-card-subtitle">{{ total_consumed|number_format }} GNF</p>
+        </div>
+        <div class="stat-card-icon amber"><i data-lucide="credit-card"></i></div>
+      </div>
+    </a>
+    {% endif %}
+    {% if can_read_partners %}
+    <a class="stat-card stat-card-green stat-card-link" href="{% url 'core:partners' %}">
+      <div class="stat-card-header">
+        <div>
+          <p class="stat-card-label">{% trans 'Partenaires actifs' %}</p>
+          <p class="stat-card-value">{{ active_partners }}</p>
+          <p class="stat-card-subtitle">{% trans 'Collaborations en cours' %}</p>
+        </div>
+        <div class="stat-card-icon green"><i data-lucide="users"></i></div>
+      </div>
+    </a>
+    {% endif %}
   {% elif is_director %}
     <div class="stat-card stat-card-blue">
       <div class="stat-card-header">
@@ -52,6 +76,7 @@
         <div class="stat-card-icon blue"><i data-lucide="folder"></i></div>
       </div>
     </div>
+    {% if can_view_budgets %}
     <div class="stat-card stat-card-amber">
       <div class="stat-card-header">
         <div>
@@ -62,6 +87,7 @@
         <div class="stat-card-icon amber"><i data-lucide="credit-card"></i></div>
       </div>
     </div>
+    {% endif %}
     <div class="stat-card stat-card-green">
       <div class="stat-card-header">
         <div>
@@ -83,6 +109,7 @@
         <div class="stat-card-icon blue"><i data-lucide="folder"></i></div>
       </div>
     </a>
+    {% if can_view_budgets %}
     <a class="stat-card stat-card-amber stat-card-link" href="{% url 'core:resources' %}">
       <div class="stat-card-header">
         <div>
@@ -93,6 +120,8 @@
         <div class="stat-card-icon amber"><i data-lucide="credit-card"></i></div>
       </div>
     </a>
+    {% endif %}
+    {% if can_read_partners %}
     <a class="stat-card stat-card-green stat-card-link" href="{% url 'core:partners' %}">
       <div class="stat-card-header">
         <div>
@@ -103,6 +132,7 @@
         <div class="stat-card-icon green"><i data-lucide="users"></i></div>
       </div>
     </a>
+    {% endif %}
   {% endif %}
 </div>
 
@@ -213,7 +243,7 @@
 </div>
 
 <!-- ── Widgets spécifiques par rôle ──────────────────────────────────────── -->
-{% if is_admin_or_dg and late_projects %}
+{% if can_view_all_projects and late_projects %}
 <div class="card mb-6" style="border-left: 4px solid #ef4444;">
   <div class="card-header">
     <h3 class="card-title" style="color:#ef4444;">{% trans 'Alertes — projets en retard' %}</h3>
@@ -240,7 +270,7 @@
 <div class="card mb-6">
   <div class="card-header">
     <h3 class="card-title">
-      {% if is_admin_or_dg %}{% trans 'Congés en attente de validation finale' %}{% elif is_director %}{% trans 'Congés en attente dans votre direction' %}{% endif %}
+      {% if is_admin_or_dg %}{% trans 'Congés en attente de validation finale' %}{% elif is_director %}{% trans 'Congés en attente dans votre direction' %}{% else %}{% trans 'Congés en attente' %}{% endif %}
     </h3>
     <a href="{% url 'core:leave_list' %}" class="card-link">{% trans 'Voir tout' %} →</a>
   </div>
@@ -354,6 +384,7 @@
 {% else %}
 <!-- ── Demandes + Événements ─────────────────────────────────────────────── -->
 <div class="grid grid-2">
+  {% if can_approve_requests %}
   <div class="card">
     <div class="card-header">
       <h3 class="card-title">{% trans 'Demandes des directions' %}</h3>
@@ -383,6 +414,7 @@
       </div>
     </div>
   </div>
+  {% endif %}
 
   <div class="card">
     <div class="card-header">

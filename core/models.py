@@ -160,13 +160,30 @@ class UserProfile(models.Model):
         return self.role_slug in ['admin', 'directeur_general', 'directeur', 'chef_projet']
 
     # ------------------------------------------------------------------
+    # Helpers de permission (avec ou sans condition)
+    # ------------------------------------------------------------------
+    def _has_permission(self, action, subject):
+        """Vérifie si le profil possède au moins une règle (action, subject)
+        avec ou sans condition. Utile pour les widgets qui ne ciblent pas
+        une instance précise mais veulent savoir si l'utilisateur a un accès
+        scopé à un type d'objet."""
+        from .ability import Ability
+        ab = Ability(self.user)
+        for rule in ab.rules:
+            r_action  = rule.get('action')       if isinstance(rule, dict) else rule.action
+            r_subject = rule.get('subject')      if isinstance(rule, dict) else rule.subject
+            if r_action in (action, 'manage') and r_subject in (subject, 'all'):
+                return True
+        return False
+
+    # ------------------------------------------------------------------
     # Wrappers fonctionnels — délèguent à Ability
     # Conservés pour compatibilité avec les vues existantes
     # ------------------------------------------------------------------
 
     # Budget
     def can_view_budgets(self):
-        return self.can('read', 'Budget') or self.can('manage', 'Budget')
+        return self._has_permission('read', 'Budget') or self._has_permission('manage', 'Budget')
 
     def can_manage_budgets(self):
         return self.can('manage', 'Budget')
@@ -227,6 +244,18 @@ class UserProfile(models.Model):
 
     def can_manage_projects(self):
         return self.can('read', 'Project') or self.can('manage', 'Project')
+
+    def can_view_all_projects(self):
+        """Permission globale de voir tous les projets (sans condition de direction/appartenance)."""
+        from .ability import Ability
+        ab = Ability(self.user)
+        for rule in ab.rules:
+            action  = rule.get('action')       if isinstance(rule, dict) else rule.action
+            subject = rule.get('subject')      if isinstance(rule, dict) else rule.subject
+            cond    = rule.get('condition','') if isinstance(rule, dict) else rule.condition
+            if action in ('read', 'manage') and subject in ('Project', 'all') and not cond:
+                return True
+        return False
 
     # Projets — niveau instance
     def can_view_project(self, project):

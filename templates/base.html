@@ -98,7 +98,7 @@
                         </a>
                     </li>
                     {% endif %}
-                    {% if user.profile.is_directeur %}
+                    {% if user.profile.can_approve_documents %}
                     <li>
                         <a href="{% url 'core:documents' %}" {% if request.resolver_match.url_name == 'documents' %}class="active"{% endif %}>
                             <i data-lucide="file-text"></i>{% trans 'Documents' %}
@@ -112,7 +112,7 @@
                         </a>
                     </li>
                     {% endif %}
-                    {% if user.profile.is_directeur_general or user.is_staff %}
+                    {% if user.profile.can_view_reports %}
                     <li>
                         <a href="{% url 'core:reports' %}" {% if request.resolver_match.url_name == 'reports' %}class="active"{% endif %}>
                             <i data-lucide="bar-chart-2"></i>{% trans 'Rapports' %}
