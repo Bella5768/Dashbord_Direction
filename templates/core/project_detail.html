@@ -166,9 +166,9 @@
   <div class="pdetail-bottom">
     <div class="pdetail-prog-wrap">
       <div class="pdetail-prog-track">
-        <div class="pdetail-prog-fill {% if project.progress >= 80 %}high{% elif project.progress >= 50 %}mid{% elif project.progress >= 25 %}low{% else %}very-low{% endif %}" style="width:{{ project.progress }}%"></div>
+        <div id="proj-prog-fill" class="pdetail-prog-fill {% if project.progress >= 80 %}high{% elif project.progress >= 50 %}mid{% elif project.progress >= 25 %}low{% else %}very-low{% endif %}" style="width:{{ project.progress }}%"></div>
       </div>
-      <span class="pdetail-prog-val">{{ project.progress }}%</span>
+      <span id="proj-prog-val" class="pdetail-prog-val">{{ project.progress }}%</span>
     </div>
     <div class="pdetail-meta">
       <span class="pdetail-mi">
@@ -283,7 +283,7 @@
             <div style="position:relative;width:180px;height:180px;flex-shrink:0;">
               <canvas id="dash-donut-{{ project.id }}" width="180" height="180"></canvas>
               <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;">
-                <p style="font-size:26px;font-weight:800;color:#1e3a5f;margin:0;line-height:1;">{{ project.progress }}%</p>
+                <p id="proj-dash-pct" style="font-size:26px;font-weight:800;color:#1e3a5f;margin:0;line-height:1;">{{ project.progress }}%</p>
                 <p style="font-size:10px;color:#6b7280;margin:2px 0 0;">{% trans "avancement" %}</p>
               </div>
             </div>
@@ -762,7 +762,7 @@
           <div class="mrow-sub">
             {% for sub in milestone.sub_milestones.all %}
             {% with is_my_sub=sub.assigned_to|is_user_employee:user_employee %}
-            <div class="msub-item{% if is_my_sub and not sub.completed %} mine{% endif %}">
+            <div class="msub-item{% if is_my_sub and not sub.completed %} mine{% endif %}" data-sid="{{ sub.id }}" data-mid="{{ milestone.id }}">
               <div class="msub-lhs">
                 {% if can_add_milestones or is_my_sub %}
                 <a href="{% url 'core:sub_milestone_toggle' sub.id %}"
@@ -1821,5 +1821,95 @@ function renderCalendar() {
 })();
 </script>
 {% endif %}
+
+<!-- ── WebSocket temps réel : progression du projet ── -->
+<script>
+(function(){
+  var proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  var PROJECT_ID = {{ project.id }};
+  var _ws = null;
+  var _retry = null;
+
+  function progClass(pct) {
+    return pct >= 80 ? 'high' : pct >= 50 ? 'mid' : 'low';
+  }
+
+  function setMilestoneProgress(mid, pct, completed) {
+    var row = document.querySelector('[data-mid="' + mid + '"]');
+    if (!row) return;
+    var fill = row.querySelector('.mrow-prog-fill');
+    if (fill) {
+      fill.style.width = pct + '%';
+      fill.className = 'mrow-prog-fill ' + progClass(pct);
+    }
+    var val = row.querySelector('.mrow-prog-val');
+    if (val) val.textContent = pct + '%';
+    var chk = row.querySelector('.mrow-check');
+    if (chk) {
+      if (completed) { chk.classList.add('done'); if (!chk.textContent.includes('✓')) chk.textContent = '✓'; }
+      else { chk.classList.remove('done'); chk.textContent = ''; }
+    }
+    if (completed) row.classList.add('mrow-done');
+    else row.classList.remove('mrow-done');
+  }
+
+  function setSubProgress(sid, completed) {
+    var item = document.querySelector('[data-sid="' + sid + '"]');
+    if (!item) return;
+    var chk = item.querySelector('.msub-check');
+    if (chk) {
+      if (completed) { chk.classList.add('done'); if (!chk.textContent.includes('✓')) chk.textContent = '✓'; }
+      else { chk.classList.remove('done'); chk.textContent = ''; }
+    }
+    var name = item.querySelector('.msub-name');
+    if (name) {
+      if (completed) name.classList.add('done');
+      else name.classList.remove('done');
+    }
+  }
+
+  function setProjectProgress(pct) {
+    var fill = document.getElementById('proj-prog-fill');
+    if (fill) {
+      fill.style.width = pct + '%';
+      fill.className = 'pdetail-prog-fill ' + (pct >= 80 ? 'high' : pct >= 50 ? 'mid' : pct >= 25 ? 'low' : 'very-low');
+    }
+    var val = document.getElementById('proj-prog-val');
+    if (val) val.textContent = pct + '%';
+    var dash = document.getElementById('proj-dash-pct');
+    if (dash) dash.textContent = pct + '%';
+  }
+
+  function handleUpdate(data) {
+    if (data.event === 'milestone_toggle') {
+      setMilestoneProgress(data.milestone_id, data.progress, data.completed);
+      setProjectProgress(data.project_progress);
+    } else if (data.event === 'sous_etape_toggle') {
+      setSubProgress(data.sub_id, data.completed);
+      setMilestoneProgress(data.milestone_id, data.milestone_progress, data.milestone_completed);
+      setProjectProgress(data.project_progress);
+    }
+  }
+
+  function connect() {
+    try {
+      _ws = new WebSocket(proto + '//' + location.host + '/ws/projets/' + PROJECT_ID + '/');
+      _ws.onopen  = function() { _retry = null; };
+      _ws.onerror = function() {};
+      _ws.onclose = function() {
+        _ws = null;
+        var delay = _retry ? Math.min(_retry * 2, 30000) : 3000;
+        _retry = delay;
+        setTimeout(connect, delay);
+      };
+      _ws.onmessage = function(e) {
+        try { handleUpdate(JSON.parse(e.data)); } catch(err) {}
+      };
+    } catch(err) {}
+  }
+
+  connect();
+})();
+</script>
 
 {% endblock %}

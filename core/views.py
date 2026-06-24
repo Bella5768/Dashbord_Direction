@@ -1916,7 +1916,7 @@ def user_create(request):
             user.set_unusable_password()
             user.save()
 
-            profile, _ = UserProfile.objects.get_or_create(user=user)
+            profile, _created = UserProfile.objects.get_or_create(user=user)
             profile.role = role  # role est déjà un objet Role (ModelChoiceField)
             profile.direction = emp.direction
             profile.employee = emp
@@ -2995,6 +2995,10 @@ def sub_milestone_toggle(request, sub_milestone_id):
     sub_milestone.completed = not sub_milestone.completed
     sub_milestone.save()
 
+    # Refresh pour obtenir les valeurs recalculées par les signaux post_save
+    milestone.refresh_from_db()
+    project.refresh_from_db()
+
     status = "complétée" if sub_milestone.completed else "non complétée"
     log_project_activity(project, 'toggle_sous_etape', f"Sous-étape '{sub_milestone.name}' marquée comme {status}", request.user)
     if sub_milestone.completed and not was_completed:
@@ -3005,6 +3009,19 @@ def sub_milestone_toggle(request, sub_milestone_id):
             success, msg = notify_task_completed('sous-étape', sub_milestone.name, project, emp, sub_milestone.assigned_by, request.user)
             if not success:
                 messages.warning(request, _("Sous-étape terminée mais notification email échouée : {msg}").format(msg=msg))
+
+    from .notifs import push_project_update
+    push_project_update(project.id, {
+        'event': 'sous_etape_toggle',
+        'sub_id': sub_milestone.id,
+        'milestone_id': milestone.id,
+        'completed': sub_milestone.completed,
+        'milestone_progress': milestone.progress,
+        'milestone_completed': milestone.completed,
+        'project_progress': project.progress,
+        'actor': request.user.get_full_name() or request.user.username,
+    })
+
     messages.success(request, _("Sous-étape marquée comme {status}.").format(status=status))
     return redirect('core:project_detail', project_id=project.id)
 
@@ -3036,6 +3053,9 @@ def milestone_toggle(request, milestone_id):
     milestone.completed_at = timezone.now() if milestone.completed else None
     milestone.save()
 
+    # Refresh pour obtenir la progression projet recalculée par les signaux post_save
+    project.refresh_from_db()
+
     label = "complété" if milestone.completed else "non complété"
     log_project_activity(project, 'toggle_jalon', f"Jalon '{milestone.name}' marqué comme {label}", request.user)
     if milestone.completed and not was_completed:
@@ -3046,6 +3066,17 @@ def milestone_toggle(request, milestone_id):
             success, msg = notify_task_completed('jalon', milestone.name, project, emp, milestone.assigned_by, request.user)
             if not success:
                 messages.warning(request, _("Jalon terminé mais notification email échouée : {msg}").format(msg=msg))
+
+    from .notifs import push_project_update
+    push_project_update(project.id, {
+        'event': 'milestone_toggle',
+        'milestone_id': milestone.id,
+        'completed': milestone.completed,
+        'progress': milestone.progress,
+        'project_progress': project.progress,
+        'actor': request.user.get_full_name() or request.user.username,
+    })
+
     messages.success(request, _("Jalon marqué comme {label}.").format(label=label))
     return redirect('core:project_detail', project_id=project.id)
 
@@ -3964,7 +3995,7 @@ def document_download(request, doc_id):
         messages.error(request, _("Fichier introuvable."))
         return redirect('core:documents')
     from urllib.parse import quote
-    mime_type, _ = mimetypes.guess_type(file_path)
+    mime_type, _enc = mimetypes.guess_type(file_path)
     response = FileResponse(open(file_path, 'rb'), content_type=mime_type or 'application/octet-stream')
     _dl_name = os.path.basename(file_path)
     response['Content-Disposition'] = (

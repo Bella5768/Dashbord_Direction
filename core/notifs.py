@@ -7,6 +7,21 @@ destinataires concernés, en silence (aucune exception ne remonte).
 from django.urls import reverse
 
 
+def push_project_update(project_id, data):
+    """Diffuse une mise à jour de projet à tous les clients sur ws/projets/<id>/."""
+    try:
+        from channels.layers import get_channel_layer
+        from asgiref.sync import async_to_sync
+        layer = get_channel_layer()
+        if layer:
+            async_to_sync(layer.group_send)(
+                f'project_{project_id}',
+                {'type': 'project.update', 'data': data},
+            )
+    except Exception:
+        pass
+
+
 def _push_ws(receiver_id, notif_data):
     """Envoie la notification en temps réel via le channel layer."""
     try:

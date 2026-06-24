@@ -1,8 +1,9 @@
-"""Backend SMTP qui force un local_hostname valide.
+"""Backend SMTP qui force un local_hostname valide (EMAIL_LOCAL_HOSTNAME).
 
-Outlook (Office 365) renvoie "501 5.5.4 Invalid domain name" si le client
-envoie un EHLO/HELO avec un nom de machine sans domaine (ex: DESKTOP-XYZ).
-Ce backend force un FQDN valide pour la commande EHLO.
+Certains serveurs SMTP (Gmail, Outlook…) rejettent la connexion si le client
+envoie un EHLO avec le hostname réel de la machine (invalide, avec virgule,
+sans domaine…). Ce backend force un FQDN fixe pour la commande EHLO,
+indépendamment du réseau ou du WiFi utilisé.
 """
 import smtplib
 
@@ -17,24 +18,28 @@ def _local_hostname():
     return getattr(settings, 'EMAIL_LOCAL_HOSTNAME', '') or 'csig.edu.gn'
 
 
-class _OutlookSMTP(smtplib.SMTP):
+class _FixedHostnameSMTP(smtplib.SMTP):
     def __init__(self, host='', port=0, local_hostname=None, *args, **kwargs):
-        # Forcer le local_hostname pour éviter l'erreur "Invalid domain name"
-        hostname = _local_hostname()
-        super().__init__(host, port, hostname, *args, **kwargs)
+        super().__init__(host, port, _local_hostname(), *args, **kwargs)
 
 
-class _OutlookSMTP_SSL(smtplib.SMTP_SSL):
+class _FixedHostnameSMTP_SSL(smtplib.SMTP_SSL):
     def __init__(self, host='', port=0, local_hostname=None, *args, **kwargs):
-        # Forcer le local_hostname pour éviter l'erreur "Invalid domain name"
-        hostname = _local_hostname()
-        super().__init__(host, port, hostname, *args, **kwargs)
+        super().__init__(host, port, _local_hostname(), *args, **kwargs)
 
 
 class OutlookSMTPBackend(DjangoSMTPBackend):
+    """Alias conservé pour compatibilité .env existants."""
     @property
     def connection_class(self):
-        return _OutlookSMTP_SSL if self.use_ssl else _OutlookSMTP
+        return _FixedHostnameSMTP_SSL if self.use_ssl else _FixedHostnameSMTP
+
+
+class FixedHostnameSMTPBackend(DjangoSMTPBackend):
+    """Backend SMTP avec EHLO hostname fixe — fonctionne avec Gmail, Outlook, etc."""
+    @property
+    def connection_class(self):
+        return _FixedHostnameSMTP_SSL if self.use_ssl else _FixedHostnameSMTP
 
 
 def send_email(
