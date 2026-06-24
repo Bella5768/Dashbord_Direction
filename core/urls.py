@@ -36,6 +36,7 @@ urlpatterns = [
     path('documents/<int:doc_id>/signer/', views.document_sign, name='document_sign'),
     path('documents/<int:doc_id>/valider/', views.document_validate, name='document_validate'),
     path('documents/<int:doc_id>/telecharger/', views.document_download, name='document_download'),
+    path('documents/<int:doc_id>/apercu/', views.document_preview, name='document_preview'),
 
     # Reports
     path('rapports/', views.reports, name='reports'),
@@ -89,6 +90,7 @@ urlpatterns = [
     path('projets/documents/<int:doc_id>/modifier/', views.project_document_edit, name='project_document_edit'),
     path('projets/documents/<int:doc_id>/supprimer/', views.project_document_delete, name='project_document_delete'),
     path('projets/documents/<int:doc_id>/telecharger/', views.project_document_download, name='project_document_download'),
+    path('projets/documents/<int:doc_id>/apercu/', views.project_document_preview, name='project_document_preview'),
     
     # Project Need status
     path('besoins/<int:need_id>/statut/', views.project_need_update_status, name='project_need_update_status'),

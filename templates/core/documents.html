@@ -121,6 +121,11 @@
                         </td>
                         <td>
                             <div class="flex items-center justify-center gap-1">
+                                {% if doc.file %}
+                                <a href="{% url 'core:document_preview' doc.id %}" class="action-btn" title="{% trans 'Aperçu' %}">
+                                    <i data-lucide="eye" width="15" height="15"></i>
+                                </a>
+                                {% endif %}
                                 <a href="{% url 'core:document_edit' doc.id %}" class="action-btn" title="{% trans 'Modifier' %}">
                                     <i data-lucide="pencil" width="15" height="15"></i>
                                 </a>

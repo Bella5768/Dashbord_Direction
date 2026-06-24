@@ -86,6 +86,9 @@
                         </div>
                         <div class="flex gap-1">
                             {% if doc.file %}
+                            <a href="{% url 'core:project_document_preview' doc.id %}" class="action-btn" title="{% trans 'Aperçu' %}">
+                                <i data-lucide="eye" width="14" height="14" ></i>
+                            </a>
                             <a href="{{ doc.file.url }}" target="_blank" class="action-btn" title="{% trans 'Télécharger' %}">
                                 <i data-lucide="download" width="14" height="14" ></i>
                             </a>

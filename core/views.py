@@ -3458,6 +3458,55 @@ def project_document_download(request, doc_id):
         return redirect('core:project_detail', project_id=project.id)
 
 
+@login_required
+def project_document_preview(request, doc_id):
+    """Prévisualiser un document de projet (PDF, image...)."""
+    import mimetypes
+    import os
+
+    doc = get_object_or_404(ProjectDocument.objects.select_related('project'), pk=doc_id)
+    project = doc.project
+
+    if not request.user.profile.can_view_project(project):
+        messages.error(request, _("Vous n'avez pas accès à ce projet."))
+        return redirect('core:projects')
+
+    if not doc.file:
+        messages.error(request, _("Aucun fichier attaché à ce document."))
+        return redirect('core:project_detail', project_id=project.id)
+
+    file_path = doc.file.path
+    if not os.path.exists(file_path):
+        messages.error(request, _("Fichier introuvable."))
+        return redirect('core:project_detail', project_id=project.id)
+
+    mime_type, _encoding = mimetypes.guess_type(file_path)
+    mime_type = mime_type or 'application/octet-stream'
+
+    if mime_type.startswith('image/'):
+        preview_type = 'image'
+    elif mime_type == 'application/pdf':
+        preview_type = 'pdf'
+    else:
+        preview_type = 'unsupported'
+
+    if doc.folder_id:
+        back_url = reverse('core:project_folder_detail', args=[doc.folder_id])
+    else:
+        back_url = reverse('core:project_detail', args=[project.id])
+
+    context = {
+        'document': doc,
+        'project': project,
+        'file_url': doc.file.url,
+        'mime_type': mime_type,
+        'preview_type': preview_type,
+        'filename': os.path.basename(file_path),
+        'back_url': back_url,
+    }
+    return render(request, 'core/document_preview.html', context)
+
+
 # ==================== PROJECT MEMBER CRUD ====================
 
 @login_required
@@ -3847,6 +3896,49 @@ def document_download(request, doc_id):
         f"attachment; filename=\"{_dl_name}\"; filename*=UTF-8''{quote(_dl_name)}"
     )
     return response
+
+
+@login_required
+def document_preview(request, doc_id):
+    """Prévisualiser un document global (PDF, image...)."""
+    import mimetypes
+    import os
+
+    doc = get_object_or_404(Document, pk=doc_id)
+
+    # Permission : même règle que la liste des documents (admin/DG/directeur/chef de projet)
+    if not request.user.profile.can_approve_documents():
+        messages.error(request, _("Vous n'avez pas accès à ce document."))
+        return redirect('core:documents')
+
+    if not doc.file:
+        messages.error(request, _("Aucun fichier attaché à ce document."))
+        return redirect('core:documents')
+
+    file_path = doc.file.path
+    if not os.path.exists(file_path):
+        messages.error(request, _("Fichier introuvable."))
+        return redirect('core:documents')
+
+    mime_type, _encoding = mimetypes.guess_type(file_path)
+    mime_type = mime_type or 'application/octet-stream'
+
+    if mime_type.startswith('image/'):
+        preview_type = 'image'
+    elif mime_type == 'application/pdf':
+        preview_type = 'pdf'
+    else:
+        preview_type = 'unsupported'
+
+    context = {
+        'document': doc,
+        'file_url': doc.file.url,
+        'mime_type': mime_type,
+        'preview_type': preview_type,
+        'filename': os.path.basename(file_path),
+        'back_url': reverse('core:documents'),
+    }
+    return render(request, 'core/document_preview.html', context)
 
 
 # ==================== REQUEST CRUD ====================

@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans 'Aperçu' %} - {{ document.title }}{% endblock %}
+{% block page_title %}{% trans 'Aperçu du document' %}{% endblock %}
+{% block page_subtitle %}{{ document.title }}{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+    <div>
+      <h3 class="card-title">{{ document.title }}</h3>
+      <span class="card-subtitle" style="font-size:12px;color:#6b7280;">
+        {{ filename }} · {{ mime_type }}
+      </span>
+    </div>
+    <div class="flex gap-2">
+      {% if document.file %}
+      <a href="{{ document.file.url }}" download="{{ filename }}" class="btn btn-outline btn-sm" style="display:flex;align-items:center;gap:5px;">
+        <i data-lucide="download" width="14" height="14"></i>
+        {% trans 'Télécharger' %}
+      </a>
+      {% endif %}
+      <a href="{{ back_url }}" class="btn btn-outline btn-sm" style="display:flex;align-items:center;gap:5px;">
+        <i data-lucide="arrow-left" width="14" height="14"></i>
+        {% trans 'Retour' %}
+      </a>
+    </div>
+  </div>
+  <div class="card-content" style="padding:0;">
+    {% if preview_type == 'pdf' %}
+      <iframe src="{{ file_url }}" style="width:100%;height:80vh;border:none;display:block;" title="{% trans 'Aperçu PDF' %}"></iframe>
+    {% elif preview_type == 'image' %}
+      <div style="padding:24px;text-align:center;background:#f8fafc;">
+        <img src="{{ file_url }}" alt="{{ document.title }}" style="max-width:100%;max-height:80vh;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.08);">
+      </div>
+    {% else %}
+      <div style="padding:48px 24px;text-align:center;">
+        <i data-lucide="file-x" width="48" height="48" style="color:#d1d5db;margin-bottom:16px;"></i>
+        <h3 class="card-title" style="margin-bottom:8px;">{% trans 'Prévisualisation non disponible' %}</h3>
+        <p class="text-gray-500" style="margin-bottom:20px;">
+          {% trans "Ce format de fichier ne peut pas être prévisualisé directement dans l'application." %}
+        </p>
+        {% if document.file %}
+        <a href="{{ document.file.url }}" download="{{ filename }}" class="btn btn-primary">
+          <i data-lucide="download" width="16" height="16" style="margin-right:6px;"></i>
+          {% trans 'Télécharger le fichier' %}
+        </a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
