@@ -42,12 +42,14 @@ if _extra_csrf:
     CSRF_TRUSTED_ORIGINS += _extra_csrf
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'channels',
     'core',
 ]
 
@@ -84,6 +86,23 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'dashboard_csig.wsgi.application'
+ASGI_APPLICATION = 'dashboard_csig.asgi.application'
+
+# Channel layer : InMemory en dev, Redis en prod (REDIS_URL=redis://...)
+_redis_url = os.getenv('REDIS_URL', '')
+if _redis_url:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {'hosts': [_redis_url]},
+        }
+    }
+else:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        }
+    }
 
 if os.getenv('MYSQL_HOST'):
     DATABASES = {

@@ -7,17 +7,41 @@ destinataires concernés, en silence (aucune exception ne remonte).
 from django.urls import reverse
 
 
+def _push_ws(receiver_id, notif_data):
+    """Envoie la notification en temps réel via le channel layer."""
+    try:
+        from channels.layers import get_channel_layer
+        from asgiref.sync import async_to_sync
+        layer = get_channel_layer()
+        if layer:
+            async_to_sync(layer.group_send)(
+                f'notif_user_{receiver_id}',
+                {'type': 'notif.new', 'data': notif_data},
+            )
+    except Exception:
+        pass
+
+
 def _create(receiver, notif_type, title, message='', link=''):
-    """Créer une notification en ignorant toute erreur."""
+    """Créer une notification et la pousser via WebSocket."""
     try:
         from .models import Notification
-        Notification.objects.create(
+        n = Notification.objects.create(
             receiver=receiver,
             notif_type=notif_type,
             title=title,
             message=message,
             link=link,
         )
+        _push_ws(receiver.id, {
+            'id': n.id,
+            'type': notif_type,
+            'title': title,
+            'message': message,
+            'link': link,
+            'is_read': False,
+            'created_at': n.created_at.strftime('%d/%m à %H:%M'),
+        })
     except Exception:
         pass
 
