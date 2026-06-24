@@ -343,6 +343,8 @@ def leave_decide_manager(request, leave_id):
                 notifications.notify_leave_manager_decided(obj)
             except Exception:
                 pass
+            from .notifs import notify_conge_avis
+            notify_conge_avis(obj, request.user)
             messages.success(request, _("Avis hiérarchique enregistré."))
             return redirect('core:leave_detail', leave_id=obj.id)
     return redirect('core:leave_detail', leave_id=leave.id)
@@ -373,6 +375,8 @@ def leave_decide_hr(request, leave_id):
                 notifications.notify_leave_hr_decided(obj)
             except Exception:
                 pass
+            from .notifs import notify_conge_rh
+            notify_conge_rh(obj, request.user)
             messages.success(request, _("Vérification RH enregistrée."))
             return redirect('core:leave_detail', leave_id=obj.id)
     return redirect('core:leave_detail', leave_id=leave.id)
@@ -408,6 +412,8 @@ def leave_decide_final(request, leave_id):
                 notifications.notify_leave_final_decided(obj, pdf_bytes)
             except Exception:
                 pass
+            from .notifs import notify_conge_decision
+            notify_conge_decision(obj, request.user)
             messages.success(request, _("Décision finale enregistrée et notifiée."))
             return redirect('core:leave_detail', leave_id=obj.id)
     return redirect('core:leave_detail', leave_id=leave.id)

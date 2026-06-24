@@ -1239,6 +1239,41 @@ class LeaveRequest(models.Model):
         }.get(self.status, self.get_status_display())
 
 
+class Notification(models.Model):
+    """Notification in-app pour un utilisateur."""
+
+    TYPE_CHOICES = [
+        ('jalon_complete',      _('Jalon complété')),
+        ('sous_etape_complete', _('Sous-étape complétée')),
+        ('membre_projet',       _('Ajout comme membre de projet')),
+        ('commentaire',         _('Nouveau commentaire')),
+        ('conge_avis',          _('Avis hiérarchique congé')),
+        ('conge_rh',            _('Vérification RH congé')),
+        ('conge_decision',      _('Décision finale congé')),
+    ]
+
+    receiver    = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications_received', verbose_name=_("Destinataire"))
+    notif_type  = models.CharField(max_length=30, choices=TYPE_CHOICES, verbose_name=_("Type"))
+    title       = models.CharField(max_length=200, verbose_name=_("Titre"))
+    message     = models.TextField(blank=True, verbose_name=_("Message"))
+    link        = models.CharField(max_length=500, blank=True, verbose_name=_("Lien"))
+    is_read     = models.BooleanField(default=False, verbose_name=_("Lu"))
+    created_at  = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("Notification")
+        verbose_name_plural = _("Notifications")
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"[{self.notif_type}] {self.title} → {self.receiver}"
+
+    def mark_read(self):
+        if not self.is_read:
+            self.is_read = True
+            self.save(update_fields=['is_read'])
+
+
 class LeaveDocument(models.Model):
     """Piece jointe supplementaire pour une demande de conge."""
     leave_request = models.ForeignKey(LeaveRequest, on_delete=models.CASCADE, related_name='documents', verbose_name=_("Demande"))

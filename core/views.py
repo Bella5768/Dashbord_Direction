@@ -2439,6 +2439,8 @@ def project_comment_create(request, project_id):
         comment.created_by = request.user.get_full_name() or request.user.username
         comment.save()
         log_project_activity(project, 'ajout_commentaire', f"Ajout d'un commentaire", request.user)
+        from .notifs import notify_commentaire
+        notify_commentaire(project, request.user)
         messages.success(request, _("Commentaire ajouté."))
     else:
         messages.error(request, _("Impossible d'ajouter le commentaire. Vérifiez le formulaire."))
@@ -2932,6 +2934,8 @@ def sub_milestone_toggle(request, sub_milestone_id):
     log_project_activity(project, 'toggle_sous_etape', f"Sous-étape '{sub_milestone.name}' marquée comme {status}", request.user)
     if sub_milestone.completed and not was_completed:
         from .notifications import notify_task_completed
+        from .notifs import notify_sous_etape_completed
+        notify_sous_etape_completed(sub_milestone, request.user)
         for emp in sub_milestone.assigned_to.all():
             success, msg = notify_task_completed('sous-étape', sub_milestone.name, project, emp, sub_milestone.assigned_by, request.user)
             if not success:
@@ -2971,6 +2975,8 @@ def milestone_toggle(request, milestone_id):
     log_project_activity(project, 'toggle_jalon', f"Jalon '{milestone.name}' marqué comme {label}", request.user)
     if milestone.completed and not was_completed:
         from .notifications import notify_task_completed
+        from .notifs import notify_jalon_completed
+        notify_jalon_completed(milestone, request.user)
         for emp in milestone.assigned_to.all():
             success, msg = notify_task_completed('jalon', milestone.name, project, emp, milestone.assigned_by, request.user)
             if not success:
@@ -3669,6 +3675,8 @@ def project_member_add(request, project_id):
                         messages.warning(request, _("Compte non créé : {name} n'a pas d'adresse email.").format(name=new_employee.name))
 
                 from .notifications import notify_project_member_added
+                from .notifs import notify_membre_ajoute
+                notify_membre_ajoute(member, request.user)
                 success, msg = notify_project_member_added(member, request.user)
                 if success:
                     messages.info(request, msg)
@@ -3689,6 +3697,8 @@ def project_member_add(request, project_id):
                 member.save()
                 log_project_activity(project, 'ajout_membre', f"Ajout du membre '{member.employee.name}' ({member.project_role.name if member.project_role else 'sans rôle'})", request.user)
                 from .notifications import notify_project_member_added
+                from .notifs import notify_membre_ajoute
+                notify_membre_ajoute(member, request.user)
                 success, msg = notify_project_member_added(member, request.user)
                 if success:
                     messages.info(request, msg)
