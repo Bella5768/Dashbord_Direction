@@ -14,6 +14,13 @@ urlpatterns = [
     path('mon-compte/', views.profile, name='profile'),
     path('mon-compte/mot-de-passe/', views.password_change, name='password_change'),
     
+    # Notifications in-app
+    path('notifications/', views.notifications_list, name='notifications_list'),
+    path('notifications/count/', views.notifications_count, name='notifications_count'),
+    path('notifications/recent/', views.notifications_recent, name='notifications_recent'),
+    path('notifications/<int:notif_id>/read/', views.notification_mark_read, name='notification_mark_read'),
+    path('notifications/read-all/', views.notifications_mark_all_read, name='notifications_mark_all_read'),
+
     # Main pages
     path('', views.dashboard, name='dashboard'),
     path('recherche/', views.global_search, name='global_search'),

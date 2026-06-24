@@ -696,6 +696,71 @@ def _dashboard_pending_leaves(user, profile, direction_id):
     return LeaveRequest.objects.none()
 
 
+# ==================== NOTIFICATIONS IN-APP ====================
+
+@login_required
+def notifications_list(request):
+    """Page complète des notifications de l'utilisateur connecté."""
+    notifs = request.user.notifications_received.all()[:50]
+    request.user.notifications_received.filter(is_read=False).update(is_read=True)
+    return render(request, 'core/notifications_list.html', {'notifications': notifs})
+
+
+@login_required
+def notifications_count(request):
+    """API JSON : nombre de notifications non lues."""
+    from django.http import JsonResponse
+    count = request.user.notifications_received.filter(is_read=False).count()
+    return JsonResponse({'unread': count})
+
+
+@login_required
+def notifications_recent(request):
+    """API JSON : 6 dernières notifications avec détail."""
+    from django.http import JsonResponse
+    qs = request.user.notifications_received.all()[:6]
+    data = [
+        {
+            'id': n.id,
+            'type': n.notif_type,
+            'title': n.title,
+            'message': n.message,
+            'link': n.link,
+            'is_read': n.is_read,
+            'created_at': n.created_at.strftime('%d/%m à %H:%M'),
+        }
+        for n in qs
+    ]
+    unread = request.user.notifications_received.filter(is_read=False).count()
+    return JsonResponse({'notifications': data, 'unread': unread})
+
+
+@login_required
+def notification_mark_read(request, notif_id):
+    """Marquer une notification comme lue (POST)."""
+    from django.http import JsonResponse
+    if request.method != 'POST':
+        return JsonResponse({'error': 'method not allowed'}, status=405)
+    try:
+        n = request.user.notifications_received.get(pk=notif_id)
+        n.mark_read()
+    except Exception:
+        pass
+    return JsonResponse({'ok': True})
+
+
+@login_required
+def notifications_mark_all_read(request):
+    """Marquer toutes les notifications comme lues (POST)."""
+    from django.http import JsonResponse
+    if request.method != 'POST':
+        return JsonResponse({'error': 'method not allowed'}, status=405)
+    request.user.notifications_received.filter(is_read=False).update(is_read=True)
+    return JsonResponse({'ok': True})
+
+
+# ==================== DASHBOARD ====================
+
 @login_required
 def dashboard(request):
     """Vue principale du tableau de bord, personnalisée selon le rôle."""

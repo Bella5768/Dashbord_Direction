@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Notifications" %}{% endblock %}
+{% block page_title %}{% trans "Notifications" %}{% endblock %}
+{% block page_subtitle %}{% trans "Historique de vos notifications" %}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width:720px;">
+  <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+    <h3 class="card-title">{% trans "Toutes les notifications" %}</h3>
+    {% if notifications %}
+    <form method="post" action="{% url 'core:notifications_mark_all_read' %}">
+      {% csrf_token %}
+      <button class="btn btn-outline btn-sm" type="submit">{% trans "Tout marquer comme lu" %}</button>
+    </form>
+    {% endif %}
+  </div>
+  <div class="card-content" style="padding:0;">
+    {% if notifications %}
+    <ul style="list-style:none;margin:0;padding:0;">
+      {% for n in notifications %}
+      <li style="padding:14px 20px;border-bottom:1px solid var(--gray-100);display:flex;gap:14px;align-items:flex-start;{% if not n.is_read %}background:#f0f7ff;{% endif %}">
+        <div style="flex-shrink:0;width:36px;height:36px;border-radius:50%;background:var(--primary-100);display:flex;align-items:center;justify-content:center;">
+          <i data-lucide="bell" width="16" height="16" style="color:var(--primary-600);"></i>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <p style="font-size:13px;font-weight:{% if not n.is_read %}600{% else %}500{% endif %};color:var(--gray-900);margin:0 0 3px;">{{ n.title }}</p>
+          {% if n.message %}<p style="font-size:12px;color:var(--gray-500);margin:0 0 4px;">{{ n.message }}</p>{% endif %}
+          <span style="font-size:11px;color:var(--gray-400);">{{ n.created_at|date:"d/m/Y à H:i" }}</span>
+        </div>
+        {% if n.link %}
+        <a href="{{ n.link }}" style="flex-shrink:0;font-size:12px;color:var(--primary-600);text-decoration:none;white-space:nowrap;align-self:center;">{% trans "Voir" %} →</a>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p style="text-align:center;padding:40px 0;color:var(--gray-400);font-size:13px;">{% trans "Aucune notification pour l'instant." %}</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
