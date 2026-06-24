@@ -1011,6 +1011,9 @@
               </div>
               <div class="flex gap-1" style="flex-shrink:0;margin-left:6px;">
                 {% if doc.file %}
+                <a href="{% url 'core:project_document_preview' doc.id %}" class="action-btn" title="{% trans 'Aperçu' %}">
+                  <i data-lucide="eye" width="13" height="13" ></i>
+                </a>
                 <a href="{% url 'core:project_document_download' doc.id %}" class="action-btn" title="{% trans 'Télécharger' %}">
                   <i data-lucide="download" width="13" height="13" ></i>
                 </a>
