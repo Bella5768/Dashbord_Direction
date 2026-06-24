@@ -172,7 +172,8 @@
       {% if active_projects %}
       <div style="display:flex;flex-direction:column;gap:14px;">
         {% for project in active_projects %}
-        <a href="{% url 'core:project_detail' project.id %}" style="text-decoration:none;display:block;padding:14px;border-radius:10px;border:1px solid #e2e8f0;background:#f8fafc;transition:box-shadow .15s;"
+        <a href="{% url 'core:project_detail' project.id %}" data-project-id="{{ project.id }}"
+           style="text-decoration:none;display:block;padding:14px;border-radius:10px;border:1px solid #e2e8f0;background:#f8fafc;transition:box-shadow .15s;"
            onmouseenter="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseleave="this.style.boxShadow='none'">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px;">
             <div style="display:flex;gap:6px;flex-wrap:wrap;">
@@ -192,7 +193,7 @@
             <div class="progress" style="flex:1;height:6px;">
               <div class="progress-bar {% if project.progress >= 80 %}green{% elif project.progress >= 50 %}blue{% elif project.progress >= 25 %}amber{% else %}red{% endif %}" style="width:{{ project.progress }}%"></div>
             </div>
-            <span style="font-size:12px;font-weight:600;color:#374151;white-space:nowrap;">{{ project.progress }}%</span>
+            <span data-proj-pct style="font-size:12px;font-weight:600;color:#374151;white-space:nowrap;">{{ project.progress }}%</span>
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;font-size:11px;color:#64748b;flex-wrap:wrap;gap:4px;">
             <span>{% trans 'Fin' %} : {{ project.end_date|date:"d/m/Y" }}</span>
@@ -252,13 +253,13 @@
   <div class="card-content">
     <div class="item-list">
       {% for project in late_projects %}
-      <a href="{% url 'core:project_detail' project.id %}" class="request-item" style="text-decoration:none;">
+      <a href="{% url 'core:project_detail' project.id %}" class="request-item" data-project-id="{{ project.id }}" style="text-decoration:none;">
         <div class="request-header">
           <span class="badge badge-danger">{% trans 'En retard' %}</span>
           <span style="font-size:11px;color:#64748b;">{{ project.direction.code|default:"—" }}</span>
         </div>
         <h4 class="request-title">{{ project.name }}</h4>
-        <p class="request-description">{% trans 'Fin prévue le' %} {{ project.end_date|date:"d/m/Y" }} — {{ project.progress }}%</p>
+        <p class="request-description">{% trans 'Fin prévue le' %} {{ project.end_date|date:"d/m/Y" }} — <span data-proj-pct>{{ project.progress }}%</span></p>
       </a>
       {% endfor %}
     </div>
@@ -569,5 +570,35 @@ var DASH_I18N = {
     });
   }
 })();
+</script>
+<script>
+window._onProjUpdate = function(data) {
+    var pid = data.project_id;
+    if (!pid) return;
+    var cards = document.querySelectorAll('[data-project-id="' + pid + '"]');
+    cards.forEach(function(card) {
+        var pct = data.project_progress != null ? data.project_progress : data.progress;
+        if (pct != null) {
+            var bar = card.querySelector('.progress-bar');
+            if (bar) {
+                bar.style.width = pct + '%';
+                bar.className = 'progress-bar ' + (pct >= 80 ? 'green' : pct >= 50 ? 'blue' : pct >= 25 ? 'amber' : 'red');
+            }
+            var pctEl = card.querySelector('[data-proj-pct]');
+            if (pctEl) pctEl.textContent = pct + '%';
+        }
+        if (data.computed_status) {
+            var sb = card.querySelector('.badge');
+            if (sb && sb.className.includes('badge-')) {
+                var cls = data.computed_status === 'en_retard' ? 'badge-danger'
+                        : data.computed_status === 'en_cours'  ? 'badge-info'
+                        : data.computed_status === 'planifie'  ? 'badge-warning'
+                        : 'badge-success';
+                sb.className = 'badge ' + cls;
+                sb.textContent = data.status_label || data.computed_status;
+            }
+        }
+    });
+};
 </script>
 {% endblock %}

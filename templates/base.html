@@ -710,6 +710,10 @@
 
           _ws.onmessage = function(e) {
             var data = JSON.parse(e.data);
+            if (data.msg_type === 'proj') {
+              if (typeof window._onProjUpdate === 'function') window._onProjUpdate(data);
+              return;
+            }
             /* Badge instantané */
             updateBadge(_unreadCount + 1);
             /* Si le dropdown est ouvert, insérer l'item en tête */
@@ -735,10 +739,7 @@
       }
 
       connectWS();
-
-      /* ── Polling fallback 60s (secours si WS coupé) ─────────── */
       fetchCount();
-      setInterval(fetchCount, 60000);
     })();
     </script>
     {% endif %}

@@ -147,7 +147,8 @@
       <div class="mt-rows">
         {% for item in group.milestones %}
         {% with overdue=item.due_date|is_overdue %}
-        <div class="mt-row{% if item.completed %} done{% elif overdue and not item.completed %} overdue{% endif %}">
+        <div class="mt-row{% if item.completed %} done{% elif overdue and not item.completed %} overdue{% endif %}"
+             {% if item.type == 'jalon' %}data-mid="{{ item.id }}"{% else %}data-sid="{{ item.id }}"{% endif %}>
 
           <span class="mt-type {% if item.type == 'jalon' %}jalon{% else %}sub{% endif %}">
             {% if item.type == 'jalon' %}{% trans 'Jalon' %}{% else %}{% trans 'Sous-étape' %}{% endif %}
@@ -196,4 +197,33 @@
 </div>
 {% endif %}
 
+<script>
+window._onProjUpdate = function(data) {
+    var rowSel = null;
+    if (data.event === 'milestone_toggle') {
+        rowSel = '.mt-row[data-mid="' + data.milestone_id + '"]';
+    } else if (data.event === 'sous_etape_toggle') {
+        rowSel = '.mt-row[data-sid="' + data.sub_id + '"]';
+    }
+    if (!rowSel) return;
+    var row = document.querySelector(rowSel);
+    if (!row) return;
+    var done = !!data.completed;
+    row.classList.toggle('done', done);
+    if (done) row.classList.remove('overdue');
+    var name = row.querySelector('.mt-name');
+    if (name) name.classList.toggle('done', done);
+    var chk = row.querySelector('.mt-chk');
+    if (chk) {
+        chk.classList.toggle('done', done);
+        chk.textContent = done ? '✓' : '';
+    }
+    var chkRo = row.querySelector('.mt-chk-ro');
+    if (chkRo) {
+        chkRo.classList.toggle('done', done);
+        chkRo.classList.toggle('pending', !done);
+        chkRo.textContent = done ? '✓' : '';
+    }
+};
+</script>
 {% endblock %}

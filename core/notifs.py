@@ -8,7 +8,8 @@ from django.urls import reverse
 
 
 def push_project_update(project_id, data):
-    """Diffuse une mise à jour de projet à tous les clients sur ws/projets/<id>/."""
+    """Diffuse une mise à jour de projet à tous les membres connectés (toutes pages)."""
+    data = {**data, 'project_id': project_id}  # project_id always included for client-side filtering
     try:
         from channels.layers import get_channel_layer
         from asgiref.sync import async_to_sync
@@ -20,6 +21,36 @@ def push_project_update(project_id, data):
             )
     except Exception:
         pass
+
+
+def push_section_refresh(project_id, section, actor=''):
+    """Demande aux clients d'actualiser un panel de la page projet via fetch+DOMParser."""
+    push_project_update(project_id, {'event': 'section_refresh', 'section': section, 'actor': actor})
+
+
+def push_project_meta(project):
+    """Diffuse les métadonnées projet mises à jour (statut, nom, progression)."""
+    push_project_update(project.id, {
+        'event': 'project_meta',
+        'name': project.name,
+        'status': project.status,
+        'computed_status': project.computed_status,
+        'status_label': project.get_status_display(),
+        'progress': project.progress,
+    })
+
+
+def push_milestone_status(project_id, milestone_id, status, status_label, completed, milestone_progress, project_progress):
+    """Mise à jour in-place du statut d'un jalon (badge + progression)."""
+    push_project_update(project_id, {
+        'event': 'milestone_status',
+        'milestone_id': milestone_id,
+        'status': status,
+        'status_label': status_label,
+        'completed': completed,
+        'progress': milestone_progress,
+        'project_progress': project_progress,
+    })
 
 
 def _push_ws(receiver_id, notif_data):

@@ -139,7 +139,7 @@
   <div class="pdetail-hdr-top">
     <div class="pdetail-badges">
       {% with cs=project.computed_status %}
-      <span class="pdetail-badge s-{{ cs }}">{% if cs == 'en_retard' %}{% trans 'En retard' %}{% else %}{{ project.get_status_display }}{% endif %}</span>
+      <span id="proj-status-badge" class="pdetail-badge s-{{ cs }}">{% if cs == 'en_retard' %}{% trans 'En retard' %}{% else %}{{ project.get_status_display }}{% endif %}</span>
       {% endwith %}
       <span class="pdetail-badge prio-{{ project.priority }}">{{ project.get_priority_display }}</span>
       {% if project.direction %}<span class="pdetail-badge dir">{{ project.direction.code }}</span>{% endif %}
@@ -1880,6 +1880,25 @@ function renderCalendar() {
     if (dash) dash.textContent = pct + '%';
   }
 
+  var _refreshInFlight = {};
+  function refreshPanel(panelId) {
+    if (_refreshInFlight[panelId]) return;
+    _refreshInFlight[panelId] = true;
+    fetch(window.location.pathname + '?_ts=' + Date.now(), {credentials: 'same-origin'})
+      .then(function(r) { return r.text(); })
+      .then(function(html) {
+        var doc = new DOMParser().parseFromString(html, 'text/html');
+        var newEl = doc.getElementById(panelId);
+        var curEl = document.getElementById(panelId);
+        if (newEl && curEl) {
+          curEl.innerHTML = newEl.innerHTML;
+          if (window.lucide) lucide.createIcons({nodes: [curEl]});
+        }
+      })
+      .catch(function() {})
+      .finally(function() { delete _refreshInFlight[panelId]; });
+  }
+
   function handleUpdate(data) {
     if (data.event === 'milestone_toggle') {
       setMilestoneProgress(data.milestone_id, data.progress, data.completed);
@@ -1888,6 +1907,20 @@ function renderCalendar() {
       setSubProgress(data.sub_id, data.completed);
       setMilestoneProgress(data.milestone_id, data.milestone_progress, data.milestone_completed);
       setProjectProgress(data.project_progress);
+    } else if (data.event === 'milestone_status') {
+      var badge = document.getElementById('mstatus-' + data.milestone_id);
+      if (badge) { badge.textContent = data.status_label; badge.className = 'mrow-sbadge s-' + data.status; }
+      setMilestoneProgress(data.milestone_id, data.progress, data.completed);
+      setProjectProgress(data.project_progress);
+    } else if (data.event === 'section_refresh') {
+      refreshPanel(data.section);
+    } else if (data.event === 'project_meta') {
+      setProjectProgress(data.progress);
+      var sb = document.getElementById('proj-status-badge');
+      if (sb && data.computed_status) {
+        sb.className = 'pdetail-badge s-' + data.computed_status;
+        sb.textContent = data.status_label || data.computed_status;
+      }
     }
   }
 
