@@ -1905,15 +1905,16 @@ function renderCalendar() {
             if (window.lucide) lucide.createIcons({nodes: [curEl]});
           }
         });
-        if (sections.indexOf('jalons-view-list') !== -1 && typeof _rendered !== 'undefined') {
+        if (sections.indexOf('jalons-view-list') !== -1) {
           var jsonEl = doc.getElementById('milestones-json');
-          if (jsonEl) {
-            try { MILESTONES_DATA = JSON.parse(jsonEl.textContent); } catch(e) {}
+          if (typeof _rendered === 'undefined') {
+            // Page chargée sans jalons — reload pour initialiser le JS kanban/gantt
+            if (jsonEl) { location.reload(); return; }
           } else {
-            MILESTONES_DATA = [];
+            MILESTONES_DATA = jsonEl ? JSON.parse(jsonEl.textContent) : [];
+            _rendered.kanban = false; _rendered.gantt = false; _rendered.calendrier = false;
+            if (_currentView !== 'list') { _renderView(_currentView); _rendered[_currentView] = true; }
           }
-          _rendered.kanban = false; _rendered.gantt = false; _rendered.calendrier = false;
-          if (_currentView !== 'list') { _renderView(_currentView); _rendered[_currentView] = true; }
         }
       })
       .catch(function() {})

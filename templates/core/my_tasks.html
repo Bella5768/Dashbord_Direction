@@ -103,6 +103,7 @@
 </div>
 {% endif %}
 
+<div id="mt-content">
 {% if not task_groups %}
 <div class="card">
   <div class="card-content mt-empty">
@@ -196,6 +197,7 @@
   {% endfor %}
 </div>
 {% endif %}
+</div><!-- #mt-content -->
 
 <script>
 window._onProjUpdate = function(data) {
@@ -247,11 +249,11 @@ function _refreshTaskList() {
         .then(function(r) { return r.text(); })
         .then(function(html) {
             var doc = new DOMParser().parseFromString(html, 'text/html');
-            var newList = doc.querySelector('.mt-list');
-            var curList = document.querySelector('.mt-list');
-            if (newList && curList) {
-                curList.innerHTML = newList.innerHTML;
-                if (window.lucide) lucide.createIcons({nodes: [curList]});
+            var newEl = doc.getElementById('mt-content');
+            var curEl = document.getElementById('mt-content');
+            if (newEl && curEl) {
+                curEl.innerHTML = newEl.innerHTML;
+                if (window.lucide) lucide.createIcons({nodes: [curEl]});
             }
         })
         .catch(function() {})

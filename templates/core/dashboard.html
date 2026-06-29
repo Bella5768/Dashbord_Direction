@@ -168,7 +168,7 @@
       <h3 class="card-title">{% if is_employee_view %}{% trans 'Mes projets en cours' %}{% else %}{% trans 'Projets en cours' %}{% endif %}</h3>
       <a href="{% url 'core:projects' %}" class="card-link">{% trans 'Voir tout' %} →</a>
     </div>
-    <div class="card-content">
+    <div class="card-content" id="dash-active-projects">
       {% if active_projects %}
       <div style="display:flex;flex-direction:column;gap:14px;">
         {% for project in active_projects %}
@@ -244,6 +244,7 @@
 </div>
 
 <!-- ── Widgets spécifiques par rôle ──────────────────────────────────────── -->
+<div id="dash-late-container">
 {% if can_view_all_projects and late_projects %}
 <div class="card mb-6" style="border-left: 4px solid #ef4444;">
   <div class="card-header">
@@ -266,6 +267,7 @@
   </div>
 </div>
 {% endif %}
+</div><!-- #dash-late-container -->
 
 {% if pending_leaves %}
 <div class="card mb-6">
@@ -599,6 +601,32 @@ window._onProjUpdate = function(data) {
             }
         }
     });
+    // Rafraîchit les listes structurelles quand le statut projet change
+    if (data.event === 'project_meta' && data.computed_status) {
+        _refreshDashProjects();
+    }
 };
+
+var _dashInFlight = false;
+function _refreshDashProjects() {
+    if (_dashInFlight) return;
+    _dashInFlight = true;
+    fetch(window.location.pathname + '?_ts=' + Date.now(), {credentials: 'same-origin'})
+        .then(function(r) { return r.text(); })
+        .then(function(html) {
+            var doc = new DOMParser().parseFromString(html, 'text/html');
+            var sections = ['dash-active-projects', 'dash-late-container'];
+            sections.forEach(function(sid) {
+                var newEl = doc.getElementById(sid);
+                var curEl = document.getElementById(sid);
+                if (newEl && curEl) {
+                    curEl.innerHTML = newEl.innerHTML;
+                    if (window.lucide) lucide.createIcons({nodes: [curEl]});
+                }
+            });
+        })
+        .catch(function() {})
+        .finally(function() { _dashInFlight = false; });
+}
 </script>
 {% endblock %}
