@@ -199,31 +199,63 @@
 
 <script>
 window._onProjUpdate = function(data) {
-    var rowSel = null;
-    if (data.event === 'milestone_toggle') {
-        rowSel = '.mt-row[data-mid="' + data.milestone_id + '"]';
-    } else if (data.event === 'sous_etape_toggle') {
-        rowSel = '.mt-row[data-sid="' + data.sub_id + '"]';
+    // Toggles — mise à jour in-place
+    if (data.event === 'milestone_toggle' || data.event === 'sous_etape_toggle') {
+        var rowSel = data.event === 'milestone_toggle'
+            ? '.mt-row[data-mid="' + data.milestone_id + '"]'
+            : '.mt-row[data-sid="' + data.sub_id + '"]';
+        var row = document.querySelector(rowSel);
+        if (row) {
+            var done = !!data.completed;
+            row.classList.toggle('done', done);
+            if (done) row.classList.remove('overdue');
+            var name = row.querySelector('.mt-name');
+            if (name) name.classList.toggle('done', done);
+            var chk = row.querySelector('.mt-chk');
+            if (chk) { chk.classList.toggle('done', done); chk.textContent = done ? '✓' : ''; }
+            var chkRo = row.querySelector('.mt-chk-ro');
+            if (chkRo) { chkRo.classList.toggle('done', done); chkRo.classList.toggle('pending', !done); chkRo.textContent = done ? '✓' : ''; }
+        }
+        return;
     }
-    if (!rowSel) return;
-    var row = document.querySelector(rowSel);
-    if (!row) return;
-    var done = !!data.completed;
-    row.classList.toggle('done', done);
-    if (done) row.classList.remove('overdue');
-    var name = row.querySelector('.mt-name');
-    if (name) name.classList.toggle('done', done);
-    var chk = row.querySelector('.mt-chk');
-    if (chk) {
-        chk.classList.toggle('done', done);
-        chk.textContent = done ? '✓' : '';
+    // Jalons CRUD — rechargement de la liste complète
+    if (data.event === 'section_refresh' && data.section === 'jalons-view-list') {
+        _refreshTaskList();
+        return;
     }
-    var chkRo = row.querySelector('.mt-chk-ro');
-    if (chkRo) {
-        chkRo.classList.toggle('done', done);
-        chkRo.classList.toggle('pending', !done);
-        chkRo.textContent = done ? '✓' : '';
+    // Changement de métadonnées projet — badge statut inline
+    if (data.event === 'project_meta' && data.project_id && data.computed_status) {
+        document.querySelectorAll('.mt-project-link').forEach(function(link) {
+            if (link.href.indexOf('/' + data.project_id + '/') === -1) return;
+            var badge = link.closest('.card-header') && link.closest('.card-header').querySelector('.badge');
+            if (!badge) return;
+            var cls = data.computed_status === 'en_retard' ? 'badge-danger'
+                    : data.computed_status === 'en_cours'  ? 'badge-info'
+                    : data.computed_status === 'termine'   ? 'badge-success'
+                    : 'badge-secondary';
+            badge.className = 'badge ' + cls;
+            badge.textContent = data.status_label || data.computed_status;
+        });
     }
 };
+
+var _taskListInFlight = false;
+function _refreshTaskList() {
+    if (_taskListInFlight) return;
+    _taskListInFlight = true;
+    fetch(window.location.pathname + '?_ts=' + Date.now(), {credentials: 'same-origin'})
+        .then(function(r) { return r.text(); })
+        .then(function(html) {
+            var doc = new DOMParser().parseFromString(html, 'text/html');
+            var newList = doc.querySelector('.mt-list');
+            var curList = document.querySelector('.mt-list');
+            if (newList && curList) {
+                curList.innerHTML = newList.innerHTML;
+                if (window.lucide) lucide.createIcons({nodes: [curList]});
+            }
+        })
+        .catch(function() {})
+        .finally(function() { _taskListInFlight = false; });
+}
 </script>
 {% endblock %}

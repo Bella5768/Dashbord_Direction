@@ -1457,6 +1457,9 @@ var DETAIL_I18N = {
 
 <!-- ==================== JALONS VUES DYNAMIQUES ==================== -->
 {% if milestones %}
+<script id="milestones-json" type="application/json">
+[{% for m in milestones %}{"id":{{m.id}},"name":"{{m.name|escapejs}}","status":"{{m.status}}","progress":{{m.progress}},"due_date":"{{m.due_date|date:'Y-m-d'|default:''}}","completed":{% if m.completed %}true{% else %}false{% endif %},"order":{{m.order}},"assigned":"{% for emp in m.assigned_to.all %}{{emp.name|escapejs}}{% if not forloop.last %}, {% endif %}{% endfor %}"}{% if not forloop.last %},{% endif %}{% endfor %}]
+</script>
 <script>
 // ── Données jalons ──────────────────────────────────────────────────────────
 var MILESTONES_DATA = [{% for m in milestones %}{
@@ -1902,15 +1905,12 @@ function renderCalendar() {
             if (window.lucide) lucide.createIcons({nodes: [curEl]});
           }
         });
-        if (sections.indexOf('jalons-view-list') !== -1) {
-          var scripts = doc.querySelectorAll('script:not([src])');
-          for (var i = 0; i < scripts.length; i++) {
-            var t = scripts[i].textContent;
-            if (t.indexOf('var MILESTONES_DATA') !== -1) {
-              var mx = t.match(/var MILESTONES_DATA\s*=\s*(\[[\s\S]*?\]);/);
-              if (mx) { try { eval('MILESTONES_DATA = ' + mx[1]); } catch(e) {} }
-              break;
-            }
+        if (sections.indexOf('jalons-view-list') !== -1 && typeof _rendered !== 'undefined') {
+          var jsonEl = doc.getElementById('milestones-json');
+          if (jsonEl) {
+            try { MILESTONES_DATA = JSON.parse(jsonEl.textContent); } catch(e) {}
+          } else {
+            MILESTONES_DATA = [];
           }
           _rendered.kanban = false; _rendered.gantt = false; _rendered.calendrier = false;
           if (_currentView !== 'list') { _renderView(_currentView); _rendered[_currentView] = true; }

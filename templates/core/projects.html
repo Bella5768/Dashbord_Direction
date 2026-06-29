@@ -216,12 +216,20 @@ window._onProjUpdate = function(data) {
         if (val) val.textContent = pct + '%';
     }
     if (data.computed_status) {
+        var oldMatch = card.className.match(/\bstatus-(\S+)/);
+        var oldStatus = oldMatch ? oldMatch[1] : null;
         var sb = card.querySelector('.pc-status');
         if (sb) {
             sb.className = 'pc-status s-' + data.computed_status;
             sb.textContent = data.status_label || data.computed_status;
         }
         card.className = card.className.replace(/\bstatus-\S+/, 'status-' + data.computed_status);
+        if (oldStatus && oldStatus !== data.computed_status) {
+            var dec = document.querySelector('a[href*="status=' + oldStatus + '"] .stat-box-value');
+            var inc = document.querySelector('a[href*="status=' + data.computed_status + '"] .stat-box-value');
+            if (dec) dec.textContent = Math.max(0, (parseInt(dec.textContent) || 0) - 1);
+            if (inc) inc.textContent = (parseInt(inc.textContent) || 0) + 1;
+        }
     }
     if (data.name) {
         var nm = card.querySelector('.pc-name');
