@@ -16,7 +16,7 @@ from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
 from reportlab.pdfgen import canvas
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
-from .models import Direction, Project, Document, Partner, Event, Request, Employee, Budget, UserProfile, UserActivity, ProjectMember, Milestone, SubMilestone, ProjectNeed, ProjectComment, ProjectDocument, ProjectFolder, ProjectActivity, Role, ProjectRole, LeaveRequest
+from .models import Direction, Project, Document, Partner, Event, EventMember, Request, Employee, Budget, UserProfile, UserActivity, ProjectMember, Milestone, SubMilestone, ProjectNeed, ProjectComment, ProjectDocument, ProjectFolder, ProjectActivity, Role, ProjectRole, LeaveRequest
 from .notifs import push_section_refresh, push_project_meta, push_milestone_status
 
 
@@ -1125,7 +1125,6 @@ def calendar(request):
     stats = {
         'reunions': events_qs.filter(event_type='reunion').count(),
         'evenements': events_qs.filter(event_type='evenement').count(),
-        'deadlines': events_qs.filter(event_type='deadline').count(),
         'total': events_qs.count(),
     }
 
@@ -1168,20 +1167,105 @@ def calendar(request):
 def event_detail(request, event_id):
     """Détail d'un événement"""
     event = get_object_or_404(Event, pk=event_id)
+
+    if not request.user.profile.can_read_events():
+        messages.error(request, _("Accès au calendrier insuffisant."))
+        return redirect('core:dashboard')
+
     can_manage = request.user.profile.can_manage_events()
     is_creator = event.created_by == request.user
     can_edit = can_manage or is_creator
+
+    members = (
+        event.event_members
+        .select_related('employee', 'employee__direction')
+        .order_by('employee__name')
+    )
+
+    # Membership du user courant (pour RSVP)
+    my_membership = None
+    employee = getattr(request.user.profile, 'employee', None)
+    if employee:
+        my_membership = members.filter(employee=employee).first()
+
+    # Compteurs RSVP
+    rsvp_counts = {
+        'accepte':   members.filter(status='accepte').count(),
+        'refuse':    members.filter(status='refuse').count(),
+        'peut_etre': members.filter(status='peut_etre').count(),
+        'invite':    members.filter(status='invite').count(),
+    }
+
+    # Données pour l'ajout de membres (managers uniquement)
+    existing_emp_ids = set(members.values_list('employee_id', flat=True))
+    available_employees = Employee.objects.exclude(id__in=existing_emp_ids).order_by('name')
+    all_directions = Direction.objects.order_by('name')
+    all_projects = Project.objects.order_by('name')
+
     return render(request, 'core/event_detail.html', {
         'event': event,
         'can_edit': can_edit,
         'can_delete': can_edit,
+        'members': members,
+        'my_membership': my_membership,
+        'rsvp_counts': rsvp_counts,
+        'available_employees': available_employees,
+        'all_directions': all_directions,
+        'all_projects': all_projects,
     })
+
+
+def _sync_event_members(event, actor_user):
+    """
+    Synchronise les EventMember selon les directions participantes (dans une transaction).
+    - Bulk-crée les membres manquants et les notifie (invite)
+    - Retire les membres non-répondants dont la direction est retirée
+    Retourne le set d'employee_id nouvellement créés.
+    """
+    from django.db import transaction
+    from .notifs import notify_event_member_invited
+    from .notifications import notify_event_member_email
+
+    with transaction.atomic():
+        current_dir_ids = set(event.participants.values_list('id', flat=True))
+        existing = {
+            m.employee_id: m
+            for m in event.event_members.select_related('employee').all()
+        }
+        expected_ids = set(
+            Employee.objects
+            .filter(direction_id__in=current_dir_ids)
+            .values_list('id', flat=True)
+        )
+        to_add_ids = expected_ids - set(existing.keys())
+
+        if to_add_ids:
+            employees_to_add = Employee.objects.filter(id__in=to_add_ids)
+            EventMember.objects.bulk_create(
+                [EventMember(event=event, employee=emp) for emp in employees_to_add],
+                ignore_conflicts=True,
+            )
+            # Récupérer les instances créées (bulk_create ne remplit pas les PK sur SQLite)
+            for member in EventMember.objects.filter(event=event, employee_id__in=to_add_ids).select_related('employee'):
+                notify_event_member_invited(member, actor_user)
+                notify_event_member_email(member, actor_user)
+
+        # Retirer les membres non-répondants dont la direction est retirée
+        to_remove = [
+            m for emp_id, m in existing.items()
+            if emp_id not in expected_ids and m.status == 'invite'
+        ]
+        for m in to_remove:
+            m.delete()
+
+    return to_add_ids
 
 
 @login_required
 def event_create(request):
     """Créer un événement"""
     from .forms import EventForm
+    from .notifs import push_calendar_update
 
     if not request.user.profile.can_manage_events():
         messages.error(request, _("Permission insuffisante pour créer des événements."))
@@ -1194,6 +1278,9 @@ def event_create(request):
             event.created_by = request.user
             event.save()
             form.save_m2m()
+            # _sync_event_members envoie les invitations individuelles — pas de notif direction séparée
+            _sync_event_members(event, request.user)
+            push_calendar_update('created', event.id, event.date)
             messages.success(request, _("Événement créé avec succès."))
             return redirect('core:event_detail', event_id=event.pk)
     else:
@@ -1210,6 +1297,7 @@ def event_create(request):
 def event_edit(request, event_id):
     """Modifier un événement"""
     from .forms import EventForm
+    from .notifs import notify_event_members_updated, push_calendar_update
 
     event = get_object_or_404(Event, pk=event_id)
     can_manage = request.user.profile.can_manage_events()
@@ -1223,6 +1311,12 @@ def event_edit(request, event_id):
         form = EventForm(request.POST, instance=event)
         if form.is_valid():
             form.save()
+            form.save_m2m()
+            # new_ids = membres nouvellement invités via sync (ont déjà reçu une notif invite)
+            new_ids = _sync_event_members(event, request.user)
+            # Notifier uniquement les membres existants (pas les nouveaux) de la modification
+            notify_event_members_updated(event, request.user, exclude_employee_ids=new_ids)
+            push_calendar_update('updated', event.id, event.date)
             messages.success(request, _("Événement modifié avec succès."))
             return redirect('core:event_detail', event_id=event.pk)
     else:
@@ -1236,6 +1330,8 @@ def event_edit(request, event_id):
 @login_required
 def event_delete(request, event_id):
     """Supprimer un événement"""
+    from .notifs import notify_event_deleted, push_calendar_update
+
     event = get_object_or_404(Event, pk=event_id)
     can_manage = request.user.profile.can_manage_events()
     is_creator = event.created_by == request.user
@@ -1245,11 +1341,129 @@ def event_delete(request, event_id):
         return redirect('core:event_detail', event_id=event_id)
 
     if request.method == 'POST':
+        from .notifications import notify_event_deleted_email
+        directions = list(event.participants.all())
+        event_title, event_date = event.title, event.date
+        # Capturer les emails AVANT suppression (CASCADE supprime les EventMember)
+        member_emails = list(
+            event.event_members
+            .exclude(employee__email='')
+            .values_list('employee__email', flat=True)
+        )
         event.delete()
+        notify_event_deleted(event_title, event_date, directions, request.user)
+        notify_event_deleted_email(event_title, event_date, member_emails, request.user)
+        push_calendar_update('deleted', None, event_date)
         messages.success(request, _("Événement supprimé."))
         return redirect('core:calendar')
 
     return render(request, 'core/event_confirm_delete.html', {'event': event})
+
+
+@login_required
+def event_rsvp(request, event_id):
+    """L'utilisateur répond à son invitation (RSVP)."""
+    from .models import EventMember
+    from .notifs import notify_event_rsvp
+
+    if request.method != 'POST':
+        return redirect('core:event_detail', event_id=event_id)
+
+    event = get_object_or_404(Event, pk=event_id)
+    employee = getattr(request.user.profile, 'employee', None)
+    if not employee:
+        messages.error(request, _("Votre profil n'est pas lié à un employé."))
+        return redirect('core:event_detail', event_id=event_id)
+
+    member = get_object_or_404(EventMember, event=event, employee=employee)
+    status = request.POST.get('status')
+    if status not in ('accepte', 'refuse', 'peut_etre'):
+        messages.error(request, _("Statut invalide."))
+        return redirect('core:event_detail', event_id=event_id)
+
+    member.status = status
+    member.note = request.POST.get('note', '')
+    member.responded_at = timezone.now()
+    member.save(update_fields=['status', 'note', 'responded_at'])
+    notify_event_rsvp(member, request.user)
+    messages.success(request, _("Votre réponse (%(status)s) a été enregistrée.") % {
+        'status': member.get_status_display()
+    })
+    return redirect('core:event_detail', event_id=event_id)
+
+
+def _event_can_manage_members(request, event):
+    """True si l'utilisateur peut gérer les membres de cet événement."""
+    profile = request.user.profile
+    return profile.can_manage_events() or event.created_by == request.user
+
+
+@login_required
+def event_add_members(request, event_id):
+    """Ajouter des membres à un événement : individuel, direction entière, projet entier."""
+    from .notifs import notify_event_member_invited
+    from .notifications import notify_event_member_email
+
+    if request.method != 'POST':
+        return redirect('core:event_detail', event_id=event_id)
+
+    event = get_object_or_404(Event, pk=event_id)
+    if not _event_can_manage_members(request, event):
+        messages.error(request, _("Permission insuffisante."))
+        return redirect('core:event_detail', event_id=event_id)
+
+    add_type = request.POST.get('add_type', '')
+    added = 0
+
+    def _add_employee(emp):
+        nonlocal added
+        member, created = EventMember.objects.get_or_create(event=event, employee=emp)
+        if created:
+            notify_event_member_invited(member, request.user)
+            notify_event_member_email(member, request.user)
+            added += 1
+
+    if add_type == 'employee':
+        emp_id = request.POST.get('employee_id')
+        if emp_id:
+            emp = get_object_or_404(Employee, pk=emp_id)
+            _add_employee(emp)
+
+    elif add_type == 'direction':
+        dir_id = request.POST.get('direction_id')
+        if dir_id:
+            for emp in Employee.objects.filter(direction_id=dir_id):
+                _add_employee(emp)
+
+    elif add_type == 'project':
+        proj_id = request.POST.get('project_id')
+        if proj_id:
+            for pm in ProjectMember.objects.filter(project_id=proj_id).select_related('employee'):
+                _add_employee(pm.employee)
+
+    if added:
+        messages.success(request, _("%(n)d participant(s) ajouté(s).") % {'n': added})
+    else:
+        messages.info(request, _("Tous ces participants sont déjà invités."))
+    return redirect('core:event_detail', event_id=event_id)
+
+
+@login_required
+def event_remove_member(request, event_id, member_id):
+    """Retirer un membre d'un événement."""
+    if request.method != 'POST':
+        return redirect('core:event_detail', event_id=event_id)
+
+    event = get_object_or_404(Event, pk=event_id)
+    if not _event_can_manage_members(request, event):
+        messages.error(request, _("Permission insuffisante."))
+        return redirect('core:event_detail', event_id=event_id)
+
+    member = get_object_or_404(EventMember, pk=member_id, event=event)
+    emp_name = member.employee.name
+    member.delete()
+    messages.success(request, _("%(name)s retiré(e) de l'événement.") % {'name': emp_name})
+    return redirect('core:event_detail', event_id=event_id)
 
 
 @login_required

@@ -1,7 +1,7 @@
 from django import forms
 from django.db.models import Max
 from django.utils.translation import gettext_lazy as _
-from .models import Project, Document, Request, Partner, Event, Direction, Budget, Employee, Milestone, SubMilestone, ProjectFolder, ProjectDocument, ProjectMember, ProjectNeed, ProjectComment, ProjectRole, Role
+from .models import Project, Document, Request, Partner, Direction, Budget, Employee, Milestone, SubMilestone, ProjectFolder, ProjectDocument, ProjectMember, ProjectNeed, ProjectComment, ProjectRole, Role
 from .currencies import CURRENCY_CHOICES, convert_currency, format_currency
 from .fields import IntlPhoneField
 
@@ -370,32 +370,6 @@ class PartnerForm(forms.ModelForm):
             from datetime import date
             if start > date.today():
                 self.add_error('start_date', _("La date de début de collaboration ne peut pas être dans le futur."))
-        return cleaned
-
-
-class EventForm(forms.ModelForm):
-    """Formulaire pour les événements"""
-    class Meta:
-        model = Event
-        fields = ['title', 'event_type', 'description', 'date', 'time', 'duration', 'location', 'participants']
-        widgets = {
-            'date': forms.DateInput(attrs={'type': 'date'}),
-            'time': forms.TimeInput(attrs={'type': 'time'}),
-            'description': forms.Textarea(attrs={'rows': 3}),
-            'participants': forms.CheckboxSelectMultiple(),
-        }
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field_name, field in self.fields.items():
-            if field_name != 'participants':
-                field.widget.attrs['class'] = 'form-control'
-
-    def clean(self):
-        cleaned = super().clean()
-        duration = cleaned.get('duration')
-        if duration is not None and duration <= 0:
-            self.add_error('duration', _("La durée doit être positive."))
         return cleaned
 
 

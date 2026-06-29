@@ -17,11 +17,13 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             g = f'project_{pid}'
             await self.channel_layer.group_add(g, self.channel_name)
             self.project_groups.append(g)
+        await self.channel_layer.group_add('calendar', self.channel_name)
         await self.accept()
 
     async def disconnect(self, code):
         if hasattr(self, 'group_name'):
             await self.channel_layer.group_discard(self.group_name, self.channel_name)
+        await self.channel_layer.group_discard('calendar', self.channel_name)
         for g in getattr(self, 'project_groups', []):
             await self.channel_layer.group_discard(g, self.channel_name)
 
@@ -33,6 +35,9 @@ class NotificationConsumer(AsyncWebsocketConsumer):
 
     async def project_update(self, event):
         await self.send(text_data=json.dumps({'msg_type': 'proj', **event['data']}))
+
+    async def calendar_update(self, event):
+        await self.send(text_data=json.dumps({'msg_type': 'calendar', **event['data']}))
 
     @database_sync_to_async
     def _project_ids(self, user):

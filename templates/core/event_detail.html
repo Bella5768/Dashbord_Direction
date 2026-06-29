@@ -17,7 +17,6 @@
 }
 .ev-badge.reunion   { background: #dbeafe; color: #1d4ed8; }
 .ev-badge.evenement { background: #dcfce7; color: #15803d; }
-.ev-badge.deadline  { background: #fee2e2; color: #dc2626; }
 
 .ev-grid { display: grid; grid-template-columns: 1fr 300px; gap: 20px; align-items: start; }
 @media (max-width: 900px) { .ev-grid { grid-template-columns: 1fr; } }
@@ -56,10 +55,105 @@
     display: flex; align-items: center; gap: 8px;
     font-size: 13px; color: #92400e;
 }
+
+/* Membres */
+.member-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px;
+}
+.member-row:last-child { border-bottom: none; }
+.member-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: #e2e8f0; color: #475569;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; flex-shrink: 0;
+}
+.member-info { flex: 1; min-width: 0; }
+.member-name { font-weight: 500; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.member-dir  { font-size: 11px; color: #94a3b8; }
+.rsvp-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; white-space: nowrap;
+}
+.rsvp-badge.invite    { background:#f1f5f9; color:#64748b; }
+.rsvp-badge.accepte   { background:#dcfce7; color:#15803d; }
+.rsvp-badge.refuse    { background:#fee2e2; color:#dc2626; }
+.rsvp-badge.peut_etre { background:#fef9c3; color:#854d0e; }
+
+/* RSVP widget */
+.rsvp-widget {
+    background: #f0f9ff; border: 1px solid #bae6fd;
+    border-radius: 10px; padding: 14px 16px;
+}
+.rsvp-widget-title { font-size: 12px; font-weight: 600; color: #0369a1; margin-bottom: 10px; }
+.rsvp-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+.rsvp-btn {
+    padding: 6px 12px; border-radius: 8px; border: 1px solid transparent;
+    font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s;
+}
+.rsvp-btn.accept  { background:#dcfce7; color:#15803d; border-color:#86efac; }
+.rsvp-btn.refuse  { background:#fee2e2; color:#dc2626; border-color:#fca5a5; }
+.rsvp-btn.maybe   { background:#fef9c3; color:#854d0e; border-color:#fde68a; }
+.rsvp-btn.active  { box-shadow: 0 0 0 2px currentColor; }
+.rsvp-btn:disabled, .rsvp-btn[disabled] { opacity:.4; cursor:not-allowed; pointer-events:none; }
+.rsvp-bar { display: flex; gap: 10px; font-size: 12px; color: #64748b; margin-top: 8px; }
+.rsvp-bar span { display: inline-flex; align-items: center; gap: 4px; }
+.rsvp-summary { display:flex; align-items:center; justify-content:space-between; margin-top:6px; }
+.rsvp-change-btn { font-size:11px;color:#0369a1;background:none;border:none;cursor:pointer;text-decoration:underline;padding:0; }
+
+/* Panel ajout membres */
+.add-member-panel {
+    border: 1px dashed #cbd5e1; border-radius: 10px;
+    padding: 16px; background: #f8fafc; margin-top: 12px;
+}
+.add-tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+.add-tab {
+    padding: 5px 12px; border-radius: 20px; border: 1px solid #e2e8f0;
+    background: white; font-size: 12px; font-weight: 600; color: #64748b;
+    cursor: pointer; transition: all .15s;
+}
+.add-tab.active { background: #1e3a5f; color: white; border-color: #1e3a5f; }
+.add-pane { display: none; }
+.add-pane.active { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+.add-pane select { flex: 1; min-width: 180px; padding: 7px 10px; border-radius: 7px; border: 1px solid #e2e8f0; font-size: 13px; }
+.btn-remove-member {
+    background: none; border: none; cursor: pointer; color: #94a3b8; padding: 4px;
+    border-radius: 6px; display: flex; align-items: center; transition: color .15s;
+}
+.btn-remove-member:hover { color: #dc2626; background: #fee2e2; }
+
+/* ─── Type stripe ─── */
+.ev-type-stripe {
+    height: 4px; border-radius: 4px; margin-bottom: 20px;
+}
+.ev-type-stripe.reunion   { background: linear-gradient(90deg,#3b82f6,#93c5fd); }
+.ev-type-stripe.evenement { background: linear-gradient(90deg,#10b981,#6ee7b7); }
+
+/* ─── RSVP widget — look neutre ─── */
+.rsvp-widget {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+}
+.rsvp-widget-title { color: #374151 !important; }
+.rsvp-change-btn { color: #475569 !important; }
+
+/* ─── Past banner ─── */
+.ev-past-banner {
+    background: #fff7ed !important; border: 1px solid #fed7aa !important;
+    border-radius: 10px !important; font-size: 13px !important;
+}
+
+/* ─── Détails card clean ─── */
+.ev-meta-row {
+    padding: 13px 0 !important;
+}
+.ev-meta-value { font-size: 14px !important; }
 </style>
 {% endblock %}
 
 {% block content %}
+
+<div class="ev-type-stripe {{ event.event_type }}"></div>
 
 {% if event.is_past %}
 <div class="ev-past-banner">
@@ -71,7 +165,6 @@
 <div class="ev-header">
     <span class="ev-badge {{ event.event_type }}">
         {% if event.event_type == 'reunion' %}<i data-lucide="video" width="14" height="14"></i>
-        {% elif event.event_type == 'deadline' %}<i data-lucide="triangle-alert" width="14" height="14"></i>
         {% else %}<i data-lucide="calendar" width="14" height="14"></i>{% endif %}
         {{ event.get_event_type_display }}
     </span>
@@ -174,6 +267,134 @@
         </div>
         {% endif %}
 
+        <!-- Membres invités -->
+        <div class="card">
+            <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                <h3 class="card-title" style="display:flex;align-items:center;gap:6px;">
+                    <i data-lucide="users" width="16" height="16"></i>
+                    {% trans 'Participants invités' %}
+                    <span style="font-size:12px;font-weight:400;color:#94a3b8;margin-left:4px;">{{ members|length }}</span>
+                </h3>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <div class="rsvp-bar">
+                        {% if rsvp_counts.accepte %}<span style="color:#15803d;"><i data-lucide="check" width="12" height="12"></i>{{ rsvp_counts.accepte }}</span>{% endif %}
+                        {% if rsvp_counts.refuse %}<span style="color:#dc2626;"><i data-lucide="x" width="12" height="12"></i>{{ rsvp_counts.refuse }}</span>{% endif %}
+                        {% if rsvp_counts.peut_etre %}<span style="color:#854d0e;"><i data-lucide="minus" width="12" height="12"></i>{{ rsvp_counts.peut_etre }}</span>{% endif %}
+                        {% if rsvp_counts.invite %}<span><i data-lucide="clock" width="12" height="12"></i>{{ rsvp_counts.invite }}</span>{% endif %}
+                    </div>
+                    {% if can_edit %}
+                    <button type="button" onclick="toggleAddPanel()" class="btn btn-outline" style="font-size:12px;padding:4px 10px;">
+                        <i data-lucide="user-plus" width="13" height="13"></i>
+                        {% trans 'Ajouter' %}
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-content">
+
+                <!-- Panel ajout membres -->
+                {% if can_edit %}
+                <div class="add-member-panel" id="add-member-panel" style="display:none;">
+                    <div class="add-tabs">
+                        <button type="button" class="add-tab active" onclick="switchTab('employee', this)">
+                            <i data-lucide="user" width="11" height="11" style="vertical-align:middle;"></i>
+                            {% trans 'Individuel' %}
+                        </button>
+                        <button type="button" class="add-tab" onclick="switchTab('direction', this)">
+                            <i data-lucide="building-2" width="11" height="11" style="vertical-align:middle;"></i>
+                            {% trans 'Direction' %}
+                        </button>
+                        <button type="button" class="add-tab" onclick="switchTab('project', this)">
+                            <i data-lucide="folder" width="11" height="11" style="vertical-align:middle;"></i>
+                            {% trans 'Projet' %}
+                        </button>
+                    </div>
+
+                    <!-- Onglet Individuel -->
+                    <form method="post" action="{% url 'core:event_add_members' event.id %}" class="add-pane active" id="pane-employee">
+                        {% csrf_token %}
+                        <input type="hidden" name="add_type" value="employee">
+                        <select name="employee_id" required>
+                            <option value="">— {% trans 'Choisir un employé' %} —</option>
+                            {% for emp in available_employees %}
+                            <option value="{{ emp.id }}">{{ emp.name }}{% if emp.direction %} ({{ emp.direction.code }}){% endif %}</option>
+                            {% empty %}
+                            <option disabled>{% trans 'Tous les employés sont déjà invités' %}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-primary" style="font-size:13px;white-space:nowrap;">
+                            <i data-lucide="plus" width="13" height="13"></i>
+                            {% trans 'Inviter' %}
+                        </button>
+                    </form>
+
+                    <!-- Onglet Direction -->
+                    <form method="post" action="{% url 'core:event_add_members' event.id %}" class="add-pane" id="pane-direction">
+                        {% csrf_token %}
+                        <input type="hidden" name="add_type" value="direction">
+                        <select name="direction_id" required>
+                            <option value="">— {% trans 'Choisir une direction' %} —</option>
+                            {% for dir in all_directions %}
+                            <option value="{{ dir.id }}">{{ dir.code }} — {{ dir.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-primary" style="font-size:13px;white-space:nowrap;">
+                            <i data-lucide="users" width="13" height="13"></i>
+                            {% trans 'Tous les employés' %}
+                        </button>
+                    </form>
+
+                    <!-- Onglet Projet -->
+                    <form method="post" action="{% url 'core:event_add_members' event.id %}" class="add-pane" id="pane-project">
+                        {% csrf_token %}
+                        <input type="hidden" name="add_type" value="project">
+                        <select name="project_id" required>
+                            <option value="">— {% trans 'Choisir un projet' %} —</option>
+                            {% for proj in all_projects %}
+                            <option value="{{ proj.id }}">{{ proj.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-primary" style="font-size:13px;white-space:nowrap;">
+                            <i data-lucide="users" width="13" height="13"></i>
+                            {% trans 'Toute l\'équipe' %}
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+
+                <!-- Liste des membres -->
+                {% if members %}
+                <div style="max-height:360px;overflow-y:auto;{% if can_edit %}margin-top:8px;{% endif %}">
+                    {% for m in members %}
+                    <div class="member-row">
+                        <div class="member-avatar">{{ m.employee.name|slice:":2"|upper }}</div>
+                        <div class="member-info">
+                            <div class="member-name">{{ m.employee.name }}</div>
+                            {% if m.employee.direction %}<div class="member-dir">{{ m.employee.direction.code }} — {{ m.employee.direction.name }}</div>{% endif %}
+                        </div>
+                        <span class="rsvp-badge {{ m.status }}">{{ m.get_status_display }}</span>
+                        {% if can_edit %}
+                        <form method="post" action="{% url 'core:event_remove_member' event.id m.id %}" style="margin:0;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-remove-member" title="{% trans 'Retirer' %}"
+                                    onclick="return confirm('{% trans "Retirer ce participant ?" %}')">
+                                <i data-lucide="x" width="14" height="14"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-sm" style="color:#94a3b8;font-style:italic;text-align:center;padding:20px 0;">
+                    <i data-lucide="users" width="20" height="20" style="display:block;margin:0 auto 6px;opacity:.4;"></i>
+                    {% trans 'Aucun participant invité pour le moment.' %}
+                </p>
+                {% endif %}
+
+            </div>
+        </div>
+
     </div>
 
     <!-- Colonne latérale -->
@@ -203,6 +424,75 @@
             </div>
         </div>
 
+        <!-- Widget RSVP personnel -->
+        {% if my_membership and not event.is_past %}
+        <div class="card">
+            <div class="card-content">
+                <div class="rsvp-widget">
+                    <div class="rsvp-widget-title">
+                        <i data-lucide="mail-check" width="13" height="13" style="vertical-align:middle;"></i>
+                        {% trans 'Votre invitation' %}
+                    </div>
+
+                    {% if my_membership.has_responded %}
+                    <!-- État : réponse déjà donnée — affiche le résumé -->
+                    <div class="rsvp-summary" id="rsvp-summary">
+                        <div>
+                            <span class="rsvp-badge {{ my_membership.status }}">
+                                {% if my_membership.status == 'accepte' %}<i data-lucide="check" width="11" height="11" style="vertical-align:middle;"></i>
+                                {% elif my_membership.status == 'refuse' %}<i data-lucide="x" width="11" height="11" style="vertical-align:middle;"></i>
+                                {% else %}<i data-lucide="minus" width="11" height="11" style="vertical-align:middle;"></i>{% endif %}
+                                {{ my_membership.get_status_display }}
+                            </span>
+                            {% if my_membership.responded_at %}
+                            <span style="font-size:11px;color:#94a3b8;margin-left:6px;">{{ my_membership.responded_at|date:"d/m à H:i" }}</span>
+                            {% endif %}
+                        </div>
+                        <button type="button" class="rsvp-change-btn" id="rsvp-toggle" onclick="toggleRsvpEdit()">
+                            {% trans 'Modifier' %}
+                        </button>
+                    </div>
+                    <!-- Formulaire de modification (masqué par défaut) -->
+                    <div id="rsvp-edit" style="display:none;margin-top:10px;">
+                    {% else %}
+                    <!-- État : pas encore répondu — affiche directement les boutons -->
+                    <div id="rsvp-edit" style="margin-top:8px;">
+                    {% endif %}
+
+                        <form method="post" action="{% url 'core:event_rsvp' event.id %}" id="rsvp-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" id="rsvp-status-input" value="">
+                            <div class="rsvp-buttons">
+                                <button type="submit"
+                                        class="rsvp-btn accept {% if my_membership.status == 'accepte' %}active{% endif %}"
+                                        {% if my_membership.status == 'accepte' %}disabled{% endif %}
+                                        onclick="return setAndSubmit('accepte')">
+                                    <i data-lucide="check" width="12" height="12" style="vertical-align:middle;"></i>
+                                    {% trans 'Accepter' %}
+                                </button>
+                                <button type="submit"
+                                        class="rsvp-btn maybe {% if my_membership.status == 'peut_etre' %}active{% endif %}"
+                                        {% if my_membership.status == 'peut_etre' %}disabled{% endif %}
+                                        onclick="return setAndSubmit('peut_etre')">
+                                    <i data-lucide="minus" width="12" height="12" style="vertical-align:middle;"></i>
+                                    {% trans 'Peut-être' %}
+                                </button>
+                                <button type="submit"
+                                        class="rsvp-btn refuse {% if my_membership.status == 'refuse' %}active{% endif %}"
+                                        {% if my_membership.status == 'refuse' %}disabled{% endif %}
+                                        onclick="return setAndSubmit('refuse')">
+                                    <i data-lucide="x" width="12" height="12" style="vertical-align:middle;"></i>
+                                    {% trans 'Refuser' %}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Actions rapides -->
         {% if can_edit %}
         <div class="card">
@@ -224,4 +514,44 @@
     </div>
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/* ---- Panel ajout membres ---- */
+function toggleAddPanel() {
+    var p = document.getElementById('add-member-panel');
+    if (p) p.style.display = p.style.display === 'none' ? 'block' : 'none';
+}
+
+function switchTab(type, btn) {
+    document.querySelectorAll('.add-tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.add-pane').forEach(function(p) { p.classList.remove('active'); });
+    btn.classList.add('active');
+    var pane = document.getElementById('pane-' + type);
+    if (pane) pane.classList.add('active');
+}
+
+/* ---- RSVP ---- */
+var _rsvpSubmitting = false;
+
+function setAndSubmit(status) {
+    if (_rsvpSubmitting) return false;   // bloque le double-clic
+    _rsvpSubmitting = true;
+    document.getElementById('rsvp-status-input').value = status;
+    // Désactive tous les boutons pendant la soumission
+    document.querySelectorAll('#rsvp-form .rsvp-btn').forEach(function(b) { b.disabled = true; });
+    return true;  // laisse le formulaire se soumettre normalement
+}
+
+function toggleRsvpEdit() {
+    var edit    = document.getElementById('rsvp-edit');
+    var toggle  = document.getElementById('rsvp-toggle');
+    var visible = edit.style.display !== 'none';
+    edit.style.display  = visible ? 'none' : 'block';
+    if (toggle) toggle.textContent = visible ? '{% trans "Modifier" %}' : '{% trans "Annuler" %}';
+    // Réinitialise le flag si on rouvre le formulaire
+    if (!visible) _rsvpSubmitting = false;
+}
+</script>
 {% endblock %}

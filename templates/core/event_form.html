@@ -6,40 +6,66 @@
 {% block page_subtitle %}{% trans 'Calendrier' %}{% endblock %}
 
 {% block extra_css %}
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <style>
-    .select2-container--default .select2-selection--multiple {
-        border: 1px solid #d1d5db;
-        border-radius: 0.375rem;
-        min-height: 38px;
-    }
-    .select2-container--default .select2-selection--multiple .select2-selection__choice {
-        background-color: #1e3a5f;
-        color: white;
-        border: none;
-        border-radius: 0.25rem;
-        padding: 2px 6px;
-        font-size: 0.875rem;
-    }
-    .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
-        color: white;
-        margin-right: 4px;
-    }
-    .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
-        color: #f3f4f6;
-    }
+.dur-hint { font-size: 12px; color: #94a3b8; margin-top: 4px; min-height: 16px; }
+
+/* ── Direction picker ── */
+.dir-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px;
+    border: 1px solid #9ca3af;
+    border-radius: 8px;
+    background: white;
+    min-height: 44px;
+    cursor: default;
+    transition: border-color .15s, box-shadow .15s;
+}
+.dir-picker:focus-within {
+    border-color: var(--primary-500);
+    box-shadow: 0 0 0 3px var(--primary-100);
+}
+
+.dir-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 10px;
+    border-radius: 20px;
+    border: 1.5px solid #e2e8f0;
+    background: #f9fafb;
+    font-size: 13px; font-weight: 500; color: #374151;
+    cursor: pointer;
+    transition: all .15s;
+    user-select: none;
+}
+.dir-chip:hover { border-color: #9ca3af; background: #f3f4f6; }
+.dir-chip.selected {
+    border-color: var(--primary-600);
+    background: var(--primary-600);
+    color: white;
+}
+.dir-chip .dir-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dir-chip .dir-check { display: none; }
+.dir-chip.selected .dir-check { display: inline-flex; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="card" style="max-width: 600px;">
+<div class="card" style="max-width: 620px;">
     <div class="card-header">
         <h3 class="card-title">{% trans "Informations de l'événement" %}</h3>
     </div>
     <div class="card-content">
+
+        {% if form.non_field_errors %}
+        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:12px 16px;margin-bottom:20px;font-size:13px;color:#dc2626;">
+            {{ form.non_field_errors.0 }}
+        </div>
+        {% endif %}
+
         <form method="post">
             {% csrf_token %}
-            
+
             <div class="form-group">
                 <label class="form-label" for="id_title">{% trans 'Titre' %} <span class="required">*</span></label>
                 {{ form.title }}
@@ -54,12 +80,12 @@
 
             <div class="grid grid-2" style="gap: 16px;">
                 <div class="form-group">
-                    <label class="form-label" for="id_date">{% trans 'Date' %} <span class="required">*</span></label>
+                    <label class="form-label" for="{{ form.date.id_for_label }}">{% trans 'Date' %} <span class="required">*</span></label>
                     {{ form.date }}
                     {% if form.date.errors %}<p class="form-error">{{ form.date.errors.0 }}</p>{% endif %}
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="id_time">{% trans 'Heure' %} <span class="required">*</span></label>
+                    <label class="form-label" for="{{ form.time.id_for_label }}">{% trans 'Heure' %} <span class="required">*</span></label>
                     {{ form.time }}
                     {% if form.time.errors %}<p class="form-error">{{ form.time.errors.0 }}</p>{% endif %}
                 </div>
@@ -67,29 +93,44 @@
 
             <div class="grid grid-2" style="gap: 16px;">
                 <div class="form-group">
-                    <label class="form-label" for="id_duration">{% trans 'Durée (minutes)' %}</label>
+                    <label class="form-label" for="{{ form.duration.id_for_label }}">{% trans 'Durée (minutes)' %}</label>
                     {{ form.duration }}
+                    <p class="dur-hint" id="duration-hint"></p>
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="id_location">{% trans 'Lieu' %}</label>
+                    <label class="form-label" for="{{ form.location.id_for_label }}">{% trans 'Lieu' %}</label>
                     {{ form.location }}
                 </div>
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="id_description">{% trans 'Description' %}</label>
+                <label class="form-label" for="{{ form.description.id_for_label }}">{% trans 'Description' %}</label>
                 {{ form.description }}
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="id_participants">{% trans 'Directions participantes' %}</label>
-                {{ form.participants }}
-                <span class="form-help">{% trans 'Cliquez pour sélectionner ou désélectionner des directions' %}</span>
+                <label class="form-label">{% trans 'Directions participantes' %}</label>
+                <div style="display:none;">{{ form.participants }}</div>
+                <div class="dir-picker" id="dir-picker">
+                    {% for dir in form.participants.field.queryset %}
+                    <div class="dir-chip" data-id="{{ dir.id }}" tabindex="0"
+                         onclick="toggleDir(this, '{{ dir.id }}')"
+                         onkeydown="if(event.key==='Enter'||event.key===' '){toggleDir(this,'{{ dir.id }}');event.preventDefault();}">
+                        <span class="dir-dot" style="background:{{ dir.color }};"></span>
+                        {{ dir.code }}
+                        <span class="dir-check"><i data-lucide="check" width="11" height="11"></i></span>
+                    </div>
+                    {% empty %}
+                    <span style="font-size:13px;color:#9ca3af;font-style:italic;">{% trans 'Aucune direction disponible' %}</span>
+                    {% endfor %}
+                </div>
+                <span class="form-help">{% trans 'Cliquez sur une direction pour la sélectionner ou désélectionner.' %}</span>
+                {% if form.participants.errors %}<p class="form-error">{{ form.participants.errors.0 }}</p>{% endif %}
             </div>
-            
+
             <div class="flex gap-3">
                 <button type="submit" class="btn btn-primary">
-                    <i data-lucide="check" width="16" height="16" ></i>
+                    <i data-lucide="check" width="16" height="16"></i>
                     {% if event %}{% trans 'Enregistrer' %}{% else %}{% trans "Créer l'événement" %}{% endif %}
                 </button>
                 {% if event %}
@@ -98,26 +139,49 @@
                 <a href="{% url 'core:calendar' %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
                 {% endif %}
             </div>
+
         </form>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
-    $(document).ready(function() {
-        $('#id_participants').select2({
-            placeholder: '{% trans "Sélectionner des directions..." %}',
-            allowClear: true,
-            width: '100%',
-            closeOnSelect: false,
-            language: {
-                noResults: function() {
-                    return '{% trans "Aucune direction trouvée" %}';
-                }
-            }
+/* ── Direction picker ── */
+(function() {
+    var sel = document.getElementById('id_participants');
+    if (!sel) return;
+
+    function syncChips() {
+        var selected = Array.from(sel.selectedOptions).map(function(o) { return o.value; });
+        document.querySelectorAll('#dir-picker .dir-chip[data-id]').forEach(function(chip) {
+            chip.classList.toggle('selected', selected.indexOf(chip.dataset.id) !== -1);
         });
-    });
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    window.toggleDir = function(chip, id) {
+        var opt = sel.querySelector('option[value="' + id + '"]');
+        if (opt) opt.selected = !opt.selected;
+        syncChips();
+    };
+
+    syncChips();
+})();
+
+/* ── Duration hint ── */
+(function() {
+    var inp  = document.getElementById('id_duration');
+    var hint = document.getElementById('duration-hint');
+    if (!inp || !hint) return;
+    function update() {
+        var min = parseInt(inp.value) || 0;
+        if (!min) { hint.textContent = ''; return; }
+        var h = Math.floor(min / 60), m = min % 60;
+        hint.textContent = (h ? h + 'h' : '') + (m ? (h ? ' ' : '') + m + 'min' : '');
+    }
+    inp.addEventListener('input', update);
+    update();
+})();
 </script>
 {% endblock %}

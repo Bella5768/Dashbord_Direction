@@ -242,6 +242,123 @@ def notify_conge_rh(leave, actor_user):
     )
 
 
+# ------------------------------------------------------------------
+# Événements / Calendrier
+# ------------------------------------------------------------------
+
+def push_calendar_update(action, event_id, event_date):
+    """Broadcast WS global pour actualiser le calendrier sur tous les clients connectés."""
+    try:
+        from channels.layers import get_channel_layer
+        from asgiref.sync import async_to_sync
+        layer = get_channel_layer()
+        if layer:
+            async_to_sync(layer.group_send)(
+                'calendar',
+                {'type': 'calendar.update', 'data': {
+                    'action': action,
+                    'event_id': event_id,
+                    'date': str(event_date),
+                }},
+            )
+    except Exception:
+        pass
+
+
+def _users_from_directions(directions):
+    """Retourne les Users actifs liés à une liste de directions (via UserProfile)."""
+    try:
+        from .models import UserProfile
+        profiles = (
+            UserProfile.objects
+            .filter(direction__in=directions, is_active_profile=True)
+            .select_related('user')
+        )
+        return [p.user for p in profiles]
+    except Exception:
+        return []
+
+
+def notify_event_members_updated(event, actor_user, exclude_employee_ids=None):
+    """Notifie les EventMember existants de la modification d'un événement.
+
+    exclude_employee_ids — set d'IDs à exclure (membres nouvellement ajoutés
+    dans le même cycle : ils reçoivent déjà une notif d'invitation).
+    """
+    link = reverse('core:event_detail', args=[event.id])
+    actor_name = actor_user.get_full_name() or actor_user.username
+    date_fmt = event.date.strftime('%d/%m/%Y')
+    exclude = exclude_employee_ids or set()
+
+    members = (
+        event.event_members
+        .exclude(employee_id__in=exclude)
+        .select_related('employee')
+    )
+    for m in members:
+        user = _user_from_employee(m.employee)
+        if user and user != actor_user:
+            _create(
+                user,
+                'event_update',
+                f"Événement modifié — {event.title}",
+                f"« {event.title} » du {date_fmt} a été modifié par {actor_name}.",
+                link,
+            )
+
+
+def notify_event_deleted(event_title, event_date, directions, actor_user):
+    """Notifie les users des directions participantes à la suppression d'un événement."""
+    actor_name = actor_user.get_full_name() or actor_user.username
+    date_fmt = event_date.strftime('%d/%m/%Y')
+    for user in _users_from_directions(directions):
+        if user != actor_user:
+            _create(
+                user,
+                'event_cancel',
+                f"Événement annulé — {event_title}",
+                f"« {event_title} » prévu le {date_fmt} a été annulé par {actor_name}.",
+                '',
+            )
+
+
+def notify_event_member_invited(event_member, actor_user):
+    """Notifie un employé qu'il est invité à un événement."""
+    user = _user_from_employee(event_member.employee)
+    if not user or user == actor_user:
+        return
+    event = event_member.event
+    link = reverse('core:event_detail', args=[event.id])
+    actor_name = actor_user.get_full_name() or actor_user.username
+    date_fmt = event.date.strftime('%d/%m/%Y')
+    time_fmt = event.time.strftime('%H:%M')
+    _create(
+        user,
+        'event_invite',
+        f"Invitation — {event.title}",
+        f"Vous êtes invité à « {event.title} » le {date_fmt} à {time_fmt}. Organisé par {actor_name}.",
+        link,
+    )
+
+
+def notify_event_rsvp(event_member, actor_user):
+    """Notifie le créateur de l'événement d'une réponse RSVP."""
+    event = event_member.event
+    creator = event.created_by
+    if not creator or creator == actor_user:
+        return
+    link = reverse('core:event_detail', args=[event.id])
+    employee_name = event_member.employee.name
+    status_label = event_member.get_status_display()
+    _create(
+        creator,
+        'event_rsvp',
+        f"Réponse RSVP — {event.title}",
+        f"{employee_name} a répondu « {status_label} » à l'invitation pour « {event.title} ».",
+        link,
+    )
+
+
 def notify_conge_decision(leave, actor_user):
     """Notifie le demandeur de la décision finale."""
     user = _leave_requestor_user(leave)

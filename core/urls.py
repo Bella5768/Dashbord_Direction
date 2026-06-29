@@ -34,6 +34,9 @@ urlpatterns = [
     path('evenements/<int:event_id>/', views.event_detail, name='event_detail'),
     path('evenements/<int:event_id>/modifier/', views.event_edit, name='event_edit'),
     path('evenements/<int:event_id>/supprimer/', views.event_delete, name='event_delete'),
+    path('evenements/<int:event_id>/rsvp/', views.event_rsvp, name='event_rsvp'),
+    path('evenements/<int:event_id>/membres/ajouter/', views.event_add_members, name='event_add_members'),
+    path('evenements/<int:event_id>/membres/<int:member_id>/retirer/', views.event_remove_member, name='event_remove_member'),
     
     # Document CRUD (module Documents global)
     path('documents/', views.documents, name='documents'),

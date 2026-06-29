@@ -5,28 +5,104 @@
 {% block page_title %}{% trans "Supprimer l'événement" %}{% endblock %}
 {% block page_subtitle %}{{ event.title }}{% endblock %}
 
+{% block extra_css %}
+<style>
+.del-wrap { max-width: 480px; }
+
+.del-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 32px;
+}
+
+.del-icon {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    background: #fef2f2;
+    display: flex; align-items: center; justify-content: center;
+    color: #dc2626;
+    margin-bottom: 20px;
+}
+
+.del-heading {
+    font-size: 19px; font-weight: 800; color: #0f172a;
+    margin-bottom: 8px;
+}
+
+.del-body {
+    font-size: 14px; color: #64748b;
+    line-height: 1.6; margin-bottom: 24px;
+}
+
+.del-meta {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 4px 0;
+    margin-bottom: 28px;
+}
+.del-meta-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 18px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 13px;
+}
+.del-meta-row:last-child { border-bottom: none; }
+.del-key { color: #94a3b8; font-weight: 500; }
+.del-val { color: #1e293b; font-weight: 600; max-width: 55%; text-align: right; word-break: break-word; }
+
+.del-actions { display: flex; gap: 10px; align-items: center; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="card" style="max-width: 500px;">
-    <div class="card-header">
-        <h3 class="card-title" style="color: var(--red-600);">{% trans 'Confirmer la suppression' %}</h3>
-    </div>
-    <div class="card-content">
-        <p style="margin-bottom: 16px;">{% trans "Êtes-vous sûr de vouloir supprimer l'événement" %} <strong>{{ event.title }}</strong> ?</p>
-        
-        <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
-            <p><strong>{% trans 'Date' %} :</strong> {{ event.date|date:"d/m/Y" }}</p>
-            <p><strong>{% trans 'Heure' %} :</strong> {{ event.time|time:"H:i" }}</p>
-            <p><strong>{% trans 'Type' %} :</strong> {{ event.get_event_type_display }}</p>
+<div class="del-wrap">
+    <div class="del-card">
+        <div class="del-icon">
+            <i data-lucide="trash-2" width="24" height="24"></i>
         </div>
-        
+
+        <div class="del-heading">{% trans "Supprimer cet événement ?" %}</div>
+        <p class="del-body">
+            {% trans "Cette action est irréversible. L'événement, ses invitations et toutes les réponses RSVP associées seront définitivement supprimés." %}
+        </p>
+
+        <div class="del-meta">
+            <div class="del-meta-row">
+                <span class="del-key">{% trans "Titre" %}</span>
+                <span class="del-val">{{ event.title }}</span>
+            </div>
+            <div class="del-meta-row">
+                <span class="del-key">{% trans "Date" %}</span>
+                <span class="del-val">{{ event.date|date:"d F Y" }}</span>
+            </div>
+            <div class="del-meta-row">
+                <span class="del-key">{% trans "Heure" %}</span>
+                <span class="del-val">{{ event.time|time:"H:i" }}</span>
+            </div>
+            <div class="del-meta-row">
+                <span class="del-key">{% trans "Type" %}</span>
+                <span class="del-val">{{ event.get_event_type_display }}</span>
+            </div>
+            {% if event.participants.count %}
+            <div class="del-meta-row">
+                <span class="del-key">{% trans "Participants invités" %}</span>
+                <span class="del-val">{{ event.event_members.count }} {% trans "personnes" %}</span>
+            </div>
+            {% endif %}
+        </div>
+
         <form method="post">
             {% csrf_token %}
-            <div class="flex gap-3">
+            <div class="del-actions">
                 <button type="submit" class="btn btn-danger">
-                    <i data-lucide="trash-2" width="16" height="16" ></i>
-                    {% trans 'Supprimer' %}
+                    <i data-lucide="trash-2" width="14" height="14"></i>
+                    {% trans "Supprimer définitivement" %}
                 </button>
-                <a href="{% url 'core:event_detail' event.id %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
+                <a href="{% url 'core:event_detail' event.id %}" class="btn btn-outline">
+                    {% trans "Annuler" %}
+                </a>
             </div>
         </form>
     </div>

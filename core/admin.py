@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
-from .models import Direction, Project, Milestone, Document, Partner, Event, Request, Employee, Budget, UserProfile, LeaveRequest, LeaveDocument
+from .models import Direction, Project, Milestone, Document, Partner, Event, EventMember, Request, Employee, Budget, UserProfile, LeaveRequest, LeaveDocument
 
 
 class UserProfileInline(admin.StackedInline):
@@ -74,12 +74,29 @@ class PartnerAdmin(admin.ModelAdmin):
     search_fields = ['name', 'contact_person']
 
 
+class EventMemberInline(admin.TabularInline):
+    model = EventMember
+    extra = 0
+    readonly_fields = ['invited_at', 'responded_at']
+    fields = ['employee', 'status', 'note', 'invited_at', 'responded_at']
+
+
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
-    list_display = ['title', 'event_type', 'date', 'time', 'location']
+    list_display = ['title', 'event_type', 'date', 'time', 'location', 'created_by']
     list_filter = ['event_type', 'date']
-    search_fields = ['title']
+    search_fields = ['title', 'description']
     filter_horizontal = ['participants']
+    readonly_fields = ['created_by', 'created_at', 'updated_at']
+    inlines = [EventMemberInline]
+
+
+@admin.register(EventMember)
+class EventMemberAdmin(admin.ModelAdmin):
+    list_display = ['employee', 'event', 'status', 'invited_at', 'responded_at']
+    list_filter = ['status', 'event__date']
+    search_fields = ['employee__name', 'event__title']
+    readonly_fields = ['invited_at', 'responded_at']
 
 
 @admin.register(Request)

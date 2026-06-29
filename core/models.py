@@ -916,7 +916,6 @@ class Event(models.Model):
     TYPE_CHOICES = [
         ('reunion', _('Réunion')),
         ('evenement', _('Événement')),
-        ('deadline', _('Deadline')),
     ]
     
     title = models.CharField(max_length=200, verbose_name=_("Titre"))
@@ -928,8 +927,8 @@ class Event(models.Model):
     location = models.CharField(max_length=200, blank=True, verbose_name=_("Lieu"))
     participants = models.ManyToManyField(Direction, related_name='events', verbose_name=_("Participants"), blank=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_events', verbose_name=_("Créé par"))
-    created_at = models.DateTimeField(null=True, blank=True, auto_now_add=True, verbose_name=_("Créé le"))
-    updated_at = models.DateTimeField(null=True, blank=True, auto_now=True, verbose_name=_("Modifié le"))
+    created_at = models.DateTimeField(auto_now_add=True, null=True, verbose_name=_("Créé le"))
+    updated_at = models.DateTimeField(auto_now=True, null=True, verbose_name=_("Modifié le"))
 
     class Meta:
         verbose_name = _("Événement")
@@ -961,6 +960,37 @@ class Event(models.Model):
         elif h:
             return f"{h}h"
         return f"{m} min"
+
+
+class EventMember(models.Model):
+    STATUS_CHOICES = [
+        ('invite',    _('Invité')),
+        ('accepte',   _('Accepté')),
+        ('refuse',    _('Refusé')),
+        ('peut_etre', _('Peut-être')),
+    ]
+
+    event        = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='event_members', verbose_name=_("Événement"))
+    employee     = models.ForeignKey('Employee', on_delete=models.CASCADE, related_name='event_memberships', verbose_name=_("Employé"))
+    status       = models.CharField(max_length=20, choices=STATUS_CHOICES, default='invite', verbose_name=_("Statut RSVP"))
+    invited_at   = models.DateTimeField(auto_now_add=True, verbose_name=_("Invité le"))
+    responded_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Répondu le"))
+    note         = models.TextField(blank=True, verbose_name=_("Note"))
+
+    class Meta:
+        verbose_name        = _("Membre d'événement")
+        verbose_name_plural = _("Membres d'événement")
+        unique_together     = ('event', 'employee')
+        ordering            = ['employee__name']
+        indexes             = [
+            models.Index(fields=['event', 'status']),
+        ]
+
+    def __str__(self):
+        return f"{self.employee.name} — {self.event.title} ({self.get_status_display()})"
+
+    def has_responded(self):
+        return self.status != 'invite'
 
 
 class Request(models.Model):
@@ -1250,6 +1280,10 @@ class Notification(models.Model):
         ('conge_avis',          _('Avis hiérarchique congé')),
         ('conge_rh',            _('Vérification RH congé')),
         ('conge_decision',      _('Décision finale congé')),
+        ('event_invite',        _('Invitation à un événement')),
+        ('event_update',        _('Événement modifié')),
+        ('event_cancel',        _('Événement annulé')),
+        ('event_rsvp',          _('Réponse à une invitation')),
     ]
 
     receiver    = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications_received', verbose_name=_("Destinataire"))

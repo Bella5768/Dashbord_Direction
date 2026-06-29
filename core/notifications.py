@@ -589,3 +589,115 @@ def notify_leave_final_decided(leave, pdf_attachment=None):
         banner_subtitle=_('Notification officielle CSIG'),
         pdf_attachment=pdf_attachment,
     )
+
+
+# =====================================================================
+# Événements / Calendrier
+# =====================================================================
+
+def _event_email_ctx(event, actor_user, action):
+    """Contexte commun pour les emails d'événement."""
+    action_labels = {
+        'created': _('Nouvel événement'),
+        'updated': _('Événement modifié'),
+        'cancelled': _('Événement annulé'),
+        'invited': _('Invitation à un événement'),
+    }
+    banner_colors = {
+        'created': '#1e3a5f',
+        'updated': '#b45309',
+        'cancelled': '#dc2626',
+        'invited': '#1e3a5f',
+    }
+    label = action_labels.get(action, _('Événement'))
+    site_url = getattr(settings, 'SITE_URL', '').rstrip('/')
+    event_url = f"{site_url}{reverse('core:event_detail', args=[event.id])}" if site_url and event.id else ''
+    return {
+        'title': f"{label} : {event.title}",
+        'action_link': event_url,
+        'action_text': _('Voir l\'événement'),
+        'actor_name': actor_user.get_full_name() or actor_user.username,
+        'event_title': event.title,
+        'event_date': event.date.strftime('%d/%m/%Y'),
+        'event_time': event.time.strftime('%H:%M'),
+        'event_location': event.location or '',
+        'event_type': event.get_event_type_display(),
+        'banner_color': banner_colors.get(action, '#1e3a5f'),
+        'banner_title': label,
+        'banner_subtitle': _('Dashboard CSIG – Direction Générale'),
+    }
+
+
+def notify_event_directions_email(event, actor_user, action='created'):
+    """Envoie un email aux employés des directions participantes à l'événement."""
+    if not _is_email_configured():
+        return
+    from .models import Employee
+    directions = list(event.participants.all())
+    if not directions:
+        return
+    employees = (
+        Employee.objects
+        .filter(direction__in=directions)
+        .exclude(email='')
+        .exclude(email__isnull=True)
+    )
+    ctx = _event_email_ctx(event, actor_user, action)
+    subject = f"[CSIG] {ctx['title']}"
+    for emp in employees:
+        text, html = _render_email('notification.html', {**ctx, 'username': emp.name})
+        try:
+            _send(subject, text, html, emp.email)
+            logger.info(f"Email event ({action}) envoyé à {emp.email}")
+        except Exception as e:
+            logger.error(f"Erreur envoi email event à {emp.email}: {e}")
+
+
+def notify_event_member_email(event_member, actor_user):
+    """Envoie un email d'invitation à un membre d'événement spécifique."""
+    if not _is_email_configured():
+        return
+    emp = event_member.employee
+    if not emp.email:
+        return
+    event = event_member.event
+    ctx = _event_email_ctx(event, actor_user, 'invited')
+    subject = f"[CSIG] {ctx['title']}"
+    text, html = _render_email('notification.html', {**ctx, 'username': emp.name})
+    try:
+        _send(subject, text, html, emp.email)
+        logger.info(f"Email invitation event envoyé à {emp.email}")
+    except Exception as e:
+        logger.error(f"Erreur envoi email invitation event à {emp.email}: {e}")
+
+
+def notify_event_deleted_email(event_title, event_date, member_emails, actor_user):
+    """Envoie un email d'annulation aux membres d'un événement supprimé.
+
+    member_emails — liste d'adresses email collectées AVANT la suppression.
+    """
+    if not _is_email_configured() or not member_emails:
+        return
+    actor_name = actor_user.get_full_name() or actor_user.username
+    date_fmt = event_date.strftime('%d/%m/%Y')
+    subject = f"[CSIG] Événement annulé : {event_title}"
+    for email in member_emails:
+        if not email:
+            continue
+        text, html = _render_email('notification.html', {
+            'username': email,
+            'title': f"Événement annulé : {event_title}",
+            'message': (
+                f"L'événement « {event_title} » prévu le {date_fmt} "
+                f"a été annulé par {actor_name}."
+            ),
+            'action_link': '',
+            'banner_color': '#dc2626',
+            'banner_title': _('Événement annulé'),
+            'banner_subtitle': _('Dashboard CSIG – Direction Générale'),
+        })
+        try:
+            _send(subject, text, html, email)
+            logger.info(f"Email annulation event envoyé à {email}")
+        except Exception as e:
+            logger.error(f"Erreur envoi email annulation event à {email}: {e}")

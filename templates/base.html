@@ -714,6 +714,10 @@
               if (typeof window._onProjUpdate === 'function') window._onProjUpdate(data);
               return;
             }
+            if (data.msg_type === 'calendar') {
+              if (typeof window._onCalendarUpdate === 'function') window._onCalendarUpdate(data);
+              return;
+            }
             /* Badge instantané */
             updateBadge(_unreadCount + 1);
             /* Si le dropdown est ouvert, insérer l'item en tête */

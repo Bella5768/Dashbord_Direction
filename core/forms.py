@@ -166,8 +166,10 @@ class EventForm(forms.ModelForm):
     def clean_date(self):
         from django.utils import timezone
         date = self.cleaned_data.get('date')
-        # En édition, on autorise la date existante même si elle est passée
-        if date and not self.instance.pk and date < timezone.now().date():
+        if date and date < timezone.now().date():
+            # En édition, autorise uniquement si la date n'a pas changé (ex: correction d'un autre champ)
+            if self.instance.pk and self.instance.date == date:
+                return date
             raise forms.ValidationError(_("La date ne peut pas être dans le passé."))
         return date
 
