@@ -1825,10 +1825,7 @@ function renderCalendar() {
 <!-- ── WebSocket temps réel : progression du projet ── -->
 <script>
 (function(){
-  var proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
   var PROJECT_ID = {{ project.id }};
-  var _ws = null;
-  var _retry = null;
 
   function progClass(pct) {
     return pct >= 80 ? 'high' : pct >= 50 ? 'mid' : 'low';
@@ -1894,6 +1891,19 @@ function renderCalendar() {
           curEl.innerHTML = newEl.innerHTML;
           if (window.lucide) lucide.createIcons({nodes: [curEl]});
         }
+        if (panelId === 'jalons-view-list') {
+          var scripts = doc.querySelectorAll('script:not([src])');
+          for (var i = 0; i < scripts.length; i++) {
+            var t = scripts[i].textContent;
+            if (t.indexOf('var MILESTONES_DATA') !== -1) {
+              var mx = t.match(/var MILESTONES_DATA\s*=\s*(\[[\s\S]*?\]);/);
+              if (mx) { try { eval('MILESTONES_DATA = ' + mx[1]); } catch(e) {} }
+              break;
+            }
+          }
+          _rendered.kanban = false; _rendered.gantt = false; _rendered.calendrier = false;
+          if (_currentView !== 'list') { _renderView(_currentView); _rendered[_currentView] = true; }
+        }
       })
       .catch(function() {})
       .finally(function() { delete _refreshInFlight[panelId]; });
@@ -1914,6 +1924,7 @@ function renderCalendar() {
       setProjectProgress(data.project_progress);
     } else if (data.event === 'section_refresh') {
       refreshPanel(data.section);
+      if (data.project_progress != null) setProjectProgress(data.project_progress);
     } else if (data.event === 'project_meta') {
       setProjectProgress(data.progress);
       var sb = document.getElementById('proj-status-badge');
@@ -1924,24 +1935,10 @@ function renderCalendar() {
     }
   }
 
-  function connect() {
-    try {
-      _ws = new WebSocket(proto + '//' + location.host + '/ws/projets/' + PROJECT_ID + '/');
-      _ws.onopen  = function() { _retry = null; };
-      _ws.onerror = function() {};
-      _ws.onclose = function() {
-        _ws = null;
-        var delay = _retry ? Math.min(_retry * 2, 30000) : 3000;
-        _retry = delay;
-        setTimeout(connect, delay);
-      };
-      _ws.onmessage = function(e) {
-        try { handleUpdate(JSON.parse(e.data)); } catch(err) {}
-      };
-    } catch(err) {}
-  }
-
-  connect();
+  window._onProjUpdate = function(data) {
+    if (+data.project_id !== PROJECT_ID) return;
+    handleUpdate(data);
+  };
 })();
 </script>
 

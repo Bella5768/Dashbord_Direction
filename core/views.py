@@ -29,6 +29,7 @@ def log_project_activity(project, action, description, user):
         description=description,
         user=username
     )
+    push_section_refresh(project.id, 'panel-activite', username)
 
 
 def _ensure_manager_in_team(project, user=None):
@@ -2670,7 +2671,8 @@ def milestone_create(request, project_id):
                     if success:
                         messages.info(request, msg)
             log_project_activity(project, 'ajout_jalon', f"Ajout du jalon '{milestone.name}'", request.user)
-            push_section_refresh(project.id, 'jalons-view-list', request.user.get_full_name() or request.user.username)
+            project.refresh_from_db()
+            push_section_refresh(project.id, 'jalons-view-list', request.user.get_full_name() or request.user.username, project_progress=project.progress)
             messages.success(request, _("Jalon créé avec succès."))
             return redirect('core:project_detail', project_id=project.id)
     else:
@@ -2724,7 +2726,8 @@ def milestone_edit(request, milestone_id):
                 for emp in assigned_emps:
                     notify_task_completed('jalon', milestone.name, project, emp, milestone.assigned_by, request.user)
             log_project_activity(project, 'modif_jalon', f"Modification du jalon '{milestone.name}'", request.user)
-            push_section_refresh(project.id, 'jalons-view-list', request.user.get_full_name() or request.user.username)
+            project.refresh_from_db()
+            push_section_refresh(project.id, 'jalons-view-list', request.user.get_full_name() or request.user.username, project_progress=project.progress)
             messages.success(request, _("Jalon modifié avec succès."))
             return redirect('core:project_detail', project_id=project.id)
     else:
@@ -2755,7 +2758,8 @@ def milestone_delete(request, milestone_id):
         milestone_name = milestone.name
         milestone.delete()
         log_project_activity(project, 'suppr_jalon', f"Suppression du jalon '{milestone_name}'", request.user)
-        push_section_refresh(project.id, 'jalons-view-list', request.user.get_full_name() or request.user.username)
+        project.refresh_from_db()
+        push_section_refresh(project.id, 'jalons-view-list', request.user.get_full_name() or request.user.username, project_progress=project.progress)
         messages.success(request, _("Jalon supprimé."))
         return redirect('core:project_detail', project_id=project.id)
     
@@ -2797,7 +2801,8 @@ def sub_milestone_create(request, milestone_id):
                     if success:
                         messages.info(request, msg)
             log_project_activity(project, 'ajout_sous_etape', f"Ajout de la sous-étape '{sub_milestone.name}' au jalon '{milestone.name}'", request.user)
-            push_section_refresh(project.id, 'jalons-view-list', request.user.get_full_name() or request.user.username)
+            project.refresh_from_db()
+            push_section_refresh(project.id, 'jalons-view-list', request.user.get_full_name() or request.user.username, project_progress=project.progress)
             messages.success(request, _("Sous-étape ajoutée avec succès."))
             return redirect('core:project_detail', project_id=project.id)
     else:
@@ -2854,7 +2859,8 @@ def sub_milestone_edit(request, sub_milestone_id):
                 for emp in assigned_emps:
                     notify_task_completed('sous-étape', sub_milestone.name, project, emp, sub_milestone.assigned_by, request.user)
             log_project_activity(project, 'modif_sous_etape', f"Modification de la sous-étape '{sub_milestone.name}'", request.user)
-            push_section_refresh(project.id, 'jalons-view-list', request.user.get_full_name() or request.user.username)
+            project.refresh_from_db()
+            push_section_refresh(project.id, 'jalons-view-list', request.user.get_full_name() or request.user.username, project_progress=project.progress)
             messages.success(request, _("Sous-étape modifiée avec succès."))
             return redirect('core:project_detail', project_id=project.id)
     else:
@@ -2888,7 +2894,8 @@ def sub_milestone_delete(request, sub_milestone_id):
         sub_name = sub_milestone.name
         sub_milestone.delete()
         log_project_activity(project, 'suppr_sous_etape', f"Suppression de la sous-étape '{sub_name}'", request.user)
-        push_section_refresh(project.id, 'jalons-view-list', request.user.get_full_name() or request.user.username)
+        project.refresh_from_db()
+        push_section_refresh(project.id, 'jalons-view-list', request.user.get_full_name() or request.user.username, project_progress=project.progress)
         messages.success(request, _("Sous-étape supprimée."))
         return redirect('core:project_detail', project_id=project.id)
     
@@ -3293,8 +3300,9 @@ def api_project_task_create(request, project_id):
             order=max_order + 1,
         )
         project.recalculate_progress()
+        project.refresh_from_db()
         log_project_activity(project, 'ajout_jalon', f"Ajout de la tâche '{milestone.name}'", request.user)
-        push_section_refresh(project.id, 'jalons-view-list', request.user.get_full_name() or request.user.username)
+        push_section_refresh(project.id, 'jalons-view-list', request.user.get_full_name() or request.user.username, project_progress=project.progress)
         return JsonResponse({
             'success': True,
             'task': {
@@ -3356,8 +3364,9 @@ def api_project_task_update(request, milestone_id):
 
         milestone.save()
         project.recalculate_progress()
+        project.refresh_from_db()
         log_project_activity(project, 'modif_jalon', f"Mise à jour de la tâche '{milestone.name}'", request.user)
-        push_section_refresh(project.id, 'jalons-view-list', request.user.get_full_name() or request.user.username)
+        push_section_refresh(project.id, 'jalons-view-list', request.user.get_full_name() or request.user.username, project_progress=project.progress)
         return JsonResponse({'success': True, 'task': {'id': milestone.id, 'name': milestone.name, 'progress': milestone.progress, 'completed': milestone.completed, 'update_url': reverse('core:api_project_task_update', args=[milestone.id])}})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)

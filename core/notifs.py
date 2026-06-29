@@ -23,9 +23,12 @@ def push_project_update(project_id, data):
         pass
 
 
-def push_section_refresh(project_id, section, actor=''):
+def push_section_refresh(project_id, section, actor='', project_progress=None):
     """Demande aux clients d'actualiser un panel de la page projet via fetch+DOMParser."""
-    push_project_update(project_id, {'event': 'section_refresh', 'section': section, 'actor': actor})
+    payload = {'event': 'section_refresh', 'section': section, 'actor': actor}
+    if project_progress is not None:
+        payload['project_progress'] = project_progress
+    push_project_update(project_id, payload)
 
 
 def push_project_meta(project):
