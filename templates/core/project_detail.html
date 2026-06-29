@@ -1877,21 +1877,32 @@ function renderCalendar() {
     if (dash) dash.textContent = pct + '%';
   }
 
-  var _refreshInFlight = {};
+  var _pendingRefresh = {};
+  var _refreshInFlight = false;
+
   function refreshPanel(panelId) {
-    if (_refreshInFlight[panelId]) return;
-    _refreshInFlight[panelId] = true;
+    _pendingRefresh[panelId] = true;
+    if (_refreshInFlight) return;
+    _refreshInFlight = true;
+    setTimeout(_flushRefresh, 20);
+  }
+
+  function _flushRefresh() {
+    var sections = Object.keys(_pendingRefresh);
+    _pendingRefresh = {};
     fetch(window.location.pathname + '?_ts=' + Date.now(), {credentials: 'same-origin'})
       .then(function(r) { return r.text(); })
       .then(function(html) {
         var doc = new DOMParser().parseFromString(html, 'text/html');
-        var newEl = doc.getElementById(panelId);
-        var curEl = document.getElementById(panelId);
-        if (newEl && curEl) {
-          curEl.innerHTML = newEl.innerHTML;
-          if (window.lucide) lucide.createIcons({nodes: [curEl]});
-        }
-        if (panelId === 'jalons-view-list') {
+        sections.forEach(function(pid) {
+          var newEl = doc.getElementById(pid);
+          var curEl = document.getElementById(pid);
+          if (newEl && curEl) {
+            curEl.innerHTML = newEl.innerHTML;
+            if (window.lucide) lucide.createIcons({nodes: [curEl]});
+          }
+        });
+        if (sections.indexOf('jalons-view-list') !== -1) {
           var scripts = doc.querySelectorAll('script:not([src])');
           for (var i = 0; i < scripts.length; i++) {
             var t = scripts[i].textContent;
@@ -1906,7 +1917,13 @@ function renderCalendar() {
         }
       })
       .catch(function() {})
-      .finally(function() { delete _refreshInFlight[panelId]; });
+      .finally(function() {
+        _refreshInFlight = false;
+        if (Object.keys(_pendingRefresh).length > 0) {
+          _refreshInFlight = true;
+          setTimeout(_flushRefresh, 20);
+        }
+      });
   }
 
   function handleUpdate(data) {
