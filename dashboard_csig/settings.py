@@ -22,6 +22,9 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-csig-dashboard-2025
 DEBUG = os.getenv('DJANGO_DEBUG', 'True').lower() in ('1', 'true', 'yes', 'on')
 
 ALLOWED_HOSTS = [h.strip() for h in os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()]
+_render_host = os.getenv('RENDER_EXTERNAL_HOSTNAME')
+if _render_host:
+    ALLOWED_HOSTS.append(_render_host)
 
 # Permet l'affichage des previews de documents dans des iframes du même domaine
 X_FRAME_OPTIONS = 'SAMEORIGIN'
