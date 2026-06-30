@@ -22,12 +22,6 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-csig-dashboard-2025
 DEBUG = os.getenv('DJANGO_DEBUG', 'True').lower() in ('1', 'true', 'yes', 'on')
 
 ALLOWED_HOSTS = [h.strip() for h in os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()]
-_render_host = os.getenv('RENDER_EXTERNAL_HOSTNAME')
-if _render_host:
-    ALLOWED_HOSTS.append(_render_host)
-    CSRF_TRUSTED_ORIGINS_RENDER = [f'https://{_render_host}', f'http://{_render_host}']
-else:
-    CSRF_TRUSTED_ORIGINS_RENDER = []
 
 # Permet l'affichage des previews de documents dans des iframes du même domaine
 X_FRAME_OPTIONS = 'SAMEORIGIN'
@@ -43,7 +37,6 @@ CSRF_TRUSTED_ORIGINS = [
     'https://dgdashbord.pythonanywhere.com',
 ]
 
-CSRF_TRUSTED_ORIGINS += CSRF_TRUSTED_ORIGINS_RENDER
 _extra_csrf = [o.strip() for o in os.getenv('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',') if o.strip()]
 if _extra_csrf:
     CSRF_TRUSTED_ORIGINS += _extra_csrf
