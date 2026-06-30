@@ -73,48 +73,50 @@
 {% block content %}
 <!-- Stats -->
 <div class="stats-row">
-    <a class="stat-box {% if current_status == 'all' or not current_status %}active{% endif %}" href="{% url 'core:projects' %}?status=all">
+{% with _dir=current_direction _q=search %}
+    <a class="stat-box {% if current_status == 'all' or not current_status %}active{% endif %}" href="{% url 'core:projects' %}?status=all{% if _dir and _dir != 'all' %}&direction={{ _dir }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="archive" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.total }}</p>
             <p class="stat-box-label">{% trans 'Total' %}</p>
         </div>
     </a>
-    <a class="stat-box blue {% if current_status == 'en_cours' %}active{% endif %}" href="{% url 'core:projects' %}?status=en_cours">
+    <a class="stat-box blue {% if current_status == 'en_cours' %}active{% endif %}" href="{% url 'core:projects' %}?status=en_cours{% if _dir and _dir != 'all' %}&direction={{ _dir }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="circle-play" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.en_cours }}</p>
             <p class="stat-box-label">{% trans 'En cours' %}</p>
         </div>
     </a>
-    <a class="stat-box green {% if current_status == 'termine' %}active{% endif %}" href="{% url 'core:projects' %}?status=termine">
+    <a class="stat-box green {% if current_status == 'termine' %}active{% endif %}" href="{% url 'core:projects' %}?status=termine{% if _dir and _dir != 'all' %}&direction={{ _dir }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="circle-check" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.termine }}</p>
             <p class="stat-box-label">{% trans 'Terminés' %}</p>
         </div>
     </a>
-    <a class="stat-box amber {% if current_status == 'planifie' %}active{% endif %}" href="{% url 'core:projects' %}?status=planifie">
+    <a class="stat-box amber {% if current_status == 'planifie' %}active{% endif %}" href="{% url 'core:projects' %}?status=planifie{% if _dir and _dir != 'all' %}&direction={{ _dir }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="clock" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.planifie }}</p>
             <p class="stat-box-label">{% trans 'Planifiés' %}</p>
         </div>
     </a>
-    <a class="stat-box red {% if current_status == 'en_retard' %}active{% endif %}" href="{% url 'core:projects' %}?status=en_retard">
+    <a class="stat-box red {% if current_status == 'en_retard' %}active{% endif %}" href="{% url 'core:projects' %}?status=en_retard{% if _dir and _dir != 'all' %}&direction={{ _dir }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="circle-x" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.en_retard|default:0 }}</p>
             <p class="stat-box-label">{% trans 'En retard' %}</p>
         </div>
     </a>
-    <a class="stat-box {% if current_status == 'suspendu' %}active{% endif %}" href="{% url 'core:projects' %}?status=suspendu">
+    <a class="stat-box {% if current_status == 'suspendu' %}active{% endif %}" href="{% url 'core:projects' %}?status=suspendu{% if _dir and _dir != 'all' %}&direction={{ _dir }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="circle-pause" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.suspendu|default:0 }}</p>
             <p class="stat-box-label">{% trans 'Suspendus' %}</p>
         </div>
     </a>
+{% endwith %}
 </div>
 
 <!-- Filters -->

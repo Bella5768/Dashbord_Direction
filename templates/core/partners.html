@@ -8,21 +8,22 @@
 {% block content %}
 <!-- Stats -->
 <div class="stats-row">
-    <a class="stat-box {% if current_status == 'all' or not current_status %}active{% endif %}" href="{% url 'core:partners' %}?status=all&type=all">
+{% with _t=current_type _q=search %}
+    <a class="stat-box {% if current_status == 'all' or not current_status %}active{% endif %}" href="{% url 'core:partners' %}?status=all{% if _t and _t != 'all' %}&type={{ _t }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="handshake" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.total }}</p>
             <p class="stat-box-label">{% trans 'Total partenaires' %}</p>
         </div>
     </a>
-    <a class="stat-box green {% if current_status == 'actif' %}active{% endif %}" href="{% url 'core:partners' %}?status=actif&type=all">
+    <a class="stat-box green {% if current_status == 'actif' %}active{% endif %}" href="{% url 'core:partners' %}?status=actif{% if _t and _t != 'all' %}&type={{ _t }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="circle-check" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.actif }}</p>
             <p class="stat-box-label">{% trans 'Partenariats actifs' %}</p>
         </div>
     </a>
-    <a class="stat-box amber {% if current_status == 'en_discussion' %}active{% endif %}" href="{% url 'core:partners' %}?status=en_discussion&type=all">
+    <a class="stat-box amber {% if current_status == 'en_discussion' %}active{% endif %}" href="{% url 'core:partners' %}?status=en_discussion{% if _t and _t != 'all' %}&type={{ _t }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="message-circle" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.en_discussion }}</p>
@@ -36,6 +37,7 @@
             <p class="stat-box-label">{% trans 'Événements à venir' %}</p>
         </div>
     </a>
+{% endwith %}
 </div>
 
 <!-- Filters - full width, above the grid -->
@@ -55,6 +57,7 @@
         <option value="all" {% if current_status == 'all' %}selected{% endif %}>{% trans 'Tous les statuts' %}</option>
         <option value="actif" {% if current_status == 'actif' %}selected{% endif %}>{% trans 'Actif' %}</option>
         <option value="en_discussion" {% if current_status == 'en_discussion' %}selected{% endif %}>{% trans 'En discussion' %}</option>
+        <option value="inactif" {% if current_status == 'inactif' %}selected{% endif %}>{% trans 'Inactif' %}</option>
     </select>
     <a href="{% url 'core:partner_create' %}" class="btn btn-primary" style="margin-left:auto;flex-shrink:0;">
         <i data-lucide="plus-circle" width="16" height="16"></i>

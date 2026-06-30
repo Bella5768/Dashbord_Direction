@@ -8,27 +8,29 @@
 {% block content %}
 <!-- Stats -->
 <div class="stats-row">
-    <a class="stat-box {% if current_status == 'all' %}active{% endif %}" href="{% url 'core:users_list' %}?status=all">
+{% with _r=current_role _q=search %}
+    <a class="stat-box {% if current_status == 'all' %}active{% endif %}" href="{% url 'core:users_list' %}?status=all{% if _r and _r != 'all' %}&role={{ _r }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="users" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.total }}</p>
             <p class="stat-box-label">{% trans 'Total utilisateurs' %}</p>
         </div>
     </a>
-    <a class="stat-box green {% if current_status == 'active' %}active{% endif %}" href="{% url 'core:users_list' %}?status=active">
+    <a class="stat-box green {% if current_status == 'active' %}active{% endif %}" href="{% url 'core:users_list' %}?status=active{% if _r and _r != 'all' %}&role={{ _r }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="user-check" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.active }}</p>
             <p class="stat-box-label">{% trans 'Comptes actifs' %}</p>
         </div>
     </a>
-    <a class="stat-box red {% if current_status == 'inactive' %}active{% endif %}" href="{% url 'core:users_list' %}?status=inactive">
+    <a class="stat-box red {% if current_status == 'inactive' %}active{% endif %}" href="{% url 'core:users_list' %}?status=inactive{% if _r and _r != 'all' %}&role={{ _r }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="user-x" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.inactive }}</p>
             <p class="stat-box-label">{% trans 'Comptes inactifs' %}</p>
         </div>
     </a>
+{% endwith %}
     <a class="stat-box blue" href="{% url 'core:user_activities' %}">
         <div class="stat-box-icon"><i data-lucide="activity" width="20" height="20"></i></div>
         <div class="stat-box-body">

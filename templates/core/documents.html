@@ -8,34 +8,36 @@
 {% block content %}
 <!-- Stats -->
 <div class="stats-row">
-    <a class="stat-box {% if current_status == 'all' %}active{% endif %}" href="{% url 'core:documents' %}?status=all">
+{% with _t=current_type _q=search %}
+    <a class="stat-box {% if current_status == 'all' %}active{% endif %}" href="{% url 'core:documents' %}?status=all{% if _t and _t != 'all' %}&type={{ _t }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="file-text" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.total }}</p>
             <p class="stat-box-label">{% trans 'Total documents' %}</p>
         </div>
     </a>
-    <a class="stat-box red {% if current_status == 'a_signer' %}active{% endif %}" href="{% url 'core:documents' %}?status=a_signer">
+    <a class="stat-box red {% if current_status == 'a_signer' %}active{% endif %}" href="{% url 'core:documents' %}?status=a_signer{% if _t and _t != 'all' %}&type={{ _t }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="pen-line" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.a_signer }}</p>
             <p class="stat-box-label">{% trans 'À signer' %}</p>
         </div>
     </a>
-    <a class="stat-box amber {% if current_status == 'a_valider' %}active{% endif %}" href="{% url 'core:documents' %}?status=a_valider">
+    <a class="stat-box amber {% if current_status == 'a_valider' %}active{% endif %}" href="{% url 'core:documents' %}?status=a_valider{% if _t and _t != 'all' %}&type={{ _t }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="clock" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.a_valider }}</p>
             <p class="stat-box-label">{% trans 'À valider' %}</p>
         </div>
     </a>
-    <a class="stat-box green {% if current_status == 'signe' %}active{% endif %}" href="{% url 'core:documents' %}?status=signe">
+    <a class="stat-box green {% if current_status == 'signe' %}active{% endif %}" href="{% url 'core:documents' %}?status=signe{% if _t and _t != 'all' %}&type={{ _t }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="file-check" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.signe }}</p>
             <p class="stat-box-label">{% trans 'Signés' %}</p>
         </div>
     </a>
+{% endwith %}
 </div>
 
 <!-- Filters -->

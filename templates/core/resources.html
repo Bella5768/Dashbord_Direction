@@ -183,7 +183,7 @@
 {% else %}
 <!-- HR Stats -->
 <div class="stats-row">
-    <a class="stat-box {% if not rh_workload %}active{% endif %}" href="?tab=rh">
+    <a class="stat-box {% if not rh_workload %}active{% endif %}" href="?tab=rh{% if rh_dir %}&dir={{ rh_dir }}{% endif %}{% if rh_search %}&search={{ rh_search|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="users" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ employees_count }}</p>
@@ -197,7 +197,7 @@
             <p class="stat-box-label">{% trans 'Charge moyenne' %}</p>
         </div>
     </div>
-    <a class="stat-box amber {% if rh_workload == 'surcharge' %}active{% endif %}" href="?tab=rh&workload=surcharge">
+    <a class="stat-box amber {% if rh_workload == 'surcharge' %}active{% endif %}" href="?tab=rh&workload=surcharge{% if rh_dir %}&dir={{ rh_dir }}{% endif %}{% if rh_search %}&search={{ rh_search|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="alert-circle" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ overloaded }}</p>
