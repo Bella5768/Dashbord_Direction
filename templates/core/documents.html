@@ -2,35 +2,35 @@
 {% load i18n %}
 
 {% block title %}{% trans 'Documents' %}{% endblock %}
-{% block page_title %}{% trans 'Suivi Documentaire' %}{% endblock %}
+{% block pageftitle %}{% trans 'Suivi Documentaire' %}{% endblock %}
 {% block page_subtitle %}{% trans 'Gestion des documents à signer et valider' %}{% endblock %}
 
 {% block content %}
 <!-- Stats -->
 <div class="stats-row">
-{% with _t=current_type _q=search %}
-    <a class="stat-box {% if current_status == 'all' %}active{% endif %}" href="{% url 'core:documents' %}?status=all{% if _t and _t != 'all' %}&type={{ _t }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
+{% with ft=currentftype fq=search %}
+    <a class="stat-box {% if current_status == 'all' %}active{% endif %}" href="{% url 'core:documents' %}?status=all{% if ft and ft != 'all' %}&type={{ ft }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="file-text" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.total }}</p>
             <p class="stat-box-label">{% trans 'Total documents' %}</p>
         </div>
     </a>
-    <a class="stat-box red {% if current_status == 'a_signer' %}active{% endif %}" href="{% url 'core:documents' %}?status=a_signer{% if _t and _t != 'all' %}&type={{ _t }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
+    <a class="stat-box red {% if current_status == 'a_signer' %}active{% endif %}" href="{% url 'core:documents' %}?status=a_signer{% if ft and ft != 'all' %}&type={{ ft }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="pen-line" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.a_signer }}</p>
             <p class="stat-box-label">{% trans 'À signer' %}</p>
         </div>
     </a>
-    <a class="stat-box amber {% if current_status == 'a_valider' %}active{% endif %}" href="{% url 'core:documents' %}?status=a_valider{% if _t and _t != 'all' %}&type={{ _t }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
+    <a class="stat-box amber {% if current_status == 'a_valider' %}active{% endif %}" href="{% url 'core:documents' %}?status=a_valider{% if ft and ft != 'all' %}&type={{ ft }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="clock" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.a_valider }}</p>
             <p class="stat-box-label">{% trans 'À valider' %}</p>
         </div>
     </a>
-    <a class="stat-box green {% if current_status == 'signe' %}active{% endif %}" href="{% url 'core:documents' %}?status=signe{% if _t and _t != 'all' %}&type={{ _t }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
+    <a class="stat-box green {% if current_status == 'signe' %}active{% endif %}" href="{% url 'core:documents' %}?status=signe{% if ft and ft != 'all' %}&type={{ ft }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="file-check" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.signe }}</p>
@@ -53,11 +53,11 @@
         <option value="signe" {% if current_status == 'signe' %}selected{% endif %}>{% trans 'Signé' %}</option>
     </select>
     <select name="type" class="form-control" onchange="this.form.submit()">
-        <option value="all" {% if current_type == 'all' %}selected{% endif %}>{% trans 'Tous les types' %}</option>
-        <option value="contrat" {% if current_type == 'contrat' %}selected{% endif %}>{% trans 'Contrat' %}</option>
-        <option value="budget" {% if current_type == 'budget' %}selected{% endif %}>{% trans 'Budget' %}</option>
-        <option value="rapport" {% if current_type == 'rapport' %}selected{% endif %}>{% trans 'Rapport' %}</option>
-        <option value="note" {% if current_type == 'note' %}selected{% endif %}>{% trans 'Note' %}</option>
+        <option value="all" {% if currentftype == 'all' %}selected{% endif %}>{% trans 'Tous les types' %}</option>
+        <option value="contrat" {% if currentftype == 'contrat' %}selected{% endif %}>{% trans 'Contrat' %}</option>
+        <option value="budget" {% if currentftype == 'budget' %}selected{% endif %}>{% trans 'Budget' %}</option>
+        <option value="rapport" {% if currentftype == 'rapport' %}selected{% endif %}>{% trans 'Rapport' %}</option>
+        <option value="note" {% if currentftype == 'note' %}selected{% endif %}>{% trans 'Note' %}</option>
     </select>
     <a href="{% url 'core:document_create' %}" class="btn btn-primary">
         <i data-lucide="plus-circle" width="16" height="16" ></i>
@@ -96,8 +96,8 @@
                             </div>
                         </td>
                         <td>
-                            <span class="badge {% if doc.doc_type == 'contrat' %}badge-purple{% elif doc.doc_type == 'budget' %}badge-info{% elif doc.doc_type == 'rapport' %}badge-success{% else %}badge-secondary{% endif %}">
-                                {{ doc.get_doc_type_display }}
+                            <span class="badge {% if doc.docftype == 'contrat' %}badge-purple{% elif doc.docftype == 'budget' %}badge-info{% elif doc.docftype == 'rapport' %}badge-success{% else %}badge-secondary{% endif %}">
+                                {{ doc.get_docftype_display }}
                             </span>
                         </td>
                         <td>

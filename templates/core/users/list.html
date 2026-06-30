@@ -8,22 +8,22 @@
 {% block content %}
 <!-- Stats -->
 <div class="stats-row">
-{% with _r=current_role _q=search %}
-    <a class="stat-box {% if current_status == 'all' %}active{% endif %}" href="{% url 'core:users_list' %}?status=all{% if _r and _r != 'all' %}&role={{ _r }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
+{% with fr=currentfrole fq=search %}
+    <a class="stat-box {% if current_status == 'all' %}active{% endif %}" href="{% url 'core:users_list' %}?status=all{% if fr and fr != 'all' %}&role={{ fr }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="users" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.total }}</p>
             <p class="stat-box-label">{% trans 'Total utilisateurs' %}</p>
         </div>
     </a>
-    <a class="stat-box green {% if current_status == 'active' %}active{% endif %}" href="{% url 'core:users_list' %}?status=active{% if _r and _r != 'all' %}&role={{ _r }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
+    <a class="stat-box green {% if current_status == 'active' %}active{% endif %}" href="{% url 'core:users_list' %}?status=active{% if fr and fr != 'all' %}&role={{ fr }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="user-check" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.active }}</p>
             <p class="stat-box-label">{% trans 'Comptes actifs' %}</p>
         </div>
     </a>
-    <a class="stat-box red {% if current_status == 'inactive' %}active{% endif %}" href="{% url 'core:users_list' %}?status=inactive{% if _r and _r != 'all' %}&role={{ _r }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
+    <a class="stat-box red {% if current_status == 'inactive' %}active{% endif %}" href="{% url 'core:users_list' %}?status=inactive{% if fr and fr != 'all' %}&role={{ fr }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="user-x" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.inactive }}</p>
@@ -47,9 +47,9 @@
         <input type="text" name="search" placeholder="{% trans 'Rechercher un utilisateur...' %}" value="{{ search }}" class="form-control">
     </div>
     <select name="role" class="form-control" onchange="this.form.submit()">
-        <option value="all" {% if current_role == 'all' %}selected{% endif %}>{% trans 'Tous les rôles' %}</option>
+        <option value="all" {% if currentfrole == 'all' %}selected{% endif %}>{% trans 'Tous les rôles' %}</option>
         {% for value, label in role_choices %}
-        <option value="{{ value }}" {% if current_role == value %}selected{% endif %}>{{ label }}</option>
+        <option value="{{ value }}" {% if currentfrole == value %}selected{% endif %}>{{ label }}</option>
         {% endfor %}
     </select>
     <select name="status" class="form-control" onchange="this.form.submit()">
@@ -102,7 +102,7 @@
                         <td>
                             {% if u.profile %}
                             <span class="badge {% if u.profile.role_slug == 'admin' %}badge-danger{% elif u.profile.role_slug == 'directeur_general' %}badge-warning{% elif u.profile.role_slug == 'directeur' %}badge-info{% else %}badge-secondary{% endif %}">
-                                {% trans 'Sans rôle' as no_role_label %}{{ u.profile.role.name|default:no_role_label }}
+                                {% trans 'Sans rôle' as nofrole_label %}{{ u.profile.role.name|default:nofrole_label }}
                             </span>
                             {% else %}
                             <span class="badge badge-secondary">{% trans 'Non défini' %}</span>

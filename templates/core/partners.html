@@ -2,28 +2,28 @@
 {% load i18n %}
 
 {% block title %}{% trans 'Partenaires' %}{% endblock %}
-{% block page_title %}{% trans 'Partenaires et Événements' %}{% endblock %}
+{% block pageftitle %}{% trans 'Partenaires et Événements' %}{% endblock %}
 {% block page_subtitle %}{% trans 'Gestion des partenariats et activités conjointes' %}{% endblock %}
 
 {% block content %}
 <!-- Stats -->
 <div class="stats-row">
-{% with _t=current_type _q=search %}
-    <a class="stat-box {% if current_status == 'all' or not current_status %}active{% endif %}" href="{% url 'core:partners' %}?status=all{% if _t and _t != 'all' %}&type={{ _t }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
+{% with ft=currentftype fq=search %}
+    <a class="stat-box {% if current_status == 'all' or not current_status %}active{% endif %}" href="{% url 'core:partners' %}?status=all{% if ft and ft != 'all' %}&type={{ ft }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="handshake" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.total }}</p>
             <p class="stat-box-label">{% trans 'Total partenaires' %}</p>
         </div>
     </a>
-    <a class="stat-box green {% if current_status == 'actif' %}active{% endif %}" href="{% url 'core:partners' %}?status=actif{% if _t and _t != 'all' %}&type={{ _t }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
+    <a class="stat-box green {% if current_status == 'actif' %}active{% endif %}" href="{% url 'core:partners' %}?status=actif{% if ft and ft != 'all' %}&type={{ ft }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="circle-check" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.actif }}</p>
             <p class="stat-box-label">{% trans 'Partenariats actifs' %}</p>
         </div>
     </a>
-    <a class="stat-box amber {% if current_status == 'en_discussion' %}active{% endif %}" href="{% url 'core:partners' %}?status=en_discussion{% if _t and _t != 'all' %}&type={{ _t }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
+    <a class="stat-box amber {% if current_status == 'en_discussion' %}active{% endif %}" href="{% url 'core:partners' %}?status=en_discussion{% if ft and ft != 'all' %}&type={{ ft }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="message-circle" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.en_discussion }}</p>
@@ -47,11 +47,11 @@
         <input type="text" name="search" placeholder="{% trans 'Rechercher un partenaire...' %}" value="{{ search }}" class="form-control">
     </div>
     <select name="type" class="form-control" onchange="this.form.submit()">
-        <option value="all" {% if current_type == 'all' %}selected{% endif %}>{% trans 'Tous les types' %}</option>
-        <option value="entreprise" {% if current_type == 'entreprise' %}selected{% endif %}>{% trans 'Entreprise' %}</option>
-        <option value="universite" {% if current_type == 'universite' %}selected{% endif %}>{% trans 'Université' %}</option>
-        <option value="institution" {% if current_type == 'institution' %}selected{% endif %}>{% trans 'Institution' %}</option>
-        <option value="ong" {% if current_type == 'ong' %}selected{% endif %}>{% trans 'ONG' %}</option>
+        <option value="all" {% if currentftype == 'all' %}selected{% endif %}>{% trans 'Tous les types' %}</option>
+        <option value="entreprise" {% if currentftype == 'entreprise' %}selected{% endif %}>{% trans 'Entreprise' %}</option>
+        <option value="universite" {% if currentftype == 'universite' %}selected{% endif %}>{% trans 'Université' %}</option>
+        <option value="institution" {% if currentftype == 'institution' %}selected{% endif %}>{% trans 'Institution' %}</option>
+        <option value="ong" {% if currentftype == 'ong' %}selected{% endif %}>{% trans 'ONG' %}</option>
     </select>
     <select name="status" class="form-control" onchange="this.form.submit()">
         <option value="all" {% if current_status == 'all' %}selected{% endif %}>{% trans 'Tous les statuts' %}</option>
@@ -80,10 +80,10 @@
                 {% endif %}
 
                 <div class="partner-header">
-                    <div class="partner-icon {{ partner.partner_type }}">
-                        {% if partner.partner_type == 'entreprise' %}<i data-lucide="building-2" width="18" height="18"></i>
-                        {% elif partner.partner_type == 'universite' %}<i data-lucide="graduation-cap" width="18" height="18"></i>
-                        {% elif partner.partner_type == 'institution' %}<i data-lucide="landmark" width="18" height="18"></i>
+                    <div class="partner-icon {{ partner.partnerftype }}">
+                        {% if partner.partnerftype == 'entreprise' %}<i data-lucide="building-2" width="18" height="18"></i>
+                        {% elif partner.partnerftype == 'universite' %}<i data-lucide="graduation-cap" width="18" height="18"></i>
+                        {% elif partner.partnerftype == 'institution' %}<i data-lucide="landmark" width="18" height="18"></i>
                         {% else %}<i data-lucide="heart" width="18" height="18"></i>
                         {% endif %}
                     </div>

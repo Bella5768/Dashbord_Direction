@@ -73,43 +73,43 @@
 {% block content %}
 <!-- Stats -->
 <div class="stats-row">
-{% with _dir=current_direction _q=search %}
-    <a class="stat-box {% if current_status == 'all' or not current_status %}active{% endif %}" href="{% url 'core:projects' %}?status=all{% if _dir and _dir != 'all' %}&direction={{ _dir }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
+{% with fdir=currentfdirection fq=search %}
+    <a class="stat-box {% if current_status == 'all' or not current_status %}active{% endif %}" href="{% url 'core:projects' %}?status=all{% if fdir and fdir != 'all' %}&direction={{ fdir }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="archive" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.total }}</p>
             <p class="stat-box-label">{% trans 'Total' %}</p>
         </div>
     </a>
-    <a class="stat-box blue {% if current_status == 'en_cours' %}active{% endif %}" href="{% url 'core:projects' %}?status=en_cours{% if _dir and _dir != 'all' %}&direction={{ _dir }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
+    <a class="stat-box blue {% if current_status == 'en_cours' %}active{% endif %}" href="{% url 'core:projects' %}?status=en_cours{% if fdir and fdir != 'all' %}&direction={{ fdir }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="circle-play" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.en_cours }}</p>
             <p class="stat-box-label">{% trans 'En cours' %}</p>
         </div>
     </a>
-    <a class="stat-box green {% if current_status == 'termine' %}active{% endif %}" href="{% url 'core:projects' %}?status=termine{% if _dir and _dir != 'all' %}&direction={{ _dir }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
+    <a class="stat-box green {% if current_status == 'termine' %}active{% endif %}" href="{% url 'core:projects' %}?status=termine{% if fdir and fdir != 'all' %}&direction={{ fdir }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="circle-check" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.termine }}</p>
             <p class="stat-box-label">{% trans 'Terminés' %}</p>
         </div>
     </a>
-    <a class="stat-box amber {% if current_status == 'planifie' %}active{% endif %}" href="{% url 'core:projects' %}?status=planifie{% if _dir and _dir != 'all' %}&direction={{ _dir }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
+    <a class="stat-box amber {% if current_status == 'planifie' %}active{% endif %}" href="{% url 'core:projects' %}?status=planifie{% if fdir and fdir != 'all' %}&direction={{ fdir }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="clock" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.planifie }}</p>
             <p class="stat-box-label">{% trans 'Planifiés' %}</p>
         </div>
     </a>
-    <a class="stat-box red {% if current_status == 'en_retard' %}active{% endif %}" href="{% url 'core:projects' %}?status=en_retard{% if _dir and _dir != 'all' %}&direction={{ _dir }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
+    <a class="stat-box red {% if current_status == 'en_retard' %}active{% endif %}" href="{% url 'core:projects' %}?status=en_retard{% if fdir and fdir != 'all' %}&direction={{ fdir }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="circle-x" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.en_retard|default:0 }}</p>
             <p class="stat-box-label">{% trans 'En retard' %}</p>
         </div>
     </a>
-    <a class="stat-box {% if current_status == 'suspendu' %}active{% endif %}" href="{% url 'core:projects' %}?status=suspendu{% if _dir and _dir != 'all' %}&direction={{ _dir }}{% endif %}{% if _q %}&search={{ _q|urlencode }}{% endif %}">
+    <a class="stat-box {% if current_status == 'suspendu' %}active{% endif %}" href="{% url 'core:projects' %}?status=suspendu{% if fdir and fdir != 'all' %}&direction={{ fdir }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
         <div class="stat-box-icon"><i data-lucide="circle-pause" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.suspendu|default:0 }}</p>
@@ -134,9 +134,9 @@
         <option value="en_retard" {% if current_status == 'en_retard' %}selected{% endif %}>{% trans 'En retard' %}</option>
     </select>
     <select name="direction" class="form-control" onchange="this.form.submit()">
-        <option value="all" {% if current_direction == 'all' %}selected{% endif %}>{% trans 'Toutes les directions' %}</option>
+        <option value="all" {% if currentfdirection == 'all' %}selected{% endif %}>{% trans 'Toutes les directions' %}</option>
         {% for dir in directions %}
-        <option value="{{ dir.code }}" {% if current_direction == dir.code %}selected{% endif %}>{{ dir.code }} — {{ dir.name }}</option>
+        <option value="{{ dir.code }}" {% if currentfdirection == dir.code %}selected{% endif %}>{{ dir.code }} — {{ dir.name }}</option>
         {% endfor %}
     </select>
     <a href="{% url 'core:project_create' %}" class="btn btn-primary" style="margin-left:auto;">
