@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from .models import LeaveRequest, LeaveDocument, Employee, Direction
+from .validators import validate_safe_file
 
 
 _DATE_INPUT = forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
@@ -27,10 +28,14 @@ class MultipleFileField(forms.FileField):
     def clean(self, data, initial=None):
         single_clean = super().clean
         if isinstance(data, (list, tuple)):
-            return [single_clean(d, initial) for d in data if d]
-        if data:
-            return [single_clean(data, initial)]
-        return []
+            files = [single_clean(d, initial) for d in data if d]
+        elif data:
+            files = [single_clean(data, initial)]
+        else:
+            files = []
+        for f in files:
+            validate_safe_file(f)
+        return files
 
 
 class LeaveRequestForm(forms.ModelForm):

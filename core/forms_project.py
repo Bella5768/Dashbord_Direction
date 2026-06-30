@@ -4,6 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from .models import Project, Document, Request, Partner, Direction, Budget, Employee, Milestone, SubMilestone, ProjectFolder, ProjectDocument, ProjectMember, ProjectNeed, ProjectComment, ProjectRole, Role
 from .currencies import CURRENCY_CHOICES, convert_currency, format_currency
 from .fields import IntlPhoneField
+from .validators import validate_safe_file
 
 
 class ProjectForm(forms.ModelForm):
@@ -99,11 +100,12 @@ class DocumentForm(forms.ModelForm):
         widgets = {
             'due_date': forms.DateInput(attrs={'type': 'date'}),
         }
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
+        self.fields['file'].validators = [validate_safe_file]
 
     def clean(self):
         cleaned = super().clean()
@@ -236,14 +238,14 @@ class ProjectDocumentForm(forms.ModelForm):
         widgets = {
             'description': forms.Textarea(attrs={'rows': 3}),
         }
-    
+
     def __init__(self, project, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.project = project
-        # Filter folders to only show folders from the same project
         self.fields['folder'].queryset = ProjectFolder.objects.filter(project=project)
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
+        self.fields['file'].validators = [validate_safe_file]
 
 
 class ProjectMemberForm(forms.ModelForm):

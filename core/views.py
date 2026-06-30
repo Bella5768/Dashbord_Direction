@@ -308,8 +308,15 @@ def login_view(request):
                     ip_address=request.META.get('REMOTE_ADDR'),
                     user_agent=request.META.get('HTTP_USER_AGENT', ''),
                 )
-                next_url = request.GET.get('next', 'core:dashboard')
-                return redirect(next_url)
+                from django.utils.http import url_has_allowed_host_and_scheme
+                next_url = request.GET.get('next')
+                if next_url and url_has_allowed_host_and_scheme(
+                    next_url,
+                    allowed_hosts={request.get_host()},
+                    require_https=request.is_secure(),
+                ):
+                    return redirect(next_url)
+                return redirect('core:dashboard')
             elif not user.has_usable_password():
                 messages.error(request, _("Votre compte est en attente d'activation. Consultez votre email pour le lien d'invitation."))
             else:
@@ -1044,21 +1051,30 @@ def documents(request):
     status_filter = request.GET.get('status', 'all')
     type_filter = request.GET.get('type', 'all')
     search = request.GET.get('search', '')
-    
-    docs_qs = Document.objects.select_related('direction')
-    
+
+    profile = request.user.profile
+    role_slug = profile.role_slug if profile else None
+    direction_id = getattr(profile, 'direction_id', None)
+
+    if role_slug in ('admin', 'directeur_general') or request.user.is_superuser:
+        docs_qs = Document.objects.select_related('direction')
+    elif direction_id:
+        docs_qs = Document.objects.select_related('direction').filter(direction_id=direction_id)
+    else:
+        docs_qs = Document.objects.none()
+
     if status_filter != 'all':
         docs_qs = docs_qs.filter(status=status_filter)
     if type_filter != 'all':
         docs_qs = docs_qs.filter(doc_type=type_filter)
     if search:
         docs_qs = docs_qs.filter(title__icontains=search)
-    
+
     stats = {
-        'total': Document.objects.count(),
-        'a_signer': Document.objects.filter(status='a_signer').count(),
-        'a_valider': Document.objects.filter(status='a_valider').count(),
-        'signe': Document.objects.filter(status='signe').count(),
+        'total': docs_qs.count(),
+        'a_signer': docs_qs.filter(status='a_signer').count(),
+        'a_valider': docs_qs.filter(status='a_valider').count(),
+        'signe': docs_qs.filter(status='signe').count(),
     }
     
     from django.utils import timezone
@@ -1079,23 +1095,32 @@ def requests_view(request):
     status_filter = request.GET.get('status', 'all')
     direction_filter = request.GET.get('direction', 'all')
     search = request.GET.get('search', '')
-    
-    reqs_qs = Request.objects.select_related('direction')
-    
+
+    profile = request.user.profile
+    role_slug = profile.role_slug if profile else None
+    direction_id = getattr(profile, 'direction_id', None)
+
+    if role_slug in ('admin', 'directeur_general') or request.user.is_superuser:
+        reqs_qs = Request.objects.select_related('direction')
+    elif direction_id:
+        reqs_qs = Request.objects.select_related('direction').filter(direction_id=direction_id)
+    else:
+        reqs_qs = Request.objects.none()
+
     if status_filter != 'all':
         reqs_qs = reqs_qs.filter(status=status_filter)
     if direction_filter != 'all':
         reqs_qs = reqs_qs.filter(direction__code=direction_filter)
     if search:
         reqs_qs = reqs_qs.filter(title__icontains=search)
-    
+
     directions = Direction.objects.all()
-    
+
     stats = {
-        'total': Request.objects.count(),
-        'en_attente': Request.objects.filter(status='en_attente').count(),
-        'approuve': Request.objects.filter(status='approuve').count(),
-        'rejete': Request.objects.filter(status='rejete').count(),
+        'total': reqs_qs.count(),
+        'en_attente': reqs_qs.filter(status='en_attente').count(),
+        'approuve': reqs_qs.filter(status='approuve').count(),
+        'rejete': reqs_qs.filter(status='rejete').count(),
     }
     
     context = {
@@ -4237,6 +4262,15 @@ def document_download(request, doc_id):
     import os
     from django.http import FileResponse
     doc = get_object_or_404(Document, pk=doc_id)
+
+    profile = request.user.profile
+    role_slug = profile.role_slug if profile else None
+    direction_id = getattr(profile, 'direction_id', None)
+    if not (role_slug in ('admin', 'directeur_general') or request.user.is_superuser):
+        if doc.direction_id != direction_id:
+            from django.core.exceptions import PermissionDenied
+            raise PermissionDenied
+
     if not doc.file:
         messages.error(request, _("Aucun fichier attaché à ce document."))
         return redirect('core:documents')
