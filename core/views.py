@@ -4312,12 +4312,12 @@ def document_preview(request, doc_id):
     doc = get_object_or_404(Document, pk=doc_id)
 
     profile = request.user.profile
-    if not profile.can_approve_documents():
-        messages.error(request, _("Vous n'avez pas accès à ce document."))
-        return redirect('core:documents')
     direction_id = getattr(profile, 'direction_id', None)
     if not profile.is_directeur_general():
         if not direction_id or doc.direction_id != direction_id:
+            messages.error(request, _("Vous n'avez pas accès à ce document."))
+            return redirect('core:documents')
+        if not profile.can_approve_documents():
             messages.error(request, _("Vous n'avez pas accès à ce document."))
             return redirect('core:documents')
 

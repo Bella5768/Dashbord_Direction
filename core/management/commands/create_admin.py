@@ -18,23 +18,26 @@ class Command(BaseCommand):
             )
 
         if User.objects.filter(username=username).exists():
-            self.stdout.write(f"L'utilisateur '{username}' existe déjà.")
-            user = User.objects.get(username=username)
-        else:
-            user = User.objects.create_superuser(
-                username=username,
-                email=email,
-                password=password,
-                first_name="Super",
-                last_name="Administrateur",
-            )
-            self.stdout.write(self.style.SUCCESS(f"Utilisateur '{username}' créé."))
+            self.stdout.write(self.style.WARNING(
+                f"L'utilisateur '{username}' existe déjà — aucune modification effectuée. "
+                "Supprimez le compte manuellement si vous souhaitez le recréer."
+            ))
+            return
+
+        user = User.objects.create_superuser(
+            username=username,
+            email=email,
+            password=password,
+            first_name="Super",
+            last_name="Administrateur",
+        )
+        self.stdout.write(self.style.SUCCESS(f"Utilisateur '{username}' créé."))
 
         admin_role = Role.objects.filter(slug='admin').first()
         if admin_role is None:
             self.stdout.write(self.style.WARNING(
                 "Rôle 'admin' introuvable — profil sauvegardé sans rôle. "
-                "Lancez d'abord 'python manage.py assign_roles'."
+                "Lancez 'python manage.py assign_roles' puis relancez cette commande."
             ))
 
         profile, _ = UserProfile.objects.get_or_create(user=user)
