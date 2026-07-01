@@ -105,7 +105,7 @@ class DocumentForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
-        self.fields['file'].validators = [validate_safe_file]
+        self.fields['file'].validators.append(validate_safe_file)
 
     def clean(self):
         cleaned = super().clean()
@@ -245,7 +245,7 @@ class ProjectDocumentForm(forms.ModelForm):
         self.fields['folder'].queryset = ProjectFolder.objects.filter(project=project)
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
-        self.fields['file'].validators = [validate_safe_file]
+        self.fields['file'].validators.append(validate_safe_file)
 
 
 class ProjectMemberForm(forms.ModelForm):

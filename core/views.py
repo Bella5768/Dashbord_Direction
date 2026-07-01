@@ -613,7 +613,7 @@ def _project_budget_data(project_qs):
 def _project_stats(project_qs):
     """Retourne les compteurs de projets pour un queryset (1 seule requête)."""
     return project_qs.aggregate(
-        total_projects=Count('id'),
+        total_projects=Count('id', distinct=True),
         projects_in_progress=Count(Case(When(status='en_cours', then=1), output_field=IntegerField())),
         projects_completed=Count(Case(When(status='termine', then=1), output_field=IntegerField())),
         projects_planned=Count(Case(When(status='planifie', then=1), output_field=IntegerField())),
@@ -1053,15 +1053,21 @@ def documents(request):
     search = request.GET.get('search', '')
 
     profile = request.user.profile
-    role_slug = profile.role_slug if profile else None
     direction_id = getattr(profile, 'direction_id', None)
 
-    if role_slug in ('admin', 'directeur_general') or request.user.is_superuser:
+    if profile.is_directeur_general():
         docs_qs = Document.objects.select_related('direction')
     elif direction_id:
         docs_qs = Document.objects.select_related('direction').filter(direction_id=direction_id)
     else:
         docs_qs = Document.objects.none()
+
+    stats = docs_qs.aggregate(
+        total=Count('id'),
+        a_signer=Count(Case(When(status='a_signer', then=1), output_field=IntegerField())),
+        a_valider=Count(Case(When(status='a_valider', then=1), output_field=IntegerField())),
+        signe=Count(Case(When(status='signe', then=1), output_field=IntegerField())),
+    )
 
     if status_filter != 'all':
         docs_qs = docs_qs.filter(status=status_filter)
@@ -1069,13 +1075,6 @@ def documents(request):
         docs_qs = docs_qs.filter(doc_type=type_filter)
     if search:
         docs_qs = docs_qs.filter(title__icontains=search)
-
-    stats = {
-        'total': docs_qs.count(),
-        'a_signer': docs_qs.filter(status='a_signer').count(),
-        'a_valider': docs_qs.filter(status='a_valider').count(),
-        'signe': docs_qs.filter(status='signe').count(),
-    }
     
     from django.utils import timezone
     context = {
@@ -1097,15 +1096,21 @@ def requests_view(request):
     search = request.GET.get('search', '')
 
     profile = request.user.profile
-    role_slug = profile.role_slug if profile else None
     direction_id = getattr(profile, 'direction_id', None)
 
-    if role_slug in ('admin', 'directeur_general') or request.user.is_superuser:
+    if profile.is_directeur_general():
         reqs_qs = Request.objects.select_related('direction')
     elif direction_id:
         reqs_qs = Request.objects.select_related('direction').filter(direction_id=direction_id)
     else:
         reqs_qs = Request.objects.none()
+
+    stats = reqs_qs.aggregate(
+        total=Count('id'),
+        en_attente=Count(Case(When(status='en_attente', then=1), output_field=IntegerField())),
+        approuve=Count(Case(When(status='approuve', then=1), output_field=IntegerField())),
+        rejete=Count(Case(When(status='rejete', then=1), output_field=IntegerField())),
+    )
 
     if status_filter != 'all':
         reqs_qs = reqs_qs.filter(status=status_filter)
@@ -1115,13 +1120,6 @@ def requests_view(request):
         reqs_qs = reqs_qs.filter(title__icontains=search)
 
     directions = Direction.objects.all()
-
-    stats = {
-        'total': reqs_qs.count(),
-        'en_attente': reqs_qs.filter(status='en_attente').count(),
-        'approuve': reqs_qs.filter(status='approuve').count(),
-        'rejete': reqs_qs.filter(status='rejete').count(),
-    }
     
     context = {
         'requests': reqs_qs,
@@ -4282,10 +4280,9 @@ def document_download(request, doc_id):
     doc = get_object_or_404(Document, pk=doc_id)
 
     profile = request.user.profile
-    role_slug = profile.role_slug if profile else None
     direction_id = getattr(profile, 'direction_id', None)
-    if not (role_slug in ('admin', 'directeur_general') or request.user.is_superuser):
-        if doc.direction_id != direction_id:
+    if not profile.is_directeur_general():
+        if not direction_id or doc.direction_id != direction_id:
             from django.core.exceptions import PermissionDenied
             raise PermissionDenied
 
@@ -4314,10 +4311,15 @@ def document_preview(request, doc_id):
 
     doc = get_object_or_404(Document, pk=doc_id)
 
-    # Permission : même règle que la liste des documents (admin/DG/directeur/chef de projet)
-    if not request.user.profile.can_approve_documents():
+    profile = request.user.profile
+    if not profile.can_approve_documents():
         messages.error(request, _("Vous n'avez pas accès à ce document."))
         return redirect('core:documents')
+    direction_id = getattr(profile, 'direction_id', None)
+    if not profile.is_directeur_general():
+        if not direction_id or doc.direction_id != direction_id:
+            messages.error(request, _("Vous n'avez pas accès à ce document."))
+            return redirect('core:documents')
 
     if not doc.file:
         messages.error(request, _("Aucun fichier attaché à ce document."))
