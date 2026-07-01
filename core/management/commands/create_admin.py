@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
-from core.models import UserProfile
+from core.models import UserProfile, Role
 
 
 class Command(BaseCommand):
@@ -24,8 +24,9 @@ class Command(BaseCommand):
             )
             self.stdout.write(self.style.SUCCESS(f"Utilisateur '{username}' créé."))
 
+        admin_role = Role.objects.filter(slug='admin').first()
         profile, _ = UserProfile.objects.get_or_create(user=user)
-        profile.role = 'admin'
+        profile.role = admin_role
         profile.is_active_profile = True
         profile.budget_view = True
         profile.budget_manage = True
