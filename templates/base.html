@@ -6,11 +6,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{% trans 'Dashboard DG' %}{% endblock %} - CSIG</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/jpeg" href="{% static 'logocsig.jpg' %}">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@23.9.3/build/css/intlTelInput.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js" defer></script>
     {% block extra_css %}{% endblock %}
     <style>
         .toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;max-width:380px;pointer-events:none}
@@ -748,7 +751,7 @@
     </script>
     {% endif %}
 
-    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@23.9.3/build/js/intlTelInput.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@23.9.3/build/js/intlTelInput.min.js" defer></script>
     <style>
       .iti { width: 100%; display: block; }
       .iti__flag-container { z-index: 10; }

@@ -2,7 +2,7 @@ from django.utils.translation import gettext as _
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.http import JsonResponse, HttpResponse
-from django.db.models import Sum, Count, Avg, Q
+from django.db.models import Sum, Count, Avg, Q, Case, When, IntegerField
 from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -611,13 +611,13 @@ def _project_budget_data(project_qs):
 
 
 def _project_stats(project_qs):
-    """Retourne les compteurs de projets pour un queryset."""
-    return {
-        'total_projects': project_qs.count(),
-        'projects_in_progress': project_qs.filter(status='en_cours').count(),
-        'projects_completed': project_qs.filter(status='termine').count(),
-        'projects_planned': project_qs.filter(status='planifie').count(),
-    }
+    """Retourne les compteurs de projets pour un queryset (1 seule requête)."""
+    return project_qs.aggregate(
+        total_projects=Count('id'),
+        projects_in_progress=Count(Case(When(status='en_cours', then=1), output_field=IntegerField())),
+        projects_completed=Count(Case(When(status='termine', then=1), output_field=IntegerField())),
+        projects_planned=Count(Case(When(status='planifie', then=1), output_field=IntegerField())),
+    )
 
 
 def _project_budget_totals(project_qs):
@@ -1498,26 +1498,30 @@ def reports(request):
         messages.error(request, _("Accès insuffisant pour consulter les rapports."))
         return redirect('core:dashboard')
     
-    # Projets par direction
-    directions = Direction.objects.all()
-    projects_by_direction = []
-    for direction in directions:
-        projects_by_direction.append({
-            'direction': direction.code,
-            'en_cours': Project.objects.filter(direction=direction, status='en_cours').count(),
-            'termine': Project.objects.filter(direction=direction, status='termine').count(),
-        })
-    
-    # Projets par statut
-    projects_by_status = [
-        {'name': 'En cours', 'value': Project.objects.filter(status='en_cours').count()},
-        {'name': 'Terminés', 'value': Project.objects.filter(status='termine').count()},
-        {'name': 'Planifiés', 'value': Project.objects.filter(status='planifie').count()},
+    # Projets par direction — 1 requête avec annotation
+    directions = Direction.objects.annotate(
+        proj_en_cours=Count(Case(When(projects__status='en_cours', then=1), output_field=IntegerField())),
+        proj_termine=Count(Case(When(projects__status='termine', then=1), output_field=IntegerField())),
+    )
+    projects_by_direction = [
+        {'direction': d.code, 'en_cours': d.proj_en_cours, 'termine': d.proj_termine}
+        for d in directions
     ]
-    
-    # KPIs budget : Budget table + Project.budget direct (sans doublon)
-    total_projects = Project.objects.count()
-    projects_completed = Project.objects.filter(status='termine').count()
+
+    # Projets par statut + KPIs globaux — 1 seule requête
+    proj_agg = Project.objects.aggregate(
+        total=Count('id'),
+        en_cours=Count(Case(When(status='en_cours', then=1), output_field=IntegerField())),
+        termine=Count(Case(When(status='termine', then=1), output_field=IntegerField())),
+        planifie=Count(Case(When(status='planifie', then=1), output_field=IntegerField())),
+    )
+    projects_by_status = [
+        {'name': 'En cours', 'value': proj_agg['en_cours']},
+        {'name': 'Terminés', 'value': proj_agg['termine']},
+        {'name': 'Planifiés', 'value': proj_agg['planifie']},
+    ]
+    total_projects = proj_agg['total']
+    projects_completed = proj_agg['termine']
     budget_agg = Budget.objects.aggregate(alloc=Sum('allocated'), cons=Sum('consumed'))
     _budget_table_alloc = float(budget_agg['alloc'] or 0)
     _budget_table_cons  = float(budget_agg['cons']  or 0)
@@ -1747,25 +1751,31 @@ def export_reports_pdf(request):
         return redirect('core:dashboard')
     
     # Récupérer les mêmes données que la vue reports
-    directions = Direction.objects.all()
-    projects_by_direction = []
-    for direction in directions:
-        projects_by_direction.append({
-            'direction': direction.code,
-            'en_cours': Project.objects.filter(direction=direction, status='en_cours').count(),
-            'termine': Project.objects.filter(direction=direction, status='termine').count(),
-        })
-    
-    projects_by_status = [
-        {'name': 'En cours', 'value': Project.objects.filter(status='en_cours').count()},
-        {'name': 'Terminés', 'value': Project.objects.filter(status='termine').count()},
-        {'name': 'Planifiés', 'value': Project.objects.filter(status='planifie').count()},
+    directions = Direction.objects.annotate(
+        proj_en_cours=Count(Case(When(projects__status='en_cours', then=1), output_field=IntegerField())),
+        proj_termine=Count(Case(When(projects__status='termine', then=1), output_field=IntegerField())),
+    )
+    projects_by_direction = [
+        {'direction': d.code, 'en_cours': d.proj_en_cours, 'termine': d.proj_termine}
+        for d in directions
     ]
-    
-    total_projects = Project.objects.count()
-    projects_completed = Project.objects.filter(status='termine').count()
-    total_budget = Budget.objects.aggregate(total=Sum('allocated'))['total'] or 0
-    total_consumed = Budget.objects.aggregate(total=Sum('consumed'))['total'] or 0
+
+    proj_agg = Project.objects.aggregate(
+        total=Count('id'),
+        en_cours=Count(Case(When(status='en_cours', then=1), output_field=IntegerField())),
+        termine=Count(Case(When(status='termine', then=1), output_field=IntegerField())),
+        planifie=Count(Case(When(status='planifie', then=1), output_field=IntegerField())),
+    )
+    projects_by_status = [
+        {'name': 'En cours', 'value': proj_agg['en_cours']},
+        {'name': 'Terminés', 'value': proj_agg['termine']},
+        {'name': 'Planifiés', 'value': proj_agg['planifie']},
+    ]
+    total_projects = proj_agg['total']
+    projects_completed = proj_agg['termine']
+    budget_agg = Budget.objects.aggregate(total=Sum('allocated'), consumed=Sum('consumed'))
+    total_budget = budget_agg['total'] or 0
+    total_consumed = budget_agg['consumed'] or 0
     budget_rate = round((float(total_consumed) / float(total_budget) * 100)) if total_budget > 0 else 0
     active_partners = Partner.objects.filter(status='actif').count()
     pending_docs = Document.objects.exclude(status='signe').count()
@@ -1934,17 +1944,25 @@ def partners(request):
         date__gte=today
     ).prefetch_related('participants')[:3]
     
+    partner_agg = Partner.objects.aggregate(
+        total=Count('id'),
+        actif=Count(Case(When(status='actif', then=1), output_field=IntegerField())),
+        en_discussion=Count(Case(When(status='en_discussion', then=1), output_field=IntegerField())),
+        entreprise=Count(Case(When(partner_type='entreprise', then=1), output_field=IntegerField())),
+        universite=Count(Case(When(partner_type='universite', then=1), output_field=IntegerField())),
+        institution=Count(Case(When(partner_type='institution', then=1), output_field=IntegerField())),
+        ong=Count(Case(When(partner_type='ong', then=1), output_field=IntegerField())),
+    )
     stats = {
-        'total': Partner.objects.count(),
-        'actif': Partner.objects.filter(status='actif').count(),
-        'en_discussion': Partner.objects.filter(status='en_discussion').count(),
+        'total': partner_agg['total'],
+        'actif': partner_agg['actif'],
+        'en_discussion': partner_agg['en_discussion'],
     }
-    
     type_counts = {
-        'entreprise': Partner.objects.filter(partner_type='entreprise').count(),
-        'universite': Partner.objects.filter(partner_type='universite').count(),
-        'institution': Partner.objects.filter(partner_type='institution').count(),
-        'ong': Partner.objects.filter(partner_type='ong').count(),
+        'entreprise': partner_agg['entreprise'],
+        'universite': partner_agg['universite'],
+        'institution': partner_agg['institution'],
+        'ong': partner_agg['ong'],
     }
     
     context = {

@@ -386,7 +386,7 @@ class Project(models.Model):
     name = models.CharField(max_length=200, verbose_name=_("Nom du projet"))
     description = models.TextField(blank=True, verbose_name=_("Description"))
     direction = models.ForeignKey(Direction, on_delete=models.SET_NULL, null=True, blank=True, related_name='projects', verbose_name=_("Direction"))
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='planifie', verbose_name=_("Statut"))
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='planifie', db_index=True, verbose_name=_("Statut"))
     priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='moyenne', verbose_name=_("Priorité"))
     progress = models.IntegerField(default=0, verbose_name=_("Progression (%)"))
     budget = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name=_("Budget alloué"))
@@ -841,7 +841,7 @@ class Document(models.Model):
     
     title = models.CharField(max_length=200, verbose_name=_("Titre"))
     doc_type = models.CharField(max_length=20, choices=TYPE_CHOICES, verbose_name=_("Type"))
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='a_valider', verbose_name=_("Statut"))
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='a_valider', db_index=True, verbose_name=_("Statut"))
     priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='moyenne', verbose_name=_("Priorité"))
     direction = models.ForeignKey(Direction, on_delete=models.CASCADE, related_name='documents', verbose_name=_("Direction"))
     created_by = models.CharField(max_length=100, verbose_name=_("Créé par"))
@@ -887,7 +887,7 @@ class Partner(models.Model):
     
     name = models.CharField(max_length=200, verbose_name=_("Nom"))
     partner_type = models.CharField(max_length=20, choices=TYPE_CHOICES, verbose_name=_("Type"))
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='en_discussion', verbose_name=_("Statut"))
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='en_discussion', db_index=True, verbose_name=_("Statut"))
     contact_person = models.CharField(max_length=100, verbose_name=_("Personne de contact"))
     email = models.EmailField(verbose_name=_("Email"))
     phone = models.CharField(max_length=20, verbose_name=_("Téléphone"))
@@ -1009,7 +1009,7 @@ class Request(models.Model):
     description = models.TextField(verbose_name=_("Description"))
     direction = models.ForeignKey(Direction, on_delete=models.CASCADE, related_name='requests', verbose_name=_("Direction"))
     priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='moyenne', verbose_name=_("Priorité"))
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='en_attente', verbose_name=_("Statut"))
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='en_attente', db_index=True, verbose_name=_("Statut"))
     created_by = models.CharField(max_length=100, verbose_name=_("Créé par"))
     created_at = models.DateField(auto_now_add=True, verbose_name=_("Date de création"))
     approved_at = models.DateField(null=True, blank=True, verbose_name=_("Date d'approbation"))
@@ -1174,7 +1174,7 @@ class LeaveRequest(models.Model):
     justification = models.FileField(upload_to='leaves/', null=True, blank=True, verbose_name=_("Justificatif"))
 
     # Statut global
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='soumise', verbose_name=_("Statut"))
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='soumise', db_index=True, verbose_name=_("Statut"))
 
     # Etape 1 : superieur hierarchique (48h)
     manager_decision = models.CharField(max_length=15, choices=DECISION_CHOICES, blank=True, default='', verbose_name=_("Avis hiérarchique"))
@@ -1298,6 +1298,9 @@ class Notification(models.Model):
         verbose_name = _("Notification")
         verbose_name_plural = _("Notifications")
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['receiver', 'is_read'], name='notif_receiver_read_idx'),
+        ]
 
     def __str__(self):
         return f"[{self.notif_type}] {self.title} → {self.receiver}"
