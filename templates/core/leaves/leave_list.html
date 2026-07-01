@@ -106,7 +106,7 @@
             <p style="margin:6px 0 0;opacity:.85;font-size:13px;">{% trans 'Suivez vos demandes en temps réel et soumettez-en de nouvelles en quelques clics.' %}</p>
         </div>
         <a href="{% url 'core:leave_create' %}" class="btn" style="background:white;color:#1c3550;font-weight:700;border:none;box-shadow:0 4px 12px rgba(0,0,0,.15);">
-            <i data-lucide="plus-circle" width="16" height="16"></i>
+            <i class="fa-solid fa-circle-plus" width="16" height="16"></i>
             {% trans 'Nouvelle demande' %}
         </a>
     </div>
@@ -115,28 +115,28 @@
 {# ── Stats ── #}
 <div class="stats-row mb-6">
     <a class="stat-box {% if tab == 'mine' and not status_filter %}active{% endif %}" href="?tab=mine">
-        <div class="stat-box-icon"><i data-lucide="clipboard-list" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-clipboard-list" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ my_stats.total }}</p>
             <p class="stat-box-label">{% trans 'Total demandes' %}</p>
         </div>
     </a>
     <a class="stat-box amber {% if tab == 'mine' and status_filter in 'soumise,avis_favorable,rh_conforme' %}active{% endif %}" href="?tab=mine&status=soumise">
-        <div class="stat-box-icon"><i data-lucide="clock" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-clock" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ my_stats.pending }}</p>
             <p class="stat-box-label">{% trans 'En cours de validation' %}</p>
         </div>
     </a>
     <a class="stat-box green {% if tab == 'mine' and status_filter == 'approuvee' %}active{% endif %}" href="?tab=mine&status=approuvee">
-        <div class="stat-box-icon"><i data-lucide="circle-check" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-circle-check" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ my_stats.approved }}</p>
             <p class="stat-box-label">{% trans 'Approuvées' %}</p>
         </div>
     </a>
     <a class="stat-box red {% if tab == 'mine' and status_filter == 'rejetee' %}active{% endif %}" href="?tab=mine&status=rejetee">
-        <div class="stat-box-icon"><i data-lucide="circle-x" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-circle-xmark" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ my_stats.rejected }}</p>
             <p class="stat-box-label">{% trans 'Refusées' %}</p>
@@ -148,42 +148,42 @@
 <div class="flex justify-between items-center mb-4" style="flex-wrap:wrap; gap:12px;">
     <div class="tabs" style="flex-wrap:wrap; margin-bottom:0;">
         <a href="?tab=mine" class="tab-btn {% if tab == 'mine' %}active{% endif %}">
-            <i data-lucide="user" width="14" height="14"></i>
+            <i class="fa-solid fa-user" width="14" height="14"></i>
             {% trans 'Mes demandes' %}
             <span class="tab-count">{{ counts.mine }}</span>
         </a>
         {% if can_manager %}
         <a href="?tab=to_approve_manager" class="tab-btn {% if tab == 'to_approve_manager' %}active{% endif %}">
-            <i data-lucide="clipboard-check" width="14" height="14"></i>
+            <i class="fa-solid fa-clipboard-check" width="14" height="14"></i>
             {% trans 'À valider' %}
             <span class="tab-count {% if counts.to_approve_manager %}warn{% endif %}">{{ counts.to_approve_manager }}</span>
         </a>
         <a href="?tab=history_mine_decisions" class="tab-btn {% if tab == 'history_mine_decisions' %}active{% endif %}">
-            <i data-lucide="archive" width="14" height="14"></i>
+            <i class="fa-solid fa-box-archive" width="14" height="14"></i>
             {% trans 'Mes validations' %}
             <span class="tab-count">{{ counts.history_mine_decisions }}</span>
         </a>
         {% endif %}
         {% if can_hr %}
         <a href="?tab=to_check_hr" class="tab-btn {% if tab == 'to_check_hr' %}active{% endif %}">
-            <i data-lucide="search" width="14" height="14"></i>
+            <i class="fa-solid fa-magnifying-glass" width="14" height="14"></i>
             {% trans 'Vérification RH' %}
             <span class="tab-count {% if counts.to_check_hr %}warn{% endif %}">{{ counts.to_check_hr }}</span>
         </a>
         <a href="?tab=history_hr" class="tab-btn {% if tab == 'history_hr' %}active{% endif %}">
-            <i data-lucide="folder" width="14" height="14"></i>
+            <i class="fa-solid fa-folder" width="14" height="14"></i>
             {% trans 'Mes vérifications' %}
             <span class="tab-count">{{ counts.history_hr }}</span>
         </a>
         {% endif %}
         {% if can_final %}
         <a href="?tab=to_decide" class="tab-btn {% if tab == 'to_decide' %}active{% endif %}">
-            <i data-lucide="gavel" width="14" height="14"></i>
+            <i class="fa-solid fa-gavel" width="14" height="14"></i>
             {% trans 'Décision finale' %}
             <span class="tab-count {% if counts.to_decide %}warn{% endif %}">{{ counts.to_decide }}</span>
         </a>
         <a href="?tab=all" class="tab-btn {% if tab == 'all' %}active{% endif %}">
-            <i data-lucide="globe" width="14" height="14"></i>
+            <i class="fa-solid fa-globe" width="14" height="14"></i>
             {% trans 'Toutes' %}
             <span class="tab-count">{{ counts.all }}</span>
         </a>
@@ -264,12 +264,12 @@
     </table>
     {% else %}
     <div style="text-align:center; padding:64px 24px;">
-        <i data-lucide="calendar" width="48" height="48" style="color:#d1d5db; display:block; margin:0 auto 12px;"></i>
+        <i class="fa-solid fa-calendar" width="48" height="48" style="color:#d1d5db; display:block; margin:0 auto 12px;"></i>
         <p style="font-size:15px; font-weight:600; color:#374151; margin:0 0 6px;">{% trans 'Aucune demande à afficher' %}</p>
         <p style="color:#9ca3af; margin:0 0 20px; font-size:13px;">{% trans 'Aucun élément ne correspond à cette vue pour le moment.' %}</p>
         {% if tab == 'mine' %}
         <a href="{% url 'core:leave_create' %}" class="btn btn-primary">
-            <i data-lucide="plus-circle" width="16" height="16"></i>
+            <i class="fa-solid fa-circle-plus" width="16" height="16"></i>
             {% trans 'Créer ma première demande' %}
         </a>
         {% endif %}

@@ -112,14 +112,14 @@
             {% endif %}
             {% if milestone.completed %}
             <span class="md-badge-done">
-              <i data-lucide="check" ></i>
+              <i class="fa-solid fa-check" ></i>
               {% trans 'Complété' %}{% if milestone.completed_at %} {% trans 'le' %} {{ milestone.completed_at|date:"d/m/Y" }}{% endif %}
             </span>
             {% endif %}
             {% if milestone.due_date %}
             {% with overdue=milestone.due_date|is_overdue %}
             <span class="md-due{% if not milestone.completed and overdue %} overdue{% endif %}">
-              <i data-lucide="calendar" ></i>
+              <i class="fa-solid fa-calendar" ></i>
               {% trans 'Échéance :' %} {{ milestone.due_date|date:"d/m/Y" }}{% if not milestone.completed and overdue %} — {% trans 'En retard' %}{% endif %}
             </span>
             {% endwith %}
@@ -182,7 +182,7 @@
         </div>
         {% if can_edit %}
         <a href="{% url 'core:sub_milestone_create' milestone.id %}" class="btn btn-primary btn-sm" style="display:flex;align-items:center;gap:6px;">
-          <i data-lucide="plus-circle" width="14" height="14" ></i>
+          <i class="fa-solid fa-circle-plus" width="14" height="14" ></i>
           {% trans 'Ajouter' %}
         </a>
         {% endif %}
@@ -224,13 +224,13 @@
             {% if can_edit %}
             <div class="msub-acts">
               <a href="{% url 'core:sub_milestone_edit' sub.id %}" class="action-btn" title="{% trans 'Modifier' %}">
-                <i data-lucide="pencil" width="12" height="12" ></i>
+                <i class="fa-solid fa-pencil" width="12" height="12" ></i>
               </a>
               <a href="#" class="action-btn danger" title="{% trans 'Supprimer' %}"
                  data-delete-url="{% url 'core:sub_milestone_delete' sub.id %}"
                  data-delete-type="{% trans 'la sous-étape' %}"
                  data-delete-name="{{ sub.name }}">
-                <i data-lucide="trash-2" width="12" height="12" ></i>
+                <i class="fa-solid fa-trash-can" width="12" height="12" ></i>
               </a>
             </div>
             {% endif %}
@@ -240,7 +240,7 @@
         </div>
         {% else %}
         <div style="text-align:center;padding:32px 16px;">
-          <i data-lucide="clipboard" width="36" height="36" style="color:#d1d5db;margin:0 auto 10px;" ></i>
+          <i class="fa-solid fa-clipboard" width="36" height="36" style="color:#d1d5db;margin:0 auto 10px;" ></i>
           <p class="text-gray-500" style="margin-bottom:12px;">{% trans 'Aucune sous-étape définie.' %}</p>
           {% if can_edit %}
           <a href="{% url 'core:sub_milestone_create' milestone.id %}" class="btn btn-primary btn-sm">{% trans 'Ajouter la première sous-étape' %}</a>
@@ -329,7 +329,7 @@
         {% if can_edit %}
         <div class="md-manage">
           <a href="{% url 'core:milestone_edit' milestone.id %}">
-            <i data-lucide="pencil" ></i>
+            <i class="fa-solid fa-pencil" ></i>
             {% trans 'Gérer les assignés' %}
           </a>
         </div>

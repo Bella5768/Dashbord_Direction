@@ -60,7 +60,7 @@
 <div class="del-wrap">
     <div class="del-card">
         <div class="del-icon">
-            <i data-lucide="trash-2" width="24" height="24"></i>
+            <i class="fa-solid fa-trash-can" width="24" height="24"></i>
         </div>
 
         <div class="del-heading">{% trans "Supprimer cet événement ?" %}</div>
@@ -97,7 +97,7 @@
             {% csrf_token %}
             <div class="del-actions">
                 <button type="submit" class="btn btn-danger">
-                    <i data-lucide="trash-2" width="14" height="14"></i>
+                    <i class="fa-solid fa-trash-can" width="14" height="14"></i>
                     {% trans "Supprimer définitivement" %}
                 </button>
                 <a href="{% url 'core:event_detail' event.id %}" class="btn btn-outline">

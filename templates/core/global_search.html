@@ -9,14 +9,14 @@
 {% block content %}
 {% if not query %}
 <div class="card" style="text-align: center; padding: 60px 20px;">
-    <i data-lucide="search" style="width: 64px; height: 64px; color: #9ca3af; margin: 0 auto 16px;" ></i>
+    <i class="fa-solid fa-magnifying-glass" style="width: 64px; height: 64px; color: #9ca3af; margin: 0 auto 16px;" ></i>
     <h3 style="color: #6b7280; margin-bottom: 8px;">{% trans 'Recherche globale' %}</h3>
     <p style="color: #9ca3af;">{% trans 'Tapez un mot-clé dans la barre de recherche pour trouver des projets, partenaires, employés, demandes ou documents.' %}</p>
 </div>
 
 {% elif total == 0 %}
 <div class="card" style="text-align: center; padding: 60px 20px;">
-    <i data-lucide="circle-play" style="width: 64px; height: 64px; color: #9ca3af; margin: 0 auto 16px;" ></i>
+    <i class="fa-solid fa-circle-play" style="width: 64px; height: 64px; color: #9ca3af; margin: 0 auto 16px;" ></i>
     <h3 style="color: #6b7280; margin-bottom: 8px;">{% trans 'Aucun résultat' %}</h3>
     <p style="color: #9ca3af;">{% trans 'Aucun résultat trouvé pour' %} "<strong>{{ query }}</strong>". {% trans "Essayez avec d'autres mots-clés." %}</p>
 </div>
@@ -28,7 +28,7 @@
 <div class="card mb-6">
     <div class="card-header">
         <h3 class="card-title">
-            <i data-lucide="clipboard" style="width: 20px; height: 20px; display: inline; vertical-align: middle; margin-right: 8px;" ></i>
+            <i class="fa-solid fa-clipboard" style="width: 20px; height: 20px; display: inline; vertical-align: middle; margin-right: 8px;" ></i>
             {% trans 'Projets' %} ({{ results.projects|length }})
         </h3>
         <a href="{% url 'core:projects' %}?search={{ query }}" class="btn btn-outline btn-sm">{% trans 'Voir tout' %}</a>
@@ -78,7 +78,7 @@
 <div class="card mb-6">
     <div class="card-header">
         <h3 class="card-title">
-            <i data-lucide="users" style="width: 20px; height: 20px; display: inline; vertical-align: middle; margin-right: 8px;" ></i>
+            <i class="fa-solid fa-users" style="width: 20px; height: 20px; display: inline; vertical-align: middle; margin-right: 8px;" ></i>
             {% trans 'Partenaires' %} ({{ results.partners|length }})
         </h3>
         <a href="{% url 'core:partners' %}?search={{ query }}" class="btn btn-outline btn-sm">{% trans 'Voir tout' %}</a>
@@ -119,7 +119,7 @@
 <div class="card mb-6">
     <div class="card-header">
         <h3 class="card-title">
-            <i data-lucide="user" style="width: 20px; height: 20px; display: inline; vertical-align: middle; margin-right: 8px;" ></i>
+            <i class="fa-solid fa-user" style="width: 20px; height: 20px; display: inline; vertical-align: middle; margin-right: 8px;" ></i>
             {% trans 'Employés' %} ({{ results.employees|length }})
         </h3>
         <a href="{% url 'core:resources' %}?tab=employees" class="btn btn-outline btn-sm">{% trans 'Voir tout' %}</a>
@@ -156,7 +156,7 @@
 <div class="card mb-6">
     <div class="card-header">
         <h3 class="card-title">
-            <i data-lucide="file-text" style="width: 20px; height: 20px; display: inline; vertical-align: middle; margin-right: 8px;" ></i>
+            <i class="fa-solid fa-file-lines" style="width: 20px; height: 20px; display: inline; vertical-align: middle; margin-right: 8px;" ></i>
             {% trans 'Demandes' %} ({{ results.requests|length }})
         </h3>
         <a href="{% url 'core:requests' %}?search={{ query }}" class="btn btn-outline btn-sm">{% trans 'Voir tout' %}</a>
@@ -195,7 +195,7 @@
 <div class="card mb-6">
     <div class="card-header">
         <h3 class="card-title">
-            <i data-lucide="file" style="width: 20px; height: 20px; display: inline; vertical-align: middle; margin-right: 8px;" ></i>
+            <i class="fa-solid fa-file" style="width: 20px; height: 20px; display: inline; vertical-align: middle; margin-right: 8px;" ></i>
             {% trans 'Documents' %} ({{ results.documents|length }})
         </h3>
     </div>

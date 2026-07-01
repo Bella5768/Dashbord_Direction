@@ -15,7 +15,7 @@
 
     <!-- Info flow -->
     <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:14px 16px;margin-bottom:24px;display:flex;gap:12px;align-items:flex-start;">
-      <i data-lucide="info" width="20" height="20" stroke="#1e40af" style="flex-shrink:0;margin-top:1px;" ></i>
+      <i class="fa-solid fa-circle-info" width="20" height="20" stroke="#1e40af" style="flex-shrink:0;margin-top:1px;" ></i>
       <div style="font-size:13px;color:#1e40af;line-height:1.5;">
         <strong>{% trans "Flow d'invitation" %}</strong> : {% trans "le compte est créé inactif. L'employé reçoit un email avec un lien sécurisé pour définir lui-même son mot de passe (lien valable 3 jours)." %}
       </div>
@@ -83,7 +83,7 @@
 
       <div class="flex gap-3">
         <button type="submit" id="submitBtn" class="btn btn-primary" disabled>
-          <i data-lucide="mail" width="16" height="16" ></i>
+          <i class="fa-solid fa-envelope" width="16" height="16" ></i>
           {% trans "Créer et envoyer l'invitation" %}
         </button>
         <a href="{% url 'core:users_list' %}" class="btn btn-outline">{% trans 'Annuler' %}</a>

@@ -10,14 +10,14 @@
 <!-- Stats -->
 <div class="stats-row mb-4">
     <div class="stat-box indigo">
-        <div class="stat-box-icon"><i data-lucide="key-round" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-key" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ role.permissions.count }}</p>
             <p class="stat-box-label">{% trans "Permissions" %}</p>
         </div>
     </div>
     <div class="stat-box">
-        <div class="stat-box-icon"><i data-lucide="users" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-users" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ user_count }}</p>
             <p class="stat-box-label">{% trans "Utilisateurs" %}</p>
@@ -29,31 +29,31 @@
 <div class="flex justify-between items-center mb-6">
     {% if is_project %}
     <a href="{% url 'core:project_roles_list' %}" class="btn btn-outline">
-        <i data-lucide="arrow-left" width="14" height="14"></i>
+        <i class="fa-solid fa-arrow-left" width="14" height="14"></i>
         {% trans "Retour" %}
     </a>
     <div style="display:flex;gap:8px;">
         <a href="{% url 'core:project_role_duplicate' role.pk %}" class="btn btn-outline">
-            <i data-lucide="copy" width="14" height="14"></i>
+            <i class="fa-solid fa-copy" width="14" height="14"></i>
             {% trans "Dupliquer" %}
         </a>
         <a href="{% url 'core:project_role_edit' role.pk %}" class="btn btn-primary">
-            <i data-lucide="pencil" width="14" height="14"></i>
+            <i class="fa-solid fa-pencil" width="14" height="14"></i>
             {% trans "Modifier" %}
         </a>
     </div>
     {% else %}
     <a href="{% url 'core:roles_list' %}" class="btn btn-outline">
-        <i data-lucide="arrow-left" width="14" height="14"></i>
+        <i class="fa-solid fa-arrow-left" width="14" height="14"></i>
         {% trans "Retour" %}
     </a>
     <div style="display:flex;gap:8px;">
         <a href="{% url 'core:role_duplicate' role.pk %}" class="btn btn-outline">
-            <i data-lucide="copy" width="14" height="14"></i>
+            <i class="fa-solid fa-copy" width="14" height="14"></i>
             {% trans "Dupliquer" %}
         </a>
         <a href="{% url 'core:role_edit' role.pk %}" class="btn btn-primary">
-            <i data-lucide="pencil" width="14" height="14"></i>
+            <i class="fa-solid fa-pencil" width="14" height="14"></i>
             {% trans "Modifier" %}
         </a>
     </div>
@@ -91,7 +91,7 @@
                     {% for perm in perms %}
                     {% if perm.pk in role_perm_ids %}
                     <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;font-size:11px;color:#15803d;font-weight:500;">
-                        <i data-lucide="check" width="11" height="11"></i>
+                        <i class="fa-solid fa-check" width="11" height="11"></i>
                         {{ perm.get_action_display }}
                         {% if perm.condition %}
                         <span style="color:#86efac;font-size:10px;">· {{ perm.get_condition_display }}</span>
@@ -146,11 +146,11 @@
             <div class="card-content" style="display:flex;flex-direction:column;gap:8px;">
                 {% if is_project %}
                 <a href="{% url 'core:project_role_edit' role.pk %}" class="btn btn-primary" style="width:100%;justify-content:center;">
-                    <i data-lucide="pencil" width="14" height="14"></i>
+                    <i class="fa-solid fa-pencil" width="14" height="14"></i>
                     {% trans "Modifier les permissions" %}
                 </a>
                 <a href="{% url 'core:project_role_duplicate' role.pk %}" class="btn btn-outline" style="width:100%;justify-content:center;">
-                    <i data-lucide="copy" width="14" height="14"></i>
+                    <i class="fa-solid fa-copy" width="14" height="14"></i>
                     {% trans "Dupliquer ce rôle" %}
                 </a>
                 {% if not role.is_system %}
@@ -158,17 +158,17 @@
                    data-delete-url="{% url 'core:project_role_delete' role.pk %}"
                    data-delete-type="{% trans 'le rôle' %}"
                    data-delete-name="{{ role.name }}">
-                    <i data-lucide="trash-2" width="14" height="14"></i>
+                    <i class="fa-solid fa-trash-can" width="14" height="14"></i>
                     {% trans "Supprimer" %}
                 </a>
                 {% endif %}
                 {% else %}
                 <a href="{% url 'core:role_edit' role.pk %}" class="btn btn-primary" style="width:100%;justify-content:center;">
-                    <i data-lucide="pencil" width="14" height="14"></i>
+                    <i class="fa-solid fa-pencil" width="14" height="14"></i>
                     {% trans "Modifier les permissions" %}
                 </a>
                 <a href="{% url 'core:role_duplicate' role.pk %}" class="btn btn-outline" style="width:100%;justify-content:center;">
-                    <i data-lucide="copy" width="14" height="14"></i>
+                    <i class="fa-solid fa-copy" width="14" height="14"></i>
                     {% trans "Dupliquer ce rôle" %}
                 </a>
                 {% if not role.is_system %}
@@ -176,7 +176,7 @@
                    data-delete-url="{% url 'core:role_delete' role.pk %}"
                    data-delete-type="{% trans 'le rôle' %}"
                    data-delete-name="{{ role.name }}">
-                    <i data-lucide="trash-2" width="14" height="14"></i>
+                    <i class="fa-solid fa-trash-can" width="14" height="14"></i>
                     {% trans "Supprimer" %}
                 </a>
                 {% endif %}

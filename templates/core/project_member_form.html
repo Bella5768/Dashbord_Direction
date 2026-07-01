@@ -90,7 +90,7 @@
             <input type="radio" name="member_type" id="mt_existing" value="existing"
               {% if not member_type or member_type == 'existing' %}checked{% endif %}>
             <label for="mt_existing" class="mt-type-label">
-              <i data-lucide="users" width="22" height="22" ></i>
+              <i class="fa-solid fa-users" width="22" height="22" ></i>
               <span class="mt-type-title">{% trans 'Employé existant' %}</span>
               <span class="mt-type-sub">{% trans 'Déjà dans le système' %}</span>
             </label>
@@ -100,7 +100,7 @@
             <input type="radio" name="member_type" id="mt_internal" value="new_internal"
               {% if member_type == 'new_internal' %}checked{% endif %}>
             <label for="mt_internal" class="mt-type-label">
-              <i data-lucide="user-plus" width="22" height="22" ></i>
+              <i class="fa-solid fa-user-plus" width="22" height="22" ></i>
               <span class="mt-type-title">{% trans 'Nouvel employé' %}</span>
               <span class="mt-type-sub">{% trans 'Créer une fiche interne' %}</span>
             </label>
@@ -110,7 +110,7 @@
             <input type="radio" name="member_type" id="mt_external" value="new_external"
               {% if member_type == 'new_external' %}checked{% endif %}>
             <label for="mt_external" class="mt-type-label">
-              <i data-lucide="circle-play" width="22" height="22" ></i>
+              <i class="fa-solid fa-circle-play" width="22" height="22" ></i>
               <span class="mt-type-title">{% trans 'Personne externe' %}</span>
               <span class="mt-type-sub">{% trans 'Consultant, partenaire…' %}</span>
             </label>
@@ -122,7 +122,7 @@
       <!-- ===== SECTION EMPLOYÉ EXISTANT ===== -->
       <div id="panel_existing" class="mt-panel">
         <p class="mt-panel-title">
-          <i data-lucide="search" width="15" height="15" ></i>
+          <i class="fa-solid fa-magnifying-glass" width="15" height="15" ></i>
           {% trans 'Sélectionner un employé existant' %}
         </p>
         <div class="form-group fg-sm">
@@ -137,7 +137,7 @@
       <!-- ===== SECTION NOUVEL EMPLOYÉ INTERNE ===== -->
       <div id="panel_internal" class="mt-panel mt-panel-int" style="display:none;">
         <p class="mt-panel-title int">
-          <i data-lucide="building-2" width="15" height="15" ></i>
+          <i class="fa-solid fa-building" width="15" height="15" ></i>
           {% trans 'Créer un nouvel employé interne' %}
           {% if project.direction %}<span class="badge badge-primary badge-sm" style="margin-left:6px;">{{ project.direction.code }}</span>{% endif %}
         </p>
@@ -169,7 +169,7 @@
       <!-- ===== SECTION PERSONNE EXTERNE ===== -->
       <div id="panel_external" class="mt-panel mt-panel-ext" style="display:none;">
         <p class="mt-panel-title ext">
-          <i data-lucide="circle-play" width="15" height="15" ></i>
+          <i class="fa-solid fa-circle-play" width="15" height="15" ></i>
           {% trans 'Personne externe au projet' %}
         </p>
         <p class="mt-panel-desc ext">{% trans "Consultant, prestataire, partenaire — la fiche est créée et stockée avec le marqueur « Externe »." %}</p>
@@ -213,7 +213,7 @@
       <div id="permissions_section" class="mt-perm-section" style="display:none;">
         <div class="mt-perm-hdr">
           <p class="mt-perm-title">
-            <i data-lucide="shield-check" width="15" height="15" ></i>
+            <i class="fa-solid fa-shield-halved" width="15" height="15" ></i>
             <span id="perm_section_title">{% trans 'Permissions du rôle' %}</span>
           </p>
           <span id="perm_preset_note" class="mt-perm-note preset"></span>
@@ -253,7 +253,7 @@
       <div id="panel_create_account" class="mt-create-account" style="display:none;">
 
         <div id="alert_external_account" class="mt-alert-amber" style="display:none;">
-          <i data-lucide="triangle-alert" width="16" height="16" style="flex-shrink:0;margin-top:1px;" ></i>
+          <i class="fa-solid fa-triangle-exclamation" width="16" height="16" style="flex-shrink:0;margin-top:1px;" ></i>
           <span>{% trans "Cette personne externe doit avoir un compte pour consulter le projet." %}</span>
         </div>
 
@@ -264,7 +264,7 @@
 
         <div id="create_user_fields" class="mt-create-account-fields" style="display:none;">
           <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:#1e40af;display:flex;gap:10px;align-items:flex-start;">
-            <i data-lucide="mail" width="16" height="16" style="flex-shrink:0;margin-top:1px;" ></i>
+            <i class="fa-solid fa-envelope" width="16" height="16" style="flex-shrink:0;margin-top:1px;" ></i>
             <span>{% trans "Le compte sera créé inactif. Un email d'invitation sera envoyé à la personne pour qu'elle définisse elle-même son mot de passe." %}</span>
           </div>
           <div class="form-group">
@@ -282,7 +282,7 @@
 
       <div class="flex gap-3 fg-actions">
         <button type="submit" class="btn btn-primary">
-          <i data-lucide="check" width="16" height="16" ></i>
+          <i class="fa-solid fa-check" width="16" height="16" ></i>
           {% trans 'Ajouter le membre' %}
         </button>
         <a href="{% url 'core:project_detail' project.id %}" class="btn btn-outline">{% trans 'Annuler' %}</a>

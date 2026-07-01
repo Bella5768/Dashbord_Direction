@@ -25,7 +25,7 @@
             
             <div class="flex gap-3 mt-6">
                 <button type="submit" class="btn btn-primary">
-                    <i data-lucide="check" width="16" height="16"></i>
+                    <i class="fa-solid fa-check" width="16" height="16"></i>
                     {% if budget %}{% trans 'Modifier' %}{% else %}{% trans 'Créer' %}{% endif %}
                 </button>
                 <a href="{% url 'core:resources' %}" class="btn btn-outline">{% trans 'Annuler' %}</a>

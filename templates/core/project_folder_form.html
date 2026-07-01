@@ -28,7 +28,7 @@
             
             <div class="flex gap-3">
                 <button type="submit" class="btn btn-primary">
-                    <i data-lucide="check" width="16" height="16" ></i>
+                    <i class="fa-solid fa-check" width="16" height="16" ></i>
                     {% if folder %}{% trans 'Enregistrer' %}{% else %}{% trans 'Créer le dossier' %}{% endif %}
                 </button>
                 <a href="{% url 'core:project_detail' project.id %}" class="btn btn-outline">{% trans 'Annuler' %}</a>

@@ -9,7 +9,7 @@
 <div class="card" style="max-width: 600px;">
     <div class="card-content" style="text-align: center; padding: 48px;">
         <div style="width: 80px; height: 80px; background: #fef2f2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;">
-            <i data-lucide="triangle-alert" width="40" height="40" stroke="#dc2626" ></i>
+            <i class="fa-solid fa-triangle-exclamation" width="40" height="40" stroke="#dc2626" ></i>
         </div>
         
         <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 8px;">{% trans 'Confirmer la suppression' %}</h2>
@@ -32,7 +32,7 @@
             {% csrf_token %}
             <a href="{% url 'core:users_list' %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
             <button type="submit" class="btn" style="background: #dc2626; color: white;">
-                <i data-lucide="trash-2" width="16" height="16" ></i>
+                <i class="fa-solid fa-trash-can" width="16" height="16" ></i>
                 {% trans 'Supprimer définitivement' %}
             </button>
         </form>

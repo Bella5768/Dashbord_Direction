@@ -41,7 +41,7 @@
 
       <a href="{% url 'core:password_change' %}"
          style="display:inline-flex;align-items:center;gap:7px;padding:9px 16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-weight:600;color:#374151;text-decoration:none;white-space:nowrap;">
-        <i data-lucide="key-round" width="15" height="15"></i>
+        <i class="fa-solid fa-key" width="15" height="15"></i>
         {% trans 'Changer le mot de passe' %}
       </a>
     </div>
@@ -134,7 +134,7 @@
 
         <div class="flex gap-3" style="margin-top:24px;">
           <button type="submit" class="btn btn-primary">
-            <i data-lucide="save" width="16" height="16"></i>
+            <i class="fa-solid fa-floppy-disk" width="16" height="16"></i>
             {% trans 'Enregistrer les modifications' %}
           </button>
           <a href="{% url 'core:dashboard' %}" class="btn btn-outline">{% trans 'Annuler' %}</a>

@@ -22,7 +22,7 @@
       {% for n in notifications %}
       <li style="padding:14px 20px;border-bottom:1px solid var(--gray-100);display:flex;gap:14px;align-items:flex-start;{% if not n.is_read %}background:#f0f7ff;{% endif %}">
         <div style="flex-shrink:0;width:36px;height:36px;border-radius:50%;background:var(--primary-100);display:flex;align-items:center;justify-content:center;">
-          <i data-lucide="bell" width="16" height="16" style="color:var(--primary-600);"></i>
+          <i class="fa-solid fa-bell" width="16" height="16" style="color:var(--primary-600);"></i>
         </div>
         <div style="flex:1;min-width:0;">
           <p style="font-size:13px;font-weight:{% if not n.is_read %}600{% else %}500{% endif %};color:var(--gray-900);margin:0 0 3px;">{{ n.title }}</p>

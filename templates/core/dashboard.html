@@ -18,7 +18,7 @@
           <p class="stat-card-value">{{ my_projects_count }}</p>
           <p class="stat-card-subtitle">{% trans 'Projets auxquels vous participez' %}</p>
         </div>
-        <div class="stat-card-icon blue"><i data-lucide="folder"></i></div>
+        <div class="stat-card-icon blue"><i class="fa-solid fa-folder"></i></div>
       </div>
     </div>
     <div class="stat-card stat-card-amber">
@@ -28,7 +28,7 @@
           <p class="stat-card-value">{{ my_tasks_count }}</p>
           <p class="stat-card-subtitle">{% trans 'Jalons et sous-étapes en cours' %}</p>
         </div>
-        <div class="stat-card-icon amber"><i data-lucide="list-checks"></i></div>
+        <div class="stat-card-icon amber"><i class="fa-solid fa-list-check"></i></div>
       </div>
     </div>
     <a class="stat-card stat-card-green stat-card-link" href="{% url 'core:leave_list' %}">
@@ -38,7 +38,7 @@
           <p class="stat-card-value">{{ my_leave_requests|length }}</p>
           <p class="stat-card-subtitle">{% trans 'Demandes récentes' %}</p>
         </div>
-        <div class="stat-card-icon green"><i data-lucide="plane"></i></div>
+        <div class="stat-card-icon green"><i class="fa-solid fa-plane"></i></div>
       </div>
     </a>
     {% if can_view_budgets %}
@@ -49,7 +49,7 @@
           <p class="stat-card-value">{{ budget_percentage }}%</p>
           <p class="stat-card-subtitle">{{ total_consumed|number_format }} GNF</p>
         </div>
-        <div class="stat-card-icon amber"><i data-lucide="credit-card"></i></div>
+        <div class="stat-card-icon amber"><i class="fa-solid fa-credit-card"></i></div>
       </div>
     </a>
     {% endif %}
@@ -61,7 +61,7 @@
           <p class="stat-card-value">{{ active_partners }}</p>
           <p class="stat-card-subtitle">{% trans 'Collaborations en cours' %}</p>
         </div>
-        <div class="stat-card-icon green"><i data-lucide="users"></i></div>
+        <div class="stat-card-icon green"><i class="fa-solid fa-users"></i></div>
       </div>
     </a>
     {% endif %}
@@ -73,7 +73,7 @@
           <p class="stat-card-value">{{ projects_in_progress }}</p>
           <p class="stat-card-subtitle">{% blocktrans count n=total_projects %}{{ n }} projet dans votre direction{% plural %}{{ n }} projets dans votre direction{% endblocktrans %}</p>
         </div>
-        <div class="stat-card-icon blue"><i data-lucide="folder"></i></div>
+        <div class="stat-card-icon blue"><i class="fa-solid fa-folder"></i></div>
       </div>
     </div>
     {% if can_view_budgets %}
@@ -84,7 +84,7 @@
           <p class="stat-card-value">{{ budget_percentage }}%</p>
           <p class="stat-card-subtitle">{{ total_consumed|number_format }} GNF</p>
         </div>
-        <div class="stat-card-icon amber"><i data-lucide="credit-card"></i></div>
+        <div class="stat-card-icon amber"><i class="fa-solid fa-credit-card"></i></div>
       </div>
     </div>
     {% endif %}
@@ -95,7 +95,7 @@
           <p class="stat-card-value">{{ direction_employees_count|default:0 }}</p>
           <p class="stat-card-subtitle">{% trans 'Collaborateurs dans votre direction' %}</p>
         </div>
-        <div class="stat-card-icon green"><i data-lucide="users"></i></div>
+        <div class="stat-card-icon green"><i class="fa-solid fa-users"></i></div>
       </div>
     </div>
   {% else %}
@@ -106,7 +106,7 @@
           <p class="stat-card-value">{{ projects_in_progress }}</p>
           <p class="stat-card-subtitle">{% blocktrans count n=total_projects %}{{ n }} projet au total{% plural %}{{ n }} projets au total{% endblocktrans %}</p>
         </div>
-        <div class="stat-card-icon blue"><i data-lucide="folder"></i></div>
+        <div class="stat-card-icon blue"><i class="fa-solid fa-folder"></i></div>
       </div>
     </a>
     {% if can_view_budgets %}
@@ -117,7 +117,7 @@
           <p class="stat-card-value">{{ budget_percentage }}%</p>
           <p class="stat-card-subtitle">{{ total_consumed|number_format }} GNF</p>
         </div>
-        <div class="stat-card-icon amber"><i data-lucide="credit-card"></i></div>
+        <div class="stat-card-icon amber"><i class="fa-solid fa-credit-card"></i></div>
       </div>
     </a>
     {% endif %}
@@ -129,7 +129,7 @@
           <p class="stat-card-value">{{ active_partners }}</p>
           <p class="stat-card-subtitle">{% trans 'Collaborations en cours' %}</p>
         </div>
-        <div class="stat-card-icon green"><i data-lucide="users"></i></div>
+        <div class="stat-card-icon green"><i class="fa-solid fa-users"></i></div>
       </div>
     </a>
     {% endif %}
@@ -372,8 +372,8 @@
             </div>
             <h4 class="event-title">{{ event.title }}</h4>
             <div class="event-meta">
-              <span class="event-meta-item"><i data-lucide="clock"></i>{{ event.time|time:"H:i" }}</span>
-              {% if event.location %}<span class="event-meta-item"><i data-lucide="map-pin"></i>{{ event.location }}</span>{% endif %}
+              <span class="event-meta-item"><i class="fa-solid fa-clock"></i>{{ event.time|time:"H:i" }}</span>
+              {% if event.location %}<span class="event-meta-item"><i class="fa-solid fa-location-dot"></i>{{ event.location }}</span>{% endif %}
             </div>
           </div>
         </div>
@@ -408,7 +408,7 @@
           <p class="request-description">{{ req.description }}</p>
           <div class="request-footer">
             <span>{% trans 'Par' %} {{ req.created_by }}</span>
-            <span class="request-footer-item"><i data-lucide="clock"></i>{{ req.created_at|date:"d/m/Y" }}</span>
+            <span class="request-footer-item"><i class="fa-solid fa-clock"></i>{{ req.created_at|date:"d/m/Y" }}</span>
           </div>
         </div>
         {% empty %}
@@ -441,9 +441,9 @@
             </div>
             <h4 class="event-title">{{ event.title }}</h4>
             <div class="event-meta">
-              <span class="event-meta-item"><i data-lucide="clock"></i>{{ event.time|time:"H:i" }}</span>
-              {% if event.location %}<span class="event-meta-item"><i data-lucide="map-pin"></i>{{ event.location }}</span>{% endif %}
-              <span class="event-meta-item"><i data-lucide="user-cog"></i>{% blocktrans count n=event.participants.count %}{{ n }} participant{% plural %}{{ n }} participants{% endblocktrans %}</span>
+              <span class="event-meta-item"><i class="fa-solid fa-clock"></i>{{ event.time|time:"H:i" }}</span>
+              {% if event.location %}<span class="event-meta-item"><i class="fa-solid fa-location-dot"></i>{{ event.location }}</span>{% endif %}
+              <span class="event-meta-item"><i class="fa-solid fa-user-gear"></i>{% blocktrans count n=event.participants.count %}{{ n }} participant{% plural %}{{ n }} participants{% endblocktrans %}</span>
             </div>
           </div>
         </div>
@@ -621,7 +621,6 @@ function _refreshDashProjects() {
                 var curEl = document.getElementById(sid);
                 if (newEl && curEl) {
                     curEl.innerHTML = newEl.innerHTML;
-                    if (window.lucide) lucide.createIcons({nodes: [curEl]});
                 }
             });
         })

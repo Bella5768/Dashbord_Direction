@@ -150,21 +150,21 @@
 <!-- Stats Row -->
 <div class="stats-row">
     <div class="stat-box blue stat-box-static">
-        <div class="stat-box-icon"><i data-lucide="video" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-video" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.reunions }}</p>
             <p class="stat-box-label">{% trans 'Réunions ce mois' %}</p>
         </div>
     </div>
     <a class="stat-box green" href="#upcoming">
-        <div class="stat-box-icon"><i data-lucide="calendar" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-calendar" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.evenements }}</p>
             <p class="stat-box-label">{% trans 'Événements' %}</p>
         </div>
     </a>
     <div class="stat-box amber stat-box-static">
-        <div class="stat-box-icon"><i data-lucide="calendar-days" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-calendar-days" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.total }}</p>
             <p class="stat-box-label">{% trans 'Total ce mois' %}</p>
@@ -181,15 +181,15 @@
                 <div class="cal-nav-wrap">
                     <div class="cal-nav-group">
                         <a href="?year={{ prev_year }}&month={{ prev_month }}" class="cal-nav-btn" title="{% trans 'Mois précédent' %}">
-                            <i data-lucide="chevron-left" width="16" height="16"></i>
+                            <i class="fa-solid fa-chevron-left" width="16" height="16"></i>
                         </a>
                         <span class="cal-month-title">{{ month_name }} {{ year }}</span>
                         <a href="?year={{ next_year }}&month={{ next_month }}" class="cal-nav-btn" title="{% trans 'Mois suivant' %}">
-                            <i data-lucide="chevron-right" width="16" height="16"></i>
+                            <i class="fa-solid fa-chevron-right" width="16" height="16"></i>
                         </a>
                     </div>
                     <a href="{% url 'core:event_create' %}" class="btn btn-primary" style="font-size:13px;padding:7px 14px;">
-                        <i data-lucide="plus" width="14" height="14"></i>
+                        <i class="fa-solid fa-plus" width="14" height="14"></i>
                         {% trans 'Nouvel événement' %}
                     </a>
                 </div>
@@ -240,7 +240,7 @@
         <div class="card mb-6" id="upcoming">
             <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
                 <h3 class="card-title" style="display:flex;align-items:center;gap:7px;">
-                    <i data-lucide="calendar-clock" width="16" height="16"></i>
+                    <i class="fa-solid fa-calendar" width="16" height="16"></i>
                     {% trans 'Prochains événements' %}
                 </h3>
                 {% if upcoming_events %}
@@ -260,28 +260,28 @@
                             <div class="ev-item-type {{ event.event_type }}">{{ event.get_event_type_display }}</div>
                             <div class="ev-item-title">{{ event.title }}</div>
                             <div class="ev-item-meta">
-                                <i data-lucide="clock" width="11" height="11"></i>
+                                <i class="fa-solid fa-clock" width="11" height="11"></i>
                                 {{ event.time|time:"H:i" }}
                                 {% if event.location %}
                                 <span style="color:#e2e8f0;">·</span>
-                                <i data-lucide="map-pin" width="10" height="10"></i>
+                                <i class="fa-solid fa-location-dot" width="10" height="10"></i>
                                 {{ event.location|truncatechars:20 }}
                                 {% endif %}
                             </div>
                         </div>
                         <div class="ev-item-actions">
                             <a href="{% url 'core:event_detail' event.id %}" class="action-btn" title="{% trans 'Voir' %}">
-                                <i data-lucide="eye" width="14" height="14"></i>
+                                <i class="fa-solid fa-eye" width="14" height="14"></i>
                             </a>
                             {% if can_manage %}
                             <a href="{% url 'core:event_edit' event.id %}" class="action-btn" title="{% trans 'Modifier' %}">
-                                <i data-lucide="pencil" width="14" height="14"></i>
+                                <i class="fa-solid fa-pencil" width="14" height="14"></i>
                             </a>
                             <a href="#" class="action-btn danger" title="{% trans 'Supprimer' %}"
                                data-delete-url="{% url 'core:event_delete' event.id %}"
                                data-delete-type="{% trans "l'événement" %}"
                                data-delete-name="{{ event.title }}">
-                                <i data-lucide="trash-2" width="14" height="14"></i>
+                                <i class="fa-solid fa-trash-can" width="14" height="14"></i>
                             </a>
                             {% endif %}
                         </div>
@@ -290,7 +290,7 @@
                 </div>
                 {% else %}
                 <p style="font-size:13px;color:#94a3b8;text-align:center;padding:20px 0;font-style:italic;">
-                    <i data-lucide="calendar-x" width="20" height="20" style="display:block;margin:0 auto 6px;opacity:.4;"></i>
+                    <i class="fa-solid fa-calendar-xmark" width="20" height="20" style="display:block;margin:0 auto 6px;opacity:.4;"></i>
                     {% trans 'Aucun événement à venir' %}
                 </p>
                 {% endif %}
@@ -305,14 +305,14 @@
             <div class="card-content">
                 <div class="cal-legend-row reunion">
                     <div class="cal-legend-label reunion">
-                        <i data-lucide="video" width="14" height="14" style="color:#3b82f6;"></i>
+                        <i class="fa-solid fa-video" width="14" height="14" style="color:#3b82f6;"></i>
                         {% trans 'Réunions' %}
                     </div>
                     <span class="cal-legend-count reunion">{{ stats.reunions }}</span>
                 </div>
                 <div class="cal-legend-row evenement">
                     <div class="cal-legend-label evenement">
-                        <i data-lucide="calendar" width="14" height="14" style="color:#16a34a;"></i>
+                        <i class="fa-solid fa-calendar" width="14" height="14" style="color:#16a34a;"></i>
                         {% trans 'Événements' %}
                     </div>
                     <span class="cal-legend-count evenement">{{ stats.evenements }}</span>

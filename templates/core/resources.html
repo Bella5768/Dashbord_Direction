@@ -10,11 +10,11 @@
 <!-- Tabs -->
 <div class="tabs">
     <a href="?tab=budget" class="tab-btn {% if tab == 'budget' %}active{% endif %}">
-        <i data-lucide="credit-card" ></i>
+        <i class="fa-solid fa-credit-card" ></i>
         {% trans 'Budget' %}
     </a>
     <a href="?tab=rh" class="tab-btn {% if tab == 'rh' %}active{% endif %}">
-        <i data-lucide="user-cog" ></i>
+        <i class="fa-solid fa-user-gear" ></i>
         {% trans 'Ressources Humaines' %}
     </a>
 </div>
@@ -23,28 +23,28 @@
 <!-- Budget Stats -->
 <div class="stats-row">
     <div class="stat-box stat-box-static">
-        <div class="stat-box-icon"><i data-lucide="wallet" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-wallet" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ total_allocated|number_format }}</p>
             <p class="stat-box-label">{% trans 'Budget total (GNF)' %}</p>
         </div>
     </div>
     <div class="stat-box amber stat-box-static">
-        <div class="stat-box-icon"><i data-lucide="trending-up" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-arrow-trend-up" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ total_consumed|number_format }}</p>
             <p class="stat-box-label">{% trans 'Consommé (GNF)' %}</p>
         </div>
     </div>
     <div class="stat-box green stat-box-static">
-        <div class="stat-box-icon"><i data-lucide="circle-dollar-sign" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-circle-dollar-sign" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ total_available|number_format }}</p>
             <p class="stat-box-label">{% trans 'Disponible (GNF)' %}</p>
         </div>
     </div>
     <div class="stat-box blue stat-box-static">
-        <div class="stat-box-icon"><i data-lucide="percent" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-percent" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ consumption_rate }}%</p>
             <p class="stat-box-label">{% trans 'Taux de consommation' %}</p>
@@ -83,7 +83,7 @@
         <h3 class="card-title">{% trans 'Détail des budgets par projet' %}</h3>
         {% if can_manage_budgets %}
         <a href="{% url 'core:budget_create' %}" class="btn btn-primary btn-sm">
-            <i data-lucide="plus-circle" width="16" height="16" ></i>
+            <i class="fa-solid fa-circle-plus" width="16" height="16" ></i>
             {% trans 'Affecter un budget' %}
         </a>
         {% endif %}
@@ -155,17 +155,17 @@
                             <div class="flex gap-2 justify-center">
                                 {% if budget.id %}
                                 <a href="{% url 'core:budget_edit' budget.id %}" class="action-btn" title="{% trans 'Modifier' %}">
-                                    <i data-lucide="pencil" width="16" height="16" ></i>
+                                    <i class="fa-solid fa-pencil" width="16" height="16" ></i>
                                 </a>
                                 <a href="#" class="action-btn danger" title="{% trans 'Supprimer' %}"
                                    data-delete-url="{% url 'core:budget_delete' budget.id %}"
                                    data-delete-type="{% trans 'le budget' %}"
                                    data-delete-name="{{ budget.project.name|default:budget.direction.name }}">
-                                    <i data-lucide="trash-2" width="16" height="16" ></i>
+                                    <i class="fa-solid fa-trash-can" width="16" height="16" ></i>
                                 </a>
                                 {% elif budget.project %}
                                 <a href="{% url 'core:project_edit' budget.project.id %}" class="action-btn" title="{% trans 'Modifier le projet' %}">
-                                    <i data-lucide="pencil" width="16" height="16" ></i>
+                                    <i class="fa-solid fa-pencil" width="16" height="16" ></i>
                                 </a>
                                 {% endif %}
                             </div>
@@ -184,28 +184,28 @@
 <!-- HR Stats -->
 <div class="stats-row">
     <a class="stat-box {% if not rh_workload %}active{% endif %}" href="?tab=rh{% if rh_dir %}&dir={{ rh_dir }}{% endif %}{% if rh_search %}&search={{ rh_search|urlencode }}{% endif %}">
-        <div class="stat-box-icon"><i data-lucide="users" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-users" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ employees_count }}</p>
             <p class="stat-box-label">{% trans 'Effectif total' %}</p>
         </div>
     </a>
     <div class="stat-box blue stat-box-static">
-        <div class="stat-box-icon"><i data-lucide="bar-chart-2" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-chart-bar" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ avg_workload }}%</p>
             <p class="stat-box-label">{% trans 'Charge moyenne' %}</p>
         </div>
     </div>
     <a class="stat-box amber {% if rh_workload == 'surcharge' %}active{% endif %}" href="?tab=rh&workload=surcharge{% if rh_dir %}&dir={{ rh_dir }}{% endif %}{% if rh_search %}&search={{ rh_search|urlencode }}{% endif %}">
-        <div class="stat-box-icon"><i data-lucide="alert-circle" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-circle-exclamation" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ overloaded }}</p>
             <p class="stat-box-label">{% trans 'En surcharge' %}</p>
         </div>
     </a>
     <div class="stat-box green stat-box-static">
-        <div class="stat-box-icon"><i data-lucide="building-2" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-building" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ directions.count }}</p>
             <p class="stat-box-label">{% trans 'Directions' %}</p>
@@ -230,17 +230,17 @@
         </select>
         {% if rh_search or rh_dir %}
         <a href="?tab=rh" class="btn btn-outline btn-sm" style="color:#6b7280;">
-            <i data-lucide="x" width="14" height="14"></i>
+            <i class="fa-solid fa-xmark" width="14" height="14"></i>
         </a>
         {% endif %}
     </form>
     <div class="flex gap-2">
         <a href="{% url 'core:export_employees_pdf' %}" class="btn btn-outline btn-sm">
-            <i data-lucide="file-down" width="16" height="16"></i>
+            <i class="fa-solid fa-file-arrow-down" width="16" height="16"></i>
             {% trans 'Exporter PDF' %}
         </a>
         <a href="{% url 'core:employee_create' %}" class="btn btn-primary">
-            <i data-lucide="plus-circle" width="16" height="16"></i>
+            <i class="fa-solid fa-circle-plus" width="16" height="16"></i>
             {% trans 'Nouvel employé' %}
         </a>
     </div>
@@ -267,10 +267,10 @@
             </div>
             <div class="ec-actions">
                 <a href="{% url 'core:employee_edit' employee.id %}" class="action-btn" title="{% trans 'Modifier' %}">
-                    <i data-lucide="pencil" width="14" height="14"></i>
+                    <i class="fa-solid fa-pencil" width="14" height="14"></i>
                 </a>
                 <a href="{% url 'core:employee_delete' employee.id %}" class="action-btn danger" title="{% trans 'Supprimer' %}">
-                    <i data-lucide="trash-2" width="14" height="14"></i>
+                    <i class="fa-solid fa-trash-can" width="14" height="14"></i>
                 </a>
             </div>
         </div>
@@ -299,7 +299,7 @@
     {% empty %}
     <div class="card" style="grid-column: span 3;">
         <div class="card-content" style="text-align:center; padding: 48px;">
-            <i data-lucide="users" width="40" height="40" style="color:#d1d5db; margin-bottom:12px;"></i>
+            <i class="fa-solid fa-users" width="40" height="40" style="color:#d1d5db; margin-bottom:12px;"></i>
             <p class="text-gray-500">{% trans 'Aucun employé trouvé' %}</p>
         </div>
     </div>

@@ -118,7 +118,7 @@
                          onkeydown="if(event.key==='Enter'||event.key===' '){toggleDir(this,'{{ dir.id }}');event.preventDefault();}">
                         <span class="dir-dot" style="background:{{ dir.color }};"></span>
                         {{ dir.code }}
-                        <span class="dir-check"><i data-lucide="check" width="11" height="11"></i></span>
+                        <span class="dir-check"><i class="fa-solid fa-check" width="11" height="11"></i></span>
                     </div>
                     {% empty %}
                     <span style="font-size:13px;color:#9ca3af;font-style:italic;">{% trans 'Aucune direction disponible' %}</span>
@@ -130,7 +130,7 @@
 
             <div class="flex gap-3">
                 <button type="submit" class="btn btn-primary">
-                    <i data-lucide="check" width="16" height="16"></i>
+                    <i class="fa-solid fa-check" width="16" height="16"></i>
                     {% if event %}{% trans 'Enregistrer' %}{% else %}{% trans "Créer l'événement" %}{% endif %}
                 </button>
                 {% if event %}
@@ -157,7 +157,6 @@
         document.querySelectorAll('#dir-picker .dir-chip[data-id]').forEach(function(chip) {
             chip.classList.toggle('selected', selected.indexOf(chip.dataset.id) !== -1);
         });
-        if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
     window.toggleDir = function(chip, id) {

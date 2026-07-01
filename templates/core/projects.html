@@ -75,42 +75,42 @@
 <div class="stats-row">
 {% with fdir=currentfdirection fq=search %}
     <a class="stat-box {% if current_status == 'all' or not current_status %}active{% endif %}" href="{% url 'core:projects' %}?status=all{% if fdir and fdir != 'all' %}&direction={{ fdir }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
-        <div class="stat-box-icon"><i data-lucide="archive" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-box-archive" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.total }}</p>
             <p class="stat-box-label">{% trans 'Total' %}</p>
         </div>
     </a>
     <a class="stat-box blue {% if current_status == 'en_cours' %}active{% endif %}" href="{% url 'core:projects' %}?status=en_cours{% if fdir and fdir != 'all' %}&direction={{ fdir }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
-        <div class="stat-box-icon"><i data-lucide="circle-play" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-circle-play" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.en_cours }}</p>
             <p class="stat-box-label">{% trans 'En cours' %}</p>
         </div>
     </a>
     <a class="stat-box green {% if current_status == 'termine' %}active{% endif %}" href="{% url 'core:projects' %}?status=termine{% if fdir and fdir != 'all' %}&direction={{ fdir }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
-        <div class="stat-box-icon"><i data-lucide="circle-check" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-circle-check" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.termine }}</p>
             <p class="stat-box-label">{% trans 'Terminés' %}</p>
         </div>
     </a>
     <a class="stat-box amber {% if current_status == 'planifie' %}active{% endif %}" href="{% url 'core:projects' %}?status=planifie{% if fdir and fdir != 'all' %}&direction={{ fdir }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
-        <div class="stat-box-icon"><i data-lucide="clock" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-clock" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.planifie }}</p>
             <p class="stat-box-label">{% trans 'Planifiés' %}</p>
         </div>
     </a>
     <a class="stat-box red {% if current_status == 'en_retard' %}active{% endif %}" href="{% url 'core:projects' %}?status=en_retard{% if fdir and fdir != 'all' %}&direction={{ fdir }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
-        <div class="stat-box-icon"><i data-lucide="circle-x" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-circle-xmark" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.en_retard|default:0 }}</p>
             <p class="stat-box-label">{% trans 'En retard' %}</p>
         </div>
     </a>
     <a class="stat-box {% if current_status == 'suspendu' %}active{% endif %}" href="{% url 'core:projects' %}?status=suspendu{% if fdir and fdir != 'all' %}&direction={{ fdir }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
-        <div class="stat-box-icon"><i data-lucide="circle-pause" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-circle-pause" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.suspendu|default:0 }}</p>
             <p class="stat-box-label">{% trans 'Suspendus' %}</p>
@@ -122,7 +122,7 @@
 <!-- Filters -->
 <form method="get" class="filters-bar">
     <div class="search-box">
-        <i data-lucide="search" width="16" height="16"></i>
+        <i class="fa-solid fa-magnifying-glass" width="16" height="16"></i>
         <input type="text" name="search" placeholder="{% trans 'Rechercher un projet...' %}" value="{{ search }}" class="form-control">
     </div>
     <select name="status" class="form-control" onchange="this.form.submit()">
@@ -140,7 +140,7 @@
         {% endfor %}
     </select>
     <a href="{% url 'core:project_create' %}" class="btn btn-primary" style="margin-left:auto;">
-        <i data-lucide="plus-circle" width="16" height="16"></i>
+        <i class="fa-solid fa-circle-plus" width="16" height="16"></i>
         {% trans 'Nouveau projet' %}
     </a>
 </form>
@@ -178,25 +178,25 @@
 
         <div class="pc-foot">
             <span class="pc-manager">
-                <i data-lucide="user" width="13" height="13"></i>
+                <i class="fa-solid fa-user" width="13" height="13"></i>
                 {{ project.manager|default:"—" }}
             </span>
             <div style="display:flex; align-items:center; gap:10px;">
                 {% if project.end_date %}
                 <span class="pc-date">
-                    <i data-lucide="calendar" width="11" height="11"></i>
+                    <i class="fa-solid fa-calendar" width="11" height="11"></i>
                     {{ project.end_date|date:"d/m/Y" }}
                 </span>
                 {% endif %}
                 <a href="{% url 'core:project_detail' project.id %}" class="pc-open" onclick="event.stopPropagation()">
-                    {% trans 'Ouvrir' %} <i data-lucide="arrow-right" width="12" height="12"></i>
+                    {% trans 'Ouvrir' %} <i class="fa-solid fa-arrow-right" width="12" height="12"></i>
                 </a>
             </div>
         </div>
     </div>
     {% empty %}
     <div class="projects-empty">
-        <i data-lucide="folder-open" width="48" height="48"></i>
+        <i class="fa-solid fa-folder-open" width="48" height="48"></i>
         <p>{% trans 'Aucun projet trouvé' %}</p>
     </div>
     {% endfor %}

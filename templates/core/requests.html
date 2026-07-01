@@ -10,28 +10,28 @@
 <div class="stats-row">
 {% with fdir=currentfdirection fq=search %}
     <a class="stat-box {% if current_status == 'all' %}active{% endif %}" href="{% url 'core:requests' %}?status=all{% if fdir and fdir != 'all' %}&direction={{ fdir }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
-        <div class="stat-box-icon"><i data-lucide="message-square" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-message" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.total }}</p>
             <p class="stat-box-label">{% trans 'Total demandes' %}</p>
         </div>
     </a>
     <a class="stat-box amber {% if current_status == 'en_attente' %}active{% endif %}" href="{% url 'core:requests' %}?status=en_attente{% if fdir and fdir != 'all' %}&direction={{ fdir }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
-        <div class="stat-box-icon"><i data-lucide="clock" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-clock" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.en_attente }}</p>
             <p class="stat-box-label">{% trans 'En attente' %}</p>
         </div>
     </a>
     <a class="stat-box green {% if current_status == 'approuve' %}active{% endif %}" href="{% url 'core:requests' %}?status=approuve{% if fdir and fdir != 'all' %}&direction={{ fdir }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
-        <div class="stat-box-icon"><i data-lucide="circle-check" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-circle-check" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.approuve }}</p>
             <p class="stat-box-label">{% trans 'Approuvées' %}</p>
         </div>
     </a>
     <a class="stat-box red {% if current_status == 'rejete' %}active{% endif %}" href="{% url 'core:requests' %}?status=rejete{% if fdir and fdir != 'all' %}&direction={{ fdir }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
-        <div class="stat-box-icon"><i data-lucide="circle-x" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-circle-xmark" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.rejete }}</p>
             <p class="stat-box-label">{% trans 'Rejetées' %}</p>
@@ -43,7 +43,7 @@
 <!-- Filters -->
 <form method="get" class="filters-bar">
     <div class="search-box">
-        <i data-lucide="search" ></i>
+        <i class="fa-solid fa-magnifying-glass" ></i>
         <input type="text" name="search" placeholder="{% trans 'Rechercher une demande...' %}" value="{{ search }}" class="form-control">
     </div>
     <select name="status" class="form-control" onchange="this.form.submit()">
@@ -59,7 +59,7 @@
         {% endfor %}
     </select>
     <a href="{% url 'core:request_create' %}" class="btn btn-primary">
-        <i data-lucide="plus-circle" width="16" height="16" ></i>
+        <i class="fa-solid fa-circle-plus" width="16" height="16" ></i>
         {% trans 'Nouvelle demande' %}
     </a>
 </form>
@@ -72,11 +72,11 @@
         <div class="req-card-top">
             <div class="req-status-icon {% if req.status == 'en_attente' %}pending{% elif req.status == 'approuve' %}approved{% else %}rejected{% endif %}">
                 {% if req.status == 'en_attente' %}
-                <i data-lucide="clock" width="18" height="18"></i>
+                <i class="fa-solid fa-clock" width="18" height="18"></i>
                 {% elif req.status == 'approuve' %}
-                <i data-lucide="circle-check" width="18" height="18"></i>
+                <i class="fa-solid fa-circle-check" width="18" height="18"></i>
                 {% else %}
-                <i data-lucide="circle-x" width="18" height="18"></i>
+                <i class="fa-solid fa-circle-xmark" width="18" height="18"></i>
                 {% endif %}
             </div>
 
@@ -100,12 +100,12 @@
             <div class="req-meta">
                 <span>{% trans 'Par' %} <strong style="color:#374151;">{{ req.created_by }}</strong></span>
                 <span class="flex items-center gap-1">
-                    <i data-lucide="calendar" width="12" height="12"></i>
+                    <i class="fa-solid fa-calendar" width="12" height="12"></i>
                     {{ req.created_at|date:"d/m/Y" }}
                 </span>
                 {% if req.approved_at %}
                 <span style="color:#16a34a;">
-                    <i data-lucide="circle-check" width="12" height="12"></i>
+                    <i class="fa-solid fa-circle-check" width="12" height="12"></i>
                     {% trans 'Approuvé le' %} {{ req.approved_at|date:"d/m/Y" }}
                 </span>
                 {% endif %}
@@ -114,11 +114,11 @@
             {% if req.status == 'en_attente' %}
             <div class="flex gap-2">
                 <a href="{% url 'core:request_reject' req.id %}" class="btn btn-danger btn-sm">
-                    <i data-lucide="x" width="14" height="14"></i>
+                    <i class="fa-solid fa-xmark" width="14" height="14"></i>
                     {% trans 'Rejeter' %}
                 </a>
                 <a href="{% url 'core:request_approve' req.id %}" class="btn btn-primary btn-sm">
-                    <i data-lucide="check" width="14" height="14"></i>
+                    <i class="fa-solid fa-check" width="14" height="14"></i>
                     {% trans 'Approuver' %}
                 </a>
             </div>
@@ -129,7 +129,7 @@
     {% empty %}
     <div class="card">
         <div class="card-content" style="text-align:center; padding:48px;">
-            <i data-lucide="message-square" width="40" height="40" style="color:#d1d5db; margin-bottom:12px;"></i>
+            <i class="fa-solid fa-message" width="40" height="40" style="color:#d1d5db; margin-bottom:12px;"></i>
             <p class="text-gray-500">{% trans 'Aucune demande trouvée' %}</p>
         </div>
     </div>

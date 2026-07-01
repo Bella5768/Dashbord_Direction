@@ -98,7 +98,7 @@
 
             <div class="flex gap-3">
                 <button type="submit" class="btn btn-primary">
-                    <i data-lucide="check" width="16" height="16"></i>
+                    <i class="fa-solid fa-check" width="16" height="16"></i>
                     {% if employee %}{% trans 'Enregistrer' %}{% else %}{% trans 'Ajouter' %}{% endif %}
                 </button>
                 <a href="{% url 'core:resources' %}?tab=rh" class="btn btn-outline">{% trans 'Annuler' %}</a>

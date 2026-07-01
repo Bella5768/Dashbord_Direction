@@ -87,7 +87,7 @@
                     {{ form.start_date }}
                     {% if form.start_date.help_text %}
                     <p class="fhint warn">
-                        <i data-lucide="triangle-alert" width="12" height="12"></i>
+                        <i class="fa-solid fa-triangle-exclamation" width="12" height="12"></i>
                         {{ form.start_date.help_text }}
                     </p>
                     {% endif %}
@@ -97,7 +97,7 @@
                     {{ form.end_date }}
                     {% if form.end_date.help_text %}
                     <p class="fhint warn">
-                        <i data-lucide="triangle-alert" width="12" height="12"></i>
+                        <i class="fa-solid fa-triangle-exclamation" width="12" height="12"></i>
                         {{ form.end_date.help_text }}
                     </p>
                     {% endif %}
@@ -106,7 +106,7 @@
 
             <div class="flex gap-3">
                 <button type="submit" class="btn btn-primary">
-                    <i data-lucide="check" width="16" height="16" ></i>
+                    <i class="fa-solid fa-check" width="16" height="16" ></i>
                     {% if project %}{% trans 'Enregistrer' %}{% else %}{% trans 'Créer le projet' %}{% endif %}
                 </button>
                 <a href="{% url 'core:projects' %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
@@ -304,11 +304,11 @@ function updateConversions() {
         const consumedGNF = convertCurrency(consumed, currency, 'GNF');
 
         document.getElementById('budget-conversion').innerHTML =
-            `<i data-lucide="arrow-up-down" width="12" height="12" style="display: inline-block; vertical-align: middle;" ></i> ${PROJ_I18N.equivalent}: ${formatCurrency(budgetGNF, 'GNF')}`;
+            `<i class="fa-solid fa-arrows-up-down" width="12" height="12" style="display: inline-block; vertical-align: middle;" ></i> ${PROJ_I18N.equivalent}: ${formatCurrency(budgetGNF, 'GNF')}`;
 
         if (consumed > 0) {
             document.getElementById('consumed-conversion').innerHTML =
-                `<i data-lucide="arrow-up-down" width="12" height="12" style="display: inline-block; vertical-align: middle;" ></i> Équivalent: ${formatCurrency(consumedGNF, 'GNF')}`;
+                `<i class="fa-solid fa-arrows-up-down" width="12" height="12" style="display: inline-block; vertical-align: middle;" ></i> Équivalent: ${formatCurrency(consumedGNF, 'GNF')}`;
         } else {
             document.getElementById('consumed-conversion').innerHTML = '';
         }

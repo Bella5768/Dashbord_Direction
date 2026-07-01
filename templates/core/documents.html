@@ -10,28 +10,28 @@
 <div class="stats-row">
 {% with ft=currentftype fq=search %}
     <a class="stat-box {% if current_status == 'all' %}active{% endif %}" href="{% url 'core:documents' %}?status=all{% if ft and ft != 'all' %}&type={{ ft }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
-        <div class="stat-box-icon"><i data-lucide="file-text" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-file-lines" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.total }}</p>
             <p class="stat-box-label">{% trans 'Total documents' %}</p>
         </div>
     </a>
     <a class="stat-box red {% if current_status == 'a_signer' %}active{% endif %}" href="{% url 'core:documents' %}?status=a_signer{% if ft and ft != 'all' %}&type={{ ft }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
-        <div class="stat-box-icon"><i data-lucide="pen-line" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-pen" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.a_signer }}</p>
             <p class="stat-box-label">{% trans 'À signer' %}</p>
         </div>
     </a>
     <a class="stat-box amber {% if current_status == 'a_valider' %}active{% endif %}" href="{% url 'core:documents' %}?status=a_valider{% if ft and ft != 'all' %}&type={{ ft }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
-        <div class="stat-box-icon"><i data-lucide="clock" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-clock" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.a_valider }}</p>
             <p class="stat-box-label">{% trans 'À valider' %}</p>
         </div>
     </a>
     <a class="stat-box green {% if current_status == 'signe' %}active{% endif %}" href="{% url 'core:documents' %}?status=signe{% if ft and ft != 'all' %}&type={{ ft }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
-        <div class="stat-box-icon"><i data-lucide="file-check" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-file-circle-check" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.signe }}</p>
             <p class="stat-box-label">{% trans 'Signés' %}</p>
@@ -43,7 +43,7 @@
 <!-- Filters -->
 <form method="get" class="filters-bar">
     <div class="search-box">
-        <i data-lucide="search" ></i>
+        <i class="fa-solid fa-magnifying-glass" ></i>
         <input type="text" name="search" placeholder="{% trans 'Rechercher un document...' %}" value="{{ search }}" class="form-control">
     </div>
     <select name="status" class="form-control" onchange="this.form.submit()">
@@ -60,7 +60,7 @@
         <option value="note" {% if currentftype == 'note' %}selected{% endif %}>{% trans 'Note' %}</option>
     </select>
     <a href="{% url 'core:document_create' %}" class="btn btn-primary">
-        <i data-lucide="plus-circle" width="16" height="16" ></i>
+        <i class="fa-solid fa-circle-plus" width="16" height="16" ></i>
         {% trans 'Nouveau document' %}
     </a>
 </form>
@@ -87,7 +87,7 @@
                         <td>
                             <div class="flex items-center gap-3">
                                 <div class="document-icon {% if doc.status == 'a_signer' %}sign{% elif doc.status == 'a_valider' %}validate{% else %}signed{% endif %}">
-                                    <i data-lucide="file-text" width="18" height="18"></i>
+                                    <i class="fa-solid fa-file-lines" width="18" height="18"></i>
                                 </div>
                                 <div>
                                     <p class="font-medium">{{ doc.title }}</p>
@@ -111,7 +111,7 @@
                         <td>
                             {% if doc.due_date %}
                             <span class="flex items-center gap-1 {% if doc.due_date < today and doc.status != 'signe' %}text-red-600{% else %}text-gray-500{% endif %}" style="font-size:13px;">
-                                <i data-lucide="calendar" width="13" height="13"></i>
+                                <i class="fa-solid fa-calendar" width="13" height="13"></i>
                                 {{ doc.due_date|date:"d/m/Y" }}
                             </span>
                             {% else %}<span class="text-gray-300">—</span>{% endif %}
@@ -125,27 +125,27 @@
                             <div class="flex items-center justify-center gap-1">
                                 {% if doc.file %}
                                 <a href="{% url 'core:document_preview' doc.id %}" class="action-btn" title="{% trans 'Aperçu' %}">
-                                    <i data-lucide="eye" width="15" height="15"></i>
+                                    <i class="fa-solid fa-eye" width="15" height="15"></i>
                                 </a>
                                 {% endif %}
                                 <a href="{% url 'core:document_edit' doc.id %}" class="action-btn" title="{% trans 'Modifier' %}">
-                                    <i data-lucide="pencil" width="15" height="15"></i>
+                                    <i class="fa-solid fa-pencil" width="15" height="15"></i>
                                 </a>
                                 {% if doc.status == 'a_valider' %}
                                 <a href="{% url 'core:document_validate' doc.id %}" class="action-btn success" title="{% trans 'Valider' %}">
-                                    <i data-lucide="circle-check" width="15" height="15"></i>
+                                    <i class="fa-solid fa-circle-check" width="15" height="15"></i>
                                 </a>
                                 {% endif %}
                                 {% if doc.status == 'a_signer' %}
                                 <a href="{% url 'core:document_sign' doc.id %}" class="action-btn success" title="{% trans 'Signer' %}">
-                                    <i data-lucide="pen-line" width="15" height="15"></i>
+                                    <i class="fa-solid fa-pen" width="15" height="15"></i>
                                 </a>
                                 {% endif %}
                                 <a href="#" class="action-btn danger" title="{% trans 'Supprimer' %}"
                                    data-delete-url="{% url 'core:document_delete' doc.id %}"
                                    data-delete-type="{% trans 'le document' %}"
                                    data-delete-name="{{ doc.title }}">
-                                    <i data-lucide="trash-2" width="15" height="15"></i>
+                                    <i class="fa-solid fa-trash-can" width="15" height="15"></i>
                                 </a>
                             </div>
                         </td>
@@ -153,7 +153,7 @@
                     {% empty %}
                     <tr>
                         <td colspan="7" style="text-align:center; padding:48px;">
-                            <i data-lucide="file-text" width="40" height="40" style="color:#d1d5db; margin-bottom:12px;"></i>
+                            <i class="fa-solid fa-file-lines" width="40" height="40" style="color:#d1d5db; margin-bottom:12px;"></i>
                             <p class="text-gray-500">{% trans 'Aucun document trouvé' %}</p>
                         </td>
                     </tr>

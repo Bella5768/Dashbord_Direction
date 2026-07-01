@@ -12,6 +12,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/jpeg" href="{% static 'logocsig.jpg' %}">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'fontawesome/css/fontawesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'fontawesome/css/solid.min.css' %}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@23.9.3/build/css/intlTelInput.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js" defer></script>
     {% block extra_css %}{% endblock %}
@@ -54,31 +56,31 @@
                 <ul class="sidebar-group">
                     <li>
                         <a href="{% url 'core:dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>
-                            <i data-lucide="layout-dashboard"></i>{% trans 'Tableau de bord' %}
+                            <i class="fa-solid fa-table-cells-large"></i>{% trans 'Tableau de bord' %}
                         </a>
                     </li>
                     {% if user.profile.can_manage_projects or user.profile.employee %}
                     <li>
                         <a href="{% url 'core:projects' %}" {% if request.resolver_match.url_name == 'projects' %}class="active"{% endif %}>
-                            <i data-lucide="folder"></i>{% trans 'Projets' %}
+                            <i class="fa-solid fa-folder"></i>{% trans 'Projets' %}
                         </a>
                     </li>
                     {% endif %}
                     {% if user.profile.employee %}
                     <li>
                         <a href="{% url 'core:my_tasks' %}" {% if request.resolver_match.url_name == 'my_tasks' %}class="active"{% endif %}>
-                            <i data-lucide="clipboard-check"></i>{% trans 'Mes tâches' %}
+                            <i class="fa-solid fa-clipboard-check"></i>{% trans 'Mes tâches' %}
                         </a>
                     </li>
                     {% endif %}
                     <li>
                         <a href="{% url 'core:calendar' %}" {% if request.resolver_match.url_name == 'calendar' %}class="active"{% endif %}>
-                            <i data-lucide="calendar"></i>{% trans 'Calendrier' %}
+                            <i class="fa-solid fa-calendar"></i>{% trans 'Calendrier' %}
                         </a>
                     </li>
                     <li>
                         <a href="{% url 'core:leave_list' %}" {% if 'conges' in request.path %}class="active"{% endif %}>
-                            <i data-lucide="plane"></i>{% trans 'Congés' %}
+                            <i class="fa-solid fa-plane"></i>{% trans 'Congés' %}
                         </a>
                     </li>
                 </ul>
@@ -90,35 +92,35 @@
                     {% if user.profile.can_manage_budgets %}
                     <li>
                         <a href="{% url 'core:resources' %}" {% if request.resolver_match.url_name == 'resources' %}class="active"{% endif %}>
-                            <i data-lucide="credit-card"></i>{% trans 'Ressources' %}
+                            <i class="fa-solid fa-credit-card"></i>{% trans 'Ressources' %}
                         </a>
                     </li>
                     {% endif %}
                     {% if user.profile.can_approve_requests %}
                     <li>
                         <a href="{% url 'core:requests' %}" {% if request.resolver_match.url_name == 'requests' %}class="active"{% endif %}>
-                            <i data-lucide="message-square"></i>{% trans 'Demandes' %}
+                            <i class="fa-solid fa-message"></i>{% trans 'Demandes' %}
                         </a>
                     </li>
                     {% endif %}
                     {% if user.profile.can_approve_documents %}
                     <li>
                         <a href="{% url 'core:documents' %}" {% if request.resolver_match.url_name == 'documents' %}class="active"{% endif %}>
-                            <i data-lucide="file-text"></i>{% trans 'Documents' %}
+                            <i class="fa-solid fa-file-lines"></i>{% trans 'Documents' %}
                         </a>
                     </li>
                     {% endif %}
                     {% if user.profile.can_read_partners %}
                     <li>
                         <a href="{% url 'core:partners' %}" {% if request.resolver_match.url_name == 'partners' %}class="active"{% endif %}>
-                            <i data-lucide="handshake"></i>{% trans 'Partenaires' %}
+                            <i class="fa-solid fa-handshake"></i>{% trans 'Partenaires' %}
                         </a>
                     </li>
                     {% endif %}
                     {% if user.profile.can_view_reports %}
                     <li>
                         <a href="{% url 'core:reports' %}" {% if request.resolver_match.url_name == 'reports' %}class="active"{% endif %}>
-                            <i data-lucide="bar-chart-2"></i>{% trans 'Rapports' %}
+                            <i class="fa-solid fa-chart-bar"></i>{% trans 'Rapports' %}
                         </a>
                     </li>
                     {% endif %}
@@ -132,28 +134,28 @@
                     {% if user.profile.can_manage_users %}
                     <li>
                         <a href="{% url 'core:users_list' %}" {% if 'users' in request.path %}class="active"{% endif %}>
-                            <i data-lucide="user-cog"></i>{% trans 'Utilisateurs' %}
+                            <i class="fa-solid fa-user-gear"></i>{% trans 'Utilisateurs' %}
                         </a>
                     </li>
                     {% endif %}
                     {% if user.profile.is_directeur_general or user.is_staff %}
                     <li>
                         <a href="{% url 'core:directions_list' %}" {% if 'directions' in request.path %}class="active"{% endif %}>
-                            <i data-lucide="building-2"></i>{% trans 'Directions' %}
+                            <i class="fa-solid fa-building"></i>{% trans 'Directions' %}
                         </a>
                     </li>
                     {% endif %}
                     {% if user.profile.can_manage_users %}
                     <li>
                         <a href="{% url 'core:roles_list' %}" {% if 'roles' in request.path %}class="active"{% endif %}>
-                            <i data-lucide="shield-check"></i>{% trans 'Rôles' %}
+                            <i class="fa-solid fa-shield-halved"></i>{% trans 'Rôles' %}
                         </a>
                     </li>
                     {% endif %}
                     {% if user.profile.is_admin or user.is_superuser %}
                     <li>
                         <a href="/admin/" target="_blank">
-                            <i data-lucide="settings"></i>{% trans 'Administration' %}
+                            <i class="fa-solid fa-gear"></i>{% trans 'Administration' %}
                         </a>
                     </li>
                     {% endif %}
@@ -173,7 +175,7 @@
                 </div>
                 <div class="header-actions">
                     <form class="search-box" action="{% url 'core:global_search' %}" method="get">
-                        <i data-lucide="search" ></i>
+                        <i class="fa-solid fa-magnifying-glass" ></i>
                         <input type="text" name="q" placeholder="{% trans 'Rechercher...' %}" value="{{ request.GET.q }}">
                     </form>
                     <!-- Selecteur de langue -->
@@ -181,7 +183,7 @@
                         <button id="lang-btn"
                                 style="display:flex;align-items:center;gap:5px;padding:5px 10px;border:1px solid #e5e7eb;border-radius:8px;background:white;cursor:pointer;font-size:13px;color:#374151;">
                             {% if LANGUAGE_CODE == 'en' %}EN{% else %}FR{% endif %}
-                            <i data-lucide="chevron-down" width="12" height="12"></i>
+                            <i class="fa-solid fa-chevron-down" width="12" height="12"></i>
                         </button>
                         <div id="lang-menu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:white;border:1px solid #e5e7eb;border-radius:8px;min-width:110px;box-shadow:0 4px 16px rgba(0,0,0,.1);z-index:200;">
                             <form action="{% url 'set_language' %}" method="post" style="margin:0;">
@@ -215,7 +217,7 @@
                     <!-- Cloche de notifications -->
                     <div class="notif-bell" id="notif-bell-widget">
                       <button class="notif-bell-btn" id="notif-bell-btn" aria-label="{% trans 'Notifications' %}">
-                        <i data-lucide="bell" width="18" height="18"></i>
+                        <i class="fa-solid fa-bell" width="18" height="18"></i>
                         <span class="notif-badge" id="notif-badge" style="display:none;">0</span>
                       </button>
                       <div class="notif-dropdown" id="notif-dropdown">
@@ -239,7 +241,7 @@
                             <span class="topbar-user-name">{{ user.get_full_name|default:user.username }}</span>
                             <span class="topbar-user-role">{{ user.profile.role.name|default:"Utilisateur" }}</span>
                         </div>
-                        <i data-lucide="chevron-down" class="topbar-user-chevron" width="14" height="14"></i>
+                        <i class="fa-solid fa-chevron-down" class="topbar-user-chevron" width="14" height="14"></i>
                         <div class="topbar-user-menu" id="topbar-user-menu">
                             <div class="topbar-user-menu-header">
                                 <div class="topbar-avatar topbar-avatar-lg">
@@ -252,13 +254,13 @@
                             </div>
                             <div class="topbar-user-menu-body">
                                 <a href="{% url 'core:profile' %}" class="topbar-menu-item">
-                                    <i data-lucide="user-round" width="15" height="15"></i>
+                                    <i class="fa-solid fa-circle-user" width="15" height="15"></i>
                                     {% trans "Mon profil" %}
                                 </a>
                                 <form method="post" action="{% url 'core:logout' %}">
                                     {% csrf_token %}
                                     <button type="submit" class="topbar-menu-item topbar-menu-logout">
-                                        <i data-lucide="log-out" width="15" height="15"></i>
+                                        <i class="fa-solid fa-right-from-bracket" width="15" height="15"></i>
                                         {% trans "Déconnexion" %}
                                     </button>
                                 </form>
@@ -275,25 +277,25 @@
                 {% for message in messages %}
                 {% if 'success' in message.tags %}
                 <div class="toast toast-success" role="alert">
-                    <div class="toast-icon"><i data-lucide="circle-check" ></i></div>
+                    <div class="toast-icon"><i class="fa-solid fa-circle-check" ></i></div>
                     <span class="toast-body">{{ message }}</span>
                     <button class="toast-close" onclick="dismissToast(this.parentElement)">×</button>
                 </div>
                 {% elif 'error' in message.tags %}
                 <div class="toast toast-error" role="alert">
-                    <div class="toast-icon"><i data-lucide="circle-x" ></i></div>
+                    <div class="toast-icon"><i class="fa-solid fa-circle-xmark" ></i></div>
                     <span class="toast-body">{{ message }}</span>
                     <button class="toast-close" onclick="dismissToast(this.parentElement)">×</button>
                 </div>
                 {% elif 'warning' in message.tags %}
                 <div class="toast toast-warning" role="alert">
-                    <div class="toast-icon"><i data-lucide="triangle-alert" ></i></div>
+                    <div class="toast-icon"><i class="fa-solid fa-triangle-exclamation" ></i></div>
                     <span class="toast-body">{{ message }}</span>
                     <button class="toast-close" onclick="dismissToast(this.parentElement)">×</button>
                 </div>
                 {% else %}
                 <div class="toast toast-info" role="alert">
-                    <div class="toast-icon"><i data-lucide="info" ></i></div>
+                    <div class="toast-icon"><i class="fa-solid fa-circle-info" ></i></div>
                     <span class="toast-body">{{ message }}</span>
                     <button class="toast-close" onclick="dismissToast(this.parentElement)">×</button>
                 </div>
@@ -315,10 +317,8 @@
 
     <script src="{% url 'javascript-catalog' %}"></script>
     <script src="{% static 'js/main.js' %}"></script>
-    <script src="{% static 'js/lucide.min.js' %}"></script>
     {% block extra_js %}{% endblock %}
     <script>
-    if(window.lucide) lucide.createIcons();
     // Enhanced file drop
     document.querySelectorAll('.file-drop').forEach(function(wrap) {
         var input = wrap.querySelector('input[type=file]');
@@ -604,24 +604,24 @@
 
       /* ── Rendu dropdown ────────────────────────────────────── */
       var ICONS = {
-        jalon_complete: 'circle-check-big',
-        sous_etape_complete: 'check-square',
-        membre_projet: 'user-plus',
-        commentaire: 'message-circle',
-        conge_avis: 'thumbs-up',
-        conge_rh: 'file-check',
-        conge_decision: 'bell-ring',
+        jalon_complete: 'fa-circle-check',
+        sous_etape_complete: 'fa-square-check',
+        membre_projet: 'fa-user-plus',
+        commentaire: 'fa-comment',
+        conge_avis: 'fa-thumbs-up',
+        conge_rh: 'fa-file-circle-check',
+        conge_decision: 'fa-bell',
       };
 
       function buildItem(n) {
-        var icon = ICONS[n.type] || 'bell';
+        var icon = ICONS[n.type] || 'fa-bell';
         var unread = n.is_read ? '' : ' unread';
         var dot = n.is_read ? '' : '<div class="notif-unread-dot"></div>';
         var href = n.link || '#';
         return (
           '<div class="notif-item' + unread + '" data-id="' + n.id + '" data-href="' + href + '">' +
             '<div class="notif-item-icon">' +
-              '<i data-lucide="' + icon + '" width="15" height="15"></i>' +
+              '<i class="fa-solid ' + icon + '"></i>' +
             '</div>' +
             '<div class="notif-item-body">' +
               '<p class="notif-item-title">' + n.title + '</p>' +
@@ -638,14 +638,12 @@
         if (!data.notifications.length) {
           listEl.innerHTML =
             '<div class="notif-empty">' +
-              '<i data-lucide="bell-off" width="28" height="28" style="color:var(--gray-300);"></i>' +
+              '<i class="fa-solid fa-bell-slash" width="28" height="28" style="color:var(--gray-300);"></i>' +
               '<span>{% trans "Aucune notification" %}</span>' +
             '</div>';
-          if (window.lucide) lucide.createIcons({nodes: [listEl]});
           return;
         }
         listEl.innerHTML = data.notifications.map(buildItem).join('');
-        if (window.lucide) lucide.createIcons({nodes: [listEl]});
       }
 
       function fetchRecent() {
@@ -731,7 +729,6 @@
               div.innerHTML = buildItem(data);
               var el = div.firstChild;
               listEl.insertBefore(el, listEl.firstChild);
-              if (window.lucide) lucide.createIcons({nodes: [el]});
             }
           };
 

@@ -63,19 +63,19 @@
                 <label class="form-label" for="id_logo">{% trans 'Logo' %}</label>
                 {% if partner and partner.logo %}
                 <div class="file-drop-current">
-                    <i data-lucide="image" width="14" height="14"></i>
+                    <i class="fa-solid fa-image" width="14" height="14"></i>
                     <span>{% trans 'Logo actuel' %} : <a href="{{ partner.logo.url }}" target="_blank">{% trans 'voir' %}</a></span>
                 </div>
                 {% endif %}
                 <div class="file-drop">
                     {{ form.logo }}
                     <div class="file-drop-zone">
-                        <i data-lucide="image" width="36" height="36"></i>
+                        <i class="fa-solid fa-image" width="36" height="36"></i>
                         <p class="file-drop-title">{% trans 'Cliquez ou glissez une image' %}</p>
                         <p class="file-drop-sub">PNG, JPG, SVG…</p>
                     </div>
                     <div class="file-drop-selected">
-                        <i data-lucide="image" width="16" height="16"></i>
+                        <i class="fa-solid fa-image" width="16" height="16"></i>
                         <span class="file-drop-name"></span>
                         <button type="button" class="file-drop-clear">✕</button>
                     </div>
@@ -85,7 +85,7 @@
             
             <div class="flex gap-3">
                 <button type="submit" class="btn btn-primary">
-                    <i data-lucide="check" width="16" height="16" ></i>
+                    <i class="fa-solid fa-check" width="16" height="16" ></i>
                     {% if partner %}{% trans 'Enregistrer' %}{% else %}{% trans 'Ajouter' %}{% endif %}
                 </button>
                 <a href="{% url 'core:partners' %}" class="btn btn-outline">{% trans 'Annuler' %}</a>

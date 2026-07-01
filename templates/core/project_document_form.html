@@ -35,19 +35,19 @@
                 <label class="form-label" for="id_file">{% trans 'Fichier' %} <span class="required">*</span></label>
                 {% if doc and doc.file %}
                 <div class="file-drop-current">
-                    <i data-lucide="file" width="14" height="14"></i>
+                    <i class="fa-solid fa-file" width="14" height="14"></i>
                     <span>{% trans 'Fichier actuel' %} : <a href="{{ doc.file.url }}" target="_blank">{{ doc.file.name|slice:"9:" }}</a></span>
                 </div>
                 {% endif %}
                 <div class="file-drop">
                     {{ form.file }}
                     <div class="file-drop-zone">
-                        <i data-lucide="upload-cloud" width="36" height="36"></i>
+                        <i class="fa-solid fa-cloud-arrow-up" width="36" height="36"></i>
                         <p class="file-drop-title">{% trans 'Cliquez ou glissez un fichier' %}</p>
                         <p class="file-drop-sub">PDF, Word, Excel, images…</p>
                     </div>
                     <div class="file-drop-selected">
-                        <i data-lucide="file-check" width="16" height="16"></i>
+                        <i class="fa-solid fa-file-circle-check" width="16" height="16"></i>
                         <span class="file-drop-name"></span>
                         <button type="button" class="file-drop-clear">✕</button>
                     </div>
@@ -57,7 +57,7 @@
             
             <div class="flex gap-3">
                 <button type="submit" class="btn btn-primary">
-                    <i data-lucide="check" width="16" height="16" ></i>
+                    <i class="fa-solid fa-check" width="16" height="16" ></i>
                     {% if doc %}{% trans 'Enregistrer' %}{% else %}{% trans 'Ajouter le document' %}{% endif %}
                 </button>
                 <a href="{% url 'core:project_detail' project.id %}" class="btn btn-outline">{% trans 'Annuler' %}</a>

@@ -157,25 +157,25 @@
 
 {% if event.is_past %}
 <div class="ev-past-banner">
-    <i data-lucide="clock" width="16" height="16"></i>
+    <i class="fa-solid fa-clock" width="16" height="16"></i>
     {% trans "Cet événement est passé." %}
 </div>
 {% endif %}
 
 <div class="ev-header">
     <span class="ev-badge {{ event.event_type }}">
-        {% if event.event_type == 'reunion' %}<i data-lucide="video" width="14" height="14"></i>
-        {% else %}<i data-lucide="calendar" width="14" height="14"></i>{% endif %}
+        {% if event.event_type == 'reunion' %}<i class="fa-solid fa-video" width="14" height="14"></i>
+        {% else %}<i class="fa-solid fa-calendar" width="14" height="14"></i>{% endif %}
         {{ event.get_event_type_display }}
     </span>
     <div style="display:flex; gap:8px;">
         <a href="{% url 'core:calendar' %}?year={{ event.date.year }}&month={{ event.date.month }}" class="btn btn-outline">
-            <i data-lucide="arrow-left" width="14" height="14"></i>
+            <i class="fa-solid fa-arrow-left" width="14" height="14"></i>
             {% trans 'Calendrier' %}
         </a>
         {% if can_edit %}
         <a href="{% url 'core:event_edit' event.id %}" class="btn btn-outline">
-            <i data-lucide="pencil" width="14" height="14"></i>
+            <i class="fa-solid fa-pencil" width="14" height="14"></i>
             {% trans 'Modifier' %}
         </a>
         {% endif %}
@@ -184,7 +184,7 @@
            data-delete-url="{% url 'core:event_delete' event.id %}"
            data-delete-type="{% trans "l'événement" %}"
            data-delete-name="{{ event.title }}">
-            <i data-lucide="trash-2" width="14" height="14"></i>
+            <i class="fa-solid fa-trash-can" width="14" height="14"></i>
             {% trans 'Supprimer' %}
         </a>
         {% endif %}
@@ -203,14 +203,14 @@
             </div>
             <div class="card-content">
                 <div class="ev-meta-row">
-                    <div class="ev-meta-icon"><i data-lucide="calendar" width="16" height="16"></i></div>
+                    <div class="ev-meta-icon"><i class="fa-solid fa-calendar" width="16" height="16"></i></div>
                     <div>
                         <span class="ev-meta-label">{% trans 'Date' %}</span>
                         <span class="ev-meta-value">{{ event.date|date:"l d F Y" }}</span>
                     </div>
                 </div>
                 <div class="ev-meta-row">
-                    <div class="ev-meta-icon"><i data-lucide="clock" width="16" height="16"></i></div>
+                    <div class="ev-meta-icon"><i class="fa-solid fa-clock" width="16" height="16"></i></div>
                     <div>
                         <span class="ev-meta-label">{% trans 'Heure' %}</span>
                         <span class="ev-meta-value">{{ event.time|time:"H:i" }} · {{ event.duration_display }}</span>
@@ -218,7 +218,7 @@
                 </div>
                 {% if event.location %}
                 <div class="ev-meta-row">
-                    <div class="ev-meta-icon"><i data-lucide="map-pin" width="16" height="16"></i></div>
+                    <div class="ev-meta-icon"><i class="fa-solid fa-location-dot" width="16" height="16"></i></div>
                     <div>
                         <span class="ev-meta-label">{% trans 'Lieu' %}</span>
                         <span class="ev-meta-value">{{ event.location }}</span>
@@ -227,7 +227,7 @@
                 {% endif %}
                 {% if event.created_by %}
                 <div class="ev-meta-row">
-                    <div class="ev-meta-icon"><i data-lucide="user" width="16" height="16"></i></div>
+                    <div class="ev-meta-icon"><i class="fa-solid fa-user" width="16" height="16"></i></div>
                     <div>
                         <span class="ev-meta-label">{% trans 'Créé par' %}</span>
                         <span class="ev-meta-value">{{ event.created_by.get_full_name|default:event.created_by.username }}</span>
@@ -236,7 +236,7 @@
                 {% endif %}
                 {% if event.created_at %}
                 <div class="ev-meta-row">
-                    <div class="ev-meta-icon"><i data-lucide="calendar-plus" width="16" height="16"></i></div>
+                    <div class="ev-meta-icon"><i class="fa-solid fa-calendar-plus" width="16" height="16"></i></div>
                     <div>
                         <span class="ev-meta-label">{% trans 'Créé le' %}</span>
                         <span class="ev-meta-value">{{ event.created_at|date:"d/m/Y à H:i" }}</span>
@@ -245,7 +245,7 @@
                 {% endif %}
                 {% if event.updated_at and event.updated_at != event.created_at %}
                 <div class="ev-meta-row">
-                    <div class="ev-meta-icon"><i data-lucide="pencil" width="16" height="16"></i></div>
+                    <div class="ev-meta-icon"><i class="fa-solid fa-pencil" width="16" height="16"></i></div>
                     <div>
                         <span class="ev-meta-label">{% trans 'Modifié le' %}</span>
                         <span class="ev-meta-value">{{ event.updated_at|date:"d/m/Y à H:i" }}</span>
@@ -271,20 +271,20 @@
         <div class="card">
             <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
                 <h3 class="card-title" style="display:flex;align-items:center;gap:6px;">
-                    <i data-lucide="users" width="16" height="16"></i>
+                    <i class="fa-solid fa-users" width="16" height="16"></i>
                     {% trans 'Participants invités' %}
                     <span style="font-size:12px;font-weight:400;color:#94a3b8;margin-left:4px;">{{ members|length }}</span>
                 </h3>
                 <div style="display:flex;align-items:center;gap:10px;">
                     <div class="rsvp-bar">
-                        {% if rsvp_counts.accepte %}<span style="color:#15803d;"><i data-lucide="check" width="12" height="12"></i>{{ rsvp_counts.accepte }}</span>{% endif %}
-                        {% if rsvp_counts.refuse %}<span style="color:#dc2626;"><i data-lucide="x" width="12" height="12"></i>{{ rsvp_counts.refuse }}</span>{% endif %}
-                        {% if rsvp_counts.peut_etre %}<span style="color:#854d0e;"><i data-lucide="minus" width="12" height="12"></i>{{ rsvp_counts.peut_etre }}</span>{% endif %}
-                        {% if rsvp_counts.invite %}<span><i data-lucide="clock" width="12" height="12"></i>{{ rsvp_counts.invite }}</span>{% endif %}
+                        {% if rsvp_counts.accepte %}<span style="color:#15803d;"><i class="fa-solid fa-check" width="12" height="12"></i>{{ rsvp_counts.accepte }}</span>{% endif %}
+                        {% if rsvp_counts.refuse %}<span style="color:#dc2626;"><i class="fa-solid fa-xmark" width="12" height="12"></i>{{ rsvp_counts.refuse }}</span>{% endif %}
+                        {% if rsvp_counts.peut_etre %}<span style="color:#854d0e;"><i class="fa-solid fa-minus" width="12" height="12"></i>{{ rsvp_counts.peut_etre }}</span>{% endif %}
+                        {% if rsvp_counts.invite %}<span><i class="fa-solid fa-clock" width="12" height="12"></i>{{ rsvp_counts.invite }}</span>{% endif %}
                     </div>
                     {% if can_edit %}
                     <button type="button" onclick="toggleAddPanel()" class="btn btn-outline" style="font-size:12px;padding:4px 10px;">
-                        <i data-lucide="user-plus" width="13" height="13"></i>
+                        <i class="fa-solid fa-user-plus" width="13" height="13"></i>
                         {% trans 'Ajouter' %}
                     </button>
                     {% endif %}
@@ -297,15 +297,15 @@
                 <div class="add-member-panel" id="add-member-panel" style="display:none;">
                     <div class="add-tabs">
                         <button type="button" class="add-tab active" onclick="switchTab('employee', this)">
-                            <i data-lucide="user" width="11" height="11" style="vertical-align:middle;"></i>
+                            <i class="fa-solid fa-user" width="11" height="11" style="vertical-align:middle;"></i>
                             {% trans 'Individuel' %}
                         </button>
                         <button type="button" class="add-tab" onclick="switchTab('direction', this)">
-                            <i data-lucide="building-2" width="11" height="11" style="vertical-align:middle;"></i>
+                            <i class="fa-solid fa-building" width="11" height="11" style="vertical-align:middle;"></i>
                             {% trans 'Direction' %}
                         </button>
                         <button type="button" class="add-tab" onclick="switchTab('project', this)">
-                            <i data-lucide="folder" width="11" height="11" style="vertical-align:middle;"></i>
+                            <i class="fa-solid fa-folder" width="11" height="11" style="vertical-align:middle;"></i>
                             {% trans 'Projet' %}
                         </button>
                     </div>
@@ -323,7 +323,7 @@
                             {% endfor %}
                         </select>
                         <button type="submit" class="btn btn-primary" style="font-size:13px;white-space:nowrap;">
-                            <i data-lucide="plus" width="13" height="13"></i>
+                            <i class="fa-solid fa-plus" width="13" height="13"></i>
                             {% trans 'Inviter' %}
                         </button>
                     </form>
@@ -339,7 +339,7 @@
                             {% endfor %}
                         </select>
                         <button type="submit" class="btn btn-primary" style="font-size:13px;white-space:nowrap;">
-                            <i data-lucide="users" width="13" height="13"></i>
+                            <i class="fa-solid fa-users" width="13" height="13"></i>
                             {% trans 'Tous les employés' %}
                         </button>
                     </form>
@@ -355,7 +355,7 @@
                             {% endfor %}
                         </select>
                         <button type="submit" class="btn btn-primary" style="font-size:13px;white-space:nowrap;">
-                            <i data-lucide="users" width="13" height="13"></i>
+                            <i class="fa-solid fa-users" width="13" height="13"></i>
                             {% trans 'Toute l\'équipe' %}
                         </button>
                     </form>
@@ -378,7 +378,7 @@
                             {% csrf_token %}
                             <button type="submit" class="btn-remove-member" title="{% trans 'Retirer' %}"
                                     onclick="return confirm('{% trans "Retirer ce participant ?" %}')">
-                                <i data-lucide="x" width="14" height="14"></i>
+                                <i class="fa-solid fa-xmark" width="14" height="14"></i>
                             </button>
                         </form>
                         {% endif %}
@@ -387,7 +387,7 @@
                 </div>
                 {% else %}
                 <p class="text-sm" style="color:#94a3b8;font-style:italic;text-align:center;padding:20px 0;">
-                    <i data-lucide="users" width="20" height="20" style="display:block;margin:0 auto 6px;opacity:.4;"></i>
+                    <i class="fa-solid fa-users" width="20" height="20" style="display:block;margin:0 auto 6px;opacity:.4;"></i>
                     {% trans 'Aucun participant invité pour le moment.' %}
                 </p>
                 {% endif %}
@@ -404,7 +404,7 @@
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title" style="display:flex;align-items:center;gap:6px;">
-                    <i data-lucide="building-2" width="16" height="16"></i>
+                    <i class="fa-solid fa-building" width="16" height="16"></i>
                     {% trans 'Directions participantes' %}
                 </h3>
             </div>
@@ -430,7 +430,7 @@
             <div class="card-content">
                 <div class="rsvp-widget">
                     <div class="rsvp-widget-title">
-                        <i data-lucide="mail-check" width="13" height="13" style="vertical-align:middle;"></i>
+                        <i class="fa-solid fa-envelope-circle-check" width="13" height="13" style="vertical-align:middle;"></i>
                         {% trans 'Votre invitation' %}
                     </div>
 
@@ -439,9 +439,9 @@
                     <div class="rsvp-summary" id="rsvp-summary">
                         <div>
                             <span class="rsvp-badge {{ my_membership.status }}">
-                                {% if my_membership.status == 'accepte' %}<i data-lucide="check" width="11" height="11" style="vertical-align:middle;"></i>
-                                {% elif my_membership.status == 'refuse' %}<i data-lucide="x" width="11" height="11" style="vertical-align:middle;"></i>
-                                {% else %}<i data-lucide="minus" width="11" height="11" style="vertical-align:middle;"></i>{% endif %}
+                                {% if my_membership.status == 'accepte' %}<i class="fa-solid fa-check" width="11" height="11" style="vertical-align:middle;"></i>
+                                {% elif my_membership.status == 'refuse' %}<i class="fa-solid fa-xmark" width="11" height="11" style="vertical-align:middle;"></i>
+                                {% else %}<i class="fa-solid fa-minus" width="11" height="11" style="vertical-align:middle;"></i>{% endif %}
                                 {{ my_membership.get_status_display }}
                             </span>
                             {% if my_membership.responded_at %}
@@ -467,21 +467,21 @@
                                         class="rsvp-btn accept {% if my_membership.status == 'accepte' %}active{% endif %}"
                                         {% if my_membership.status == 'accepte' %}disabled{% endif %}
                                         onclick="return setAndSubmit('accepte')">
-                                    <i data-lucide="check" width="12" height="12" style="vertical-align:middle;"></i>
+                                    <i class="fa-solid fa-check" width="12" height="12" style="vertical-align:middle;"></i>
                                     {% trans 'Accepter' %}
                                 </button>
                                 <button type="submit"
                                         class="rsvp-btn maybe {% if my_membership.status == 'peut_etre' %}active{% endif %}"
                                         {% if my_membership.status == 'peut_etre' %}disabled{% endif %}
                                         onclick="return setAndSubmit('peut_etre')">
-                                    <i data-lucide="minus" width="12" height="12" style="vertical-align:middle;"></i>
+                                    <i class="fa-solid fa-minus" width="12" height="12" style="vertical-align:middle;"></i>
                                     {% trans 'Peut-être' %}
                                 </button>
                                 <button type="submit"
                                         class="rsvp-btn refuse {% if my_membership.status == 'refuse' %}active{% endif %}"
                                         {% if my_membership.status == 'refuse' %}disabled{% endif %}
                                         onclick="return setAndSubmit('refuse')">
-                                    <i data-lucide="x" width="12" height="12" style="vertical-align:middle;"></i>
+                                    <i class="fa-solid fa-xmark" width="12" height="12" style="vertical-align:middle;"></i>
                                     {% trans 'Refuser' %}
                                 </button>
                             </div>
@@ -498,13 +498,13 @@
         <div class="card">
             <div class="card-content" style="display:flex;flex-direction:column;gap:8px;">
                 <a href="{% url 'core:event_edit' event.id %}" class="btn btn-primary" style="justify-content:center;">
-                    <i data-lucide="pencil" width="14" height="14"></i>
+                    <i class="fa-solid fa-pencil" width="14" height="14"></i>
                     {% trans 'Modifier cet événement' %}
                 </a>
                 <a href="#" class="btn btn-outline" style="justify-content:center;color:#dc2626;border-color:#fca5a5;"
                    data-delete-url="{% url 'core:event_delete' event.id %}"
                    data-delete-label="cet événement">
-                    <i data-lucide="trash-2" width="14" height="14"></i>
+                    <i class="fa-solid fa-trash-can" width="14" height="14"></i>
                     {% trans 'Supprimer' %}
                 </a>
             </div>

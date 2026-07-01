@@ -133,7 +133,7 @@
                         <label class="form-label">{% trans 'Statut du compte' %}</label>
                         {% if not user_obj.is_active and not user_obj.has_usable_password %}
                         <div style="background:#fef9c3;border:1px solid #fde047;border-radius:6px;padding:10px 12px;font-size:12px;color:#854d0e;display:flex;gap:8px;align-items:flex-start;">
-                            <i data-lucide="triangle-alert" width="15" height="15" style="flex-shrink:0;margin-top:1px;" ></i>
+                            <i class="fa-solid fa-triangle-exclamation" width="15" height="15" style="flex-shrink:0;margin-top:1px;" ></i>
                             <span>{% trans "Invitation en attente — le compte s'activera automatiquement quand l'employé définira son mot de passe." %}</span>
                         </div>
                         {% else %}
@@ -152,7 +152,7 @@
 
                 <div class="flex gap-3" style="margin-top: 32px;">
                     <button type="submit" class="btn btn-primary">
-                        <i data-lucide="check" width="16" height="16" ></i>
+                        <i class="fa-solid fa-check" width="16" height="16" ></i>
                         {% if user_obj %}{% trans 'Enregistrer les modifications' %}{% else %}{% trans "Créer l'utilisateur" %}{% endif %}
                     </button>
                     <a href="{% url 'core:users_list' %}" class="btn btn-outline">{% trans 'Annuler' %}</a>

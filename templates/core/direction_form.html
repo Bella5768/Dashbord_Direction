@@ -36,7 +36,7 @@
 
             <div class="flex gap-3" style="margin-top: 24px;">
                 <button type="submit" class="btn btn-primary">
-                    <i data-lucide="check" width="16" height="16"></i>
+                    <i class="fa-solid fa-check" width="16" height="16"></i>
                     {% if direction %}{% trans 'Enregistrer' %}{% else %}{% trans 'Créer' %}{% endif %}
                 </button>
                 <a href="{% url 'core:directions_list' %}" class="btn btn-outline">{% trans 'Annuler' %}</a>

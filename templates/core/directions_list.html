@@ -15,7 +15,7 @@
             <p style="margin:6px 0 0;opacity:.85;font-size:13px;">{% trans "Structure organisationnelle et répartition des ressources par direction." %}</p>
         </div>
         <a href="{% url 'core:direction_create' %}" class="btn" style="background:white;color:#1c3550;font-weight:700;border:none;box-shadow:0 4px 12px rgba(0,0,0,.15);">
-            <i data-lucide="plus-circle" width="16" height="16"></i>
+            <i class="fa-solid fa-circle-plus" width="16" height="16"></i>
             {% trans 'Nouvelle direction' %}
         </a>
     </div>
@@ -23,21 +23,21 @@
 
 <div class="stats-row">
     <div class="stat-box blue stat-box-static">
-        <div class="stat-box-icon"><i data-lucide="building-2" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-building" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ directions|length }}</p>
             <p class="stat-box-label">{% trans 'Directions' %}</p>
         </div>
     </div>
     <div class="stat-box green stat-box-static">
-        <div class="stat-box-icon"><i data-lucide="folder-open" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-folder-open" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ total_projects }}</p>
             <p class="stat-box-label">{% trans 'Projets associés' %}</p>
         </div>
     </div>
     <div class="stat-box stat-box-static">
-        <div class="stat-box-icon"><i data-lucide="users" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-users" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ total_users }}</p>
             <p class="stat-box-label">{% trans 'Utilisateurs' %}</p>
@@ -84,13 +84,13 @@
                         <td style="text-align: right;">
                             <div class="flex justify-end gap-2">
                                 <a href="{% url 'core:direction_edit' direction.id %}" class="btn btn-outline btn-sm" title="{% trans 'Modifier' %}">
-                                    <i data-lucide="pencil" width="16" height="16" ></i>
+                                    <i class="fa-solid fa-pencil" width="16" height="16" ></i>
                                 </a>
                                 <a href="#" class="btn btn-danger btn-sm" title="{% trans 'Supprimer' %}"
                                    data-delete-url="{% url 'core:direction_delete' direction.id %}"
                                    data-delete-type="{% trans 'la direction' %}"
                                    data-delete-name="{{ direction.name }}">
-                                    <i data-lucide="trash-2" width="16" height="16" ></i>
+                                    <i class="fa-solid fa-trash-can" width="16" height="16" ></i>
                                 </a>
                             </div>
                         </td>
@@ -98,7 +98,7 @@
                     {% empty %}
                     <tr>
                         <td colspan="6" style="text-align: center; padding: 48px;">
-                            <i data-lucide="building-2" width="48" height="48" style="margin: 0 auto 16px; color: #9ca3af;" ></i>
+                            <i class="fa-solid fa-building" width="48" height="48" style="margin: 0 auto 16px; color: #9ca3af;" ></i>
                             <p class="text-gray-500">{% trans 'Aucune direction trouvée' %}</p>
                             <a href="{% url 'core:direction_create' %}" class="btn btn-primary mt-4">{% trans 'Créer une direction' %}</a>
                         </td>

@@ -221,7 +221,7 @@
           <!-- Actions -->
           <div class="flex gap-3 fg-actions">
             <button type="submit" class="btn btn-primary">
-              <i data-lucide="check" width="16" height="16" ></i>
+              <i class="fa-solid fa-check" width="16" height="16" ></i>
               {% if milestone %}{% trans 'Enregistrer' %}{% else %}{% trans 'Créer le jalon' %}{% endif %}
             </button>
             <a href="{% url 'core:project_detail' project.id %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
@@ -242,13 +242,13 @@
 
         <!-- Recherche -->
         <div class="mp-search-wrap">
-          <i data-lucide="search" width="16" height="16" ></i>
+          <i class="fa-solid fa-magnifying-glass" width="16" height="16" ></i>
           <input type="text" id="mp-search" class="form-control" placeholder="{% trans 'Rechercher un membre...' %}" autocomplete="off">
         </div>
 
         <!-- Aucun responsable -->
         <div class="mp-none" id="mp-none" onclick="mpToggle('', this)">
-          <i data-lucide="ban" width="14" height="14" ></i>
+          <i class="fa-solid fa-ban" width="14" height="14" ></i>
           {% trans 'Aucun responsable' %}
         </div>
 
@@ -282,7 +282,7 @@
         {% if other_employees %}
         <details class="mp-details">
           <summary class="mp-details-summary">
-            <i data-lucide="chevron-down" width="12" height="12" ></i>
+            <i class="fa-solid fa-chevron-down" width="12" height="12" ></i>
             {% trans 'Autres employés' %} ({{ other_employees|length }})
           </summary>
           <div class="mp-grid">

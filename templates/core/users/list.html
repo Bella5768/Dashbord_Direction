@@ -10,21 +10,21 @@
 <div class="stats-row">
 {% with fr=currentfrole fq=search %}
     <a class="stat-box {% if current_status == 'all' %}active{% endif %}" href="{% url 'core:users_list' %}?status=all{% if fr and fr != 'all' %}&role={{ fr }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
-        <div class="stat-box-icon"><i data-lucide="users" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-users" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.total }}</p>
             <p class="stat-box-label">{% trans 'Total utilisateurs' %}</p>
         </div>
     </a>
     <a class="stat-box green {% if current_status == 'active' %}active{% endif %}" href="{% url 'core:users_list' %}?status=active{% if fr and fr != 'all' %}&role={{ fr }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
-        <div class="stat-box-icon"><i data-lucide="user-check" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-user-check" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.active }}</p>
             <p class="stat-box-label">{% trans 'Comptes actifs' %}</p>
         </div>
     </a>
     <a class="stat-box red {% if current_status == 'inactive' %}active{% endif %}" href="{% url 'core:users_list' %}?status=inactive{% if fr and fr != 'all' %}&role={{ fr }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
-        <div class="stat-box-icon"><i data-lucide="user-x" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-user-xmark" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.inactive }}</p>
             <p class="stat-box-label">{% trans 'Comptes inactifs' %}</p>
@@ -32,7 +32,7 @@
     </a>
 {% endwith %}
     <a class="stat-box blue" href="{% url 'core:user_activities' %}">
-        <div class="stat-box-icon"><i data-lucide="activity" width="20" height="20"></i></div>
+        <div class="stat-box-icon"><i class="fa-solid fa-chart-line" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ recent_activities|length }}</p>
             <p class="stat-box-label">{% trans 'Connexions récentes' %}</p>
@@ -43,7 +43,7 @@
 <!-- Filters -->
 <form method="get" class="filters-bar">
     <div class="search-box">
-        <i data-lucide="search" ></i>
+        <i class="fa-solid fa-magnifying-glass" ></i>
         <input type="text" name="search" placeholder="{% trans 'Rechercher un utilisateur...' %}" value="{{ search }}" class="form-control">
     </div>
     <select name="role" class="form-control" onchange="this.form.submit()">
@@ -58,11 +58,11 @@
         <option value="inactive" {% if current_status == 'inactive' %}selected{% endif %}>{% trans 'Inactifs' %}</option>
     </select>
     <a href="{% url 'core:user_create' %}" class="btn btn-primary">
-        <i data-lucide="plus-circle" width="16" height="16" ></i>
+        <i class="fa-solid fa-circle-plus" width="16" height="16" ></i>
         {% trans 'Nouvel utilisateur' %}
     </a>
     <a href="{% url 'core:user_activities' %}" class="btn btn-outline">
-        <i data-lucide="clock" width="16" height="16" ></i>
+        <i class="fa-solid fa-clock" width="16" height="16" ></i>
         {% trans 'Journal' %}
     </a>
 </form>
@@ -144,7 +144,7 @@
                         <td>
                             <div class="flex items-center justify-center gap-1">
                                 <a href="{% url 'core:user_edit' u.id %}" class="action-btn" title="{% trans 'Modifier' %}">
-                                    <i data-lucide="pencil" ></i>
+                                    <i class="fa-solid fa-pencil" ></i>
                                 </a>
                                 {% if not u.is_active %}
                                 <form method="post" action="{% url 'core:resend_invitation' u.id %}" style="display:inline;"
@@ -153,7 +153,7 @@
                                       data-confirm-label="{% trans 'Renvoyer' %}">
                                     {% csrf_token %}
                                     <button type="submit" class="action-btn" title="{% trans "Renvoyer l'invitation" %}" style="background:none;border:none;padding:0;cursor:pointer;">
-                                        <i data-lucide="mail" ></i>
+                                        <i class="fa-solid fa-envelope" ></i>
                                     </button>
                                 </form>
                                 {% endif %}
@@ -161,14 +161,14 @@
                                 {% if u.is_active or u.has_usable_password %}
                                 <a href="{% url 'core:user_toggle_status' u.id %}" class="action-btn {% if u.is_active %}danger{% else %}success{% endif %}" title="{% if u.is_active %}{% trans 'Désactiver' %}{% else %}{% trans 'Activer' %}{% endif %}">
                                     {% if u.is_active %}
-                                    <i data-lucide="ban" ></i>
+                                    <i class="fa-solid fa-ban" ></i>
                                     {% else %}
-                                    <i data-lucide="circle-check" ></i>
+                                    <i class="fa-solid fa-circle-check" ></i>
                                     {% endif %}
                                 </a>
                                 {% endif %}
                                 <a href="{% url 'core:user_delete' u.id %}" class="action-btn danger" title="{% trans 'Supprimer' %}">
-                                    <i data-lucide="trash-2" ></i>
+                                    <i class="fa-solid fa-trash-can" ></i>
                                 </a>
                                 {% endif %}
                             </div>
@@ -203,10 +203,10 @@
                     {% elif activity.action == 'logout' %}background:#fef3c7; color:#b45309;
                     {% elif activity.action == 'create' %}background:#dbeafe; color:#1d4ed8;
                     {% else %}background:#f1f5f9; color:#64748b;{% endif %}">
-                    {% if activity.action == 'login' %}<i data-lucide="log-in" width="16" height="16"></i>
-                    {% elif activity.action == 'logout' %}<i data-lucide="log-out" width="16" height="16"></i>
-                    {% elif activity.action == 'create' %}<i data-lucide="plus-circle" width="16" height="16"></i>
-                    {% else %}<i data-lucide="activity" width="16" height="16"></i>
+                    {% if activity.action == 'login' %}<i class="fa-solid fa-right-to-bracket" width="16" height="16"></i>
+                    {% elif activity.action == 'logout' %}<i class="fa-solid fa-right-from-bracket" width="16" height="16"></i>
+                    {% elif activity.action == 'create' %}<i class="fa-solid fa-circle-plus" width="16" height="16"></i>
+                    {% else %}<i class="fa-solid fa-chart-line" width="16" height="16"></i>
                     {% endif %}
                 </div>
                 <div style="flex: 1;">
