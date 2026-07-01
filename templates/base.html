@@ -315,7 +315,7 @@
 
     <script src="{% url 'javascript-catalog' %}"></script>
     <script src="{% static 'js/main.js' %}"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="{% static 'js/lucide.min.js' %}"></script>
     {% block extra_js %}{% endblock %}
     <script>
     if(window.lucide) lucide.createIcons();
