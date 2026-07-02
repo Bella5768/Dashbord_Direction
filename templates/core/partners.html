@@ -43,7 +43,6 @@
 <!-- Filters - full width, above the grid -->
 <form method="get" class="filters-bar" style="margin-bottom:16px;">
     <div class="search-box">
-        <i class="fa-solid fa-magnifying-glass"></i>
         <input type="text" name="search" placeholder="{% trans 'Rechercher un partenaire...' %}" value="{{ search }}" class="form-control">
     </div>
     <select name="type" class="form-control" onchange="this.form.submit()">
@@ -114,7 +113,7 @@
                 </div>
 
                 <div class="flex gap-2" style="padding-top:12px; border-top:1px solid #f1f5f9;">
-                    <a href="{% url 'core:partner_edit' partner.id %}" class="action-btn" title="{% trans 'Modifier' %}">
+                    <a href="{% url 'core:partner_edit' partner.id %}" class="action-btn primary" title="{% trans 'Modifier' %}">
                         <i class="fa-solid fa-pencil" width="14" height="14"></i>
                     </a>
                     <a href="#" class="action-btn danger" title="{% trans 'Supprimer' %}"

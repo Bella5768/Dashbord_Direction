@@ -43,7 +43,6 @@
 <!-- Filters -->
 <form method="get" class="filters-bar">
     <div class="search-box">
-        <i class="fa-solid fa-magnifying-glass" ></i>
         <input type="text" name="search" placeholder="{% trans 'Rechercher un document...' %}" value="{{ search }}" class="form-control">
     </div>
     <select name="status" class="form-control" onchange="this.form.submit()">
@@ -124,11 +123,11 @@
                         <td>
                             <div class="flex items-center justify-center gap-1">
                                 {% if doc.file %}
-                                <a href="{% url 'core:document_preview' doc.id %}" class="action-btn" title="{% trans 'Aperçu' %}">
+                                <a href="{% url 'core:document_preview' doc.id %}" class="action-btn primary" title="{% trans 'Aperçu' %}">
                                     <i class="fa-solid fa-eye" width="15" height="15"></i>
                                 </a>
                                 {% endif %}
-                                <a href="{% url 'core:document_edit' doc.id %}" class="action-btn" title="{% trans 'Modifier' %}">
+                                <a href="{% url 'core:document_edit' doc.id %}" class="action-btn primary" title="{% trans 'Modifier' %}">
                                     <i class="fa-solid fa-pencil" width="15" height="15"></i>
                                 </a>
                                 {% if doc.status == 'a_valider' %}

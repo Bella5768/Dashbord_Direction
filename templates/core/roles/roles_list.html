@@ -120,17 +120,17 @@
 
         <!-- Actions -->
         <div style="padding:10px 20px;border-top:1px solid #f1f5f9;display:flex;justify-content:flex-end;gap:4px;background:#fafafa;border-radius:0 0 8px 8px;">
-            <a href="{% url 'core:role_detail' role.pk %}" class="action-btn"
+            <a href="{% url 'core:role_detail' role.pk %}" class="action-btn primary"
                title="{% trans 'Voir le détail' %}"
                aria-label="{% trans 'Voir le détail de' %} {{ role.name }}">
                 <i class="fa-solid fa-eye"></i>
             </a>
-            <a href="{% url 'core:role_edit' role.pk %}" class="action-btn"
+            <a href="{% url 'core:role_edit' role.pk %}" class="action-btn primary"
                title="{% trans 'Modifier' %}"
                aria-label="{% trans 'Modifier' %} {{ role.name }}">
                 <i class="fa-solid fa-pencil"></i>
             </a>
-            <a href="{% url 'core:role_duplicate' role.pk %}" class="action-btn"
+            <a href="{% url 'core:role_duplicate' role.pk %}" class="action-btn purple"
                title="{% trans 'Dupliquer' %}"
                aria-label="{% trans 'Dupliquer' %} {{ role.name }}">
                 <i class="fa-solid fa-copy"></i>

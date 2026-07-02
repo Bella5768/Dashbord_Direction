@@ -43,7 +43,6 @@
 <!-- Filters -->
 <form method="get" class="filters-bar">
     <div class="search-box">
-        <i class="fa-solid fa-magnifying-glass" ></i>
         <input type="text" name="search" placeholder="{% trans 'Rechercher un utilisateur...' %}" value="{{ search }}" class="form-control">
     </div>
     <select name="role" class="form-control" onchange="this.form.submit()">
@@ -143,7 +142,7 @@
                         </td>
                         <td>
                             <div class="flex items-center justify-center gap-1">
-                                <a href="{% url 'core:user_edit' u.id %}" class="action-btn" title="{% trans 'Modifier' %}">
+                                <a href="{% url 'core:user_edit' u.id %}" class="action-btn primary" title="{% trans 'Modifier' %}">
                                     <i class="fa-solid fa-pencil" ></i>
                                 </a>
                                 {% if not u.is_active %}

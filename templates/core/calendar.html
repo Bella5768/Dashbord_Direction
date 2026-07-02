@@ -270,11 +270,11 @@
                             </div>
                         </div>
                         <div class="ev-item-actions">
-                            <a href="{% url 'core:event_detail' event.id %}" class="action-btn" title="{% trans 'Voir' %}">
+                            <a href="{% url 'core:event_detail' event.id %}" class="action-btn primary" title="{% trans 'Voir' %}">
                                 <i class="fa-solid fa-eye" width="14" height="14"></i>
                             </a>
                             {% if can_manage %}
-                            <a href="{% url 'core:event_edit' event.id %}" class="action-btn" title="{% trans 'Modifier' %}">
+                            <a href="{% url 'core:event_edit' event.id %}" class="action-btn primary" title="{% trans 'Modifier' %}">
                                 <i class="fa-solid fa-pencil" width="14" height="14"></i>
                             </a>
                             <a href="#" class="action-btn danger" title="{% trans 'Supprimer' %}"
