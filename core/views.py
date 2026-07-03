@@ -2772,6 +2772,491 @@ def project_comment_create(request, project_id):
     return redirect('core:project_detail', project_id=project.id)
 
 @login_required
+def project_import(request):
+    """Import de projets via Excel → JSON éditable → création en base."""
+    if not request.user.profile.can_create_projects():
+        messages.error(request, _("Vous n'avez pas les permissions pour créer des projets."))
+        return redirect('core:projects')
+
+    directions = Direction.objects.all()
+    today = _date.today()
+    end_date_default = _date(today.year + 1, today.month, today.day)
+    upload_ctx = {
+        'step': 'upload',
+        'directions': directions,
+        'today': today,
+        'end_date_default': end_date_default,
+    }
+
+    if request.method == 'POST':
+        step = request.POST.get('step', 'upload')
+
+        # ── Étape 1 : lecture Excel → JSON affiché dans textarea ──────────
+        if step == 'upload':
+            uploaded = request.FILES.get('file')
+            if not uploaded:
+                messages.error(request, _("Veuillez sélectionner un fichier Excel."))
+                return render(request, 'core/project_import.html', upload_ctx)
+
+            direction_id   = request.POST.get('direction', '')
+            start_date_str = request.POST.get('start_date', str(today))
+            end_date_str   = request.POST.get('end_date', str(end_date_default))
+
+            projects_data, error = _excel_to_projects_json(
+                uploaded, start_date_str, end_date_str
+            )
+            if error:
+                messages.error(request, f"Erreur de lecture : {error}")
+                return render(request, 'core/project_import.html', upload_ctx)
+
+            import json as _json
+            json_text = _json.dumps(projects_data, ensure_ascii=False, indent=2)
+
+            direction_obj = Direction.objects.filter(pk=direction_id).first() if direction_id else None
+            return render(request, 'core/project_import.html', {
+                'step': 'json_preview',
+                'json_text': json_text,
+                'direction': direction_obj,
+                'direction_id': direction_id,
+                'directions': directions,
+                'count': len(projects_data),
+            })
+
+        # ── Étape 2 : import depuis le JSON (édité ou non) ────────────────
+        elif step == 'import_json':
+            import json as _json
+            json_text    = request.POST.get('json_text', '')
+            direction_id = request.POST.get('direction_id', '')
+            direction    = Direction.objects.filter(pk=direction_id).first() if direction_id else None
+
+            try:
+                projects_data = _json.loads(json_text)
+            except _json.JSONDecodeError as e:
+                messages.error(request, f"JSON invalide : {e}")
+                direction_obj = Direction.objects.filter(pk=direction_id).first() if direction_id else None
+                return render(request, 'core/project_import.html', {
+                    'step': 'json_preview',
+                    'json_text': json_text,
+                    'direction': direction_obj,
+                    'direction_id': direction_id,
+                    'directions': directions,
+                    'count': 0,
+                })
+
+            existing_lower = {n.lower() for n in Project.objects.values_list('name', flat=True)}
+            created_count = skipped_count = 0
+
+            for item in projects_data:
+                name = str(item.get('name', '')).strip()
+                if not name:
+                    continue
+                if name.lower() in existing_lower:
+                    skipped_count += 1
+                    continue
+
+                # Dates
+                try:
+                    start_date = datetime.strptime(item.get('start_date', ''), '%Y-%m-%d').date()
+                except (ValueError, TypeError):
+                    start_date = today
+                try:
+                    end_date = datetime.strptime(item.get('end_date', ''), '%Y-%m-%d').date()
+                    if end_date <= start_date:
+                        raise ValueError
+                except (ValueError, TypeError):
+                    end_date = _date(start_date.year + 1, start_date.month, start_date.day)
+
+                VALID_PRIORITIES = {'basse', 'moyenne', 'haute'}
+                priority = item.get('priority', 'moyenne')
+                if priority not in VALID_PRIORITIES:
+                    priority = 'moyenne'
+
+                VALID_STATUSES = {'planifie', 'en_cours', 'suspendu', 'termine'}
+                status = item.get('status', 'planifie')
+                if status not in VALID_STATUSES:
+                    status = 'planifie'
+
+                project = Project.objects.create(
+                    name=name,
+                    manager=str(item.get('manager', ''))[:100],
+                    description=item.get('description', ''),
+                    priority=priority,
+                    status=status,
+                    direction=direction,
+                    start_date=start_date,
+                    end_date=end_date,
+                )
+                existing_lower.add(name.lower())
+
+                # Jalons
+                for order, ms in enumerate(item.get('milestones', []), start=1):
+                    ms_name = str(ms.get('name', '')).strip()
+                    if not ms_name:
+                        continue
+                    try:
+                        ms_due = datetime.strptime(ms.get('due_date', ''), '%Y-%m-%d').date()
+                        if ms_due < start_date or ms_due > end_date:
+                            ms_due = end_date
+                    except (ValueError, TypeError):
+                        ms_due = end_date
+
+                    VALID_MS_STATUSES = {'a_faire', 'en_cours', 'bloque', 'en_revision', 'termine'}
+                    ms_status = ms.get('status', 'a_faire')
+                    if ms_status not in VALID_MS_STATUSES:
+                        ms_status = 'a_faire'
+                    ms_completed = ms_status == 'termine'
+
+                    milestone = Milestone.objects.create(
+                        project=project,
+                        name=ms_name,
+                        due_date=ms_due,
+                        status=ms_status,
+                        completed=ms_completed,
+                        order=order,
+                    )
+                    # Sous-étapes
+                    for sub_order, sub_name in enumerate(ms.get('sub_milestones', []), start=1):
+                        sub_name = str(sub_name).strip()
+                        if sub_name:
+                            SubMilestone.objects.create(
+                                milestone=milestone,
+                                name=sub_name,
+                                order=sub_order,
+                            )
+
+                log_project_activity(
+                    project, 'creation',
+                    _("Import JSON : création du projet '%(name)s'") % {'name': project.name},
+                    request.user,
+                )
+                created_count += 1
+
+            if created_count:
+                messages.success(request,
+                    _("%(n)d projet(s) importé(s).%(s)s") % {
+                        'n': created_count,
+                        's': f" {skipped_count} doublon(s) ignoré(s)." if skipped_count else '',
+                    })
+            else:
+                messages.warning(request, _("Aucun projet créé — tous les noms existent déjà."))
+            return redirect('core:projects')
+
+    return render(request, 'core/project_import.html', upload_ctx)
+
+
+def _excel_to_projects_json(file_obj, default_start='', default_end=''):
+    """
+    Lit un .xlsx et retourne (list[dict], error_str).
+
+    Types de feuilles gérés :
+      A_multi  : col0=ProjetID rempli → chaque ligne = Milestone, col6=Etapes → SubMilestones
+      A_single : col0 vide, col6=Etapes → Milestones (pas de sous-jalons)
+      B        : col0=Description de Projet, col5=Etapes → Milestones
+      C        : texte libre → lignes = Milestones
+      None     : vide/template → projet sans jalons
+    """
+    import openpyxl, re
+    from datetime import datetime as _dt, date as _d
+
+    PRIORITY_MAP = {'low': 'basse', 'medium': 'moyenne', 'high': 'haute'}
+
+    def _fmt_date(val):
+        if isinstance(val, (_dt, _d)):
+            return val.strftime('%Y-%m-%d')
+        if val:
+            for fmt in ('%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y'):
+                try:
+                    return _dt.strptime(str(val).strip(), fmt).strftime('%Y-%m-%d')
+                except ValueError:
+                    pass
+        return ''
+
+    def _cell(row, idx, default=''):
+        val = row[idx] if len(row) > idx else None
+        return str(val).strip() if val is not None else default
+
+    def _map_evo_status(text):
+        t = str(text).lower()
+        if any(k in t for k in ['complet', 'termin', 'done', 'fini']):
+            return 'termine'
+        if 'cours' in t:
+            return 'en_cours'
+        if 'bloqu' in t:
+            return 'bloque'
+        return 'a_faire'
+
+    def _parse_evolution(evo_text):
+        """Retourne dict {num_str: status} depuis le texte Evolution multi-ligne."""
+        result = {}
+        for line in str(evo_text or '').split('\n'):
+            line = line.strip()
+            m = re.match(
+                r'^(?:Etape|Activit[eé]|Output|R[eé]sultat)[^\d]*(\d+[\.\d]*)\s*[:/]\s*(.+)$',
+                line, re.IGNORECASE
+            )
+            if m:
+                result[m.group(1)] = _map_evo_status(m.group(2))
+        return result
+
+    def _split_etapes(text, evo_text=''):
+        """
+        Découpe un bloc multi-lignes d'étapes en liste de dicts {name, status}.
+        Gère : Etape N:, Activité N:, Résultat N:/Output N:, bullet points.
+        """
+        if not text:
+            return []
+        evo = _parse_evolution(evo_text)
+        steps = []
+        current_num = None
+        for line in str(text).split('\n'):
+            line = line.strip().lstrip('•–—·\t ')
+            if not line:
+                continue
+            m = re.match(
+                r'^(?:Etape|Activit[eé]|R[eé]sultat\s*\d*\s*/?\s*Output\s*\d*|Output)\s*(\d+[\.\d]*)\s*[:/]?\s*(.*)$',
+                line, re.IGNORECASE
+            )
+            if m:
+                current_num = m.group(1)
+                content = m.group(2).strip()
+                if content:
+                    steps.append({'name': content, 'status': evo.get(current_num, 'a_faire')})
+            elif line:
+                steps.append({'name': line, 'status': evo.get(current_num, 'a_faire') if current_num else 'a_faire'})
+        return steps
+
+    def _find_sheet(wb, project_name):
+        import difflib as _dl
+        name_l = project_name.strip().lower()
+        # Correspondance exacte (insensible à la casse)
+        for sn in wb.sheetnames:
+            if sn.strip().lower() == name_l:
+                return wb[sn]
+        # Correspondance partielle — nom tronqué à 31 chars ou contenu dans l'autre
+        for sn in wb.sheetnames:
+            sn_l = sn.strip().lower()
+            if name_l.startswith(sn_l) or sn_l.startswith(name_l[:20]):
+                return wb[sn]
+        # Correspondance approchée (gère les fautes de frappe type Huawey→Huawei)
+        candidates = [sn.strip().lower() for sn in wb.sheetnames]
+        close = _dl.get_close_matches(name_l, candidates, n=1, cutoff=0.82)
+        if close:
+            idx = candidates.index(close[0])
+            return wb[wb.sheetnames[idx]]
+        return None
+
+    def _sheet_type(ws):
+        """
+        Retourne ('A_multi', cols) | ('A_single', cols) | ('B', cols) | ('C',) | (None,).
+        cols = dict mapping champ → index de colonne.
+        """
+        all_rows = list(ws.iter_rows(max_row=4, values_only=True))
+
+        # Chercher la première ligne non vide (header potentiel)
+        header_row = None
+        header_idx = 0
+        for i, row in enumerate(all_rows):
+            if any(v for v in row if v):
+                header_row = row
+                header_idx = i
+                break
+
+        if header_row is None:
+            return (None,)
+
+        h0 = str(header_row[0] or '').lower().strip()
+        header_str = ' '.join(str(v or '').lower() for v in header_row)
+        is_structured = any(k in header_str for k in ['debut', 'etape', 'evolution', 'fin'])
+
+        if not is_structured:
+            # Feuille texte libre (Type C) — données dès la première ligne non vide
+            return ('C',)
+
+        # Type A : "Projet ID" en col 0
+        if 'projet' in h0 and 'id' in h0:
+            cols = {'id': 0, 'desc': 1, 'lead': 2, 'debut': 4, 'fin': 5, 'etapes': 6, 'evo': 7}
+            data_rows = [
+                r for r in all_rows[header_idx + 1:]
+                if any(v for v in r if v)
+            ]
+            if not data_rows:
+                return (None,)
+            has_named = any(
+                r[0] and not isinstance(r[0], (int, float))
+                and str(r[0]).strip() not in ('', 'None')
+                for r in data_rows
+            )
+            if has_named:
+                return ('A_multi', cols)
+            # Col 0 vide ou None → vérifier si Etapes a du contenu
+            for dr in data_rows:
+                etapes_val = dr[cols['etapes']] if len(dr) > cols['etapes'] else None
+                if etapes_val and _split_etapes(str(etapes_val)):
+                    return ('A_single', cols)
+            return (None,)
+
+        # Type B : "Description" en col 0
+        if 'description' in h0:
+            cols = {'desc': 0, 'lead': 1, 'debut': 3, 'fin': 4, 'etapes': 5, 'evo': 6}
+            return ('B', cols)
+
+        return ('C',)
+
+    # ── Chargement ───────────────────────────────────────────────────────
+
+    try:
+        wb = openpyxl.load_workbook(file_obj, data_only=True)
+    except Exception as e:
+        return None, str(e)
+
+    if 'Sommaire' not in wb.sheetnames:
+        return None, "La feuille 'Sommaire' est introuvable dans le fichier."
+
+    ws_sommaire = wb['Sommaire']
+    projects = []
+
+    for raw in ws_sommaire.iter_rows(min_row=2, values_only=True):
+        name = raw[0] if len(raw) > 0 else None
+        if not name or not str(name).strip():
+            continue
+
+        name     = str(name).strip()
+        manager  = _cell(raw, 1)
+        desc     = _cell(raw, 2)
+        prio_raw = _cell(raw, 3).lower()
+        priority = PRIORITY_MAP.get(prio_raw, 'moyenne')
+
+        proj = {
+            'name': name,
+            'manager': manager,
+            'description': desc,
+            'priority': priority,
+            'status': 'planifie',
+            'start_date': default_start,
+            'end_date': default_end,
+            'milestones': [],
+        }
+
+        ws_proj = _find_sheet(wb, name)
+        if not ws_proj:
+            projects.append(proj)
+            continue
+
+        stype = _sheet_type(ws_proj)
+
+        if stype[0] == 'A_multi':
+            # Chaque ligne de données = un Milestone ; Etapes col → SubMilestones
+            cols = stype[1]
+            for row in ws_proj.iter_rows(min_row=2, values_only=True):
+                raw_id = row[cols['id']] if len(row) > cols['id'] else None
+                if not raw_id or isinstance(raw_id, (int, float)):
+                    continue
+                ms_name = str(raw_id).strip()
+                if not ms_name or ms_name.isdigit() or ms_name.lower().startswith('tache'):
+                    continue
+                ms_start = _fmt_date(row[cols['debut']] if len(row) > cols['debut'] else None)
+                ms_end   = _fmt_date(row[cols['fin']]   if len(row) > cols['fin']   else None)
+                evo_text = row[cols['evo']]    if len(row) > cols['evo']    else None
+                et_text  = row[cols['etapes']] if len(row) > cols['etapes'] else None
+                sub_steps = _split_etapes(et_text, evo_text)
+
+                # Statut global du milestone : si l'évolution global est lisible en col evo
+                ms_status = _map_evo_status(str(evo_text)) if evo_text else 'a_faire'
+
+                proj['milestones'].append({
+                    'name': ms_name,
+                    'due_date': ms_end or proj['end_date'],
+                    'status': ms_status,
+                    'sub_milestones': [s['name'] for s in sub_steps],
+                })
+                if not proj['start_date'] and ms_start:
+                    proj['start_date'] = ms_start
+                if not proj['end_date'] and ms_end:
+                    proj['end_date'] = ms_end
+
+        elif stype[0] == 'A_single':
+            # Une seule ligne de données ; Etapes col → Milestones (plats)
+            cols = stype[1]
+            for row in ws_proj.iter_rows(min_row=2, values_only=True):
+                if not any(v for v in row if v):
+                    continue
+                ms_start = _fmt_date(row[cols['debut']] if len(row) > cols['debut'] else None)
+                ms_end   = _fmt_date(row[cols['fin']]   if len(row) > cols['fin']   else None)
+                rich_desc = _cell(row, cols['desc'])
+                lead      = _cell(row, cols['lead']) or manager
+                evo_text  = row[cols['evo']]    if len(row) > cols['evo']    else None
+                et_text   = row[cols['etapes']] if len(row) > cols['etapes'] else None
+                steps     = _split_etapes(et_text, evo_text)
+
+                if ms_start:
+                    proj['start_date'] = ms_start
+                if ms_end:
+                    proj['end_date'] = ms_end
+                if rich_desc and not proj['description']:
+                    proj['description'] = rich_desc
+                if lead:
+                    proj['manager'] = lead
+
+                for s in steps:
+                    proj['milestones'].append({
+                        'name': s['name'],
+                        'due_date': ms_end or proj['end_date'],
+                        'status': s['status'],
+                        'sub_milestones': [],
+                    })
+                break  # une seule ligne de données
+
+        elif stype[0] == 'B':
+            # Une ligne ; col0=Description, col5=Etapes → Milestones (plats)
+            cols = stype[1]
+            for row in ws_proj.iter_rows(min_row=2, values_only=True):
+                if not any(v for v in row if v):
+                    continue
+                rich_desc = _cell(row, cols['desc'])
+                lead      = _cell(row, cols['lead']) or manager
+                ms_start  = _fmt_date(row[cols['debut']] if len(row) > cols['debut'] else None)
+                ms_end    = _fmt_date(row[cols['fin']]   if len(row) > cols['fin']   else None)
+                evo_text  = row[cols['evo']]    if len(row) > cols['evo']    else None
+                et_text   = row[cols['etapes']] if len(row) > cols['etapes'] else None
+                steps     = _split_etapes(et_text, evo_text)
+
+                if ms_start:
+                    proj['start_date'] = ms_start
+                if ms_end:
+                    proj['end_date'] = ms_end
+                if rich_desc:
+                    proj['description'] = rich_desc
+                if lead:
+                    proj['manager'] = lead
+
+                for s in steps:
+                    proj['milestones'].append({
+                        'name': s['name'],
+                        'due_date': ms_end or proj['end_date'],
+                        'status': s['status'],
+                        'sub_milestones': [],
+                    })
+                break
+
+        elif stype[0] == 'C':
+            # Feuille texte libre : chaque cellule non vide = un Milestone
+            for row in ws_proj.iter_rows(min_row=1, values_only=True):
+                for cell in row:
+                    val = str(cell).strip() if cell else ''
+                    if val and val not in ('None', ''):
+                        proj['milestones'].append({
+                            'name': val,
+                            'due_date': proj['end_date'],
+                            'status': 'a_faire',
+                            'sub_milestones': [],
+                        })
+
+        projects.append(proj)
+
+    return projects, None
+
+
+@login_required
 def project_create(request):
     """Créer un nouveau projet"""
     from .forms_project import ProjectForm

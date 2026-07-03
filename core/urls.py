@@ -67,6 +67,7 @@ urlpatterns = [
     path('utilisateurs/activites/', views.user_activities, name='user_activities'),
     
     # Project CRUD
+    path('projets/importer/', views.project_import, name='project_import'),
     path('projets/<int:project_id>/', views.project_detail, name='project_detail'),
     path('projets/<int:project_id>/activites/export/', views.export_project_activities, name='export_project_activities'),
     path('projets/<int:project_id>/besoins/nouveau/', views.project_need_create, name='project_need_create'),
