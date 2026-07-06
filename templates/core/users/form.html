@@ -40,7 +40,7 @@
                             <strong style="font-size:14px;color:var(--gray-800);">{{ user_obj.last_name|default:"—" }}</strong>
                         </div>
                         <div style="grid-column:1/-1;">
-                            <span style="font-size:11px;color:var(--gray-400);display:block;">Email</span>
+                            <span style="font-size:11px;color:var(--gray-400);display:block;">{% trans 'Email' %}</span>
                             <strong style="font-size:14px;color:var(--gray-800);">{{ user_obj.email|default:"—" }}</strong>
                         </div>
                     </div>
@@ -71,7 +71,7 @@
                 </div>
                 <div class="grid grid-2" style="gap:16px;margin-bottom:16px;">
                     <div class="form-group">
-                        <label class="form-label">Email</label>
+                        <label class="form-label">{% trans 'Email' %}</label>
                         <input type="email" name="email" class="form-control" value="{{ form.email.value|default:'' }}">
                         {% if form.email.errors %}<p class="form-error">{{ form.email.errors.0 }}</p>{% endif %}
                     </div>

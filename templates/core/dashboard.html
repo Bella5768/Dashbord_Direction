@@ -4,7 +4,7 @@
 
 {% block title %}{% trans 'Tableau de bord' %}{% endblock %}
 {% block page_title %}{% trans 'Tableau de bord' %}{% endblock %}
-{% block page_subtitle %}{{ dashboard_title|default:"Vue d'ensemble" }}{% endblock %}
+{% block page_subtitle %}{% trans "Vue d'ensemble" as default_subtitle %}{{ dashboard_title|default:default_subtitle }}{% endblock %}
 
 {% block content %}
 

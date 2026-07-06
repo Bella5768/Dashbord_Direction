@@ -308,7 +308,7 @@ function updateConversions() {
 
         if (consumed > 0) {
             document.getElementById('consumed-conversion').innerHTML =
-                `<i class="fa-solid fa-arrows-up-down" width="12" height="12" style="display: inline-block; vertical-align: middle;" ></i> Équivalent: ${formatCurrency(consumedGNF, 'GNF')}`;
+                `<i class="fa-solid fa-arrows-up-down" width="12" height="12" style="display: inline-block; vertical-align: middle;" ></i> ${PROJ_I18N.equivalent}: ${formatCurrency(consumedGNF, 'GNF')}`;
         } else {
             document.getElementById('consumed-conversion').innerHTML = '';
         }

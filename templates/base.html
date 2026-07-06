@@ -6,10 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{% trans 'Dashboard DG' %}{% endblock %} - CSIG</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="{% static 'fonts/inter/inter.css' %}" rel="stylesheet">
     <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon/apple-touch-icon.png' %}">
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon/favicon-32x32.png' %}">
     <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon/favicon-16x16.png' %}">
@@ -17,7 +14,7 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="stylesheet" href="{% static 'fontawesome/css/fontawesome.min.css' %}">
     <link rel="stylesheet" href="{% static 'fontawesome/css/solid.min.css' %}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@23.9.3/build/css/intlTelInput.min.css">
+    <link rel="stylesheet" href="{% static 'vendor/intl-tel-input/css/intlTelInput.min.css' %}">
     {% block extra_css %}{% endblock %}
     <style>
         .toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;max-width:380px;pointer-events:none}
@@ -193,11 +190,11 @@
                                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
                                 <button type="submit" name="language" value="fr"
                                         style="width:100%;text-align:left;padding:8px 14px;border:none;background:{% if LANGUAGE_CODE == 'fr' %}#f0f4ff{% else %}white{% endif %};cursor:pointer;font-size:13px;border-radius:8px 8px 0 0;">
-                                    Français
+                                    {% trans 'Français' %}
                                 </button>
                                 <button type="submit" name="language" value="en"
                                         style="width:100%;text-align:left;padding:8px 14px;border:none;background:{% if LANGUAGE_CODE == 'en' %}#f0f4ff{% else %}white{% endif %};cursor:pointer;font-size:13px;border-radius:0 0 8px 8px;">
-                                    English
+                                    {% trans 'English' %}
                                 </button>
                             </form>
                         </div>
@@ -241,7 +238,7 @@
                         </div>
                         <div class="topbar-user-info">
                             <span class="topbar-user-name">{{ user.get_full_name|default:user.username }}</span>
-                            <span class="topbar-user-role">{{ user.profile.role.name|default:"Utilisateur" }}</span>
+                            {% trans "Utilisateur" as default_role %}<span class="topbar-user-role">{{ user.profile.role.name|default:default_role }}</span>
                         </div>
                         <i class="fa-solid fa-chevron-down" class="topbar-user-chevron" width="14" height="14"></i>
                         <div class="topbar-user-menu" id="topbar-user-menu">
@@ -251,7 +248,7 @@
                                 </div>
                                 <div>
                                     <p class="topbar-menu-name">{{ user.get_full_name|default:user.username }}</p>
-                                    <p class="topbar-menu-role">{{ user.profile.role.name|default:"Utilisateur" }}</p>
+                                    <p class="topbar-menu-role">{{ user.profile.role.name|default:default_role }}</p>
                                 </div>
                             </div>
                             <div class="topbar-user-menu-body">
@@ -319,7 +316,7 @@
 
     <script src="{% url 'javascript-catalog' %}"></script>
     <script src="{% static 'js/main.js' %}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
+    <script src="{% static 'vendor/chartjs/chart.umd.min.js' %}"></script>
     {% block extra_js %}{% endblock %}
     <script>
     // Enhanced file drop
@@ -379,7 +376,7 @@
           <p id="csig-modal-input-error" style="margin:5px 0 0;font-size:12px;color:#ef4444;min-height:16px;"></p>
         </div>
         <div style="display:flex;gap:10px;justify-content:flex-end;padding:20px 24px 24px;">
-          <button id="csig-modal-cancel" style="padding:9px 20px;border-radius:8px;border:1px solid #e5e7eb;background:white;color:#374151;font-size:14px;font-weight:500;cursor:pointer;">Annuler</button>
+          <button id="csig-modal-cancel" style="padding:9px 20px;border-radius:8px;border:1px solid #e5e7eb;background:white;color:#374151;font-size:14px;font-weight:500;cursor:pointer;">{% trans 'Annuler' %}</button>
           <button id="csig-modal-ok"     style="padding:9px 24px;border-radius:8px;border:none;color:white;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s;"></button>
         </div>
       </div>
@@ -398,7 +395,8 @@
       confirmBtn:     "{% trans 'Confirmer' %}",
       typeToConfirm:  "{% trans 'Tapez' %}",
       toConfirm:      "{% trans 'pour confirmer' %}",
-      noMatch:        "{% trans 'Le nom ne correspond pas exactement.' %}"
+      noMatch:        "{% trans 'Le nom ne correspond pas exactement.' %}",
+      phoneInvalid:   "{% trans "Le numéro de téléphone n'est pas valide." %}"
     };
     </script>
     <script>
@@ -751,7 +749,7 @@
     </script>
     {% endif %}
 
-    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@23.9.3/build/js/intlTelInput.min.js" defer></script>
+    <script src="{% static 'vendor/intl-tel-input/js/intlTelInput.min.js' %}" defer></script>
     <style>
       .iti { width: 100%; display: block; }
       .iti__flag-container { z-index: 10; }
@@ -771,7 +769,7 @@
           preferredCountries: ['gn', 'fr', 'us', 'gb', 'de', 'sn', 'ci', 'ml'],
           separateDialCode: true,
           placeholderNumberType: 'MOBILE',
-          utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@23.9.3/build/js/utils.js",
+          utilsScript: "{% static 'vendor/intl-tel-input/js/utils.js' %}",
         });
         itiInstances.push({input: input, iti: iti});
       });
@@ -792,7 +790,7 @@
             if(telInput.value.replace(/\s/g, '') !== '' || telInput.required){
               if(typeof found.iti.isValidNumber === 'function' && !found.iti.isValidNumber()){
                 e.preventDefault();
-                var errorMsg = telInput.getAttribute('data-invalid-msg') || "Le numéro de téléphone n'est pas valide.";
+                var errorMsg = telInput.getAttribute('data-invalid-msg') || CSIG_I18N.phoneInvalid;
                 alert(errorMsg);
                 telInput.focus();
                 return;

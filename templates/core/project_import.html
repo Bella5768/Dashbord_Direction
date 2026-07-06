@@ -145,7 +145,7 @@
       <i class="fa-solid fa-circle-check" style="font-size:18px;"></i>
       <span>
         <strong>{{ count }}</strong> {% trans 'projet(s) extrait(s) du fichier Excel.' %}
-        {% trans 'Direction :' %} <strong>{{ direction.name|default:"Aucune" }}</strong>
+        {% trans 'Direction :' %} {% trans "Aucune" as aucune %}<strong>{{ direction.name|default:aucune }}</strong>
       </span>
     </div>
 

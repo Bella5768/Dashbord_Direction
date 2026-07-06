@@ -996,7 +996,7 @@
         <div>
           <h4 class="text-sm font-semibold" style="color:#374151;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
             <i class="fa-solid fa-file-lines" width="15" height="15" style="color:#6b7280;" ></i>
-            Documents ({{ docs|length }})
+            {% trans 'Documents' %} ({{ docs|length }})
           </h4>
           {% if docs %}
           <div style="display:flex;flex-direction:column;gap:6px;">
@@ -1201,7 +1201,7 @@
         <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 14px;background:#f8fafc;border-radius:8px;border-left:3px solid {% if 'ajout' in activity.action %}#22c55e{% elif 'suppr' in activity.action or 'retrait' in activity.action %}#ef4444{% elif 'modif' in activity.action or 'toggle' in activity.action or 'changement' in activity.action %}#3b82f6{% else %}#94a3b8{% endif %};">
           <div style="flex:1;">
             <p class="text-sm" style="color:#374151;margin:0;">{{ activity.description }}</p>
-            <p class="text-xs text-gray-400" style="margin:3px 0 0;">par <strong>{{ activity.user }}</strong> • {{ activity.created_at|date:"d/m/Y à H:i" }}</p>
+            <p class="text-xs text-gray-400" style="margin:3px 0 0;">{% trans 'par' %} <strong>{{ activity.user }}</strong> • {{ activity.created_at|date:"d/m/Y à H:i" }}</p>
           </div>
         </div>
         {% endfor %}
