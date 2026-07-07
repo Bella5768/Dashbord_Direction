@@ -2588,10 +2588,10 @@ a.calendar-event-pill:hover { opacity: .82; filter: brightness(.95); }
 /* Métadonnées inline (clock, calendar, location, user à côté de texte) */
 .event-meta-item i,
 .banner-step i,
-.tl-deadline i           { color: var(--primary-500); }
+.tl-deadline i           { color: #2563eb; }
 
 /* Feature list page login */
-.feature-item i          { color: var(--primary-500); }
+.feature-item i          { color: #2563eb; }
 
 /* Tâches complétées */
 .mt-done-at i,
@@ -2603,3 +2603,29 @@ a.calendar-event-pill:hover { opacity: .82; filter: brightness(.95); }
 .error-message i.fa-triangle-exclamation { color: var(--amber-600); }
 .error-message i.fa-circle-xmark         { color: var(--red-600); }
 .error-message i.fa-circle-check         { color: var(--green-600); }
+
+/* Bannière événement passé */
+.ev-past-banner i            { color: var(--amber-600); }
+
+/* Badge et date limite jalon */
+.md-badge-done i             { color: var(--green-600); }
+.md-due i                    { color: #2563eb; }
+.md-due.overdue i            { color: var(--amber-600); }
+
+/* Métadonnées détail congé (suppléant, horodatage, cadenas confidentialité) */
+.detail-row .val i           { color: #2563eb; }
+.tl-meta i                   { color: var(--gray-500); }
+
+/* Carte info formulaire congé */
+.lf-info-card h4 i          { color: #2563eb; }
+.lf-info-list .ico i        { color: #2563eb; }
+
+/* Métadonnées project cards (manager, date échéance) */
+.pc-manager i                { color: #2563eb; }
+.pc-date i                   { color: #2563eb; }
+
+/* Métadonnées partenaires (email, téléphone, date) */
+.partner-detail-item i       { color: #2563eb; }
+
+/* Widget invitation RSVP */
+.rsvp-widget-title i         { color: #2563eb; }
