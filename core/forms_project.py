@@ -137,7 +137,8 @@ class MilestoneForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.project = project
         for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form-control'
+            if not isinstance(field.widget, forms.CheckboxInput):
+                field.widget.attrs['class'] = 'form-control'
         self.fields['manual_progress'].label = _('Progression (%)')
         self.fields['manual_progress'].help_text = _("Utilisé uniquement si le jalon n'a pas de sous-étapes")
         if project:
@@ -177,7 +178,8 @@ class SubMilestoneForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.milestone = milestone
         for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form-control'
+            if not isinstance(field.widget, forms.CheckboxInput):
+                field.widget.attrs['class'] = 'form-control'
         if milestone:
             # Auto-incrémenter l'ordre si nouvelle sous-étape
             if not self.instance.pk:

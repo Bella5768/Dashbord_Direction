@@ -173,18 +173,18 @@
           {% endif %}
 
           {% if item.completed and item.completed_at %}
-          <span class="mt-done-at">✓ {{ item.completed_at|date:"d/m" }}</span>
+          <span class="mt-done-at"><i class="fa-solid fa-check"></i> {{ item.completed_at|date:"d/m" }}</span>
           {% endif %}
 
           {% if item.can_toggle %}
           <a href="{% if item.type == 'jalon' %}{% url 'core:milestone_toggle' item.id %}{% else %}{% url 'core:sub_milestone_toggle' item.id %}{% endif %}"
              class="mt-chk{% if item.completed %} done{% endif %}"
              title="{% if item.completed %}{% trans 'Marquer non terminé' %}{% else %}{% trans 'Marquer terminé' %}{% endif %}">
-            {% if item.completed %}✓{% endif %}
+            {% if item.completed %}<i class="fa-solid fa-check"></i>{% endif %}
           </a>
           {% else %}
           <span class="mt-chk-ro {% if item.completed %}done{% else %}pending{% endif %}">
-            {% if item.completed %}✓{% endif %}
+            {% if item.completed %}<i class="fa-solid fa-check"></i>{% endif %}
           </span>
           {% endif %}
 
@@ -214,9 +214,9 @@ window._onProjUpdate = function(data) {
             var name = row.querySelector('.mt-name');
             if (name) name.classList.toggle('done', done);
             var chk = row.querySelector('.mt-chk');
-            if (chk) { chk.classList.toggle('done', done); chk.textContent = done ? '✓' : ''; }
+            if (chk) { chk.classList.toggle('done', done); chk.innerHTML = done ? '<i class="fa-solid fa-check"></i>' : ''; }
             var chkRo = row.querySelector('.mt-chk-ro');
-            if (chkRo) { chkRo.classList.toggle('done', done); chkRo.classList.toggle('pending', !done); chkRo.textContent = done ? '✓' : ''; }
+            if (chkRo) { chkRo.classList.toggle('done', done); chkRo.classList.toggle('pending', !done); chkRo.innerHTML = done ? '<i class="fa-solid fa-check"></i>' : ''; }
         }
         return;
     }

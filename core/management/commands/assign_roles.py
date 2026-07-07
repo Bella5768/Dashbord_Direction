@@ -71,7 +71,7 @@ class Command(BaseCommand):
         for u in User.objects.prefetch_related('profile__role').order_by('username'):
             try:
                 profile = u.profile
-                role_name = profile.role.name if profile.role else "SANS RÔLE ⚠"
+                role_name = profile.role.name if profile.role else "SANS RÔLE [!]"
                 role_slug = profile.role.slug if profile.role else "-"
                 su = " [superuser]" if u.is_superuser else ""
                 active = "" if u.is_active else " [inactif]"

@@ -391,7 +391,7 @@ textarea.form-control, .lf-section textarea { min-height: 100px; resize: vertica
                                           data-confirm-danger
                                           data-confirm-keyword="{% trans 'SUPPRIMER' %}">
                                         {% csrf_token %}
-                                        <button type="submit" class="lf-doc-del" title="{% trans 'Supprimer' %}">✕</button>
+                                        <button type="submit" class="lf-doc-del" title="{% trans 'Supprimer' %}"><i class="fa-solid fa-xmark"></i></button>
                                     </form>
                                     {% endif %}
                                 </li>

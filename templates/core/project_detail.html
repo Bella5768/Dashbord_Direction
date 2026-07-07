@@ -664,11 +664,11 @@
               <a href="{% url 'core:milestone_toggle' milestone.id %}"
                  class="mrow-check{% if milestone.completed %} done{% endif %}"
                  title="{% if milestone.completed %}{% trans 'Marquer non terminé' %}{% else %}{% trans 'Marquer terminé' %}{% endif %}">
-                {% if milestone.completed %}✓{% endif %}
+                {% if milestone.completed %}<i class="fa-solid fa-check"></i>{% endif %}
               </a>
               {% else %}
               <span class="mrow-check num{% if milestone.completed %} done{% endif %}">
-                {% if milestone.completed %}✓{% else %}{{ forloop.counter }}{% endif %}
+                {% if milestone.completed %}<i class="fa-solid fa-check"></i>{% else %}{{ forloop.counter }}{% endif %}
               </span>
               {% endif %}
 
@@ -768,11 +768,11 @@
                 <a href="{% url 'core:sub_milestone_toggle' sub.id %}"
                    class="msub-check{% if sub.completed %} done{% endif %}"
                    title="{% if sub.completed %}{% trans 'Marquer non terminée' %}{% else %}{% trans 'Marquer terminée' %}{% endif %}">
-                  {% if sub.completed %}✓{% endif %}
+                  {% if sub.completed %}<i class="fa-solid fa-check"></i>{% endif %}
                 </a>
                 {% else %}
                 <span class="msub-check-ro {% if sub.completed %}done{% else %}pending{% endif %}">
-                  {% if sub.completed %}✓{% endif %}
+                  {% if sub.completed %}<i class="fa-solid fa-check"></i>{% endif %}
                 </span>
                 {% endif %}
                 <span class="msub-name{% if sub.completed %} done{% endif %}">{{ sub.name }}</span>
@@ -1342,7 +1342,7 @@ var DETAIL_I18N = {
             <div class="qa-name">{{ m.name }}</div>
             <div class="qa-sub">{{ m.direction }}</div>
           </div>
-          <div class="qa-chk">✓</div>
+          <div class="qa-chk"><i class="fa-solid fa-check"></i></div>
         </div>
         <div class="qa-badges">
           {% if m.is_external %}<span class="qa-b" style="background:var(--amber-100,#fef3c7);color:var(--amber-700,#b45309);">{% trans 'Externe' %}</span>{% endif %}
@@ -1378,7 +1378,7 @@ var DETAIL_I18N = {
     document.querySelectorAll('.qa-card').forEach(function(c) {
       var sel = qaCurrentIds.has(c.dataset.id);
       c.classList.toggle('qa-current', sel);
-      var chk = c.querySelector('.qa-chk'); if (chk) chk.textContent = sel ? '✓' : '';
+      var chk = c.querySelector('.qa-chk'); if (chk) chk.innerHTML = sel ? '<i class="fa-solid fa-check"></i>' : '';
       c.style.display = '';
     });
     document.getElementById('qa-none-opt').classList.toggle('qa-current', qaCurrentIds.size === 0);
@@ -1418,7 +1418,7 @@ var DETAIL_I18N = {
         document.querySelectorAll('.qa-card').forEach(function(c) {
           var sel = qaCurrentIds.has(c.dataset.id);
           c.classList.toggle('qa-current', sel);
-          var chk = c.querySelector('.qa-chk'); if (chk) chk.textContent = sel ? '✓' : '';
+          var chk = c.querySelector('.qa-chk'); if (chk) chk.innerHTML = sel ? '<i class="fa-solid fa-check"></i>' : '';
         });
         document.getElementById('qa-none-opt').classList.toggle('qa-current', qaCurrentIds.size === 0);
 
@@ -1484,11 +1484,11 @@ function detailUrl(id) { return _DETAIL_PARTS[0]+'/'+id+'/'+_DETAIL_PARTS[1]; }
 
 // ── Config statuts ──────────────────────────────────────────────────────────
 var STATUS_COLS = [
-  {key:'a_faire',    label:DETAIL_I18N.aFaire,     color:'#64748b', bg:'#f8fafc', border:'#e2e8f0'},
-  {key:'en_cours',   label:DETAIL_I18N.enCours,    color:'#1d4ed8', bg:'#eff6ff', border:'#bfdbfe'},
-  {key:'bloque',     label:DETAIL_I18N.bloque,      color:'#b45309', bg:'#fffbeb', border:'#fde68a'},
-  {key:'en_revision',label:DETAIL_I18N.enRevision, color:'#7c3aed', bg:'#f5f3ff', border:'#ddd6fe'},
-  {key:'termine',    label:DETAIL_I18N.termine,     color:'#15803d', bg:'#f0fdf4', border:'#bbf7d0'},
+  {key:'a_faire',    label:DETAIL_I18N.aFaire,     color:'#334155', bg:'#f1f5f9', border:'#94a3b8', accent:'#64748b'},
+  {key:'en_cours',   label:DETAIL_I18N.enCours,    color:'#1e40af', bg:'#dbeafe', border:'#60a5fa', accent:'#2563eb'},
+  {key:'bloque',     label:DETAIL_I18N.bloque,      color:'#92400e', bg:'#fef3c7', border:'#fbbf24', accent:'#d97706'},
+  {key:'en_revision',label:DETAIL_I18N.enRevision, color:'#4c1d95', bg:'#ede9fe', border:'#a78bfa', accent:'#7c3aed'},
+  {key:'termine',    label:DETAIL_I18N.termine,     color:'#14532d', bg:'#dcfce7', border:'#4ade80', accent:'#16a34a'},
 ];
 var STATUS_COLORS = {a_faire:'#94a3b8',en_cours:'#3b82f6',bloque:'#f59e0b',en_revision:'#8b5cf6',termine:'#22c55e'};
 var STATUS_LABELS = {a_faire:DETAIL_I18N.aFaire,en_cours:DETAIL_I18N.enCours,bloque:DETAIL_I18N.bloque,en_revision:DETAIL_I18N.enRevision,termine:DETAIL_I18N.termine};
@@ -1568,14 +1568,14 @@ function renderKanban() {
   STATUS_COLS.forEach(function(col) {
     var items = MILESTONES_DATA.filter(function(m){ return m.status === col.key; });
     html += '<div class="jk-col" data-status="'+col.key+'" ondragover="event.preventDefault()" ondrop="jkDrop(event)"'
-          + ' style="flex:0 0 210px;background:'+col.bg+';border:1px solid '+col.border+';border-radius:10px;padding:10px;'
+          + ' style="flex:0 0 220px;background:'+col.bg+';border:1px solid '+col.border+';border-top:3px solid '+col.accent+';border-radius:10px;padding:10px;'
           + 'display:flex;flex-direction:column;gap:8px;min-height:120px;">';
     html += '<div style="font-size:11px;font-weight:700;color:'+col.color+';text-transform:uppercase;letter-spacing:.6px;'
           + 'margin-bottom:2px;display:flex;justify-content:space-between;align-items:center;">'
           + escH(col.label)
-          + '<span style="background:'+col.border+';color:'+col.color+';border-radius:999px;padding:1px 8px;font-weight:600;">'+items.length+'</span></div>';
+          + '<span style="background:'+col.accent+';color:#fff;border-radius:999px;padding:1px 8px;font-weight:600;">'+items.length+'</span></div>';
     if (items.length === 0) {
-      html += '<div style="border:2px dashed '+col.border+';border-radius:8px;height:60px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#94a3b8;">'+DETAIL_I18N.none+'</div>';
+      html += '<div style="border:2px dashed '+col.border+';border-radius:8px;height:60px;display:flex;align-items:center;justify-content:center;font-size:11px;color:'+col.color+';opacity:.6;">'+DETAIL_I18N.none+'</div>';
     }
     items.forEach(function(m){ html += jkCard(m, col); });
     html += '</div>';
@@ -1586,14 +1586,14 @@ function renderKanban() {
 
 function jkCard(m, col) {
   var due = m.due_date
-    ? '<span style="font-size:10px;color:#94a3b8;">&#128197;&nbsp;'+fmtDate(m.due_date)+'</span>'
+    ? '<span style="font-size:10px;color:#475569;"><i class="fa-solid fa-calendar-days" style="margin-right:3px;color:'+col.accent+';"></i>'+fmtDate(m.due_date)+'</span>'
     : '';
   var asgn = m.assigned
-    ? '<span style="font-size:10px;color:#64748b;overflow:hidden;text-overflow:ellipsis;max-width:110px;white-space:nowrap;">&#128100;&nbsp;'+escH(m.assigned)+'</span>'
-    : '<span style="font-size:10px;background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 5px;">'+DETAIL_I18N.unassigned+'</span>';
+    ? '<span style="font-size:10px;color:#334155;overflow:hidden;text-overflow:ellipsis;max-width:110px;white-space:nowrap;"><i class="fa-solid fa-user" style="margin-right:3px;color:'+col.accent+';"></i>'+escH(m.assigned)+'</span>'
+    : '<span style="font-size:10px;background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 5px;font-weight:500;">'+DETAIL_I18N.unassigned+'</span>';
   return '<div draggable="true" ondragstart="jkDragStart(event,'+m.id+')" data-mid="'+m.id+'"'
-       + ' style="background:#fff;border:1px solid '+col.border+';border-radius:8px;padding:10px;cursor:grab;'
-       + 'box-shadow:0 1px 3px rgba(0,0,0,.06);transition:box-shadow .15s;"'
+       + ' style="background:#fff;border:1.5px solid '+col.border+';border-left:3px solid '+col.accent+';border-radius:8px;padding:10px;cursor:grab;'
+       + 'box-shadow:0 1px 4px rgba(0,0,0,.08);transition:box-shadow .15s;"'
        + ' onmouseenter="this.style.boxShadow=\'0 4px 12px rgba(0,0,0,.12)\'"'
        + ' onmouseleave="this.style.boxShadow=\'0 1px 3px rgba(0,0,0,.06)\'">'
        + '<a href="'+detailUrl(m.id)+'" onclick="event.stopPropagation()"'
@@ -1846,8 +1846,8 @@ function renderCalendar() {
     if (val) val.textContent = pct + '%';
     var chk = row.querySelector('.mrow-check');
     if (chk) {
-      if (completed) { chk.classList.add('done'); if (!chk.textContent.includes('✓')) chk.textContent = '✓'; }
-      else { chk.classList.remove('done'); chk.textContent = ''; }
+      if (completed) { chk.classList.add('done'); if (!chk.innerHTML.includes('fa-check')) chk.innerHTML = '<i class="fa-solid fa-check"></i>'; }
+      else { chk.classList.remove('done'); chk.innerHTML = ''; }
     }
     if (completed) row.classList.add('mrow-done');
     else row.classList.remove('mrow-done');
@@ -1858,8 +1858,8 @@ function renderCalendar() {
     if (!item) return;
     var chk = item.querySelector('.msub-check');
     if (chk) {
-      if (completed) { chk.classList.add('done'); if (!chk.textContent.includes('✓')) chk.textContent = '✓'; }
-      else { chk.classList.remove('done'); chk.textContent = ''; }
+      if (completed) { chk.classList.add('done'); if (!chk.innerHTML.includes('fa-check')) chk.innerHTML = '<i class="fa-solid fa-check"></i>'; }
+      else { chk.classList.remove('done'); chk.innerHTML = ''; }
     }
     var name = item.querySelector('.msub-name');
     if (name) {

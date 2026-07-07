@@ -201,7 +201,8 @@
     const dt = new DataTransfer();
     dt.items.add(f);
     inp.files = dt.files;
-    ok.textContent = '✓ ' + f.name;
+    ok.innerHTML = '<i class="fa-solid fa-check"></i> ';
+    ok.append(f.name);
     ok.style.display = 'block';
   }
 

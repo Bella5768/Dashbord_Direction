@@ -2578,3 +2578,28 @@ a.calendar-event-pill:hover { opacity: .82; filter: brightness(.95); }
     background: var(--gray-50);
     color: var(--primary-700);
 }
+
+/* ── Icônes : couleur distincte du texte adjacent ───────────────────────────
+   Principe : les icônes de métadonnées, statut et alerte ont leur propre
+   couleur pour se démarquer visuellement du texte qui les accompagne.
+   Exclus intentionnellement : boutons (.btn i), nav sidebar, icônes seules.
+──────────────────────────────────────────────────────────────────────────── */
+
+/* Métadonnées inline (clock, calendar, location, user à côté de texte) */
+.event-meta-item i,
+.banner-step i,
+.tl-deadline i           { color: var(--primary-500); }
+
+/* Feature list page login */
+.feature-item i          { color: var(--primary-500); }
+
+/* Tâches complétées */
+.mt-done-at i,
+.mt-chk.done i,
+.mt-chk-ro.done i        { color: var(--green-600); }
+
+/* Alertes et messages de validation */
+.lf-alert i,
+.error-message i.fa-triangle-exclamation { color: var(--amber-600); }
+.error-message i.fa-circle-xmark         { color: var(--red-600); }
+.error-message i.fa-circle-check         { color: var(--green-600); }

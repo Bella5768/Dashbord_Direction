@@ -462,14 +462,14 @@
         } else if(ok){
           input.style.borderColor = '#16a34a';
           input.style.background  = '#f0fdf4';
-          inputIcon.textContent   = '✓';
+          inputIcon.innerHTML     = '<i class="fa-solid fa-check"></i>';
           inputIcon.style.color   = '#16a34a';
           inputIcon.style.display = 'block';
           inputError.textContent  = '';
         } else {
           input.style.borderColor = '#ef4444';
           input.style.background  = '#fff7f7';
-          inputIcon.textContent   = '✕';
+          inputIcon.innerHTML     = '<i class="fa-solid fa-xmark"></i>';
           inputIcon.style.color   = '#ef4444';
           inputIcon.style.display = 'block';
           inputError.textContent  = CSIG_I18N.noMatch;

@@ -280,7 +280,7 @@
                         {% if rsvp_counts.accepte %}<span style="color:#15803d;"><i class="fa-solid fa-check" width="12" height="12"></i>{{ rsvp_counts.accepte }}</span>{% endif %}
                         {% if rsvp_counts.refuse %}<span style="color:#dc2626;"><i class="fa-solid fa-xmark" width="12" height="12"></i>{{ rsvp_counts.refuse }}</span>{% endif %}
                         {% if rsvp_counts.peut_etre %}<span style="color:#854d0e;"><i class="fa-solid fa-minus" width="12" height="12"></i>{{ rsvp_counts.peut_etre }}</span>{% endif %}
-                        {% if rsvp_counts.invite %}<span><i class="fa-solid fa-clock" width="12" height="12"></i>{{ rsvp_counts.invite }}</span>{% endif %}
+                        {% if rsvp_counts.invite %}<span style="color:#64748b;"><i class="fa-solid fa-clock" width="12" height="12" style="color:var(--gray-400);"></i>{{ rsvp_counts.invite }}</span>{% endif %}
                     </div>
                     {% if can_edit %}
                     <button type="button" onclick="toggleAddPanel()" class="btn btn-outline" style="font-size:12px;padding:4px 10px;">

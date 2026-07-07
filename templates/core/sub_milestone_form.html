@@ -249,11 +249,11 @@ function mpToggle(id, clickedEl) {
     if (mpSelected.has(id)) {
       mpSelected.delete(id);
       clickedEl.classList.remove('mp-active');
-      var chk = clickedEl.querySelector('.mp-chk'); if (chk) chk.textContent = '';
+      var chk = clickedEl.querySelector('.mp-chk'); if (chk) chk.innerHTML = '';
     } else {
       mpSelected.add(id);
       clickedEl.classList.add('mp-active');
-      var chk = clickedEl.querySelector('.mp-chk'); if (chk) chk.textContent = '✓';
+      var chk = clickedEl.querySelector('.mp-chk'); if (chk) chk.innerHTML = '<i class="fa-solid fa-check"></i>';
     }
   }
   mpSyncHiddenInputs();
@@ -269,7 +269,7 @@ document.getElementById('mp-search').addEventListener('input', function() {
 document.addEventListener('DOMContentLoaded', function() {
   mpSelected.forEach(function(id) {
     var card = document.querySelector('.mp-card[data-id="' + id + '"]');
-    if (card) { card.classList.add('mp-active'); var chk = card.querySelector('.mp-chk'); if (chk) chk.textContent = '✓'; }
+    if (card) { card.classList.add('mp-active'); var chk = card.querySelector('.mp-chk'); if (chk) chk.innerHTML = '<i class="fa-solid fa-check"></i>'; }
   });
   mpSyncHiddenInputs();
 });

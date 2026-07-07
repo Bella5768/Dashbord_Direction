@@ -322,7 +322,7 @@
 
                     {% if can_see_manager_step %}
                     <div class="tl-step {% if leave.manager_decision == 'favorable' %}done{% elif leave.manager_decision == 'defavorable' %}fail{% elif leave.status == 'soumise' %}curr{% endif %}">
-                        <div class="tl-dot">{% if leave.manager_decision == 'favorable' %}✓{% elif leave.manager_decision == 'defavorable' %}✕{% else %}1{% endif %}</div>
+                        <div class="tl-dot">{% if leave.manager_decision == 'favorable' %}<i class="fa-solid fa-check"></i>{% elif leave.manager_decision == 'defavorable' %}<i class="fa-solid fa-xmark"></i>{% else %}1{% endif %}</div>
                         <p class="tl-title">{% trans 'Avis hiérarchique' %} <span class="tl-deadline"><i class="fa-solid fa-stopwatch" width="10" height="10" style="vertical-align:middle;"></i> 48h max</span></p>
                         {% if leave.manager_decision %}
                             <p class="tl-meta">
@@ -339,7 +339,7 @@
 
                     {% if can_see_hr_step %}
                     <div class="tl-step {% if leave.hr_decision == 'conforme' %}done{% elif leave.hr_decision == 'non_conforme' %}fail{% elif leave.status == 'avis_favorable' %}curr{% endif %}">
-                        <div class="tl-dot">{% if leave.hr_decision == 'conforme' %}✓{% elif leave.hr_decision == 'non_conforme' %}✕{% else %}2{% endif %}</div>
+                        <div class="tl-dot">{% if leave.hr_decision == 'conforme' %}<i class="fa-solid fa-check"></i>{% elif leave.hr_decision == 'non_conforme' %}<i class="fa-solid fa-xmark"></i>{% else %}2{% endif %}</div>
                         <p class="tl-title">{% trans 'Vérification RH' %} <span class="tl-deadline"><i class="fa-solid fa-stopwatch" width="10" height="10" style="vertical-align:middle;"></i> 72h max</span></p>
                         {% if leave.hr_decision %}
                             <p class="tl-meta">
@@ -356,7 +356,7 @@
 
                     {% if can_see_final_step %}
                     <div class="tl-step {% if leave.final_decision == 'approuve' %}done{% elif leave.final_decision == 'rejete' %}fail{% elif leave.status == 'rh_conforme' %}curr{% endif %}">
-                        <div class="tl-dot">{% if leave.final_decision == 'approuve' %}✓{% elif leave.final_decision == 'rejete' %}✕{% else %}3{% endif %}</div>
+                        <div class="tl-dot">{% if leave.final_decision == 'approuve' %}<i class="fa-solid fa-check"></i>{% elif leave.final_decision == 'rejete' %}<i class="fa-solid fa-xmark"></i>{% else %}3{% endif %}</div>
                         <p class="tl-title">{% trans 'Décision Direction / Coordination' %} <span class="tl-deadline"><i class="fa-solid fa-stopwatch" width="10" height="10" style="vertical-align:middle;"></i> 3j max</span></p>
                         {% if leave.final_decision %}
                             <p class="tl-meta">

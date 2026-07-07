@@ -197,11 +197,11 @@
             <a href="{% url 'core:sub_milestone_toggle' sub.id %}"
                class="msub-check{% if sub.completed %} done{% endif %}"
                title="{% if sub.completed %}{% trans 'Marquer non terminée' %}{% else %}{% trans 'Marquer terminée' %}{% endif %}">
-              {% if sub.completed %}✓{% endif %}
+              {% if sub.completed %}<i class="fa-solid fa-check"></i>{% endif %}
             </a>
             {% else %}
             <span class="msub-check-ro {% if sub.completed %}done{% else %}pending{% endif %}">
-              {% if sub.completed %}✓{% endif %}
+              {% if sub.completed %}<i class="fa-solid fa-check"></i>{% endif %}
             </span>
             {% endif %}
 
