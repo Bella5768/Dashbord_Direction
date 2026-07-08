@@ -16,6 +16,21 @@ def _require_role_admin(request):
     return None
 
 
+def _editor_allowed_perm_ids(user):
+    """IDs de permissions que l'éditeur peut déléguer.
+
+    Un non-superuser ne peut octroyer que les permissions qu'il possède
+    lui-même (principe du moindre privilège). Retourne None pour un superuser
+    (toutes les permissions autorisées).
+    """
+    if user.is_superuser:
+        return None  # None = pas de restriction
+    profile = getattr(user, 'profile', None)
+    if not profile or not profile.role_id:
+        return set()
+    return set(profile.role.permissions.values_list('id', flat=True))
+
+
 # ---------------------------------------------------------------------------
 # Rôles globaux
 # ---------------------------------------------------------------------------
@@ -78,11 +93,17 @@ def role_create(request):
     for perm in all_permissions:
         subjects.setdefault(perm.subject, []).append(perm)
 
+    allowed_ids = _editor_allowed_perm_ids(request.user)
+
     if request.method == 'POST':
         name = request.POST.get('name', '').strip()
         slug = request.POST.get('slug', '').strip()
         description = request.POST.get('description', '').strip()
         perm_ids = request.POST.getlist('permissions')
+
+        # Restreindre aux permissions que l'éditeur possède lui-même
+        if allowed_ids is not None:
+            perm_ids = [p for p in perm_ids if int(p) in allowed_ids]
 
         if not name or not slug:
             messages.error(request, _("Le nom et l'identifiant sont obligatoires."))
@@ -110,11 +131,18 @@ def role_edit(request, role_id):
     for perm in all_permissions:
         subjects.setdefault(perm.subject, []).append(perm)
 
+    allowed_ids = _editor_allowed_perm_ids(request.user)
+
     if request.method == 'POST':
         role.name        = request.POST.get('name', role.name).strip()
         role.description = request.POST.get('description', '').strip()
-        perm_ids = request.POST.getlist('permissions')
-        role.permissions.set(Permission.objects.filter(id__in=perm_ids))
+        # Les rôles système ne peuvent pas voir leurs permissions modifiées par des non-superusers
+        if not role.is_system or request.user.is_superuser:
+            perm_ids = request.POST.getlist('permissions')
+            # Restreindre aux permissions que l'éditeur possède lui-même
+            if allowed_ids is not None:
+                perm_ids = [p for p in perm_ids if int(p) in allowed_ids]
+            role.permissions.set(Permission.objects.filter(id__in=perm_ids))
         role.save()
         messages.success(request, _("Rôle « {name} » mis à jour.").format(name=role.name))
         return redirect('core:role_detail', role_id=role.pk)
@@ -204,11 +232,16 @@ def project_role_create(request):
     for perm in all_permissions:
         subjects.setdefault(perm.subject, []).append(perm)
 
+    allowed_ids = _editor_allowed_perm_ids(request.user)
+
     if request.method == 'POST':
         name = request.POST.get('name', '').strip()
         slug = request.POST.get('slug', '').strip()
         description = request.POST.get('description', '').strip()
         perm_ids = request.POST.getlist('permissions')
+
+        if allowed_ids is not None:
+            perm_ids = [p for p in perm_ids if int(p) in allowed_ids]
 
         if not name or not slug:
             messages.error(request, _("Le nom et l'identifiant sont obligatoires."))
@@ -236,11 +269,16 @@ def project_role_edit(request, role_id):
     for perm in all_permissions:
         subjects.setdefault(perm.subject, []).append(perm)
 
+    allowed_ids = _editor_allowed_perm_ids(request.user)
+
     if request.method == 'POST':
         role.name        = request.POST.get('name', role.name).strip()
         role.description = request.POST.get('description', '').strip()
-        perm_ids = request.POST.getlist('permissions')
-        role.permissions.set(Permission.objects.filter(id__in=perm_ids))
+        if not role.is_system or request.user.is_superuser:
+            perm_ids = request.POST.getlist('permissions')
+            if allowed_ids is not None:
+                perm_ids = [p for p in perm_ids if int(p) in allowed_ids]
+            role.permissions.set(Permission.objects.filter(id__in=perm_ids))
         role.save()
         messages.success(request, _("Rôle projet « {name} » mis à jour.").format(name=role.name))
         return redirect('core:project_roles_list')

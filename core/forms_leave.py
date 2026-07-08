@@ -73,14 +73,23 @@ class LeaveRequestForm(forms.ModelForm):
         self.fields['replacement'].required = False
         self.fields['handover_note'].required = False
 
-        # Pre-remplir l'employe et la direction depuis le profil utilisateur si possible
-        if user is not None and not self.instance.pk:
+        if user is not None:
             profile = getattr(user, 'profile', None)
             if profile is not None:
-                if profile.employee_id and not self.initial.get('employee'):
-                    self.initial['employee'] = profile.employee_id
-                if profile.direction_id and not self.initial.get('direction'):
-                    self.initial['direction'] = profile.direction_id
+                is_privileged = profile.is_admin() or profile.is_directeur_general() or profile.is_hr()
+                if not is_privileged:
+                    # Restreindre à l'employé et la direction de l'utilisateur
+                    if profile.employee_id:
+                        self.fields['employee'].queryset = Employee.objects.filter(id=profile.employee_id)
+                    if profile.direction_id:
+                        self.fields['direction'].queryset = Direction.objects.filter(id=profile.direction_id)
+
+                # Pré-remplir depuis le profil si nouvelle demande
+                if not self.instance.pk:
+                    if profile.employee_id and not self.initial.get('employee'):
+                        self.initial['employee'] = profile.employee_id
+                    if profile.direction_id and not self.initial.get('direction'):
+                        self.initial['direction'] = profile.direction_id
 
     def save_extra_documents(self, leave):
         """Cree des LeaveDocument pour chaque fichier supplementaire uploade."""

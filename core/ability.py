@@ -103,10 +103,6 @@ class Ability:
             return False
         if profile.employee_id and instance.manager_employee_id:
             return instance.manager_employee_id == profile.employee_id
-        # Fallback nom pour projets legacy (sans FK manager)
-        if not instance.manager_employee_id and instance.manager:
-            user_name = self.user.get_full_name() or self.user.username
-            return instance.manager.strip() == user_name
         return False
 
     def _cond_is_project_member(self, instance, profile) -> bool:

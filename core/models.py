@@ -332,9 +332,11 @@ class UserProfile(models.Model):
         from .ability import Ability
         ab = Ability(self.user)
         for rule in ab.rules:
-            action  = rule.get('action')       if isinstance(rule, dict) else rule.action
-            subject = rule.get('subject')      if isinstance(rule, dict) else rule.subject
-            if action in ('approve', 'manage') and subject in ('LeaveRequest', 'all'):
+            action  = rule.get('action')        if isinstance(rule, dict) else rule.action
+            subject = rule.get('subject')       if isinstance(rule, dict) else rule.subject
+            cond    = rule.get('condition', '') if isinstance(rule, dict) else rule.condition
+            # Exclure les règles RH (hr_pipeline) : elles ne donnent pas l'avis hiérarchique
+            if action in ('approve', 'manage') and subject in ('LeaveRequest', 'all') and cond != 'hr_pipeline':
                 return True
         return False
 
@@ -498,28 +500,28 @@ class ProjectMember(models.Model):
         return self.project_role.permissions.filter(action=action, subject=subject).exists()
 
     def can_manage_members(self):
-        return self._has_perm('manage', _('ProjectMember'))
+        return self._has_perm('manage', 'ProjectMember')
 
     def can_edit_project(self):
-        return self._has_perm('update', _('Project'))
+        return self._has_perm('update', 'Project')
 
     def can_add_milestones(self):
-        return self._has_perm('create', _('Milestone'))
+        return self._has_perm('create', 'Milestone')
 
     def can_update_milestones(self):
-        return self._has_perm('update', _('Milestone'))
+        return self._has_perm('update', 'Milestone')
 
     def can_add_documents(self):
-        return self._has_perm('create', _('Document'))
+        return self._has_perm('create', 'Document')
 
     def can_update_documents(self):
-        return self._has_perm('update', _('Document'))
+        return self._has_perm('update', 'Document')
 
     def can_add_needs(self):
-        return self._has_perm('create', _('Request'))
+        return self._has_perm('create', 'Request')
 
     def can_add_comments(self):
-        return self._has_perm('create', _('Comment'))
+        return self._has_perm('create', 'Comment')
 
     def can_perform_actions(self):
         return any([

@@ -41,17 +41,5 @@ class NotificationConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def _project_ids(self, user):
-        from .models import ProjectMember, Project
-        if user.is_staff:
-            return list(Project.objects.values_list('id', flat=True))
-        ids = set(
-            ProjectMember.objects.filter(
-                employee__user_profile__user=user
-            ).values_list('project_id', flat=True)
-        )
-        ids.update(
-            Project.objects.filter(
-                manager_employee__user_profile__user=user
-            ).values_list('id', flat=True)
-        )
-        return list(ids)
+        from .views import get_accessible_projects_qs
+        return list(get_accessible_projects_qs(user).values_list('id', flat=True))

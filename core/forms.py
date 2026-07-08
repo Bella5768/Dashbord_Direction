@@ -41,7 +41,7 @@ class UserCreateForm(forms.Form):
         widget=forms.Select(attrs={'class': 'form-control'}),
     )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, editor=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['employee'].queryset = (
             Employee.objects
@@ -49,6 +49,16 @@ class UserCreateForm(forms.Form):
             .select_related('direction')
             .order_by('name')
         )
+        # Restreindre les rôles assignables aux rôles que l'éditeur possède lui-même
+        if editor is not None and not editor.is_superuser:
+            profile = getattr(editor, 'profile', None)
+            if profile and profile.role_id:
+                assignable = profile.role.permissions.values_list('id', flat=True)
+                self.fields['role'].queryset = Role.objects.filter(
+                    permissions__id__in=assignable
+                ).distinct().exclude(is_system=True)
+            else:
+                self.fields['role'].queryset = Role.objects.none()
 
     def clean_employee(self):
         emp = self.cleaned_data.get('employee')
@@ -94,7 +104,7 @@ class UserUpdateForm(forms.ModelForm):
         model = User
         fields = ['username', 'email', 'first_name', 'last_name', 'is_active']
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, editor=None, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
             if field_name != 'is_active':
@@ -114,6 +124,17 @@ class UserUpdateForm(forms.ModelForm):
             self.fields['direction'].initial = profile.direction
             self.fields['employee'].initial = profile.employee
             self.fields['phone'].initial = profile.phone
+
+        # Restreindre les rôles assignables aux rôles que l'éditeur possède lui-même
+        if editor is not None and not editor.is_superuser:
+            editor_profile = getattr(editor, 'profile', None)
+            if editor_profile and editor_profile.role_id:
+                assignable = editor_profile.role.permissions.values_list('id', flat=True)
+                self.fields['role'].queryset = Role.objects.filter(
+                    permissions__id__in=assignable
+                ).distinct().exclude(is_system=True)
+            else:
+                self.fields['role'].queryset = Role.objects.none()
 
     def clean_username(self):
         username = self.cleaned_data.get('username', '').strip()

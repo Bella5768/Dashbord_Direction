@@ -23,7 +23,7 @@ class ProjectForm(forms.ModelForm):
             'manager_employee': forms.Select(attrs={'class': 'form-control select-searchable'}),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
@@ -33,6 +33,14 @@ class ProjectForm(forms.ModelForm):
         self.fields['direction'].empty_label = _("-- Aucune direction --")
         # manager_employee : filtrer les internes uniquement
         self.fields['manager_employee'].queryset = Employee.objects.filter(is_external=False).order_by('name')
+        # Restreindre la direction pour les non-admin/non-DG
+        if user is not None:
+            _pf_profile = getattr(user, 'profile', None)
+            if _pf_profile and not (_pf_profile.is_admin() or _pf_profile.is_directeur_general()) and _pf_profile.direction_id:
+                from .models import Direction
+                self.fields['direction'].queryset = Direction.objects.filter(id=_pf_profile.direction_id)
+                if not self.initial.get('direction'):
+                    self.initial['direction'] = _pf_profile.direction_id
         self.fields['manager_employee'].required = True
         self.fields['manager_employee'].empty_label = _("-- Sélectionner un responsable --")
         self.fields['manager_employee'].label = _("Responsable du projet")
@@ -96,7 +104,7 @@ class DocumentForm(forms.ModelForm):
     """Formulaire pour les documents"""
     class Meta:
         model = Document
-        fields = ['title', 'doc_type', 'status', 'priority', 'direction', 'due_date', 'created_by', 'file']
+        fields = ['title', 'doc_type', 'priority', 'direction', 'due_date', 'created_by', 'file']
         widgets = {
             'due_date': forms.DateInput(attrs={'type': 'date'}),
         }
@@ -389,7 +397,7 @@ class BudgetForm(forms.ModelForm):
             'consumed': forms.NumberInput(attrs={'step': '0.01', 'min': '0'}),
         }
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
@@ -400,6 +408,17 @@ class BudgetForm(forms.ModelForm):
         self.fields['direction'].required = False
         self.fields['direction'].empty_label = _("-- Aucune direction --")
         self.fields['currency'].widget.attrs['class'] = 'form-control select-searchable'
+        # Restreindre projets et direction pour les non-admin/non-DG
+        if user is not None:
+            _bf_profile = getattr(user, 'profile', None)
+            if _bf_profile and not (_bf_profile.is_admin() or _bf_profile.is_directeur_general()):
+                from .views import get_accessible_projects_qs
+                self.fields['project'].queryset = get_accessible_projects_qs(user)
+                if _bf_profile.direction_id:
+                    from .models import Direction
+                    self.fields['direction'].queryset = Direction.objects.filter(id=_bf_profile.direction_id)
+                    if not self.initial.get('direction'):
+                        self.initial['direction'] = _bf_profile.direction_id
 
 
 class EmployeeForm(forms.ModelForm):
@@ -442,9 +461,9 @@ class EmployeeForm(forms.ModelForm):
             except Exception:
                 pass
 
-        # Restriction : un directeur ne peut creer/modifier que des employes de sa direction
+        # Restriction : tout rôle non-global ne peut gérer que les employés de sa direction
         profile = getattr(user, 'profile', None) if user else None
-        if profile and profile.role_slug == 'directeur' and profile.direction_id:
+        if profile and not (profile.is_admin() or profile.is_directeur_general()) and profile.direction_id:
             from .models import Direction
             self.fields['direction'].queryset = Direction.objects.filter(id=profile.direction_id)
             self.fields['direction'].initial = profile.direction_id

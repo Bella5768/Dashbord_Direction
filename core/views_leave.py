@@ -114,8 +114,12 @@ def leave_list(request):
         if not can_manager:
             return HttpResponseForbidden()
         qs = base_qs.filter(status='soumise')
-        if profile.role_slug == 'directeur' and not profile.can_give_final_approval():
-            qs = qs.filter(direction_id=profile.direction_id)
+        # Tout non-DG est scopé à sa direction (couvre directeur ET rôles custom avec same_direction)
+        if not profile.can_give_final_approval():
+            if profile.direction_id:
+                qs = qs.filter(direction_id=profile.direction_id)
+            else:
+                qs = base_qs.none()
     elif tab == 'history_mine_decisions':
         if not can_manager:
             return HttpResponseForbidden()
@@ -155,8 +159,11 @@ def leave_list(request):
     }
     if can_manager:
         mgr_qs = base_qs.filter(status='soumise')
-        if profile.role_slug == 'directeur' and not profile.can_give_final_approval():
-            mgr_qs = mgr_qs.filter(direction_id=profile.direction_id)
+        if not profile.can_give_final_approval():
+            if profile.direction_id:
+                mgr_qs = mgr_qs.filter(direction_id=profile.direction_id)
+            else:
+                mgr_qs = base_qs.none()
         counts['to_approve_manager'] = mgr_qs.count()
         counts['history_mine_decisions'] = base_qs.filter(manager_user=request.user).count()
     if can_hr:

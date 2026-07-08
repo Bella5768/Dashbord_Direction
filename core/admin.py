@@ -1,7 +1,14 @@
+import types
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 from .models import Direction, Project, Milestone, Document, Partner, Event, EventMember, Request, Employee, Budget, UserProfile, LeaveRequest, LeaveDocument
+
+# Restreindre l'admin Django aux superusers uniquement (pas à tous les is_staff)
+admin.site.has_permission = types.MethodType(
+    lambda self, request: request.user.is_active and request.user.is_superuser,
+    admin.site,
+)
 
 
 class UserProfileInline(admin.StackedInline):
