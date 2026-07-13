@@ -251,8 +251,9 @@ def leave_create(request):
             form.save_extra_documents(leave)
             try:
                 notifications.notify_leave_submitted(leave)
-            except Exception:
-                pass
+            except (AttributeError, ValueError, ConnectionError) as e:
+                from .error_logging import ErrorLogger
+                ErrorLogger.log_exception(e, context={'function': 'leave_create', 'leave_id': leave.id}, user=request.user)
             messages.success(request, _("Demande de congé soumise. Elle suit maintenant le circuit de validation."))
             return redirect('core:leave_detail', leave_id=leave.id)
     else:
@@ -314,8 +315,9 @@ def leave_document_delete(request, leave_id, doc_id):
     if request.method == 'POST':
         try:
             doc.file.delete(save=False)
-        except Exception:
-            pass
+        except (AttributeError, OSError, ValueError) as e:
+            from .error_logging import ErrorLogger
+            ErrorLogger.log_exception(e, context={'function': 'leave_document_delete', 'doc_id': doc.id}, user=request.user)
         doc.delete()
         messages.success(request, _("Pièce jointe supprimée."))
     return redirect('core:leave_detail', leave_id=leave.id)
@@ -348,8 +350,9 @@ def leave_decide_manager(request, leave_id):
             obj.save()
             try:
                 notifications.notify_leave_manager_decided(obj)
-            except Exception:
-                pass
+            except (AttributeError, ValueError, ConnectionError) as e:
+                from .error_logging import ErrorLogger
+                ErrorLogger.log_exception(e, context={'function': 'leave_decide_manager', 'leave_id': obj.id}, user=request.user)
             from .notifs import notify_conge_avis
             notify_conge_avis(obj, request.user)
             messages.success(request, _("Avis hiérarchique enregistré."))
@@ -380,8 +383,9 @@ def leave_decide_hr(request, leave_id):
             obj.save()
             try:
                 notifications.notify_leave_hr_decided(obj)
-            except Exception:
-                pass
+            except (AttributeError, ValueError, ConnectionError) as e:
+                from .error_logging import ErrorLogger
+                ErrorLogger.log_exception(e, context={'function': 'leave_decide_hr', 'leave_id': obj.id}, user=request.user)
             from .notifs import notify_conge_rh
             notify_conge_rh(obj, request.user)
             messages.success(request, _("Vérification RH enregistrée."))
@@ -417,8 +421,9 @@ def leave_decide_final(request, leave_id):
                     from .pdf_generator import generate_leave_approval_pdf
                     pdf_bytes = generate_leave_approval_pdf(obj)
                 notifications.notify_leave_final_decided(obj, pdf_bytes)
-            except Exception:
-                pass
+            except (AttributeError, ValueError, ConnectionError) as e:
+                from .error_logging import ErrorLogger
+                ErrorLogger.log_exception(e, context={'function': 'leave_decide_final', 'leave_id': obj.id}, user=request.user)
             from .notifs import notify_conge_decision
             notify_conge_decision(obj, request.user)
             messages.success(request, _("Décision finale enregistrée et notifiée."))

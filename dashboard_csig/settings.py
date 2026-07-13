@@ -63,6 +63,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'dashboard_csig.middleware.ExceptionHandlingMiddleware',
 ]
 
 ROOT_URLCONF = 'dashboard_csig.urls'

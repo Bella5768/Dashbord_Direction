@@ -133,7 +133,9 @@ def _user_is_assignee(user, assigned_m2m):
         return False
     try:
         return assigned_m2m.filter(pk=profile_employee.pk).exists()
-    except Exception:
+    except (AttributeError, ValueError) as e:
+        from .error_logging import ErrorLogger
+        ErrorLogger.log_exception(e, context={'function': '_user_is_assignee'}, user=user)
         return False
 
 
@@ -162,8 +164,9 @@ def get_accessible_projects_qs(user):
             emp = profile.employee
             if emp and emp.is_external:
                 return qs.filter(members__employee_id=employee_id).distinct()
-        except Exception:
-            pass
+        except (AttributeError, ValueError) as e:
+            from .error_logging import ErrorLogger
+            ErrorLogger.log_exception(e, context={'function': 'get_accessible_projects_qs'}, user=user)
 
     # Sans lien employé, aucun accès par appartenance
     if not employee_id:
@@ -216,8 +219,9 @@ def _create_or_update_user_for_employee(request, employee, system_role):
         linked_profile.direction = employee.direction
         linked_profile.save(update_fields=['role', 'direction', 'updated_at'])
         return True, _("Le rôle système du compte lié a été mis à jour.")
-    except Exception:
-        pass
+    except (AttributeError, ValueError) as e:
+        from .error_logging import ErrorLogger
+        ErrorLogger.log_exception(e, context={'function': '_create_or_update_user_for_employee', 'employee': employee.name}, user=request.user)
 
     username = _generate_username(employee.name)
     name_parts = employee.name.strip().split()
@@ -476,7 +480,9 @@ def profile(request):
             from core.fields import validate_phone_number
             try:
                 normalized_phone = validate_phone_number(phone)
-            except Exception as exc:
+            except (ValueError, AttributeError) as exc:
+                from .error_logging import ErrorLogger
+                ErrorLogger.log_validation_error('phone', str(exc), user=user)
                 errors['phone'] = str(exc)
 
         if not errors:
@@ -749,8 +755,9 @@ def notification_mark_read(request, notif_id):
     try:
         n = request.user.notifications_received.get(pk=notif_id)
         n.mark_read()
-    except Exception:
-        pass
+    except (AttributeError, ValueError) as e:
+        from .error_logging import ErrorLogger
+        ErrorLogger.log_exception(e, context={'function': 'notification_mark_read', 'notif_id': notif_id}, user=request.user)
     return JsonResponse({'ok': True})
 
 
@@ -5114,8 +5121,9 @@ def employee_edit(request, employee_id):
                 if obj.email:
                     linked_user.email = obj.email
                 linked_user.save(update_fields=['first_name', 'last_name', 'email'])
-            except Exception:
-                pass  # pas de compte lié
+            except (AttributeError, ValueError) as e:
+                from .error_logging import ErrorLogger
+                ErrorLogger.log_exception(e, context={'function': 'employee_update', 'employee': obj.name}, user=request.user)
 
             system_role = form.cleaned_data.get('system_role')
             if system_role:
