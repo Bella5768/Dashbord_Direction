@@ -19,6 +19,10 @@ class ExceptionHandlingMiddleware:
         return self.get_response(request)
     
     def process_exception(self, request, exception):
+        # Skip WebSocket connections - they use different protocol
+        if request.path.startswith('/ws/'):
+            return None
+        
         # Don't handle if response is already set
         if hasattr(exception, 'status_code'):
             return None
