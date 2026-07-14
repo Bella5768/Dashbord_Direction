@@ -114,84 +114,84 @@
 
 {# ── Stats ── #}
 <div class="stats-row mb-6">
-    <a class="stat-box {% if tab == 'mine' and not status_filter %}active{% endif %}" href="?tab=mine">
+    <button type="button" class="stat-box {% if tab == 'mine' and not status_filter %}active{% endif %}" data-tab="mine" data-status="">
         <div class="stat-box-icon"><i class="fa-solid fa-clipboard-list" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ my_stats.total }}</p>
             <p class="stat-box-label">{% trans 'Total demandes' %}</p>
         </div>
-    </a>
-    <a class="stat-box amber {% if tab == 'mine' and status_filter in 'soumise,avis_favorable,rh_conforme' %}active{% endif %}" href="?tab=mine&status=soumise">
+    </button>
+    <button type="button" class="stat-box amber {% if tab == 'mine' and status_filter in 'soumise,avis_favorable,rh_conforme' %}active{% endif %}" data-tab="mine" data-status="soumise">
         <div class="stat-box-icon"><i class="fa-solid fa-clock" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ my_stats.pending }}</p>
             <p class="stat-box-label">{% trans 'En cours de validation' %}</p>
         </div>
-    </a>
-    <a class="stat-box green {% if tab == 'mine' and status_filter == 'approuvee' %}active{% endif %}" href="?tab=mine&status=approuvee">
+    </button>
+    <button type="button" class="stat-box green {% if tab == 'mine' and status_filter == 'approuvee' %}active{% endif %}" data-tab="mine" data-status="approuvee">
         <div class="stat-box-icon"><i class="fa-solid fa-circle-check" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ my_stats.approved }}</p>
             <p class="stat-box-label">{% trans 'Approuvées' %}</p>
         </div>
-    </a>
-    <a class="stat-box red {% if tab == 'mine' and status_filter == 'rejetee' %}active{% endif %}" href="?tab=mine&status=rejetee">
+    </button>
+    <button type="button" class="stat-box red {% if tab == 'mine' and status_filter == 'rejetee' %}active{% endif %}" data-tab="mine" data-status="rejetee">
         <div class="stat-box-icon"><i class="fa-solid fa-circle-xmark" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ my_stats.rejected }}</p>
             <p class="stat-box-label">{% trans 'Refusées' %}</p>
         </div>
-    </a>
+    </button>
 </div>
 
 {# ── Tabs + filtre statut ── #}
 <div class="flex justify-between items-center mb-4" style="flex-wrap:wrap; gap:12px;">
     <div class="tabs" style="flex-wrap:wrap; margin-bottom:0;">
-        <a href="?tab=mine" class="tab-btn {% if tab == 'mine' %}active{% endif %}">
+        <button type="button" class="tab-btn {% if tab == 'mine' %}active{% endif %}" data-tab="mine">
             <i class="fa-solid fa-user" width="14" height="14"></i>
             {% trans 'Mes demandes' %}
             <span class="tab-count">{{ counts.mine }}</span>
-        </a>
+        </button>
         {% if can_manager %}
-        <a href="?tab=to_approve_manager" class="tab-btn {% if tab == 'to_approve_manager' %}active{% endif %}">
+        <button type="button" class="tab-btn {% if tab == 'to_approve_manager' %}active{% endif %}" data-tab="to_approve_manager">
             <i class="fa-solid fa-clipboard-check" width="14" height="14"></i>
             {% trans 'À valider' %}
             <span class="tab-count {% if counts.to_approve_manager %}warn{% endif %}">{{ counts.to_approve_manager }}</span>
-        </a>
-        <a href="?tab=history_mine_decisions" class="tab-btn {% if tab == 'history_mine_decisions' %}active{% endif %}">
+        </button>
+        <button type="button" class="tab-btn {% if tab == 'history_mine_decisions' %}active{% endif %}" data-tab="history_mine_decisions">
             <i class="fa-solid fa-box-archive" width="14" height="14"></i>
             {% trans 'Mes validations' %}
             <span class="tab-count">{{ counts.history_mine_decisions }}</span>
-        </a>
+        </button>
         {% endif %}
         {% if can_hr %}
-        <a href="?tab=to_check_hr" class="tab-btn {% if tab == 'to_check_hr' %}active{% endif %}">
+        <button type="button" class="tab-btn {% if tab == 'to_check_hr' %}active{% endif %}" data-tab="to_check_hr">
             <i class="fa-solid fa-magnifying-glass" width="14" height="14"></i>
             {% trans 'Vérification RH' %}
             <span class="tab-count {% if counts.to_check_hr %}warn{% endif %}">{{ counts.to_check_hr }}</span>
-        </a>
-        <a href="?tab=history_hr" class="tab-btn {% if tab == 'history_hr' %}active{% endif %}">
+        </button>
+        <button type="button" class="tab-btn {% if tab == 'history_hr' %}active{% endif %}" data-tab="history_hr">
             <i class="fa-solid fa-folder" width="14" height="14"></i>
             {% trans 'Mes vérifications' %}
             <span class="tab-count">{{ counts.history_hr }}</span>
-        </a>
+        </button>
         {% endif %}
         {% if can_final %}
-        <a href="?tab=to_decide" class="tab-btn {% if tab == 'to_decide' %}active{% endif %}">
+        <button type="button" class="tab-btn {% if tab == 'to_decide' %}active{% endif %}" data-tab="to_decide">
             <i class="fa-solid fa-gavel" width="14" height="14"></i>
             {% trans 'Décision finale' %}
             <span class="tab-count {% if counts.to_decide %}warn{% endif %}">{{ counts.to_decide }}</span>
-        </a>
-        <a href="?tab=all" class="tab-btn {% if tab == 'all' %}active{% endif %}">
+        </button>
+        <button type="button" class="tab-btn {% if tab == 'all' %}active{% endif %}" data-tab="all">
             <i class="fa-solid fa-globe" width="14" height="14"></i>
             {% trans 'Toutes' %}
             <span class="tab-count">{{ counts.all }}</span>
-        </a>
+        </button>
         {% endif %}
     </div>
-    <form method="get" style="display:flex;align-items:center;gap:8px;">
+    <form id="status-filter-form" style="display:flex;align-items:center;gap:8px;">
         <input type="hidden" name="tab" value="{{ tab }}">
-        <select name="status" onchange="this.form.submit()"
+        <select name="status" id="status-filter"
                 style="height:36px;padding:0 10px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;color:#374151;background:white;cursor:pointer;">
             <option value="">{% trans 'Tous les statuts' %}</option>
             <option value="soumise"          {% if status_filter == 'soumise' %}selected{% endif %}>{% trans 'Soumise' %}</option>
@@ -277,4 +277,104 @@
     {% endif %}
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tableContainer = document.querySelector('.leave-table-wrap');
+    const tabButtons = document.querySelectorAll('.tab-btn[data-tab]');
+    const statBoxes = document.querySelectorAll('.stat-box[data-tab]');
+    const statusFilter = document.getElementById('status-filter');
+    const currentTab = '{{ tab }}';
+    const currentStatus = '{{ status_filter }}';
+
+    // Tab switching without page reload
+    tabButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const newTab = this.dataset.tab;
+            if (newTab === currentTab) return;
+            
+            // Update active state
+            tabButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Update URL and fetch content
+            updateContent(newTab, currentStatus);
+        });
+    });
+
+    // Stat boxes switching without page reload
+    statBoxes.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const newTab = this.dataset.tab;
+            const newStatus = this.dataset.status || '';
+            
+            // Update active state
+            statBoxes.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Update URL and fetch content
+            updateContent(newTab, newStatus);
+        });
+    });
+
+    // Status filter change without page reload
+    if (statusFilter) {
+        statusFilter.addEventListener('change', function() {
+            const newStatus = this.value;
+            updateContent(currentTab, newStatus);
+        });
+    }
+
+    function updateContent(tab, status) {
+        // Build URL parameters
+        const params = new URLSearchParams();
+        if (tab) params.set('tab', tab);
+        if (status) params.set('status', status);
+        
+        // Update URL without reload
+        const newUrl = window.location.pathname + '?' + params.toString();
+        window.history.pushState({ tab, status }, '', newUrl);
+        
+        // Show loading state
+        tableContainer.style.opacity = '0.5';
+        
+        // Fetch new content
+        fetch(window.location.pathname + '?' + params.toString(), {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            // Parse the response and extract the table content
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newTableContent = doc.querySelector('.leave-table-wrap');
+            
+            if (newTableContent) {
+                tableContainer.innerHTML = newTableContent.innerHTML;
+                tableContainer.style.opacity = '1';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading content:', error);
+            tableContainer.style.opacity = '1';
+            // Fallback: reload the page
+            window.location.href = newUrl;
+        });
+    }
+
+    // Handle browser back/forward buttons
+    window.addEventListener('popstate', function(event) {
+        if (event.state) {
+            const params = new URLSearchParams(window.location.search);
+            const tab = params.get('tab') || 'mine';
+            const status = params.get('status') || '';
+            updateContent(tab, status);
+        }
+    });
+});
+</script>
 {% endblock %}
