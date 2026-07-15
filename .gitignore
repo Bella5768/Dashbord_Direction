@@ -31,7 +31,6 @@ RAPPORT_*.md
 export_from_sqlite.py
 import_batch_to_neon.py
 import_ordered_to_neon.py
-full_migration_to_neon.py
 import_missing_data.py
 verify_neon.py
 data_export.json
