@@ -180,13 +180,13 @@
             <div class="card-header">
                 <div class="cal-nav-wrap">
                     <div class="cal-nav-group">
-                        <a href="?year={{ prev_year }}&month={{ prev_month }}" class="cal-nav-btn" title="{% trans 'Mois précédent' %}">
+                        <button type="button" class="cal-nav-btn" data-year="{{ prev_year }}" data-month="{{ prev_month }}" title="{% trans 'Mois précédent' %}">
                             <i class="fa-solid fa-chevron-left" width="16" height="16"></i>
-                        </a>
+                        </button>
                         <span class="cal-month-title">{{ month_name }} {{ year }}</span>
-                        <a href="?year={{ next_year }}&month={{ next_month }}" class="cal-nav-btn" title="{% trans 'Mois suivant' %}">
+                        <button type="button" class="cal-nav-btn" data-year="{{ next_year }}" data-month="{{ next_month }}" title="{% trans 'Mois suivant' %}">
                             <i class="fa-solid fa-chevron-right" width="16" height="16"></i>
-                        </a>
+                        </button>
                     </div>
                     <a href="{% url 'core:event_create' %}" class="btn btn-primary" style="font-size:13px;padding:7px 14px;">
                         <i class="fa-solid fa-plus" width="14" height="14"></i>
@@ -327,6 +327,23 @@
 
 {% block extra_js %}
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Calendar month navigation without page reload
+    const navButtons = document.querySelectorAll('.cal-nav-btn[data-year]');
+    navButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const year = this.dataset.year;
+            const month = this.dataset.month;
+            
+            // Update URL and reload page
+            const params = new URLSearchParams();
+            params.set('year', year);
+            params.set('month', month);
+            window.location.href = window.location.pathname + '?' + params.toString();
+        });
+    });
+});
+
 window._onCalendarUpdate = function(data) {
     var url = new URL(location.href);
     if (data.date) {

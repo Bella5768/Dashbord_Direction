@@ -9,14 +9,14 @@
 {% block content %}
 <!-- Tabs -->
 <div class="tabs">
-    <a href="?tab=budget" class="tab-btn {% if tab == 'budget' %}active{% endif %}">
+    <button type="button" class="tab-btn {% if tab == 'budget' %}active{% endif %}" data-tab="budget">
         <i class="fa-solid fa-credit-card" ></i>
         {% trans 'Budget' %}
-    </a>
-    <a href="?tab=rh" class="tab-btn {% if tab == 'rh' %}active{% endif %}">
+    </button>
+    <button type="button" class="tab-btn {% if tab == 'rh' %}active{% endif %}" data-tab="rh">
         <i class="fa-solid fa-user-gear" ></i>
         {% trans 'Ressources Humaines' %}
-    </a>
+    </button>
 </div>
 
 {% if tab == 'budget' %}
@@ -183,13 +183,13 @@
 {% else %}
 <!-- HR Stats -->
 <div class="stats-row">
-    <a class="stat-box {% if not rh_workload %}active{% endif %}" href="?tab=rh{% if rh_dir %}&dir={{ rh_dir }}{% endif %}{% if rh_search %}&search={{ rh_search|urlencode }}{% endif %}">
+    <button type="button" class="stat-box {% if not rh_workload %}active{% endif %}" data-tab="rh" data-workload="">
         <div class="stat-box-icon"><i class="fa-solid fa-users" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ employees_count }}</p>
             <p class="stat-box-label">{% trans 'Effectif total' %}</p>
         </div>
-    </a>
+    </button>
     <div class="stat-box blue stat-box-static">
         <div class="stat-box-icon"><i class="fa-solid fa-chart-bar" width="20" height="20"></i></div>
         <div class="stat-box-body">
@@ -197,13 +197,13 @@
             <p class="stat-box-label">{% trans 'Charge moyenne' %}</p>
         </div>
     </div>
-    <a class="stat-box amber {% if rh_workload == 'surcharge' %}active{% endif %}" href="?tab=rh&workload=surcharge{% if rh_dir %}&dir={{ rh_dir }}{% endif %}{% if rh_search %}&search={{ rh_search|urlencode }}{% endif %}">
+    <button type="button" class="stat-box amber {% if rh_workload == 'surcharge' %}active{% endif %}" data-tab="rh" data-workload="surcharge">
         <div class="stat-box-icon"><i class="fa-solid fa-circle-exclamation" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ overloaded }}</p>
             <p class="stat-box-label">{% trans 'En surcharge' %}</p>
         </div>
-    </a>
+    </button>
     <div class="stat-box green stat-box-static">
         <div class="stat-box-icon"><i class="fa-solid fa-building" width="20" height="20"></i></div>
         <div class="stat-box-body">
@@ -369,4 +369,47 @@ new Chart(consumptionCtx, {
 });
 </script>
 {% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tabButtons = document.querySelectorAll('.tab-btn[data-tab]');
+    const statBoxes = document.querySelectorAll('.stat-box[data-tab]');
+    const currentTab = '{{ tab }}';
+    
+    // Tab switching without page reload
+    tabButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const newTab = this.dataset.tab;
+            if (newTab === currentTab) return;
+            
+            // Update active state
+            tabButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Update URL and reload page (simpler for this page with charts)
+            const params = new URLSearchParams();
+            params.set('tab', newTab);
+            window.location.href = window.location.pathname + '?' + params.toString();
+        });
+    });
+
+    // Stat boxes switching without page reload
+    statBoxes.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const newTab = this.dataset.tab;
+            const workload = this.dataset.workload || '';
+            
+            // Update active state
+            statBoxes.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Update URL and reload page
+            const params = new URLSearchParams();
+            params.set('tab', newTab);
+            if (workload) params.set('workload', workload);
+            window.location.href = window.location.pathname + '?' + params.toString();
+        });
+    });
+});
+</script>
 {% endblock %}

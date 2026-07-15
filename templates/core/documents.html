@@ -9,34 +9,34 @@
 <!-- Stats -->
 <div class="stats-row">
 {% with ft=currentftype fq=search %}
-    <a class="stat-box {% if current_status == 'all' %}active{% endif %}" href="{% url 'core:documents' %}?status=all{% if ft and ft != 'all' %}&type={{ ft }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
+    <button type="button" class="stat-box {% if current_status == 'all' %}active{% endif %}" data-status="all" data-type="{{ ft }}" data-search="{{ fq }}">
         <div class="stat-box-icon"><i class="fa-solid fa-file-lines" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.total }}</p>
             <p class="stat-box-label">{% trans 'Total documents' %}</p>
         </div>
-    </a>
-    <a class="stat-box red {% if current_status == 'a_signer' %}active{% endif %}" href="{% url 'core:documents' %}?status=a_signer{% if ft and ft != 'all' %}&type={{ ft }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
+    </button>
+    <button type="button" class="stat-box red {% if current_status == 'a_signer' %}active{% endif %}" data-status="a_signer" data-type="{{ ft }}" data-search="{{ fq }}">
         <div class="stat-box-icon"><i class="fa-solid fa-pen" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.a_signer }}</p>
             <p class="stat-box-label">{% trans 'À signer' %}</p>
         </div>
-    </a>
-    <a class="stat-box amber {% if current_status == 'a_valider' %}active{% endif %}" href="{% url 'core:documents' %}?status=a_valider{% if ft and ft != 'all' %}&type={{ ft }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
+    </button>
+    <button type="button" class="stat-box amber {% if current_status == 'a_valider' %}active{% endif %}" data-status="a_valider" data-type="{{ ft }}" data-search="{{ fq }}">
         <div class="stat-box-icon"><i class="fa-solid fa-clock" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.a_valider }}</p>
             <p class="stat-box-label">{% trans 'À valider' %}</p>
         </div>
-    </a>
-    <a class="stat-box green {% if current_status == 'signe' %}active{% endif %}" href="{% url 'core:documents' %}?status=signe{% if ft and ft != 'all' %}&type={{ ft }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
+    </button>
+    <button type="button" class="stat-box green {% if current_status == 'signe' %}active{% endif %}" data-status="signe" data-type="{{ ft }}" data-search="{{ fq }}">
         <div class="stat-box-icon"><i class="fa-solid fa-file-circle-check" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.signe }}</p>
             <p class="stat-box-label">{% trans 'Signés' %}</p>
         </div>
-    </a>
+    </button>
 {% endwith %}
 </div>
 
@@ -162,4 +162,35 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const statBoxes = document.querySelectorAll('.stat-box[data-status]');
+    const currentStatus = '{{ current_status }}';
+    const currentType = '{{ currentftype }}';
+    const currentSearch = '{{ search }}';
+    
+    // Stat boxes switching without page reload
+    statBoxes.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const newStatus = this.dataset.status;
+            const type = this.dataset.type || '';
+            const search = this.dataset.search || '';
+            
+            // Update active state
+            statBoxes.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Update URL and reload page
+            const params = new URLSearchParams();
+            params.set('status', newStatus);
+            if (type && type !== 'all') params.set('type', type);
+            if (search) params.set('search', search);
+            window.location.href = window.location.pathname + '?' + params.toString();
+        });
+    });
+});
+</script>
 {% endblock %}

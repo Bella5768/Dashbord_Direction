@@ -76,48 +76,48 @@
 <!-- Stats -->
 <div class="stats-row">
 {% with fdir=currentfdirection fq=search %}
-    <a class="stat-box {% if current_status == 'all' or not current_status %}active{% endif %}" href="{% url 'core:projects' %}?status=all{% if fdir and fdir != 'all' %}&direction={{ fdir }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
+    <button type="button" class="stat-box {% if current_status == 'all' or not current_status %}active{% endif %}" data-status="all" data-direction="{{ fdir }}" data-search="{{ fq }}">
         <div class="stat-box-icon"><i class="fa-solid fa-box-archive" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.total }}</p>
             <p class="stat-box-label">{% trans 'Total' %}</p>
         </div>
-    </a>
-    <a class="stat-box blue {% if current_status == 'en_cours' %}active{% endif %}" href="{% url 'core:projects' %}?status=en_cours{% if fdir and fdir != 'all' %}&direction={{ fdir }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
+    </button>
+    <button type="button" class="stat-box blue {% if current_status == 'en_cours' %}active{% endif %}" data-status="en_cours" data-direction="{{ fdir }}" data-search="{{ fq }}">
         <div class="stat-box-icon"><i class="fa-solid fa-circle-play" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.en_cours }}</p>
             <p class="stat-box-label">{% trans 'En cours' %}</p>
         </div>
-    </a>
-    <a class="stat-box green {% if current_status == 'termine' %}active{% endif %}" href="{% url 'core:projects' %}?status=termine{% if fdir and fdir != 'all' %}&direction={{ fdir }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
+    </button>
+    <button type="button" class="stat-box green {% if current_status == 'termine' %}active{% endif %}" data-status="termine" data-direction="{{ fdir }}" data-search="{{ fq }}">
         <div class="stat-box-icon"><i class="fa-solid fa-circle-check" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.termine }}</p>
             <p class="stat-box-label">{% trans 'Terminés' %}</p>
         </div>
-    </a>
-    <a class="stat-box amber {% if current_status == 'planifie' %}active{% endif %}" href="{% url 'core:projects' %}?status=planifie{% if fdir and fdir != 'all' %}&direction={{ fdir }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
+    </button>
+    <button type="button" class="stat-box amber {% if current_status == 'planifie' %}active{% endif %}" data-status="planifie" data-direction="{{ fdir }}" data-search="{{ fq }}">
         <div class="stat-box-icon"><i class="fa-solid fa-clock" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.planifie }}</p>
             <p class="stat-box-label">{% trans 'Planifiés' %}</p>
         </div>
-    </a>
-    <a class="stat-box red {% if current_status == 'en_retard' %}active{% endif %}" href="{% url 'core:projects' %}?status=en_retard{% if fdir and fdir != 'all' %}&direction={{ fdir }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
+    </button>
+    <button type="button" class="stat-box red {% if current_status == 'en_retard' %}active{% endif %}" data-status="en_retard" data-direction="{{ fdir }}" data-search="{{ fq }}">
         <div class="stat-box-icon"><i class="fa-solid fa-circle-xmark" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.en_retard|default:0 }}</p>
             <p class="stat-box-label">{% trans 'En retard' %}</p>
         </div>
-    </a>
-    <a class="stat-box {% if current_status == 'suspendu' %}active{% endif %}" href="{% url 'core:projects' %}?status=suspendu{% if fdir and fdir != 'all' %}&direction={{ fdir }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
+    </button>
+    <button type="button" class="stat-box {% if current_status == 'suspendu' %}active{% endif %}" data-status="suspendu" data-direction="{{ fdir }}" data-search="{{ fq }}">
         <div class="stat-box-icon"><i class="fa-solid fa-circle-pause" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.suspendu|default:0 }}</p>
             <p class="stat-box-label">{% trans 'Suspendus' %}</p>
         </div>
-    </a>
+    </button>
 {% endwith %}
 </div>
 
@@ -242,6 +242,44 @@ window._onProjUpdate = function(data) {
 </script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.project-card[data-detail-url]').forEach(function (card) {
+        card.addEventListener('click', function (e) {
+            if (e.target.closest('a, button, input, select, textarea')) return;
+            window.location.href = card.dataset.detailUrl;
+        });
+        card.addEventListener('keydown', function (e) {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            if (e.target.closest('a, button, input, select, textarea')) return;
+            e.preventDefault();
+            window.location.href = card.dataset.detailUrl;
+        });
+    });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Stat boxes switching without page reload
+    const statBoxes = document.querySelectorAll('.stat-box[data-status]');
+    statBoxes.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const status = this.dataset.status;
+            const direction = this.dataset.direction || '';
+            const search = this.dataset.search || '';
+            
+            // Update active state
+            statBoxes.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Update URL and reload page
+            const params = new URLSearchParams();
+            params.set('status', status);
+            if (direction && direction !== 'all') params.set('direction', direction);
+            if (search) params.set('search', search);
+            window.location.href = window.location.pathname + '?' + params.toString();
+        });
+    });
+
+    // Project cards click handling
     document.querySelectorAll('.project-card[data-detail-url]').forEach(function (card) {
         card.addEventListener('click', function (e) {
             if (e.target.closest('a, button, input, select, textarea')) return;

@@ -9,27 +9,27 @@
 <!-- Stats -->
 <div class="stats-row">
 {% with fr=currentfrole fq=search %}
-    <a class="stat-box {% if current_status == 'all' %}active{% endif %}" href="{% url 'core:users_list' %}?status=all{% if fr and fr != 'all' %}&role={{ fr }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
+    <button type="button" class="stat-box {% if current_status == 'all' %}active{% endif %}" data-status="all" data-role="{{ fr }}" data-search="{{ fq }}">
         <div class="stat-box-icon"><i class="fa-solid fa-users" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.total }}</p>
             <p class="stat-box-label">{% trans 'Total utilisateurs' %}</p>
         </div>
-    </a>
-    <a class="stat-box green {% if current_status == 'active' %}active{% endif %}" href="{% url 'core:users_list' %}?status=active{% if fr and fr != 'all' %}&role={{ fr }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
+    </button>
+    <button type="button" class="stat-box green {% if current_status == 'active' %}active{% endif %}" data-status="active" data-role="{{ fr }}" data-search="{{ fq }}">
         <div class="stat-box-icon"><i class="fa-solid fa-user-check" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.active }}</p>
             <p class="stat-box-label">{% trans 'Comptes actifs' %}</p>
         </div>
-    </a>
-    <a class="stat-box red {% if current_status == 'inactive' %}active{% endif %}" href="{% url 'core:users_list' %}?status=inactive{% if fr and fr != 'all' %}&role={{ fr }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
+    </button>
+    <button type="button" class="stat-box red {% if current_status == 'inactive' %}active{% endif %}" data-status="inactive" data-role="{{ fr }}" data-search="{{ fq }}">
         <div class="stat-box-icon"><i class="fa-solid fa-user-xmark" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.inactive }}</p>
             <p class="stat-box-label">{% trans 'Comptes inactifs' %}</p>
         </div>
-    </a>
+    </button>
 {% endwith %}
     <a class="stat-box blue" href="{% url 'core:user_activities' %}">
         <div class="stat-box-icon"><i class="fa-solid fa-chart-line" width="20" height="20"></i></div>
@@ -221,4 +221,35 @@
     </div>
 </div>
 {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const statBoxes = document.querySelectorAll('.stat-box[data-status]');
+    const currentStatus = '{{ current_status }}';
+    const currentRole = '{{ currentfrole }}';
+    const currentSearch = '{{ search }}';
+    
+    // Stat boxes switching without page reload
+    statBoxes.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const newStatus = this.dataset.status;
+            const role = this.dataset.role || '';
+            const search = this.dataset.search || '';
+            
+            // Update active state
+            statBoxes.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Update URL and reload page
+            const params = new URLSearchParams();
+            params.set('status', newStatus);
+            if (role && role !== 'all') params.set('role', role);
+            if (search) params.set('search', search);
+            window.location.href = window.location.pathname + '?' + params.toString();
+        });
+    });
+});
+</script>
 {% endblock %}

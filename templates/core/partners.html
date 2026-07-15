@@ -9,27 +9,27 @@
 <!-- Stats -->
 <div class="stats-row">
 {% with ft=currentftype fq=search %}
-    <a class="stat-box {% if current_status == 'all' or not current_status %}active{% endif %}" href="{% url 'core:partners' %}?status=all{% if ft and ft != 'all' %}&type={{ ft }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
+    <button type="button" class="stat-box {% if current_status == 'all' or not current_status %}active{% endif %}" data-status="all" data-type="{{ ft }}" data-search="{{ fq }}">
         <div class="stat-box-icon"><i class="fa-solid fa-handshake" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.total }}</p>
             <p class="stat-box-label">{% trans 'Total partenaires' %}</p>
         </div>
-    </a>
-    <a class="stat-box green {% if current_status == 'actif' %}active{% endif %}" href="{% url 'core:partners' %}?status=actif{% if ft and ft != 'all' %}&type={{ ft }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
+    </button>
+    <button type="button" class="stat-box green {% if current_status == 'actif' %}active{% endif %}" data-status="actif" data-type="{{ ft }}" data-search="{{ fq }}">
         <div class="stat-box-icon"><i class="fa-solid fa-circle-check" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.actif }}</p>
             <p class="stat-box-label">{% trans 'Partenariats actifs' %}</p>
         </div>
-    </a>
-    <a class="stat-box amber {% if current_status == 'en_discussion' %}active{% endif %}" href="{% url 'core:partners' %}?status=en_discussion{% if ft and ft != 'all' %}&type={{ ft }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
+    </button>
+    <button type="button" class="stat-box amber {% if current_status == 'en_discussion' %}active{% endif %}" data-status="en_discussion" data-type="{{ ft }}" data-search="{{ fq }}">
         <div class="stat-box-icon"><i class="fa-solid fa-comment" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.en_discussion }}</p>
             <p class="stat-box-label">{% trans 'En discussion' %}</p>
         </div>
-    </a>
+    </button>
     <a class="stat-box blue" href="{% url 'core:calendar' %}">
         <div class="stat-box-icon"><i class="fa-solid fa-calendar" width="20" height="20"></i></div>
         <div class="stat-box-body">
@@ -220,4 +220,35 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const statBoxes = document.querySelectorAll('.stat-box[data-status]');
+    const currentStatus = '{{ current_status }}';
+    const currentType = '{{ currentftype }}';
+    const currentSearch = '{{ search }}';
+    
+    // Stat boxes switching without page reload
+    statBoxes.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const newStatus = this.dataset.status;
+            const type = this.dataset.type || '';
+            const search = this.dataset.search || '';
+            
+            // Update active state
+            statBoxes.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Update URL and reload page
+            const params = new URLSearchParams();
+            params.set('status', newStatus);
+            if (type && type !== 'all') params.set('type', type);
+            if (search) params.set('search', search);
+            window.location.href = window.location.pathname + '?' + params.toString();
+        });
+    });
+});
+</script>
 {% endblock %}

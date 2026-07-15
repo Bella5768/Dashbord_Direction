@@ -9,34 +9,34 @@
 <!-- Stats -->
 <div class="stats-row">
 {% with fdir=currentfdirection fq=search %}
-    <a class="stat-box {% if current_status == 'all' %}active{% endif %}" href="{% url 'core:requests' %}?status=all{% if fdir and fdir != 'all' %}&direction={{ fdir }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
+    <button type="button" class="stat-box {% if current_status == 'all' %}active{% endif %}" data-status="all" data-direction="{{ fdir }}" data-search="{{ fq }}">
         <div class="stat-box-icon"><i class="fa-solid fa-message" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.total }}</p>
             <p class="stat-box-label">{% trans 'Total demandes' %}</p>
         </div>
-    </a>
-    <a class="stat-box amber {% if current_status == 'en_attente' %}active{% endif %}" href="{% url 'core:requests' %}?status=en_attente{% if fdir and fdir != 'all' %}&direction={{ fdir }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
+    </button>
+    <button type="button" class="stat-box amber {% if current_status == 'en_attente' %}active{% endif %}" data-status="en_attente" data-direction="{{ fdir }}" data-search="{{ fq }}">
         <div class="stat-box-icon"><i class="fa-solid fa-clock" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.en_attente }}</p>
             <p class="stat-box-label">{% trans 'En attente' %}</p>
         </div>
-    </a>
-    <a class="stat-box green {% if current_status == 'approuve' %}active{% endif %}" href="{% url 'core:requests' %}?status=approuve{% if fdir and fdir != 'all' %}&direction={{ fdir }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
+    </button>
+    <button type="button" class="stat-box green {% if current_status == 'approuve' %}active{% endif %}" data-status="approuve" data-direction="{{ fdir }}" data-search="{{ fq }}">
         <div class="stat-box-icon"><i class="fa-solid fa-circle-check" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.approuve }}</p>
             <p class="stat-box-label">{% trans 'Approuvées' %}</p>
         </div>
-    </a>
-    <a class="stat-box red {% if current_status == 'rejete' %}active{% endif %}" href="{% url 'core:requests' %}?status=rejete{% if fdir and fdir != 'all' %}&direction={{ fdir }}{% endif %}{% if fq %}&search={{ fq|urlencode }}{% endif %}">
+    </button>
+    <button type="button" class="stat-box red {% if current_status == 'rejete' %}active{% endif %}" data-status="rejete" data-direction="{{ fdir }}" data-search="{{ fq }}">
         <div class="stat-box-icon"><i class="fa-solid fa-circle-xmark" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ stats.rejete }}</p>
             <p class="stat-box-label">{% trans 'Rejetées' %}</p>
         </div>
-    </a>
+    </button>
 {% endwith %}
 </div>
 
@@ -134,4 +134,35 @@
     </div>
     {% endfor %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const statBoxes = document.querySelectorAll('.stat-box[data-status]');
+    const currentStatus = '{{ current_status }}';
+    const currentDirection = '{{ currentfdirection }}';
+    const currentSearch = '{{ search }}';
+    
+    // Stat boxes switching without page reload
+    statBoxes.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const newStatus = this.dataset.status;
+            const direction = this.dataset.direction || '';
+            const search = this.dataset.search || '';
+            
+            // Update active state
+            statBoxes.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Update URL and reload page
+            const params = new URLSearchParams();
+            params.set('status', newStatus);
+            if (direction && direction !== 'all') params.set('direction', direction);
+            if (search) params.set('search', search);
+            window.location.href = window.location.pathname + '?' + params.toString();
+        });
+    });
+});
+</script>
 {% endblock %}
