@@ -5,6 +5,7 @@ Django settings for dashboard_csig project.
 from pathlib import Path
 import os
 from django.utils.translation import gettext_lazy as _
+from urllib.parse import urlparse, parse_qsl
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -104,7 +105,25 @@ else:
         }
     }
 
-if os.getenv('MYSQL_HOST'):
+# Database Configuration
+# Priority: Neon PostgreSQL (DATABASE_URL) > MySQL > SQLite
+_database_url = os.getenv('DATABASE_URL', '')
+if _database_url:
+    # Neon PostgreSQL (primary choice)
+    tmpPostgres = urlparse(_database_url)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': tmpPostgres.path.replace('/', ''),
+            'USER': tmpPostgres.username,
+            'PASSWORD': tmpPostgres.password,
+            'HOST': tmpPostgres.hostname,
+            'PORT': 5432,
+            'OPTIONS': dict(parse_qsl(tmpPostgres.query)),
+        }
+    }
+elif os.getenv('MYSQL_HOST'):
+    # MySQL (fallback option)
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
@@ -119,6 +138,7 @@ if os.getenv('MYSQL_HOST'):
         }
     }
 else:
+    # SQLite (development fallback)
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
