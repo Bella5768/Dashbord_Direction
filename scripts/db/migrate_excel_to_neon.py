@@ -78,10 +78,34 @@ IMPORT_ORDER = [
 ]
 
 def clean_nan(value):
-    """Remplace NaN par None"""
+    """Remplace NaN par None ou valeur par défaut"""
     if isinstance(value, float) and np.isnan(value):
         return None
     return value
+
+def get_model_fields(model_class):
+    """Retourne la liste des champs valides pour un modèle"""
+    return [field.name for field in model_class._meta.get_fields()]
+
+def filter_valid_fields(row_data, model_class):
+    """Filtre les données pour ne garder que les champs valides du modèle"""
+    valid_fields = get_model_fields(model_class)
+    return {k: v for k, v in row_data.items() if k in valid_fields}
+
+def handle_null_constraints(row_data, model_class):
+    """Gère les contraintes NOT NULL en mettant des valeurs par défaut"""
+    from django.db.models import TextField, CharField
+    
+    for field in model_class._meta.get_fields():
+        if not field.null and not field.blank and not field.default:
+            field_name = field.name
+            if field_name in row_data and row_data[field_name] is None:
+                # Valeur par défaut selon le type de champ
+                if isinstance(field, (TextField, CharField)):
+                    row_data[field_name] = ""
+                elif hasattr(field, 'default') and field.default != '':
+                    row_data[field_name] = field.default
+    return row_data
 
 def import_excel_to_model(filename, model_class):
     """Importe un fichier Excel vers un modèle Django"""
@@ -95,6 +119,11 @@ def import_excel_to_model(filename, model_class):
         df = pd.read_excel(filepath)
         print(f"   📥 {filename} ({len(df)} lignes)")
         
+        # Vérifier si des données existent déjà
+        if model_class.objects.exists():
+            print(f"   ⏭️  Données déjà présentes ({model_class.objects.count()} objets)")
+            return 0
+        
         imported = 0
         errors = 0
         
@@ -103,16 +132,16 @@ def import_excel_to_model(filename, model_class):
                 # Nettoyer les valeurs NaN
                 row_data = {k: clean_nan(v) for k, v in row.to_dict().items()}
                 
-                # Créer ou mettre à jour l'objet
-                obj, created = model_class.objects.update_or_create(
-                    pk=row_data.get('id'),
-                    defaults=row_data
-                )
+                # Filtrer les champs valides
+                row_data = filter_valid_fields(row_data, model_class)
                 
-                if created:
-                    imported += 1
-                else:
-                    imported += 1  # Compter aussi les mises à jour
+                # Gérer les contraintes NOT NULL
+                row_data = handle_null_constraints(row_data, model_class)
+                
+                # Créer l'objet (sans update_or_create pour éviter les duplicate key errors)
+                obj = model_class(**row_data)
+                obj.save()
+                imported += 1
                     
             except Exception as e:
                 errors += 1
