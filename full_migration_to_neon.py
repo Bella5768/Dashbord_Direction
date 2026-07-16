@@ -38,123 +38,63 @@ def get_source_database():
     else:
         return 'Inconnu'
 
-def export_auth_users():
-    """Exporte les utilisateurs Django depuis la base de données source"""
+def export_all_data():
+    """Exporte TOUTES les données depuis la base de données source"""
     source_db = get_source_database()
     print("=" * 60)
-    print(f"📦 Export des utilisateurs Django depuis {source_db}")
+    print(f"📦 Export de TOUTES les données depuis {source_db}")
     print("=" * 60)
     
     try:
         # Nettoyer les fichiers existants
-        for f in ['auth_users.json', 'auth_users_clean.json']:
+        for f in ['all_data.json', 'all_data_clean.json']:
             if os.path.exists(f):
                 os.remove(f)
         
-        # Exporter les utilisateurs
+        # Exporter toutes les données (toutes les applications)
         import sys
         if sys.platform == 'win32':
-            with open('auth_users.json', 'w', encoding='utf-8') as f:
-                call_command('dumpdata', 'auth.User', indent=2, stdout=f)
+            with open('all_data.json', 'w', encoding='utf-8') as f:
+                call_command('dumpdata', indent=2, stdout=f)
         else:
-            call_command('dumpdata', 'auth.User', indent=2, output='auth_users.json')
+            call_command('dumpdata', indent=2, output='all_data.json')
         
         # Vérifier le fichier
-        with open('auth_users.json', 'r', encoding='utf-8') as f:
+        with open('all_data.json', 'r', encoding='utf-8') as f:
             data = json.load(f)
         
-        print(f"✅ {len(data)} utilisateurs exportés")
+        # Compter par modèle
+        model_counts = {}
+        for item in data:
+            model = item['model']
+            model_counts[model] = model_counts.get(model, 0) + 1
+        
+        print(f"✅ {len(data)} objets exportés au total")
+        print(f"📊 {len(model_counts)} modèles différents")
+        
+        # Afficher les détails
+        for model, count in sorted(model_counts.items()):
+            print(f"   - {model}: {count}")
+        
         return True
         
     except Exception as e:
         print(f"❌ Erreur lors de l'export: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
-def export_all_core_data():
-    """Exporte toutes les données core depuis la base de données source"""
-    source_db = get_source_database()
+def import_all_data_to_neon():
+    """Importe toutes les données vers Neon"""
     print("\n" + "=" * 60)
-    print(f"📦 Export des données core depuis {source_db}")
+    print("📥 Import de toutes les données vers Neon")
     print("=" * 60)
     
     try:
-        # Nettoyer les fichiers existants
-        for f in ['core_data.json', 'core_data_clean.json']:
-            if os.path.exists(f):
-                os.remove(f)
-        
-        # Exporter toutes les données core
-        import sys
-        if sys.platform == 'win32':
-            with open('core_data.json', 'w', encoding='utf-8') as f:
-                call_command('dumpdata', 'core', indent=2, stdout=f)
-        else:
-            call_command('dumpdata', 'core', indent=2, output='core_data.json')
-        
-        # Vérifier le fichier
-        with open('core_data.json', 'r', encoding='utf-8') as f:
+        with open('all_data.json', 'r', encoding='utf-8') as f:
             data = json.load(f)
         
-        print(f"✅ {len(data)} objets core exportés")
-        return True
-        
-    except Exception as e:
-        print(f"❌ Erreur lors de l'export: {e}")
-        return False
-
-def import_auth_users_to_neon():
-    """Importe les utilisateurs vers Neon"""
-    print("\n" + "=" * 60)
-    print("📥 Import des utilisateurs vers Neon")
-    print("=" * 60)
-    
-    try:
-        with open('auth_users.json', 'r', encoding='utf-8') as f:
-            data = json.load(f)
-        
-        print(f"📊 {len(data)} utilisateurs à importer")
-        
-        # Importer par lots
-        for i in range(0, len(data), 5):
-            batch = data[i:i+5]
-            try:
-                for obj in serializers.deserialize("json", json.dumps(batch)):
-                    obj.save()
-                print(f"   ✓ Lot {i//5 + 1}/{(len(data)-1)//5 + 1} ({len(batch)} utilisateurs)")
-                time.sleep(0.1)
-            except Exception as e:
-                print(f"   ❌ Erreur lot {i//5 + 1}: {e}")
-        
-        print("✅ Import utilisateurs terminé")
-        return True
-        
-    except Exception as e:
-        print(f"❌ Erreur lors de l'import: {e}")
-        return False
-
-def import_core_data_to_neon():
-    """Importe toutes les données core vers Neon"""
-    print("\n" + "=" * 60)
-    print("📥 Import des données core vers Neon")
-    print("=" * 60)
-    
-    # Ordre d'import correct
-    import_order = [
-        'core.direction', 'core.employee', 'core.partner', 
-        'core.permission', 'core.role', 'core.projectrole',
-        'core.project', 'core.projectfolder', 'core.document',
-        'core.projectdocument', 'core.projectmember', 'core.milestone',
-        'core.event', 'core.eventmember', 'core.submilestone',
-        'core.projectactivity', 'core.budget', 'core.request',
-        'core.userprofile', 'core.useractivity', 'core.notification',
-        'core.leaverequest', 'core.leavedocument'
-    ]
-    
-    try:
-        with open('core_data.json', 'r', encoding='utf-8') as f:
-            data = json.load(f)
-        
-        print(f"📊 {len(data)} objets core à importer")
+        print(f"📊 {len(data)} objets à importer")
         
         # Organiser par modèle
         model_data = {}
@@ -164,23 +104,79 @@ def import_core_data_to_neon():
                 model_data[model] = []
             model_data[model].append(item)
         
+        # Ordre d'import pour respecter les dépendances
+        # Système Django d'abord
+        import_order = [
+            # Django auth
+            'auth.user',
+            'auth.permission',
+            'auth.group',
+            'contenttypes.contenttype',
+            'sessions.session',
+            # Core - niveau 0 (indépendant)
+            'core.direction', 'core.employee', 'core.partner',
+            'core.permission', 'core.role', 'core.projectrole',
+            # Core - niveau 1 (dépend du niveau 0)
+            'core.project', 'core.projectfolder', 'core.document',
+            # Core - niveau 2 (dépend du niveau 1)
+            'core.projectdocument', 'core.projectmember', 'core.milestone',
+            'core.event', 'core.eventmember',
+            # Core - niveau 3 (dépend du niveau 2)
+            'core.submilestone', 'core.projectactivity', 'core.budget', 'core.request',
+            # Core - niveau 4 (dépend de auth.user)
+            'core.userprofile', 'core.useractivity', 'core.notification',
+            'core.leaverequest', 'core.leavedocument'
+        ]
+        
         # Importer dans l'ordre
+        total_imported = 0
         for model_name in import_order:
             if model_name in model_data:
                 items = model_data[model_name]
-                print(f"\n   📥 {model_name} ({len(items)} objets)")
+                print(f"\n   � {model_name} ({len(items)} objets)")
                 
+                imported = 0
                 for i in range(0, len(items), 5):
                     batch = items[i:i+5]
                     try:
                         for obj in serializers.deserialize("json", json.dumps(batch)):
                             obj.save()
+                        imported += len(batch)
                         print(f"      ✓ Lot {i//5 + 1}")
                         time.sleep(0.05)
                     except Exception as e:
+                        # Ignorer les doublons
+                        if "duplicate key" in str(e).lower():
+                            continue
                         print(f"      ❌ Erreur lot {i//5 + 1}: {str(e)[:80]}")
+                
+                total_imported += imported
+                print(f"   ✅ {imported}/{len(items)} importés")
         
-        print("\n✅ Import core terminé")
+        # Importer les modèles non listés
+        unlisted_models = set(model_data.keys()) - set(import_order)
+        if unlisted_models:
+            print(f"\n⚠️  Modèles non listés dans l'ordre d'import:")
+            for model_name in unlisted_models:
+                items = model_data[model_name]
+                print(f"   📥 {model_name} ({len(items)} objets)")
+                
+                imported = 0
+                for i in range(0, len(items), 5):
+                    batch = items[i:i+5]
+                    try:
+                        for obj in serializers.deserialize("json", json.dumps(batch)):
+                            obj.save()
+                        imported += len(batch)
+                        time.sleep(0.05)
+                    except Exception as e:
+                        if "duplicate key" in str(e).lower():
+                            continue
+                        print(f"      ❌ Erreur: {str(e)[:80]}")
+                
+                total_imported += imported
+        
+        print(f"\n📊 Total: {total_imported}/{len(data)} objets importés")
         return True
         
     except Exception as e:
@@ -229,18 +225,12 @@ def main():
     source_db = get_source_database()
     print(f"📊 Base de données source: {source_db}")
     
-    # Étape 1: Export depuis la base de données source
-    if not export_auth_users():
+    # Étape 1: Export de TOUTES les données depuis la base de données source
+    if not export_all_data():
         return False
     
-    if not export_all_core_data():
-        return False
-    
-    # Étape 2: Import vers Neon
-    if not import_auth_users_to_neon():
-        return False
-    
-    if not import_core_data_to_neon():
+    # Étape 2: Import de toutes les données vers Neon
+    if not import_all_data_to_neon():
         return False
     
     # Étape 3: Vérification
