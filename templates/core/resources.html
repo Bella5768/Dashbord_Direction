@@ -252,7 +252,7 @@
     <div class="employee-card {% if employee.workload >= 85 %}workload-high{% elif employee.workload >= 70 %}workload-medium{% else %}workload-low{% endif %}" data-href="{% url 'core:employee_edit' employee.id %}">
 
         <div class="ec-header">
-            <div class="ec-avatar" style="background: {{ employee.direction.color }}; color: #fff;">{{ employee.name|first|upper }}</div>
+            <div class="ec-avatar" style="background: {{ employee.direction.color }}; color: #fff;overflow:hidden;">{% if employee.avatar_url %}<img src="{{ employee.avatar_url }}" alt="" style="width:100%;height:100%;object-fit:cover;">{% else %}{{ employee.name|first|upper }}{% endif %}</div>
             <div class="ec-info">
                 <p class="ec-name">{{ employee.name }}</p>
                 <p class="ec-role">{{ employee.role }}</p>

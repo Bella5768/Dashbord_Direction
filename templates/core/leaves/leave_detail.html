@@ -261,7 +261,7 @@
                 <div class="detail-row">
                     <div class="lbl">{% trans 'Justificatif' %}</div>
                     <div class="val">
-                        <a href="{{ leave.justification.url }}" target="_blank" class="btn btn-outline btn-sm">
+                        <a href="{{ leave.justification }}" target="_blank" class="btn btn-outline btn-sm">
                             <i class="fa-solid fa-paperclip" width="13" height="13"></i>
                             {% trans 'Télécharger' %}
                         </a>
@@ -275,9 +275,9 @@
                         <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px;">
                             {% for doc in documents %}
                             <li style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;">
-                                <a href="{{ doc.file.url }}" target="_blank" class="btn btn-outline btn-sm" style="flex:1;justify-content:flex-start;">
+                                <a href="{% url 'core:leave_document_download' leave.id doc.id %}" class="btn btn-outline btn-sm" style="flex:1;justify-content:flex-start;">
                                     <i class="fa-solid fa-paperclip" width="13" height="13"></i>
-                                    {{ doc.label|default:doc.file.name|truncatechars:45 }}
+                                    {{ doc.label|default:doc.file|truncatechars:45 }}
                                 </a>
                                 <span style="color:#9ca3af;font-size:11px;">{{ doc.uploaded_at|date:"d/m/Y" }}</span>
                                 {% if can_cancel and leave.status == 'soumise' %}

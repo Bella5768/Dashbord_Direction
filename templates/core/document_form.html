@@ -11,7 +11,7 @@
         <h3 class="card-title">{% trans 'Informations du document' %}</h3>
     </div>
     <div class="card-content">
-        <form method="post" enctype="multipart/form-data">
+        <form method="post">
             {% csrf_token %}
             
             <div class="form-group">
@@ -62,11 +62,12 @@
                     {% if document and document.file %}
                     <div class="file-drop-current">
                         <i class="fa-solid fa-file" width="14" height="14"></i>
-                        <span>{% trans 'Fichier actuel' %} : <a href="{{ document.file.url }}" target="_blank">{{ document.file.name|slice:"9:" }}</a></span>
+                        <span>{% trans 'Fichier actuel' %} : <a href="{% url 'core:document_file_proxy' document.id %}" target="_blank">{{ document.file|truncatechars:40 }}</a></span>
                     </div>
                     {% endif %}
-                    <div class="file-drop">
+                    <div class="file-drop" data-existing-url="{{ document.file|default:'' }}">
                         {{ form.file }}
+                        <input type="file" name="_file_upload" style="position:absolute;opacity:0;pointer-events:none;">
                         <div class="file-drop-zone">
                             <i class="fa-solid fa-cloud-arrow-up" width="36" height="36"></i>
                             <p class="file-drop-title">{% trans 'Cliquez ou glissez un fichier' %}</p>

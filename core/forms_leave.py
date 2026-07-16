@@ -1,50 +1,25 @@
 """Formulaires pour la gestion des demandes de conge CSIG."""
+import json
 from django import forms
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from .models import LeaveRequest, LeaveDocument, Employee, Direction
-from .validators import validate_safe_file
 
 
 _DATE_INPUT = forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
 _TEXTAREA = forms.Textarea(attrs={'rows': 3, 'class': 'form-control'})
 _INPUT = forms.TextInput(attrs={'class': 'form-control'})
 _SELECT = forms.Select(attrs={'class': 'form-control'})
-_FILE = forms.ClearableFileInput(attrs={'class': 'form-control'})
-
-
-class _MultipleFileInput(forms.ClearableFileInput):
-    allow_multiple_selected = True
-
-
-class MultipleFileField(forms.FileField):
-    """Champ permettant l'upload de plusieurs fichiers en une seule fois."""
-
-    def __init__(self, *args, **kwargs):
-        kwargs.setdefault('widget', _MultipleFileInput(attrs={'class': 'form-control', 'multiple': True}))
-        super().__init__(*args, **kwargs)
-
-    def clean(self, data, initial=None):
-        single_clean = super().clean
-        if isinstance(data, (list, tuple)):
-            files = [single_clean(d, initial) for d in data if d]
-        elif data:
-            files = [single_clean(data, initial)]
-        else:
-            files = []
-        for f in files:
-            validate_safe_file(f)
-        return files
 
 
 class LeaveRequestForm(forms.ModelForm):
     """Formulaire de creation/modification d'une demande de conge."""
 
-    extra_documents = MultipleFileField(
+    extra_documents_json = forms.CharField(
         required=False,
-        label=_("Pièces justificatives"),
-        help_text=_("Vous pouvez sélectionner plusieurs fichiers à la fois (Ctrl/Cmd + clic) ou les glisser-déposer."),
+        widget=forms.HiddenInput(),
+        label=_("Pièces justificatives (JSON)"),
     )
 
     class Meta:
@@ -78,13 +53,11 @@ class LeaveRequestForm(forms.ModelForm):
             if profile is not None:
                 is_privileged = profile.is_admin() or profile.is_directeur_general() or profile.is_hr()
                 if not is_privileged:
-                    # Restreindre à l'employé et la direction de l'utilisateur
                     if profile.employee_id:
                         self.fields['employee'].queryset = Employee.objects.filter(id=profile.employee_id)
                     if profile.direction_id:
                         self.fields['direction'].queryset = Direction.objects.filter(id=profile.direction_id)
 
-                # Pré-remplir depuis le profil si nouvelle demande
                 if not self.instance.pk:
                     if profile.employee_id and not self.initial.get('employee'):
                         self.initial['employee'] = profile.employee_id
@@ -92,17 +65,28 @@ class LeaveRequestForm(forms.ModelForm):
                         self.initial['direction'] = profile.direction_id
 
     def save_extra_documents(self, leave):
-        """Cree des LeaveDocument pour chaque fichier supplementaire uploade."""
-        files = self.cleaned_data.get('extra_documents') or []
-        for f in files:
-            LeaveDocument.objects.create(leave_request=leave, file=f, label=f.name)
+        """Cree des LeaveDocument pour chaque URL Cloudinary uploadee."""
+        raw = self.cleaned_data.get('extra_documents_json') or '[]'
+        try:
+            docs = json.loads(raw)
+        except (json.JSONDecodeError, TypeError):
+            docs = []
+        for doc_data in docs:
+            url = doc_data.get('url', '') if isinstance(doc_data, dict) else str(doc_data)
+            label = doc_data.get('name', '') if isinstance(doc_data, dict) else ''
+            if url:
+                LeaveDocument.objects.create(leave_request=leave, file=url, label=label)
 
     def clean(self):
         cleaned = super().clean()
         start = cleaned.get('start_date')
         end = cleaned.get('end_date')
         leave_type = cleaned.get('leave_type')
-        new_files = cleaned.get('extra_documents') or []
+        raw_json = cleaned.get('extra_documents_json') or '[]'
+        try:
+            new_files = json.loads(raw_json)
+        except (json.JSONDecodeError, TypeError):
+            new_files = []
         has_existing_docs = bool(self.instance.pk and self.instance.documents.exists())
         has_any_doc = bool(new_files) or has_existing_docs
 
@@ -114,10 +98,9 @@ class LeaveRequestForm(forms.ModelForm):
             if min_delay < 15:
                 self.add_error('start_date', _("Un congé annuel doit être demandé au moins 15 jours avant le départ."))
 
-        # Certains types exigent au moins une piece justificative
         types_requiring_doc = {'maladie', 'maternite', 'formation'}
         if leave_type in types_requiring_doc and not has_any_doc:
-            self.add_error('extra_documents', _("Une pièce justificative est requise pour ce type de congé."))
+            self.add_error('extra_documents_json', _("Une pièce justificative est requise pour ce type de congé."))
 
         return cleaned
 
@@ -187,6 +170,6 @@ class LeaveDocumentForm(forms.ModelForm):
         model = LeaveDocument
         fields = ['file', 'label']
         widgets = {
-            'file': _FILE,
+            'file': forms.HiddenInput(),
             'label': _INPUT,
         }

@@ -263,7 +263,7 @@ textarea.form-control, .lf-section textarea { min-height: 100px; resize: vertica
         <div class="lf-alert"><i class="fa-solid fa-triangle-exclamation" width="16" height="16" style="vertical-align:middle;margin-right:4px;"></i>{{ form.non_field_errors }}</div>
     {% endif %}
 
-    <form method="post" enctype="multipart/form-data">
+    <form method="post">
         {% csrf_token %}
         <div class="lf-grid">
 
@@ -363,16 +363,15 @@ textarea.form-control, .lf-section textarea { min-height: 100px; resize: vertica
                     </div>
                     <div class="lf-section-body">
                         <div class="lf-group">
-                            <label class="lf-label">{{ form.extra_documents.label }}</label>
-                            <label class="lf-dropzone" for="id_extra_documents">
+                            <label class="lf-label">{% trans 'Pièces justificatives' %}</label>
+                            <label class="lf-dropzone">
                                 <div class="lf-dz-icon"><i class="fa-solid fa-upload" width="32" height="32"></i></div>
                                 <div class="lf-dz-title">{% trans 'Cliquez pour ajouter ou glissez vos fichiers' %}</div>
                                 <div class="lf-dz-sub">{% trans 'Certificat médical, acte de naissance, convocation, ordre de mission… (PDF, image, Word)' %}</div>
                                 <div class="lf-dz-files" id="lf-dz-files"></div>
                             </label>
-                            <div style="display:none;">{{ form.extra_documents }}</div>
-                            <p class="lf-help">{{ form.extra_documents.help_text }}</p>
-                            {% if form.extra_documents.errors %}<p class="lf-error">{{ form.extra_documents.errors|striptags }}</p>{% endif %}
+                            {{ form.extra_documents_json }}
+                            {% if form.extra_documents_json.errors %}<p class="lf-error">{{ form.extra_documents_json.errors|striptags }}</p>{% endif %}
                         </div>
 
                         {% if leave and leave.documents.all %}
@@ -381,7 +380,7 @@ textarea.form-control, .lf-section textarea { min-height: 100px; resize: vertica
                             <ul class="lf-doc-list">
                                 {% for doc in leave.documents.all %}
                                 <li>
-                                    <a href="{{ doc.file.url }}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;"><i class="fa-solid fa-paperclip" width="14" height="14"></i>{{ doc.label|default:doc.file.name }}</a>
+                                    <a href="{% url 'core:leave_document_download' leave.id doc.id %}" style="display:inline-flex;align-items:center;gap:4px;"><i class="fa-solid fa-paperclip" width="14" height="14"></i>{{ doc.label|default:doc.file|truncatechars:40 }}</a>
                                     <span class="lf-doc-date">{{ doc.uploaded_at|date:"d/m/Y" }}</span>
                                     {% if leave.status == 'soumise' %}
                                     <form method="post" action="{% url 'core:leave_document_delete' leave.id doc.id %}" style="display:inline;"
@@ -434,45 +433,4 @@ textarea.form-control, .lf-section textarea { min-height: 100px; resize: vertica
         </div>
     </form>
 </div>
-
-<script>
-(function() {
-    var input = document.getElementById('id_extra_documents');
-    var dz = document.querySelector('.lf-dropzone');
-    var preview = document.getElementById('lf-dz-files');
-    if (!input || !dz || !preview) return;
-
-    function render() {
-        preview.innerHTML = '';
-        var files = input.files;
-        if (!files || files.length === 0) return;
-        for (var i = 0; i < files.length; i++) {
-            var chip = document.createElement('span');
-            chip.className = 'chip';
-            chip.textContent = files[i].name + ' (' + Math.round(files[i].size / 1024) + ' Ko)';
-            preview.appendChild(chip);
-        }
-    }
-    input.addEventListener('change', render);
-
-    ['dragenter', 'dragover'].forEach(function(ev) {
-        dz.addEventListener(ev, function(e) {
-            e.preventDefault(); e.stopPropagation();
-            dz.classList.add('is-drag');
-        });
-    });
-    ['dragleave', 'drop'].forEach(function(ev) {
-        dz.addEventListener(ev, function(e) {
-            e.preventDefault(); e.stopPropagation();
-            dz.classList.remove('is-drag');
-        });
-    });
-    dz.addEventListener('drop', function(e) {
-        if (e.dataTransfer && e.dataTransfer.files) {
-            input.files = e.dataTransfer.files;
-            render();
-        }
-    });
-})();
-</script>
 {% endblock %}

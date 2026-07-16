@@ -107,13 +107,14 @@ class DocumentForm(forms.ModelForm):
         fields = ['title', 'doc_type', 'priority', 'direction', 'due_date', 'created_by', 'file']
         widgets = {
             'due_date': forms.DateInput(attrs={'type': 'date'}),
+            'file': forms.HiddenInput(),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form-control'
-        self.fields['file'].validators.append(validate_safe_file)
+            if field_name != 'file':
+                field.widget.attrs['class'] = 'form-control'
 
     def clean(self):
         cleaned = super().clean()
@@ -247,6 +248,7 @@ class ProjectDocumentForm(forms.ModelForm):
         fields = ['title', 'description', 'folder', 'file']
         widgets = {
             'description': forms.Textarea(attrs={'rows': 3}),
+            'file': forms.HiddenInput(),
         }
 
     def __init__(self, project, *args, **kwargs):
@@ -254,8 +256,8 @@ class ProjectDocumentForm(forms.ModelForm):
         self.project = project
         self.fields['folder'].queryset = ProjectFolder.objects.filter(project=project)
         for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form-control'
-        self.fields['file'].validators.append(validate_safe_file)
+            if field_name != 'file':
+                field.widget.attrs['class'] = 'form-control'
 
 
 class ProjectMemberForm(forms.ModelForm):
@@ -368,12 +370,14 @@ class PartnerForm(forms.ModelForm):
         fields = ['name', 'partner_type', 'status', 'contact_person', 'email', 'phone', 'start_date', 'logo']
         widgets = {
             'start_date': forms.DateInput(attrs={'type': 'date'}),
+            'logo': forms.HiddenInput(),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form-control'
+            if field_name != 'logo':
+                field.widget.attrs['class'] = 'form-control'
 
     def clean(self):
         cleaned = super().clean()

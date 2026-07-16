@@ -101,6 +101,7 @@ def leave_list(request):
     profile = _profile(request.user)
     tab = request.GET.get('tab', 'mine')
     status_filter = request.GET.get('status', '')
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
     base_qs = LeaveRequest.objects.select_related('employee', 'direction', 'user')
 
@@ -195,6 +196,9 @@ def leave_list(request):
         'can_final': can_final,
         'my_stats': my_stats,
     }
+    
+    if is_ajax:
+        return render(request, 'core/leaves/leave_list_table.html', context)
     return render(request, 'core/leaves/leave_list.html', context)
 
 
@@ -313,14 +317,38 @@ def leave_document_delete(request, leave_id, doc_id):
     if not _user_is_owner(request.user, leave) or leave.status != 'soumise':
         return HttpResponseForbidden()
     if request.method == 'POST':
-        try:
-            doc.file.delete(save=False)
-        except (AttributeError, OSError, ValueError) as e:
-            from .error_logging import ErrorLogger
-            ErrorLogger.log_exception(e, context={'function': 'leave_document_delete', 'doc_id': doc.id}, user=request.user)
         doc.delete()
         messages.success(request, _("Pièce jointe supprimée."))
     return redirect('core:leave_detail', leave_id=leave.id)
+
+
+@login_required
+def leave_document_download(request, leave_id, doc_id):
+    """Télécharger une pièce jointe de congé — redirection directe vers Cloudinary."""
+    from django.http import HttpResponseRedirect
+
+    leave = get_object_or_404(LeaveRequest, pk=leave_id)
+    doc = get_object_or_404(LeaveDocument, pk=doc_id, leave_request=leave)
+
+    if not doc.file:
+        return redirect('core:leave_detail', leave_id=leave.id)
+
+    url = doc.file.replace('/upload/', '/upload/fl_attachment/')
+    return HttpResponseRedirect(url)
+
+
+@login_required
+def leave_document_file_proxy(request, leave_id, doc_id):
+    """Rediriger vers le fichier d'une pièce jointe de congé (fichiers publics Cloudinary)."""
+    from django.http import HttpResponseRedirect
+
+    leave = get_object_or_404(LeaveRequest, pk=leave_id)
+    doc = get_object_or_404(LeaveDocument, pk=doc_id, leave_request=leave)
+
+    if not doc.file:
+        return HttpResponseRedirect('/')
+
+    return HttpResponseRedirect(doc.file)
 
 
 # ---------------------------------------------------------------------------

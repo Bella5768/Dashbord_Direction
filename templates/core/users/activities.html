@@ -31,8 +31,8 @@
                     <tr>
                         <td>
                             <div class="flex items-center gap-2">
-                                <div class="sidebar-avatar" style="width: 32px; height: 32px; font-size: 12px; background: linear-gradient(135deg, #2a4a6f, #4a7a9f);">
-                                    {% if activity.user.profile %}{{ activity.user.profile.get_initials }}{% else %}{{ activity.user.username|slice:":2"|upper }}{% endif %}
+                                <div class="sidebar-avatar" style="width: 32px; height: 32px; font-size: 12px; background: linear-gradient(135deg, #2a4a6f, #4a7a9f);overflow:hidden;">
+                                    {% if activity.user.profile.avatar %}<img src="{{ activity.user.profile.avatar }}" alt="" style="width:100%;height:100%;object-fit:cover;">{% elif activity.user.profile %}{{ activity.user.profile.get_initials }}{% else %}{{ activity.user.username|slice:":2"|upper }}{% endif %}
                                 </div>
                                 <span class="font-medium">{{ activity.user.get_full_name|default:activity.user.username }}</span>
                             </div>

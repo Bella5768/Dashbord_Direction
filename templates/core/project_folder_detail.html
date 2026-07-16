@@ -89,7 +89,7 @@
                             <a href="{% url 'core:project_document_preview' doc.id %}" class="action-btn primary" title="{% trans 'Aperçu' %}">
                                 <i class="fa-solid fa-eye" width="14" height="14" ></i>
                             </a>
-                            <a href="{{ doc.file.url }}" target="_blank" class="action-btn success" title="{% trans 'Télécharger' %}">
+                            <a href="{% url 'core:project_document_download' doc.id %}" class="action-btn success" title="{% trans 'Télécharger' %}">
                                 <i class="fa-solid fa-download" width="14" height="14" ></i>
                             </a>
                             {% endif %}

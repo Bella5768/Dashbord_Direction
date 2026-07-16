@@ -20,7 +20,7 @@
             <tr onclick="window.location='{% url 'core:leave_detail' leave.id %}'">
                 <td>
                     <div class="who">
-                        <div class="who-avatar">{{ leave.employee.name|slice:":1"|upper }}</div>
+                        <div class="who-avatar" style="overflow:hidden;">{% if leave.employee.avatar_url %}<img src="{{ leave.employee.avatar_url }}" alt="" style="width:100%;height:100%;object-fit:cover;">{% else %}{{ leave.employee.name|slice:":1"|upper }}{% endif %}</div>
                         <div>
                             <div class="who-name">{{ leave.employee.name }}</div>
                             <div class="who-sub">{{ leave.direction.code }}{% if leave.direction.code and leave.direction.name %} · {% endif %}{{ leave.direction.name|truncatechars:28 }}</div>

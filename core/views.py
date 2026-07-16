@@ -462,6 +462,13 @@ def profile(request):
         last_name  = request.POST.get('last_name', '').strip()
         email      = request.POST.get('email', '').strip()
         phone      = request.POST.get('phone', '').strip()
+        avatar     = request.POST.get('avatar', '').strip()
+
+        if request.POST.get('remove_avatar'):
+            prof.avatar = ''
+            prof.save(update_fields=['avatar', 'updated_at'])
+            messages.success(request, _("Photo de profil supprimée."))
+            return redirect('core:profile')
 
         if not first_name:
             errors['first_name'] = "Le prénom est requis."
@@ -491,7 +498,8 @@ def profile(request):
             user.email      = email
             user.save(update_fields=['first_name', 'last_name', 'email'])
             prof.phone = normalized_phone
-            prof.save(update_fields=['phone', 'updated_at'])
+            prof.avatar = avatar
+            prof.save(update_fields=['phone', 'avatar', 'updated_at'])
             UserActivity.objects.create(
                 user=user,
                 action='update',
@@ -4368,9 +4376,8 @@ def project_document_delete(request, doc_id):
 
 @login_required
 def project_document_download(request, doc_id):
-    """Télécharger un document de projet"""
-    from django.http import FileResponse
-    import os
+    """Télécharger un document de projet — redirect avec fl_attachment pour forcer le téléchargement."""
+    from django.http import HttpResponseRedirect
 
     doc = get_object_or_404(ProjectDocument.objects.select_related('project'), pk=doc_id)
     project = doc.project
@@ -4379,27 +4386,19 @@ def project_document_download(request, doc_id):
         messages.error(request, _("Vous n'avez pas accès à ce projet."))
         return redirect('core:projects')
     
-    # Retourner le fichier
-    file_path = doc.file.path
-    if os.path.exists(file_path):
-        from urllib.parse import quote
-        filename = os.path.basename(file_path)
-        encoded = quote(filename)
-        response = FileResponse(open(file_path, 'rb'), as_attachment=True)
-        response['Content-Disposition'] = (
-            f"attachment; filename=\"{filename}\"; filename*=UTF-8''{encoded}"
-        )
-        return response
-    else:
+    if not doc.file:
         messages.error(request, _("Fichier non trouvé."))
         return redirect('core:project_detail', project_id=project.id)
+
+    url = doc.file.replace('/upload/', '/upload/fl_attachment/')
+    return HttpResponseRedirect(url)
 
 
 @login_required
 def project_document_preview(request, doc_id):
     """Prévisualiser un document de projet (PDF, image...)."""
     import mimetypes
-    import os
+    from urllib.parse import urlparse, unquote
 
     doc = get_object_or_404(ProjectDocument.objects.select_related('project'), pk=doc_id)
     project = doc.project
@@ -4412,12 +4411,13 @@ def project_document_preview(request, doc_id):
         messages.error(request, _("Aucun fichier attaché à ce document."))
         return redirect('core:project_detail', project_id=project.id)
 
-    file_path = doc.file.path
-    if not os.path.exists(file_path):
-        messages.error(request, _("Fichier introuvable."))
-        return redirect('core:project_detail', project_id=project.id)
+    file_url = reverse('core:project_document_file_proxy', args=[doc.id])
+    path_part = urlparse(doc.file).path
+    url_filename = unquote(path_part.rsplit('/', 1)[-1]) if '/' in path_part else unquote(path_part)
+    ext = url_filename.rsplit('.', 1)[-1].lower() if '.' in url_filename else ''
+    filename = f"{doc.title}.{ext}" if ext else doc.title
 
-    mime_type, _encoding = mimetypes.guess_type(file_path)
+    mime_type, _encoding = mimetypes.guess_type(url_filename)
     mime_type = mime_type or 'application/octet-stream'
 
     if mime_type.startswith('image/'):
@@ -4435,11 +4435,12 @@ def project_document_preview(request, doc_id):
     context = {
         'document': doc,
         'project': project,
-        'file_url': doc.file.url,
+        'file_url': file_url,
         'mime_type': mime_type,
         'preview_type': preview_type,
-        'filename': os.path.basename(file_path),
+        'filename': filename,
         'back_url': back_url,
+        'download_url': reverse('core:project_document_download', args=[doc.id]),
     }
     return render(request, 'core/document_preview.html', context)
 
@@ -4820,11 +4821,50 @@ def document_validate(request, doc_id):
 
 
 @login_required
+def document_file_proxy(request, doc_id):
+    """Rediriger vers le fichier du document (fichiers publics Cloudinary)."""
+    from django.http import HttpResponseRedirect
+
+    doc = get_object_or_404(Document, pk=doc_id)
+
+    profile = request.user.profile
+    direction_id = getattr(profile, 'direction_id', None)
+    if not profile.is_directeur_general():
+        if not direction_id or doc.direction_id != direction_id:
+            from django.core.exceptions import PermissionDenied
+            raise PermissionDenied
+        if not profile.can_approve_documents():
+            from django.core.exceptions import PermissionDenied
+            raise PermissionDenied
+
+    if not doc.file:
+        return HttpResponseRedirect('/')
+
+    return HttpResponseRedirect(doc.file)
+
+
+@login_required
+def project_document_file_proxy(request, doc_id):
+    """Rediriger vers le fichier du document de projet (fichiers publics Cloudinary)."""
+    from django.http import HttpResponseRedirect
+
+    doc = get_object_or_404(ProjectDocument.objects.select_related('project'), pk=doc_id)
+    project = doc.project
+
+    if not request.user.profile.can_view_project(project):
+        return HttpResponseRedirect('/')
+
+    if not doc.file:
+        return HttpResponseRedirect('/')
+
+    return HttpResponseRedirect(doc.file)
+
+
+@login_required
 def document_download(request, doc_id):
-    """Télécharger un document"""
-    import mimetypes
-    import os
-    from django.http import FileResponse
+    """Télécharger un document — redirection directe vers Cloudinary."""
+    from django.http import HttpResponseRedirect
+
     doc = get_object_or_404(Document, pk=doc_id)
 
     profile = request.user.profile
@@ -4840,25 +4880,16 @@ def document_download(request, doc_id):
     if not doc.file:
         messages.error(request, _("Aucun fichier attaché à ce document."))
         return redirect('core:documents')
-    file_path = doc.file.path
-    if not os.path.exists(file_path):
-        messages.error(request, _("Fichier introuvable."))
-        return redirect('core:documents')
-    from urllib.parse import quote
-    mime_type, _enc = mimetypes.guess_type(file_path)
-    response = FileResponse(open(file_path, 'rb'), content_type=mime_type or 'application/octet-stream')
-    _dl_name = os.path.basename(file_path)
-    response['Content-Disposition'] = (
-        f"attachment; filename=\"{_dl_name}\"; filename*=UTF-8''{quote(_dl_name)}"
-    )
-    return response
+
+    url = doc.file.replace('/upload/', '/upload/fl_attachment/')
+    return HttpResponseRedirect(url)
 
 
 @login_required
 def document_preview(request, doc_id):
     """Prévisualiser un document global (PDF, image...)."""
     import mimetypes
-    import os
+    from urllib.parse import urlparse, unquote
 
     doc = get_object_or_404(Document, pk=doc_id)
 
@@ -4876,12 +4907,13 @@ def document_preview(request, doc_id):
         messages.error(request, _("Aucun fichier attaché à ce document."))
         return redirect('core:documents')
 
-    file_path = doc.file.path
-    if not os.path.exists(file_path):
-        messages.error(request, _("Fichier introuvable."))
-        return redirect('core:documents')
+    file_url = reverse('core:document_file_proxy', args=[doc.id])
+    path_part = urlparse(doc.file).path
+    url_filename = unquote(path_part.rsplit('/', 1)[-1]) if '/' in path_part else unquote(path_part)
+    ext = url_filename.rsplit('.', 1)[-1].lower() if '.' in url_filename else ''
+    filename = f"{doc.title}.{ext}" if ext else doc.title
 
-    mime_type, _encoding = mimetypes.guess_type(file_path)
+    mime_type, _encoding = mimetypes.guess_type(url_filename)
     mime_type = mime_type or 'application/octet-stream'
 
     if mime_type.startswith('image/'):
@@ -4893,11 +4925,12 @@ def document_preview(request, doc_id):
 
     context = {
         'document': doc,
-        'file_url': doc.file.url,
+        'file_url': file_url,
         'mime_type': mime_type,
         'preview_type': preview_type,
-        'filename': os.path.basename(file_path),
+        'filename': filename,
         'back_url': reverse('core:documents'),
+        'download_url': reverse('core:document_download', args=[doc.id]),
     }
     return render(request, 'core/document_preview.html', context)
 

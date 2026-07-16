@@ -11,7 +11,7 @@
         <h3 class="card-title">{% trans 'Informations du partenaire' %}</h3>
     </div>
     <div class="card-content">
-        <form method="post" enctype="multipart/form-data">
+        <form method="post">
             {% csrf_token %}
             
             <div class="form-group">
@@ -64,11 +64,12 @@
                 {% if partner and partner.logo %}
                 <div class="file-drop-current">
                     <i class="fa-solid fa-image" width="14" height="14"></i>
-                    <span>{% trans 'Logo actuel' %} : <a href="{{ partner.logo.url }}" target="_blank">{% trans 'voir' %}</a></span>
+                    <span>{% trans 'Logo actuel' %} : <a href="{{ partner.logo }}" target="_blank">{% trans 'voir' %}</a></span>
                 </div>
                 {% endif %}
-                <div class="file-drop">
+                <div class="file-drop" data-existing-url="{{ partner.logo|default:'' }}">
                     {{ form.logo }}
+                    <input type="file" name="_logo_upload" accept="image/*" style="position:absolute;opacity:0;pointer-events:none;">
                     <div class="file-drop-zone">
                         <i class="fa-solid fa-image" width="36" height="36"></i>
                         <p class="file-drop-title">{% trans 'Cliquez ou glissez une image' %}</p>

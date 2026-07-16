@@ -88,8 +88,8 @@
                     <tr>
                         <td>
                             <div class="flex items-center gap-3">
-                                <div class="sidebar-avatar" style="width: 40px; height: 40px; font-size: 14px; background: linear-gradient(135deg, #2a4a6f, #4a7a9f);">
-                                    {% if u.profile %}{{ u.profile.get_initials }}{% else %}{{ u.username|slice:":2"|upper }}{% endif %}
+                                <div class="sidebar-avatar" style="width: 40px; height: 40px; font-size: 14px; background: linear-gradient(135deg, #2a4a6f, #4a7a9f);overflow:hidden;">
+                                    {% if u.profile.avatar %}<img src="{{ u.profile.avatar }}" alt="" style="width:100%;height:100%;object-fit:cover;">{% elif u.profile %}{{ u.profile.get_initials }}{% else %}{{ u.username|slice:":2"|upper }}{% endif %}
                                 </div>
                                 <div>
                                     <p class="font-medium">{{ u.get_full_name|default:u.username }}</p>

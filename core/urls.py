@@ -46,6 +46,7 @@ urlpatterns = [
     path('documents/<int:doc_id>/signer/', views.document_sign, name='document_sign'),
     path('documents/<int:doc_id>/valider/', views.document_validate, name='document_validate'),
     path('documents/<int:doc_id>/telecharger/', views.document_download, name='document_download'),
+    path('documents/<int:doc_id>/fichier/', views.document_file_proxy, name='document_file_proxy'),
     path('documents/<int:doc_id>/apercu/', views.document_preview, name='document_preview'),
 
     # Reports
@@ -101,6 +102,7 @@ urlpatterns = [
     path('projets/documents/<int:doc_id>/modifier/', views.project_document_edit, name='project_document_edit'),
     path('projets/documents/<int:doc_id>/supprimer/', views.project_document_delete, name='project_document_delete'),
     path('projets/documents/<int:doc_id>/telecharger/', views.project_document_download, name='project_document_download'),
+    path('projets/documents/<int:doc_id>/fichier/', views.project_document_file_proxy, name='project_document_file_proxy'),
     path('projets/documents/<int:doc_id>/apercu/', views.project_document_preview, name='project_document_preview'),
     
     # Project Need status
@@ -172,6 +174,8 @@ urlpatterns = [
     path('conges/<int:leave_id>/modifier/', views_leave.leave_edit, name='leave_edit'),
     path('conges/<int:leave_id>/annuler/', views_leave.leave_cancel, name='leave_cancel'),
     path('conges/<int:leave_id>/document/<int:doc_id>/supprimer/', views_leave.leave_document_delete, name='leave_document_delete'),
+    path('conges/<int:leave_id>/document/<int:doc_id>/telecharger/', views_leave.leave_document_download, name='leave_document_download'),
+    path('conges/<int:leave_id>/document/<int:doc_id>/fichier/', views_leave.leave_document_file_proxy, name='leave_document_file_proxy'),
     path('conges/<int:leave_id>/decision-hierarchique/', views_leave.leave_decide_manager, name='leave_decide_manager'),
     path('conges/<int:leave_id>/verification-rh/', views_leave.leave_decide_hr, name='leave_decide_hr'),
     path('conges/<int:leave_id>/decision-finale/', views_leave.leave_decide_final, name='leave_decide_final'),

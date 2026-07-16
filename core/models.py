@@ -108,7 +108,7 @@ class UserProfile(models.Model):
     employee            = models.OneToOneField('Employee', on_delete=models.SET_NULL, null=True, blank=True, related_name='user_profile', verbose_name=_("Employé"))
     employee_identifier = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("ID Employé"))
     phone               = models.CharField(max_length=20, blank=True, verbose_name=_("Téléphone"))
-    avatar              = models.ImageField(upload_to='avatars/', null=True, blank=True, verbose_name=_("Photo"))
+    avatar              = models.URLField(max_length=500, default='', blank=True, verbose_name=_("Photo"))
     is_active_profile   = models.BooleanField(default=True, verbose_name=_("Profil actif"))
     created_at          = models.DateTimeField(auto_now_add=True)
     updated_at          = models.DateTimeField(auto_now=True)
@@ -810,7 +810,7 @@ class ProjectDocument(models.Model):
     folder = models.ForeignKey(ProjectFolder, on_delete=models.SET_NULL, null=True, blank=True, related_name='documents', verbose_name=_("Dossier"))
     title = models.CharField(max_length=200, verbose_name=_("Titre"))
     description = models.TextField(blank=True, verbose_name=_("Description"))
-    file = models.FileField(upload_to='project_documents/', verbose_name=_("Fichier"))
+    file = models.URLField(max_length=500, default='', blank=True, verbose_name=_("Fichier"))
     uploaded_by = models.CharField(max_length=100, verbose_name=_("Uploadé par"))
     uploaded_at = models.DateTimeField(auto_now_add=True)
     
@@ -850,7 +850,7 @@ class Document(models.Model):
     created_at = models.DateField(auto_now_add=True, verbose_name=_("Date de création"))
     due_date = models.DateField(verbose_name=_("Date limite"))
     signed_at = models.DateField(null=True, blank=True, verbose_name=_("Date de signature"))
-    file = models.FileField(upload_to='documents/', null=True, blank=True, verbose_name=_("Fichier"))
+    file = models.URLField(max_length=500, default='', blank=True, verbose_name=_("Fichier"))
     
     class Meta:
         verbose_name = _("Document")
@@ -894,7 +894,7 @@ class Partner(models.Model):
     email = models.EmailField(verbose_name=_("Email"))
     phone = models.CharField(max_length=20, verbose_name=_("Téléphone"))
     start_date = models.DateField(null=True, blank=True, verbose_name=_("Date de début"))
-    logo = models.ImageField(upload_to='partners/', null=True, blank=True, verbose_name=_("Logo"))
+    logo = models.URLField(max_length=500, default='', blank=True, verbose_name=_("Logo"))
     
     class Meta:
         verbose_name = _("Partenaire")
@@ -1056,6 +1056,15 @@ class Employee(models.Model):
             return [s.strip() for s in self.skills.split(',')]
         return []
 
+    @property
+    def avatar_url(self):
+        try:
+            if self.user_profile and self.user_profile.avatar:
+                return self.user_profile.avatar
+        except UserProfile.DoesNotExist:
+            pass
+        return ''
+
 
 class UserActivity(models.Model):
     """Log des activités utilisateur"""
@@ -1173,7 +1182,7 @@ class LeaveRequest(models.Model):
     handover_note = models.TextField(blank=True, verbose_name=_("Note de passation"))
 
     # Justificatif principal
-    justification = models.FileField(upload_to='leaves/', null=True, blank=True, verbose_name=_("Justificatif"))
+    justification = models.URLField(max_length=500, default='', blank=True, verbose_name=_("Justificatif"))
 
     # Statut global
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='soumise', db_index=True, verbose_name=_("Statut"))
@@ -1316,7 +1325,7 @@ class Notification(models.Model):
 class LeaveDocument(models.Model):
     """Piece jointe supplementaire pour une demande de conge."""
     leave_request = models.ForeignKey(LeaveRequest, on_delete=models.CASCADE, related_name='documents', verbose_name=_("Demande"))
-    file = models.FileField(upload_to='leaves/docs/', verbose_name=_("Fichier"))
+    file = models.URLField(max_length=500, default='', blank=True, verbose_name=_("Fichier"))
     label = models.CharField(max_length=200, blank=True, verbose_name=_("Libellé"))
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
@@ -1326,4 +1335,4 @@ class LeaveDocument(models.Model):
         ordering = ['-uploaded_at']
 
     def __str__(self):
-        return self.label or self.file.name
+        return self.label or self.file or ''

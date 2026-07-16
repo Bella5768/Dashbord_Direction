@@ -12,3 +12,5 @@ phonenumbers>=9.0.0
 channels==4.0.0
 channels-redis==4.2.0
 daphne==4.1.0
+django-cloudinary-storage>=0.3.0
+cloudinary>=1.36.0

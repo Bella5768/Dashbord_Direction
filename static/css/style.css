@@ -1288,7 +1288,7 @@ select.form-control {
     gap: 6px;
     padding: 24px 16px;
     color: #9ca3af;
-    pointer-events: none;
+    cursor: pointer;
 }
 
 .file-drop-title {
@@ -1360,6 +1360,48 @@ select.form-control {
 
 .file-drop-current a { color: var(--primary-600); font-weight: 500; }
 .file-drop-current svg { flex-shrink: 0; }
+
+/* Cloudinary upload progress */
+.cloudinary-progress {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+    font-size: 12px;
+    color: #64748b;
+}
+.cloudinary-progress-bar {
+    flex: 1;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+}
+.cloudinary-progress-fill {
+    height: 100%;
+    background: var(--primary-500, #3b82f6);
+    border-radius: 3px;
+    transition: width 0.2s ease;
+    width: 0;
+}
+.cloudinary-progress-text {
+    min-width: 32px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+.file-drop.is-uploading { pointer-events: none; opacity: 0.7; }
+
+/* Chip remove button */
+.chip-remove {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 0 0 0 4px;
+    font-size: 14px;
+    line-height: 1;
+}
+.chip-remove:hover { color: #ef4444; }
 
 /* Filters bar */
 .filters-bar {
