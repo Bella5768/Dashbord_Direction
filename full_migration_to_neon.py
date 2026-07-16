@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 """
-Script de migration complète vers Neon incluant les utilisateurs Django
+Script de migration complète vers Neon incluant l'extraction et l'import
 Usage: python full_migration_to_neon.py
+
+Ce script:
+1. Extrait les données depuis la base de données source (SQLite/MySQL)
+2. Importe les données vers Neon PostgreSQL
+3. Gère les dépendances et les erreurs
 """
 
 import os
@@ -9,10 +14,6 @@ import sys
 import django
 import json
 import time
-
-# Configuration temporaire pour utiliser SQLite
-os.environ['DATABASE_URL'] = ''
-os.environ['MYSQL_HOST'] = ''
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
@@ -22,11 +23,26 @@ django.setup()
 
 from django.core.management import call_command
 from django.core import serializers
+from django.conf import settings
+
+def get_source_database():
+    """Détecte la base de données source (SQLite ou MySQL)"""
+    db_engine = settings.DATABASES['default']['ENGINE']
+    
+    if 'sqlite' in db_engine:
+        return 'SQLite'
+    elif 'mysql' in db_engine:
+        return 'MySQL'
+    elif 'postgresql' in db_engine:
+        return 'PostgreSQL'
+    else:
+        return 'Inconnu'
 
 def export_auth_users():
-    """Exporte les utilisateurs Django depuis SQLite"""
+    """Exporte les utilisateurs Django depuis la base de données source"""
+    source_db = get_source_database()
     print("=" * 60)
-    print("📦 Export des utilisateurs Django depuis SQLite")
+    print(f"📦 Export des utilisateurs Django depuis {source_db}")
     print("=" * 60)
     
     try:
@@ -55,9 +71,10 @@ def export_auth_users():
         return False
 
 def export_all_core_data():
-    """Exporte toutes les données core depuis SQLite"""
+    """Exporte toutes les données core depuis la base de données source"""
+    source_db = get_source_database()
     print("\n" + "=" * 60)
-    print("📦 Export des données core depuis SQLite")
+    print(f"📦 Export des données core depuis {source_db}")
     print("=" * 60)
     
     try:
@@ -208,7 +225,11 @@ def main():
     print("🚀 Migration complète vers Neon PostgreSQL")
     print("=" * 60)
     
-    # Étape 1: Export depuis SQLite
+    # Afficher la base de données source
+    source_db = get_source_database()
+    print(f"📊 Base de données source: {source_db}")
+    
+    # Étape 1: Export depuis la base de données source
     if not export_auth_users():
         return False
     
