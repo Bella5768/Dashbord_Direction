@@ -174,7 +174,7 @@ for model_name, items in model_data.items():
             total_err += len(batch)
         time.sleep(0.05)
 
-print(f"\n{'='*50}")
+print(f"\\n{'='*50}")
 print(f"Import: {total_ok} reussis, {total_err} erreurs")
 print(f"{'='*50}")
 sys.exit(0 if total_err == 0 else 1)
