@@ -263,7 +263,7 @@ def verify():
         ('Docs congés', LeaveDocument),
     ]
 
-print(f"\\n{'='*50}")
+    print(f"\n{'='*50}")
     print("📊 Compteurs Neon")
     print(f"{'='*50}")
     for label, model in models:
