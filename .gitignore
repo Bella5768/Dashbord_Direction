@@ -27,20 +27,8 @@ node_modules/
 # Rapports
 RAPPORT_*.md
 
-# Scripts de migration temporaires
-export_from_sqlite.py
-import_batch_to_neon.py
-import_ordered_to_neon.py
-import_missing_data.py
-verify_neon.py
+# Export de données (généré par migrate_to_neon.py)
 data_export.json
-data_export_clean.json
-auth_users.json
-auth_users_clean.json
-core_data.json
-core_data_clean.json
-dev_export_auth.json
-dev_export_core.json
 
 #ai
 .claude/
