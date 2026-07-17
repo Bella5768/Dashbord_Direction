@@ -1161,8 +1161,13 @@ def calendar(request):
         return redirect('core:dashboard')
 
     today = timezone.now().date()
-    year = int(request.GET.get('year', today.year))
-    month = int(request.GET.get('month', today.month))
+    try:
+        year = int(request.GET.get('year', today.year))
+        month = int(request.GET.get('month', today.month))
+    except (ValueError, TypeError):
+        year, month = today.year, today.month
+    if month < 1 or month > 12:
+        month = today.month
 
     _cal_profile = request.user.profile
     _cal_is_global = _cal_profile.is_admin() or _cal_profile.is_directeur_general()

@@ -103,7 +103,7 @@ def role_create(request):
 
         # Restreindre aux permissions que l'éditeur possède lui-même
         if allowed_ids is not None:
-            perm_ids = [p for p in perm_ids if int(p) in allowed_ids]
+            perm_ids = [p for p in perm_ids if p.isdigit() and int(p) in allowed_ids]
 
         if not name or not slug:
             messages.error(request, _("Le nom et l'identifiant sont obligatoires."))
@@ -141,7 +141,7 @@ def role_edit(request, role_id):
             perm_ids = request.POST.getlist('permissions')
             # Restreindre aux permissions que l'éditeur possède lui-même
             if allowed_ids is not None:
-                perm_ids = [p for p in perm_ids if int(p) in allowed_ids]
+                perm_ids = [p for p in perm_ids if p.isdigit() and int(p) in allowed_ids]
             role.permissions.set(Permission.objects.filter(id__in=perm_ids))
         role.save()
         messages.success(request, _("Rôle « {name} » mis à jour.").format(name=role.name))
@@ -241,7 +241,7 @@ def project_role_create(request):
         perm_ids = request.POST.getlist('permissions')
 
         if allowed_ids is not None:
-            perm_ids = [p for p in perm_ids if int(p) in allowed_ids]
+            perm_ids = [p for p in perm_ids if p.isdigit() and int(p) in allowed_ids]
 
         if not name or not slug:
             messages.error(request, _("Le nom et l'identifiant sont obligatoires."))
@@ -277,7 +277,7 @@ def project_role_edit(request, role_id):
         if not role.is_system or request.user.is_superuser:
             perm_ids = request.POST.getlist('permissions')
             if allowed_ids is not None:
-                perm_ids = [p for p in perm_ids if int(p) in allowed_ids]
+                perm_ids = [p for p in perm_ids if p.isdigit() and int(p) in allowed_ids]
             role.permissions.set(Permission.objects.filter(id__in=perm_ids))
         role.save()
         messages.success(request, _("Rôle projet « {name} » mis à jour.").format(name=role.name))
