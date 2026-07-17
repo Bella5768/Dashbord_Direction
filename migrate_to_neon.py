@@ -87,7 +87,7 @@ from django.core.management import call_command
 
 engine = settings.DATABASES["default"]["ENGINE"]
 db_name = settings.DATABASES["default"]["NAME"]
-print(f"\\u{1f4e6} Source: {engine} ({db_name})")
+print(f"\U0001f4e6 Source: {engine} ({db_name})")
 
 call_command("migrate", "--run-syncdb", verbosity=0)
 
@@ -102,7 +102,7 @@ counts = {}
 for item in data:
     counts[item["model"]] = counts.get(item["model"], 0) + 1
 
-print(f"\\u2705 {len(data)} objets export\\u00e9s ({len(counts)} mod\\u00e8les)")
+print(f"[OK] {len(data)} objets exportés ({len(counts)} modeles)")
 for m in sorted(counts):
     print(f"   {m}: {counts[m]}")
 '''
@@ -121,7 +121,7 @@ import django; django.setup()
 from django.conf import settings
 from django.db import connection
 host = settings.DATABASES["default"].get("HOST", "?")
-print(f"\\u{1f4e5} Cible: {settings.DATABASES['default']['ENGINE']} ({host})")
+print(f"\U0001f4e5 Cible: {settings.DATABASES['default']['ENGINE']} ({host})")
 
 with open(sys.argv[1], "r", encoding="utf-8") as f:
     data = json.load(f)
@@ -154,15 +154,15 @@ for model_name in import_order:
             if "duplicate key" in err or "already exists" in err:
                 ok += len(batch)
             else:
-                print(f"      \\u26a0  lot {i // batch_size + 1}: {str(e)[:100]}")
+                print(f"      WARN lot {i // batch_size + 1}: {str(e)[:100]}")
                 total_err += len(batch)
                 continue
         time.sleep(0.05)
     total_ok += ok
-    print(f"      \\u2713 {ok}/{len(items)}")
+    print(f"      OK {ok}/{len(items)}")
 
 for model_name, items in model_data.items():
-    print(f"\\n   {model_name} ({len(items)}) [non ordonn\\u00e9]")
+    print(f"\n   {model_name} ({len(items)}) [non ordonne]")
     for i in range(0, len(items), batch_size):
         batch = items[i:i + batch_size]
         try:
@@ -174,8 +174,8 @@ for model_name, items in model_data.items():
             total_err += len(batch)
         time.sleep(0.05)
 
-print(f"\\n{'='*50}")
-print(f"\\u2705 Import: {total_ok} r\\u00e9ussis, {total_err} erreurs")
+print(f"\n{'='*50}")
+print(f"Import: {total_ok} reussis, {total_err} erreurs")
 print(f"{'='*50}")
 sys.exit(0 if total_err == 0 else 1)
 '''
