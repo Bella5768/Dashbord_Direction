@@ -162,7 +162,7 @@ for model_name in import_order:
     print(f"      OK {ok}/{len(items)}")
 
 for model_name, items in model_data.items():
-    print(f"\n   {model_name} ({len(items)}) [non ordonne]")
+    print(f"\\n   {model_name} ({len(items)}) [non ordonne]")
     for i in range(0, len(items), batch_size):
         batch = items[i:i + batch_size]
         try:
@@ -263,7 +263,7 @@ def verify():
         ('Docs congés', LeaveDocument),
     ]
 
-    print(f"\n{'='*50}")
+print(f"\\n{'='*50}")
     print("📊 Compteurs Neon")
     print(f"{'='*50}")
     for label, model in models:
