@@ -85,6 +85,10 @@ def export_data():
     db_name = settings.DATABASES['default']['NAME']
     print(f"📦 Export depuis {engine} ({db_name})")
 
+    # S'assurer que les tables existent (SQLite peut être vierge)
+    print("   Migration de la DB source...")
+    call_command('migrate', '--run-syncdb', verbosity=0)
+
     if os.path.exists(EXPORT_FILE):
         os.remove(EXPORT_FILE)
 
