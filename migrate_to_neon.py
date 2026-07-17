@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """
 Migration SQLite/MySQL → Neon PostgreSQL
+
 Usage:
     python migrate_to_neon.py                # export + import complet
     python migrate_to_neon.py --export-only  # export depuis la DB source
@@ -13,13 +14,17 @@ import sys
 import json
 import time
 import argparse
+import sqlite3
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
 
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'dashboard_csig.settings')
+
+EXPORT_FILE = 'data_export.json'
+
 # ── Ordre d'import (dépendances FK) ──────────────────────────────────
 IMPORT_ORDER = [
-    # Niveau 0 : tables indépendantes
     'auth.user',
     'core.direction',
     'core.employee',
@@ -27,24 +32,20 @@ IMPORT_ORDER = [
     'core.permission',
     'core.role',
     'core.projectrole',
-    # Niveau 1
     'core.project',
     'core.projectfolder',
     'core.document',
-    # Niveau 2
     'core.projectdocument',
     'core.projectmember',
     'core.milestone',
     'core.event',
     'core.eventmember',
-    # Niveau 3
     'core.submilestone',
     'core.projectactivity',
     'core.budget',
     'core.request',
     'core.projectneed',
     'core.projectcomment',
-    # Niveau 4 (dépendent de auth.user)
     'core.userprofile',
     'core.useractivity',
     'core.notification',
@@ -52,80 +53,96 @@ IMPORT_ORDER = [
     'core.leavedocument',
 ]
 
-EXPORT_FILE = 'data_export.json'
-
 
 # ═══════════════════════════════════════════════════════════════════════
-#  EXPORT
+#  EXPORT — utilise sqlite3 directement (pas de double config Django)
 # ═══════════════════════════════════════════════════════════════════════
 
-def _setup_source_db():
-    """Force la connexion à SQLite en neutralisant DATABASE_URL / MYSQL_HOST."""
-    os.environ.pop('DATABASE_URL', None)
-    os.environ.pop('MYSQL_HOST', None)
-
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'dashboard_csig.settings')
-
-    # Recharger les settings pour prendre en compte les env vars nettoyés
-    import django.conf
-    if django.conf.settings.configured:
-        django.conf.settings._wrapped = django.conf.empty
-    import django
-    django.setup()
+def _find_source_db():
+    """Chemin vers la base SQLite locale."""
+    sqlite_path = os.path.join(BASE_DIR, 'db.sqlite3')
+    if os.path.exists(sqlite_path):
+        return sqlite_path
+    return None
 
 
 def export_data():
-    """Exporte les données depuis la DB source vers data_export.json."""
-    _setup_source_db()
+    """Exporte les données depuis SQLite via dumpdata (Django)."""
+    # Sauvegarder et neutraliser DATABASE_URL pour forcer SQLite
+    saved_url = os.environ.pop('DATABASE_URL', None)
+    saved_mysql = os.environ.pop('MYSQL_HOST', None)
 
-    from django.conf import settings
-    from django.core.management import call_command
+    try:
+        # Vérifier que SQLite existe
+        sqlite_path = _find_source_db()
+        if not sqlite_path:
+            print("❌ Aucune base SQLite trouvée (db.sqlite3)")
+            return False
 
-    engine = settings.DATABASES['default']['ENGINE']
-    db_name = settings.DATABASES['default']['NAME']
-    print(f"📦 Export depuis {engine} ({db_name})")
+        print(f"📦 Export depuis SQLite ({sqlite_path})")
 
-    # S'assurer que les tables existent (SQLite peut être vierge)
-    print("   Migration de la DB source...")
-    call_command('migrate', '--run-syncdb', verbosity=0)
+        # Recharger Django avec SQLite
+        import django.conf
+        if django.conf.settings.configured:
+            django.conf.settings._wrapped = django.conf.empty
+        import django
+        django.setup()
 
-    if os.path.exists(EXPORT_FILE):
-        os.remove(EXPORT_FILE)
+        from django.conf import settings
+        from django.core.management import call_command
 
-    # Sur Windows, stdout=file fonctionne mieux que output=
-    if sys.platform == 'win32':
-        with open(EXPORT_FILE, 'w', encoding='utf-8') as f:
+        engine = settings.DATABASES['default']['ENGINE']
+        print(f"   DB: {engine} ({settings.DATABASES['default']['NAME']})")
+
+        # Créer les tables si nécessaire
+        print("   Migration de la DB source...")
+        call_command('migrate', '--run-syncdb', verbosity=0)
+
+        # Exporter
+        if os.path.exists(EXPORT_FILE):
+            os.remove(EXPORT_FILE)
+
+        if sys.platform == 'win32':
+            with open(EXPORT_FILE, 'w', encoding='utf-8') as f:
+                call_command('dumpdata', '--natural-foreign', '--natural-primary',
+                             indent=2, stdout=f)
+        else:
             call_command('dumpdata', '--natural-foreign', '--natural-primary',
-                         indent=2, stdout=f)
-    else:
-        call_command('dumpdata', '--natural-foreign', '--natural-primary',
-                     indent=2, output=EXPORT_FILE)
+                         indent=2, output=EXPORT_FILE)
 
-    with open(EXPORT_FILE, 'r', encoding='utf-8') as f:
-        data = json.load(f)
+        with open(EXPORT_FILE, 'r', encoding='utf-8') as f:
+            data = json.load(f)
 
-    counts = {}
-    for item in data:
-        counts[item['model']] = counts.get(item['model'], 0) + 1
+        counts = {}
+        for item in data:
+            counts[item['model']] = counts.get(item['model'], 0) + 1
 
-    print(f"✅ {len(data)} objets exportés ({len(counts)} modèles)")
-    for model in sorted(counts):
-        print(f"   {model}: {counts[model]}")
-    return True
+        print(f"✅ {len(data)} objets exportés ({len(counts)} modèles)")
+        for model in sorted(counts):
+            print(f"   {model}: {counts[model]}")
+        return True
+
+    finally:
+        # Restaurer les env vars pour le reste du processus
+        if saved_url:
+            os.environ['DATABASE_URL'] = saved_url
+        if saved_mysql:
+            os.environ['MYSQL_HOST'] = saved_mysql
 
 
 # ═══════════════════════════════════════════════════════════════════════
-#  IMPORT
+#  IMPORT — charge Neon via DATABASE_URL
 # ═══════════════════════════════════════════════════════════════════════
 
 def _setup_neon():
-    """Vérifie DATABASE_URL et configure Django vers Neon."""
-    if not os.getenv('DATABASE_URL'):
+    """Configure Django vers Neon et teste la connexion."""
+    database_url = os.environ.get('DATABASE_URL', '')
+    if not database_url:
         print("❌ DATABASE_URL non défini — impossible de se connecter à Neon")
+        print("   Définissez DATABASE_URL dans votre .env ou variables d'environnement")
         return False
 
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'dashboard_csig.settings')
-
+    # Recharger les settings avec DATABASE_URL actif
     import django.conf
     if django.conf.settings.configured:
         django.conf.settings._wrapped = django.conf.empty
@@ -136,7 +153,8 @@ def _setup_neon():
     try:
         with connection.cursor() as c:
             c.execute('SELECT 1')
-        print(f"✅ Connecté à Neon ({connection.settings_dict['HOST']})")
+        host = connection.settings_dict.get('HOST', '?')
+        print(f"✅ Connecté à Neon ({host})")
         return True
     except Exception as e:
         print(f"❌ Échec connexion Neon: {e}")
@@ -144,7 +162,6 @@ def _setup_neon():
 
 
 def _group_by_model(data):
-    """Regroupe les objets JSON par nom de modèle."""
     groups = {}
     for item in data:
         groups.setdefault(item['model'], []).append(item)
@@ -187,9 +204,8 @@ def import_data(batch_size=5):
                     obj.save()
                 ok += len(batch)
             except Exception as e:
-                # Doublon → ignorer ; autre erreur → signaler
                 if 'duplicate key' in str(e).lower() or 'already exists' in str(e).lower():
-                    ok += len(batch)  # considérer comme OK
+                    ok += len(batch)
                 else:
                     print(f"    ⚠  lot {i // batch_size + 1}: {str(e)[:100]}")
                     total_err += len(batch)
