@@ -29,6 +29,7 @@ RAPPORT_*.md
 
 # Export de données (généré par migrate_to_neon.py)
 data_export.json
+_export_worker.py
 
 #ai
 .claude/

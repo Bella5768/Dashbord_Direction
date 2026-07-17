@@ -14,12 +14,16 @@ import sys
 import json
 import time
 import argparse
-import sqlite3
+import subprocess
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'dashboard_csig.settings')
+# Fix Windows console encoding (cp1252 can't handle emoji)
+if sys.platform == 'win32':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 EXPORT_FILE = 'data_export.json'
 
@@ -55,79 +59,106 @@ IMPORT_ORDER = [
 
 
 # ═══════════════════════════════════════════════════════════════════════
-#  EXPORT — utilise sqlite3 directement (pas de double config Django)
+#  EXPORT — sous-processus isolé pour forcer SQLite/MySQL
 # ═══════════════════════════════════════════════════════════════════════
 
-def _find_source_db():
-    """Chemin vers la base SQLite locale."""
-    sqlite_path = os.path.join(BASE_DIR, 'db.sqlite3')
-    if os.path.exists(sqlite_path):
-        return sqlite_path
-    return None
-
-
 def export_data():
-    """Exporte les données depuis SQLite via dumpdata (Django)."""
-    # Sauvegarder et neutraliser DATABASE_URL pour forcer SQLite
-    saved_url = os.environ.pop('DATABASE_URL', None)
-    saved_mysql = os.environ.pop('MYSQL_HOST', None)
+    """Exporte les données depuis SQLite/MySQL via un sous-processus Django.
+
+    Le sous-processus a DATABASE_URL et MYSQL_HOST supprimés de son
+    environnement, ce qui force settings.py à utiliser SQLite.
+    """
+    # Vérifier que db.sqlite3 existe
+    sqlite_path = os.path.join(BASE_DIR, 'db.sqlite3')
+    has_sqlite = os.path.exists(sqlite_path)
+
+    if has_sqlite:
+        print(f"📦 Export depuis SQLite ({sqlite_path})")
+    else:
+        print("⚠  Aucun db.sqlite3 trouvé — tentative depuis MySQL si configuré")
+
+    # Construire un environnement propre pour forcer SQLite
+    # IMPORTANT: on met à '' plutôt que de supprimer, car settings.py
+    # lit .env et utilise os.environ.setdefault() qui ne touche pas
+    # une clé déjà présente. Si on pop(), setdefault la rétablit.
+    clean_env = os.environ.copy()
+    clean_env['DATABASE_URL'] = ''
+    clean_env['MYSQL_HOST'] = ''
+    clean_env['PYTHONUTF8'] = '1'
+
+    # Écrire le script d'export dans un fichier temporaire
+    export_script_path = os.path.join(BASE_DIR, '_export_worker.py')
+    with open(export_script_path, 'w', encoding='utf-8') as f:
+        f.write('''\
+import os, sys, json
+os.environ["DATABASE_URL"] = ""
+os.environ["MYSQL_HOST"] = ""
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "dashboard_csig.settings")
+
+import django
+django.setup()
+
+from django.conf import settings
+from django.core.management import call_command
+
+engine = settings.DATABASES["default"]["ENGINE"]
+db = settings.DATABASES["default"]["NAME"]
+print(f"DB detectee: {engine} ({db})")
+
+call_command("migrate", "--run-syncdb", verbosity=0)
+
+output = sys.argv[1]
+call_command("dumpdata", "--natural-foreign", "--natural-primary",
+             indent=2, output=output)
+
+with open(output, "r", encoding="utf-8") as f:
+    data = json.load(f)
+
+counts = {}
+for item in data:
+    counts[item["model"]] = counts.get(item["model"], 0) + 1
+
+print(f"{len(data)} objets exportes ({len(counts)} modeles)")
+for m in sorted(counts):
+    print(f"  {m}: {counts[m]}")
+''')
 
     try:
-        # Vérifier que SQLite existe
-        sqlite_path = _find_source_db()
-        if not sqlite_path:
-            print("❌ Aucune base SQLite trouvée (db.sqlite3)")
-            return False
-
-        print(f"📦 Export depuis SQLite ({sqlite_path})")
-
-        # Recharger Django avec SQLite
-        import django.conf
-        if django.conf.settings.configured:
-            django.conf.settings._wrapped = django.conf.empty
-        import django
-        django.setup()
-
-        from django.conf import settings
-        from django.core.management import call_command
-
-        engine = settings.DATABASES['default']['ENGINE']
-        print(f"   DB: {engine} ({settings.DATABASES['default']['NAME']})")
-
-        # Créer les tables si nécessaire
-        print("   Migration de la DB source...")
-        call_command('migrate', '--run-syncdb', verbosity=0)
-
-        # Exporter
-        if os.path.exists(EXPORT_FILE):
-            os.remove(EXPORT_FILE)
-
-        if sys.platform == 'win32':
-            with open(EXPORT_FILE, 'w', encoding='utf-8') as f:
-                call_command('dumpdata', '--natural-foreign', '--natural-primary',
-                             indent=2, stdout=f)
-        else:
-            call_command('dumpdata', '--natural-foreign', '--natural-primary',
-                         indent=2, output=EXPORT_FILE)
-
-        with open(EXPORT_FILE, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-
-        counts = {}
-        for item in data:
-            counts[item['model']] = counts.get(item['model'], 0) + 1
-
-        print(f"✅ {len(data)} objets exportés ({len(counts)} modèles)")
-        for model in sorted(counts):
-            print(f"   {model}: {counts[model]}")
-        return True
-
+        result = subprocess.run(
+            [sys.executable, export_script_path, EXPORT_FILE],
+            env=clean_env,
+            capture_output=True,
+            text=True,
+            cwd=BASE_DIR,
+        )
     finally:
-        # Restaurer les env vars pour le reste du processus
-        if saved_url:
-            os.environ['DATABASE_URL'] = saved_url
-        if saved_mysql:
-            os.environ['MYSQL_HOST'] = saved_mysql
+        if os.path.exists(export_script_path):
+            os.remove(export_script_path)
+
+    print(result.stdout)
+    if result.stderr:
+        # Afficher les erreurs (ignorer les warnings Django)
+        for line in result.stderr.splitlines():
+            if 'Traceback' in line or 'Error' in line:
+                print(f"❌ {line}")
+
+    if result.returncode != 0:
+        print("❌ Échec de l'export")
+        return False
+
+    if not os.path.exists(EXPORT_FILE):
+        print("❌ Fichier data_export.json non généré")
+        return False
+
+    with open(EXPORT_FILE, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+
+    if not data:
+        print("❌ Aucune donnée exportée — la DB source est vide")
+        return False
+
+    print(f"✅ {len(data)} objets prêts pour l'import")
+    return True
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -138,11 +169,11 @@ def _setup_neon():
     """Configure Django vers Neon et teste la connexion."""
     database_url = os.environ.get('DATABASE_URL', '')
     if not database_url:
-        print("❌ DATABASE_URL non défini — impossible de se connecter à Neon")
-        print("   Définissez DATABASE_URL dans votre .env ou variables d'environnement")
+        print("❌ DATABASE_URL non défini")
         return False
 
-    # Recharger les settings avec DATABASE_URL actif
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'dashboard_csig.settings')
+
     import django.conf
     if django.conf.settings.configured:
         django.conf.settings._wrapped = django.conf.empty
@@ -174,7 +205,7 @@ def import_data(batch_size=5):
         return False
 
     if not os.path.exists(EXPORT_FILE):
-        print(f"❌ {EXPORT_FILE} introuvable — lancez d'abord l'export")
+        print(f"❌ {EXPORT_FILE} introuvable")
         return False
 
     with open(EXPORT_FILE, 'r', encoding='utf-8') as f:
@@ -215,7 +246,6 @@ def import_data(batch_size=5):
         total_ok += ok
         print(f"    ✓ {ok}/{len(items)}")
 
-    # Modèles non prévus dans l'ordre
     for model_name, items in model_data.items():
         print(f"\n  {model_name} ({len(items)}) [non ordonné]")
         for i in range(0, len(items), batch_size):
@@ -322,7 +352,6 @@ def main():
         ok = export_data()
         sys.exit(0 if ok else 1)
 
-    # ── Mode complet : export → import → vérification ──
     print("\nÉtape 1/3 — Export")
     if not export_data():
         sys.exit(1)
