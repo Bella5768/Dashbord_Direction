@@ -177,6 +177,33 @@ for model_name, items in model_data.items():
 print(f"\\n{'='*50}")
 print(f"Import: {total_ok} reussis, {total_err} erreurs")
 print(f"{'='*50}")
+
+# Recalculer les sequences PostgreSQL apres import
+from django.db import connection
+tables = [
+    'auth_user', 'auth_permission', 'django_content_type',
+    'core_direction', 'core_employee', 'core_partner',
+    'core_permission', 'core_role', 'core_projectrole',
+    'core_project', 'core_projectfolder', 'core_projectdocument',
+    'core_projectmember', 'core_milestone', 'core_submilestone',
+    'core_event', 'core_eventmember', 'core_projectactivity',
+    'core_budget', 'core_request', 'core_projectneed',
+    'core_projectcomment', 'core_userprofile', 'core_useractivity',
+    'core_notification', 'core_leaverequest', 'core_leavedocument',
+]
+fixed = 0
+with connection.cursor() as c:
+    for t in tables:
+        try:
+            c.execute(
+                "SELECT setval(pg_get_serial_sequence('{t}', 'id'), "
+                "COALESCE((SELECT MAX(id) FROM \"{t}\"), 1))".format(t=t)
+            )
+            fixed += 1
+        except Exception:
+            pass
+print(f"Sequences PostgreSQL recalculees ({fixed} tables)")
+
 sys.exit(0 if total_err == 0 else 1)
 '''
 
