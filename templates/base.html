@@ -151,13 +151,6 @@
                         </a>
                     </li>
                     {% endif %}
-                    {% if user.profile.is_admin or user.is_superuser %}
-                    <li>
-                        <a href="/admin/" target="_blank">
-                            <i class="fa-solid fa-gear"></i>{% trans 'Administration' %}
-                        </a>
-                    </li>
-                    {% endif %}
                 </ul>
                 {% endif %}
 
