@@ -120,8 +120,11 @@ import django; django.setup()
 
 from django.conf import settings
 from django.db import connection
+from django.core.management import call_command
 host = settings.DATABASES["default"].get("HOST", "?")
 print(f"\U0001f4e5 Cible: {settings.DATABASES['default']['ENGINE']} ({host})")
+
+call_command("migrate", verbosity=1)
 
 with open(sys.argv[1], "r", encoding="utf-8") as f:
     data = json.load(f)
