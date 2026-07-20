@@ -197,7 +197,7 @@ with connection.cursor() as c:
         try:
             c.execute(
                 "SELECT setval(pg_get_serial_sequence('{t}', 'id'), "
-                "COALESCE((SELECT MAX(id) FROM \"{t}\"), 1))".format(t=t)
+                "COALESCE((SELECT MAX(id) FROM {t}), 1))".format(t=t)
             )
             fixed += 1
         except Exception:
