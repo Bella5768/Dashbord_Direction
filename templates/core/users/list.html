@@ -7,8 +7,8 @@
 
 {% block content %}
 <!-- Stats -->
-<div class="stats-row">
-{% with fr=currentfrole fq=search %}
+<div id="filter-stats" class="stats-row">
+{% with fr=current_role fq=search %}
     <button type="button" class="stat-box {% if current_status == 'all' %}active{% endif %}" data-status="all" data-role="{{ fr }}" data-search="{{ fq }}">
         <div class="stat-box-icon"><i class="fa-solid fa-users" width="20" height="20"></i></div>
         <div class="stat-box-body">
@@ -45,13 +45,13 @@
     <div class="search-box">
         <input type="text" name="search" placeholder="{% trans 'Rechercher un utilisateur...' %}" value="{{ search }}" class="form-control">
     </div>
-    <select name="role" class="form-control" onchange="this.form.submit()">
-        <option value="all" {% if currentfrole == 'all' %}selected{% endif %}>{% trans 'Tous les rôles' %}</option>
+    <select name="role" class="form-control">
+        <option value="all" {% if current_role == 'all' %}selected{% endif %}>{% trans 'Tous les rôles' %}</option>
         {% for value, label in role_choices %}
-        <option value="{{ value }}" {% if currentfrole == value %}selected{% endif %}>{{ label }}</option>
+        <option value="{{ value }}" {% if current_role == value %}selected{% endif %}>{{ label }}</option>
         {% endfor %}
     </select>
-    <select name="status" class="form-control" onchange="this.form.submit()">
+    <select name="status" class="form-control">
         <option value="all" {% if current_status == 'all' %}selected{% endif %}>{% trans 'Tous les statuts' %}</option>
         <option value="active" {% if current_status == 'active' %}selected{% endif %}>{% trans 'Actifs' %}</option>
         <option value="inactive" {% if current_status == 'inactive' %}selected{% endif %}>{% trans 'Inactifs' %}</option>
@@ -69,7 +69,7 @@
 <!-- Users Table -->
 <div class="card">
     <div class="card-content" style="padding: 0;">
-        <div class="table-container">
+        <div id="filter-content" class="table-container">
             <table>
                 <thead>
                     <tr>
@@ -226,30 +226,63 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const statBoxes = document.querySelectorAll('.stat-box[data-status]');
-    const currentStatus = '{{ current_status }}';
-    const currentRole = '{{ currentfrole }}';
-    const currentSearch = '{{ search }}';
-    
-    // Stat boxes switching without page reload
-    statBoxes.forEach(btn => {
+    var statsRow = document.getElementById('filter-stats');
+    var contentEl = document.getElementById('filter-content');
+    var form = document.querySelector('.filters-bar');
+    var searchInput = form ? form.querySelector('input[name="search"]') : null;
+    var roleSelect = form ? form.querySelector('select[name="role"]') : null;
+    var statusSelect = form ? form.querySelector('select[name="status"]') : null;
+    var searchTimer = null;
+
+    var statBoxes = document.querySelectorAll('.stat-box[data-status]');
+
+    function fetchAndSwap() {
+        var params = new URLSearchParams();
+        var st = document.querySelector('.stat-box[data-status].active');
+        var status = st ? st.dataset.status : 'all';
+        if (status !== 'all') params.set('status', status);
+        if (roleSelect && roleSelect.value !== 'all') params.set('role', roleSelect.value);
+        if (searchInput && searchInput.value.trim()) params.set('search', searchInput.value.trim());
+
+        var newUrl = window.location.pathname + '?' + params.toString();
+        history.pushState({}, '', newUrl);
+
+        if (contentEl) contentEl.style.opacity = '0.4';
+        statsRow.style.opacity = '0.4';
+
+        fetch(newUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(res) { return res.text(); })
+            .then(function(html) {
+                var doc = new DOMParser().parseFromString(html, 'text/html');
+                var newStats = doc.getElementById('filter-stats');
+                var newContent = doc.getElementById('filter-content');
+                if (newStats) statsRow.innerHTML = newStats.innerHTML;
+                if (newContent && contentEl) contentEl.innerHTML = newContent.innerHTML;
+                if (contentEl) contentEl.style.opacity = '1';
+                statsRow.style.opacity = '1';
+            })
+            .catch(function() { window.location.href = newUrl; });
+    }
+
+    statBoxes.forEach(function(btn) {
         btn.addEventListener('click', function() {
-            const newStatus = this.dataset.status;
-            const role = this.dataset.role || '';
-            const search = this.dataset.search || '';
-            
-            // Update active state
-            statBoxes.forEach(b => b.classList.remove('active'));
+            statBoxes.forEach(function(b) { b.classList.remove('active'); });
             this.classList.add('active');
-            
-            // Update URL and reload page
-            const params = new URLSearchParams();
-            params.set('status', newStatus);
-            if (role && role !== 'all') params.set('role', role);
-            if (search) params.set('search', search);
-            window.location.href = window.location.pathname + '?' + params.toString();
+            fetchAndSwap();
         });
     });
+
+    if (roleSelect) roleSelect.addEventListener('change', fetchAndSwap);
+    if (statusSelect) statusSelect.addEventListener('change', fetchAndSwap);
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(fetchAndSwap, 300);
+        });
+    }
+
+    window.addEventListener('popstate', fetchAndSwap);
 });
 </script>
 {% endblock %}

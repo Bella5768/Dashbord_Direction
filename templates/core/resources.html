@@ -182,7 +182,7 @@
 
 {% else %}
 <!-- HR Stats -->
-<div class="stats-row">
+<div id="filter-stats" class="stats-row">
     <button type="button" class="stat-box {% if not rh_workload %}active{% endif %}" data-tab="rh" data-workload="">
         <div class="stat-box-icon"><i class="fa-solid fa-users" width="20" height="20"></i></div>
         <div class="stat-box-body">
@@ -221,7 +221,7 @@
         <input type="text" name="search" value="{{ rh_search }}"
                placeholder="{% trans 'Rechercher un employé...' %}"
                style="height:36px;padding:0 12px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;min-width:220px;">
-        <select name="dir" onchange="this.form.submit()"
+        <select name="dir"
                 style="height:36px;padding:0 10px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;color:#374151;background:white;cursor:pointer;">
             <option value="">{% trans 'Toutes les directions' %}</option>
             {% for dir in directions %}
@@ -247,7 +247,7 @@
 </div>
 
 <!-- Employees Grid -->
-<div class="grid grid-3" style="margin-top:20px;">
+<div id="filter-content" class="grid grid-3" style="margin-top:20px;">
     {% for employee in employees %}
     <div class="employee-card {% if employee.workload >= 85 %}workload-high{% elif employee.workload >= 70 %}workload-medium{% else %}workload-low{% endif %}" data-href="{% url 'core:employee_edit' employee.id %}">
 
@@ -372,44 +372,85 @@ new Chart(consumptionCtx, {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const tabButtons = document.querySelectorAll('.tab-btn[data-tab]');
-    const statBoxes = document.querySelectorAll('.stat-box[data-tab]');
-    const currentTab = '{{ tab }}';
-    
-    // Tab switching without page reload
-    tabButtons.forEach(btn => {
+    var tabButtons = document.querySelectorAll('.tab-btn[data-tab]');
+    var currentTab = '{{ tab }}';
+
+    // Tab switching still reloads page (budget charts need full rerender)
+    tabButtons.forEach(function(btn) {
         btn.addEventListener('click', function() {
-            const newTab = this.dataset.tab;
+            var newTab = this.dataset.tab;
             if (newTab === currentTab) return;
-            
-            // Update active state
-            tabButtons.forEach(b => b.classList.remove('active'));
+            tabButtons.forEach(function(b) { b.classList.remove('active'); });
             this.classList.add('active');
-            
-            // Update URL and reload page (simpler for this page with charts)
-            const params = new URLSearchParams();
-            params.set('tab', newTab);
-            window.location.href = window.location.pathname + '?' + params.toString();
+            window.location.href = window.location.pathname + '?tab=' + newTab;
         });
     });
 
-    // Stat boxes switching without page reload
-    statBoxes.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const newTab = this.dataset.tab;
-            const workload = this.dataset.workload || '';
-            
-            // Update active state
-            statBoxes.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            
-            // Update URL and reload page
-            const params = new URLSearchParams();
-            params.set('tab', newTab);
+    if (currentTab === 'rh') {
+        var statsRow = document.getElementById('filter-stats');
+        var contentEl = document.getElementById('filter-content');
+        var searchInput = document.querySelector('.filters-bar input[name="search"]');
+        var dirSelect = document.querySelector('.filters-bar select[name="dir"]');
+        var workloadStatBoxes = document.querySelectorAll('.stat-box[data-workload]');
+        var workloadInput = document.querySelector('.filters-bar input[name="workload"]');
+        var searchTimer = null;
+
+        function fetchAndSwap() {
+            var workload = '';
+            var active = document.querySelector('.stat-box[data-workload].active');
+            if (active) workload = active.dataset.workload || '';
+            if (workloadInput) workloadInput.value = workload;
+
+            var params = new URLSearchParams();
+            params.set('tab', 'rh');
             if (workload) params.set('workload', workload);
-            window.location.href = window.location.pathname + '?' + params.toString();
-        });
-    });
+            if (dirSelect && dirSelect.value) params.set('dir', dirSelect.value);
+            if (searchInput && searchInput.value.trim()) params.set('search', searchInput.value.trim());
+
+            var newUrl = window.location.pathname + '?' + params.toString();
+            history.pushState({}, '', newUrl);
+
+            if (contentEl) contentEl.style.opacity = '0.4';
+            if (statsRow) statsRow.style.opacity = '0.4';
+
+            fetch(newUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function(res) { return res.text(); })
+                .then(function(html) {
+                    var doc = new DOMParser().parseFromString(html, 'text/html');
+                    var newStats = doc.getElementById('filter-stats');
+                    var newContent = doc.getElementById('filter-content');
+                    if (newStats && statsRow) statsRow.innerHTML = newStats.innerHTML;
+                    if (newContent && contentEl) contentEl.innerHTML = newContent.innerHTML;
+                    if (contentEl) contentEl.style.opacity = '1';
+                    if (statsRow) statsRow.style.opacity = '1';
+                    bindWorkloadBoxes();
+                })
+                .catch(function() { window.location.href = newUrl; });
+        }
+
+        function bindWorkloadBoxes() {
+            workloadStatBoxes = document.querySelectorAll('.stat-box[data-workload]');
+            workloadStatBoxes.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    workloadStatBoxes.forEach(function(b) { b.classList.remove('active'); });
+                    this.classList.add('active');
+                    fetchAndSwap();
+                });
+            });
+        }
+        bindWorkloadBoxes();
+
+        if (dirSelect) dirSelect.addEventListener('change', fetchAndSwap);
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(fetchAndSwap, 300);
+            });
+        }
+
+        window.addEventListener('popstate', fetchAndSwap);
+    }
 });
 </script>
 {% endblock %}

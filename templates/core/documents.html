@@ -7,8 +7,8 @@
 
 {% block content %}
 <!-- Stats -->
-<div class="stats-row">
-{% with ft=currentftype fq=search %}
+<div id="filter-stats" class="stats-row">
+{% with ft=current_type fq=search %}
     <button type="button" class="stat-box {% if current_status == 'all' %}active{% endif %}" data-status="all" data-type="{{ ft }}" data-search="{{ fq }}">
         <div class="stat-box-icon"><i class="fa-solid fa-file-lines" width="20" height="20"></i></div>
         <div class="stat-box-body">
@@ -45,18 +45,18 @@
     <div class="search-box">
         <input type="text" name="search" placeholder="{% trans 'Rechercher un document...' %}" value="{{ search }}" class="form-control">
     </div>
-    <select name="status" class="form-control" onchange="this.form.submit()">
+    <select name="status" class="form-control">
         <option value="all" {% if current_status == 'all' %}selected{% endif %}>{% trans 'Tous les statuts' %}</option>
         <option value="a_signer" {% if current_status == 'a_signer' %}selected{% endif %}>{% trans 'À signer' %}</option>
         <option value="a_valider" {% if current_status == 'a_valider' %}selected{% endif %}>{% trans 'À valider' %}</option>
         <option value="signe" {% if current_status == 'signe' %}selected{% endif %}>{% trans 'Signé' %}</option>
     </select>
-    <select name="type" class="form-control" onchange="this.form.submit()">
-        <option value="all" {% if currentftype == 'all' %}selected{% endif %}>{% trans 'Tous les types' %}</option>
-        <option value="contrat" {% if currentftype == 'contrat' %}selected{% endif %}>{% trans 'Contrat' %}</option>
-        <option value="budget" {% if currentftype == 'budget' %}selected{% endif %}>{% trans 'Budget' %}</option>
-        <option value="rapport" {% if currentftype == 'rapport' %}selected{% endif %}>{% trans 'Rapport' %}</option>
-        <option value="note" {% if currentftype == 'note' %}selected{% endif %}>{% trans 'Note' %}</option>
+    <select name="type" class="form-control">
+        <option value="all" {% if current_type == 'all' %}selected{% endif %}>{% trans 'Tous les types' %}</option>
+        <option value="contrat" {% if current_type == 'contrat' %}selected{% endif %}>{% trans 'Contrat' %}</option>
+        <option value="budget" {% if current_type == 'budget' %}selected{% endif %}>{% trans 'Budget' %}</option>
+        <option value="rapport" {% if current_type == 'rapport' %}selected{% endif %}>{% trans 'Rapport' %}</option>
+        <option value="note" {% if current_type == 'note' %}selected{% endif %}>{% trans 'Note' %}</option>
     </select>
     <a href="{% url 'core:document_create' %}" class="btn btn-primary">
         <i class="fa-solid fa-circle-plus" width="16" height="16" ></i>
@@ -67,7 +67,7 @@
 <!-- Documents Table -->
 <div class="card">
     <div class="card-content" style="padding: 0;">
-        <div class="table-container">
+        <div id="filter-content" class="table-container">
             <table>
                 <thead>
                     <tr>
@@ -167,30 +167,74 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const statsRow = document.getElementById('filter-stats');
+    const contentEl = document.getElementById('filter-content');
+    const form = document.querySelector('.filters-bar');
+    const searchInput = form ? form.querySelector('input[name="search"]') : null;
+    const statusSelect = form ? form.querySelector('select[name="status"]') : null;
+    const typeSelect = form ? form.querySelector('select[name="type"]') : null;
+    let searchTimer = null;
+
     const statBoxes = document.querySelectorAll('.stat-box[data-status]');
-    const currentStatus = '{{ current_status }}';
-    const currentType = '{{ currentftype }}';
-    const currentSearch = '{{ search }}';
-    
-    // Stat boxes switching without page reload
-    statBoxes.forEach(btn => {
+
+    function fetchAndSwap() {
+        const params = new URLSearchParams();
+        const st = document.querySelector('.stat-box[data-status].active');
+        const status = st ? st.dataset.status : 'all';
+        if (status !== 'all') params.set('status', status);
+        if (typeSelect && typeSelect.value !== 'all') params.set('type', typeSelect.value);
+        if (searchInput && searchInput.value.trim()) params.set('search', searchInput.value.trim());
+
+        const newUrl = window.location.pathname + '?' + params.toString();
+        history.pushState({}, '', newUrl);
+
+        contentEl.style.opacity = '0.4';
+        statsRow.style.opacity = '0.4';
+
+        fetch(newUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(res) { return res.text(); })
+            .then(function(html) {
+                var doc = new DOMParser().parseFromString(html, 'text/html');
+                var newStats = doc.getElementById('filter-stats');
+                var newContent = doc.getElementById('filter-content');
+                if (newStats) statsRow.innerHTML = newStats.innerHTML;
+                if (newContent) contentEl.innerHTML = newContent.innerHTML;
+                contentEl.style.opacity = '1';
+                statsRow.style.opacity = '1';
+                bindRowClicks();
+            })
+            .catch(function() { window.location.href = newUrl; });
+    }
+
+    statBoxes.forEach(function(btn) {
         btn.addEventListener('click', function() {
-            const newStatus = this.dataset.status;
-            const type = this.dataset.type || '';
-            const search = this.dataset.search || '';
-            
-            // Update active state
-            statBoxes.forEach(b => b.classList.remove('active'));
+            statBoxes.forEach(function(b) { b.classList.remove('active'); });
             this.classList.add('active');
-            
-            // Update URL and reload page
-            const params = new URLSearchParams();
-            params.set('status', newStatus);
-            if (type && type !== 'all') params.set('type', type);
-            if (search) params.set('search', search);
-            window.location.href = window.location.pathname + '?' + params.toString();
+            fetchAndSwap();
         });
     });
+
+    if (statusSelect) statusSelect.addEventListener('change', fetchAndSwap);
+    if (typeSelect) typeSelect.addEventListener('change', fetchAndSwap);
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(fetchAndSwap, 300);
+        });
+    }
+
+    window.addEventListener('popstate', fetchAndSwap);
+
+    function bindRowClicks() {
+        document.querySelectorAll('tr[data-href]').forEach(function(tr) {
+            tr.addEventListener('click', function(e) {
+                if (e.target.closest('a, button, input, select, textarea')) return;
+                window.location.href = tr.dataset.href;
+            });
+        });
+    }
+    bindRowClicks();
 });
 </script>
 {% endblock %}

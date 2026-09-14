@@ -7,8 +7,8 @@
 
 {% block content %}
 <!-- Stats -->
-<div class="stats-row">
-{% with fdir=currentfdirection fq=search %}
+<div id="filter-stats" class="stats-row">
+{% with fdir=current_direction fq=search %}
     <button type="button" class="stat-box {% if current_status == 'all' %}active{% endif %}" data-status="all" data-direction="{{ fdir }}" data-search="{{ fq }}">
         <div class="stat-box-icon"><i class="fa-solid fa-message" width="20" height="20"></i></div>
         <div class="stat-box-body">
@@ -45,16 +45,16 @@
     <div class="search-box">
         <input type="text" name="search" placeholder="{% trans 'Rechercher une demande...' %}" value="{{ search }}" class="form-control">
     </div>
-    <select name="status" class="form-control" onchange="this.form.submit()">
+    <select name="status" class="form-control">
         <option value="all" {% if current_status == 'all' %}selected{% endif %}>{% trans 'Tous les statuts' %}</option>
         <option value="en_attente" {% if current_status == 'en_attente' %}selected{% endif %}>{% trans 'En attente' %}</option>
         <option value="approuve" {% if current_status == 'approuve' %}selected{% endif %}>{% trans 'Approuvé' %}</option>
         <option value="rejete" {% if current_status == 'rejete' %}selected{% endif %}>{% trans 'Rejeté' %}</option>
     </select>
-    <select name="direction" class="form-control" onchange="this.form.submit()">
-        <option value="all" {% if currentfdirection == 'all' %}selected{% endif %}>{% trans 'Toutes les directions' %}</option>
+    <select name="direction" class="form-control">
+        <option value="all" {% if current_direction == 'all' %}selected{% endif %}>{% trans 'Toutes les directions' %}</option>
         {% for dir in directions %}
-        <option value="{{ dir.code }}" {% if currentfdirection == dir.code %}selected{% endif %}>{{ dir.code }}</option>
+        <option value="{{ dir.code }}" {% if current_direction == dir.code %}selected{% endif %}>{{ dir.code }}</option>
         {% endfor %}
     </select>
     <a href="{% url 'core:request_create' %}" class="btn btn-primary">
@@ -64,7 +64,7 @@
 </form>
 
 <!-- Requests List -->
-<div class="item-list">
+<div id="filter-content" class="item-list">
     {% for req in requests %}
     <div class="req-card {% if req.status == 'en_attente' %}status-pending{% elif req.status == 'approuve' %}status-approved{% else %}status-rejected{% endif %}">
 
@@ -139,30 +139,63 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const statBoxes = document.querySelectorAll('.stat-box[data-status]');
-    const currentStatus = '{{ current_status }}';
-    const currentDirection = '{{ currentfdirection }}';
-    const currentSearch = '{{ search }}';
-    
-    // Stat boxes switching without page reload
-    statBoxes.forEach(btn => {
+    var statsRow = document.getElementById('filter-stats');
+    var contentEl = document.getElementById('filter-content');
+    var form = document.querySelector('.filters-bar');
+    var searchInput = form ? form.querySelector('input[name="search"]') : null;
+    var statusSelect = form ? form.querySelector('select[name="status"]') : null;
+    var directionSelect = form ? form.querySelector('select[name="direction"]') : null;
+    var searchTimer = null;
+
+    var statBoxes = document.querySelectorAll('.stat-box[data-status]');
+
+    function fetchAndSwap() {
+        var params = new URLSearchParams();
+        var st = document.querySelector('.stat-box[data-status].active');
+        var status = st ? st.dataset.status : 'all';
+        if (status !== 'all') params.set('status', status);
+        if (directionSelect && directionSelect.value !== 'all') params.set('direction', directionSelect.value);
+        if (searchInput && searchInput.value.trim()) params.set('search', searchInput.value.trim());
+
+        var newUrl = window.location.pathname + '?' + params.toString();
+        history.pushState({}, '', newUrl);
+
+        if (contentEl) contentEl.style.opacity = '0.4';
+        statsRow.style.opacity = '0.4';
+
+        fetch(newUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(res) { return res.text(); })
+            .then(function(html) {
+                var doc = new DOMParser().parseFromString(html, 'text/html');
+                var newStats = doc.getElementById('filter-stats');
+                var newContent = doc.getElementById('filter-content');
+                if (newStats) statsRow.innerHTML = newStats.innerHTML;
+                if (newContent && contentEl) contentEl.innerHTML = newContent.innerHTML;
+                if (contentEl) contentEl.style.opacity = '1';
+                statsRow.style.opacity = '1';
+            })
+            .catch(function() { window.location.href = newUrl; });
+    }
+
+    statBoxes.forEach(function(btn) {
         btn.addEventListener('click', function() {
-            const newStatus = this.dataset.status;
-            const direction = this.dataset.direction || '';
-            const search = this.dataset.search || '';
-            
-            // Update active state
-            statBoxes.forEach(b => b.classList.remove('active'));
+            statBoxes.forEach(function(b) { b.classList.remove('active'); });
             this.classList.add('active');
-            
-            // Update URL and reload page
-            const params = new URLSearchParams();
-            params.set('status', newStatus);
-            if (direction && direction !== 'all') params.set('direction', direction);
-            if (search) params.set('search', search);
-            window.location.href = window.location.pathname + '?' + params.toString();
+            fetchAndSwap();
         });
     });
+
+    if (statusSelect) statusSelect.addEventListener('change', fetchAndSwap);
+    if (directionSelect) directionSelect.addEventListener('change', fetchAndSwap);
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(fetchAndSwap, 300);
+        });
+    }
+
+    window.addEventListener('popstate', fetchAndSwap);
 });
 </script>
 {% endblock %}
