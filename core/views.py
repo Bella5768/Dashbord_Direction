@@ -288,6 +288,10 @@ def _build_activation_link(request, user):
     )
 
 
+from django.views.decorators.cache import never_cache
+
+
+@never_cache
 def login_view(request):
     """Vue de connexion"""
     if request.user.is_authenticated:
