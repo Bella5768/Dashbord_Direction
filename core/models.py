@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
@@ -745,6 +746,7 @@ class ProjectActivity(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='activities', verbose_name=_("Projet"))
     action = models.CharField(max_length=30, choices=ACTION_CHOICES, verbose_name=_("Action"))
     description = models.TextField(verbose_name=_("Description"))
+    description_context = models.JSONField(default=dict, blank=True, verbose_name=_("Contexte description"))
     user = models.CharField(max_length=100, verbose_name=_("Utilisateur"))
     created_at = models.DateTimeField(auto_now_add=True)
     
@@ -752,6 +754,20 @@ class ProjectActivity(models.Model):
         verbose_name = _("Activité de projet")
         verbose_name_plural = _("Activités de projet")
         ordering = ['-created_at']
+    
+    @property
+    def rendered_description(self):
+        """Traduit la description à l'affichage (langue active du visiteur)."""
+        if not self.description:
+            return ''
+        try:
+            if self.description_context:
+                return gettext(self.description) % self.description_context
+            if '%s' in self.description or '%(' in self.description:
+                return gettext(self.description)
+        except (KeyError, TypeError, ValueError):
+            pass
+        return gettext(self.description)
     
     def __str__(self):
         return f"{self.project.name} - {self.get_action_display()} par {self.user}"
@@ -1081,6 +1097,7 @@ class UserActivity(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activities', verbose_name=_("Utilisateur"))
     action = models.CharField(max_length=20, choices=ACTION_CHOICES, verbose_name=_("Action"))
     description = models.TextField(blank=True, verbose_name=_("Description"))
+    description_context = models.JSONField(default=dict, blank=True, verbose_name=_("Contexte description"))
     ip_address = models.GenericIPAddressField(null=True, blank=True, verbose_name=_("Adresse IP"))
     user_agent = models.TextField(blank=True, verbose_name=_("Navigateur"))
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Date"))
@@ -1090,6 +1107,20 @@ class UserActivity(models.Model):
         verbose_name_plural = _("Activités utilisateurs")
         ordering = ['-created_at']
     
+    @property
+    def rendered_description(self):
+        """Traduit la description à l'affichage (langue active du visiteur)."""
+        if not self.description:
+            return ''
+        try:
+            if self.description_context:
+                return gettext(self.description) % self.description_context
+            if '%s' in self.description or '%(' in self.description:
+                return gettext(self.description)
+        except (KeyError, TypeError, ValueError):
+            pass
+        return gettext(self.description)
+
     def __str__(self):
         return f"{self.user.username} - {self.get_action_display()} - {self.created_at}"
 

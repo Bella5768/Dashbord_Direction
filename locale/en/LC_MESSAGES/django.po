@@ -969,8 +969,9 @@ msgid "Devise"
 msgstr "Currency"
 
 msgid "Le montant sera automatiquement converti selon le taux de change"
-msgstr "The amount will be automatically converted according to the exchange rate"
-"The amount will be automatically converted according to the exchange rate"
+msgstr ""
+"The amount will be automatically converted according to the exchange rateThe"
+" amount will be automatically converted according to the exchange rate"
 
 msgid "Date de début"
 msgstr "Start date"
@@ -1616,6 +1617,49 @@ msgstr "IP Address"
 msgid "Aucune activité enregistrée"
 msgstr "No activity recorded"
 
+# Activity log descriptions
+msgid "Création du compte %(username)s pour %(name)s"
+msgstr "Account created for %(name)s (%(username)s)"
+
+msgid "Réinitialisation du mot de passe via email"
+msgstr "Password reset via email"
+
+msgid "Changement de mot de passe"
+msgstr "Password changed"
+
+msgid "Mise à jour du profil"
+msgstr "Profile updated"
+
+msgid "Modification de l'utilisateur %(username)s"
+msgstr "User %(username)s modified"
+
+msgid "Suppression de l'utilisateur %(username)s"
+msgstr "User %(username)s deleted"
+
+msgid "Activation du compte via lien email"
+msgstr "Account activated via email link"
+
+msgid "Connexion"
+msgstr "Login"
+
+msgid "Déconnexion"
+msgstr "Logout"
+
+msgid "Création"
+msgstr "Creation"
+
+msgid "Modification"
+msgstr "Modification"
+
+msgid "Suppression"
+msgstr "Deletion"
+
+msgid "Activation"
+msgstr "Activation"
+
+msgid "Consultation"
+msgstr "View"
+
 # Password reset page
 msgid "Mot de passe oublié"
 msgstr "Forgot password"
@@ -1930,8 +1974,10 @@ msgid "Type de congé"
 msgstr "Leave type"
 
 msgid "Lettres minuscules, chiffres et tirets. Non modifiable après création."
-msgstr "Lowercase letters, numbers and hyphens. Cannot be changed after creation."
-"Lowercase letters, numbers and hyphens. Cannot be changed after creation."
+msgstr ""
+"Lowercase letters, numbers and hyphens. Cannot be changed after "
+"creation.Lowercase letters, numbers and hyphens. Cannot be changed after "
+"creation."
 
 msgid "Validé par (hiérarchie)"
 msgstr "Validated by (manager)"
@@ -3338,8 +3384,9 @@ msgid "Utilisez l'adresse associée à votre compte CSIG."
 msgstr "Use the address associated with your CSIG account."
 
 msgid "Cette action est irréversible. La demande sera annulée définitivement."
-msgstr "This action is irreversible. The request will be permanently cancelled."
-"This action is irreversible. The request will be permanently cancelled."
+msgstr ""
+"This action is irreversible. The request will be permanently cancelled.This "
+"action is irreversible. The request will be permanently cancelled."
 
 msgid "SUPPRIMER"
 msgstr "DELETE"
@@ -4885,7 +4932,8 @@ msgstr "more"
 msgid "Voir les jalons"
 msgstr "View milestones"
 
-msgid "<strong>Gérer (tout)</strong> inclut lire, créer, modifier et supprimer."
+msgid ""
+"<strong>Gérer (tout)</strong> inclut lire, créer, modifier et supprimer."
 msgstr "<strong>Manage (all)</strong> includes read, create, edit and delete."
 
 msgid "Accepter"
@@ -4918,20 +4966,36 @@ msgstr "Unfavorable opinion"
 msgid "Avis favorable"
 msgstr "Favorable opinion"
 
-msgid "Ce compte n'a pas encore été activé. Utilisez le lien d'activation qui vous a été envoyé par email."
-msgstr "This account has not been activated yet. Use the activation link sent to your email."
+msgid ""
+"Ce compte n'a pas encore été activé. Utilisez le lien d'activation qui vous "
+"a été envoyé par email."
+msgstr ""
+"This account has not been activated yet. Use the activation link sent to "
+"your email."
 
-msgid "Ce format de fichier ne peut pas être prévisualisé directement dans l'application."
+msgid ""
+"Ce format de fichier ne peut pas être prévisualisé directement dans "
+"l'application."
 msgstr "This file format cannot be previewed directly in the application."
 
-msgid "Certificat médical, acte de naissance, convocation, ordre de mission… (PDF, image, Word)"
-msgstr "Medical certificate, birth certificate, convocation, mission order... (PDF, image, Word)"
+msgid ""
+"Certificat médical, acte de naissance, convocation, ordre de mission… (PDF, "
+"image, Word)"
+msgstr ""
+"Medical certificate, birth certificate, convocation, mission order... (PDF, "
+"image, Word)"
 
-msgid "Cet email est utilisé pour recevoir les notifications et les liens d'invitation."
+msgid ""
+"Cet email est utilisé pour recevoir les notifications et les liens "
+"d'invitation."
 msgstr "This email is used to receive notifications and invitation links."
 
-msgid "Cette action est irréversible. L'événement, ses invitations et toutes les réponses RSVP associées seront définitivement supprimés."
-msgstr "This action is irreversible. The event, its invitations and all associated RSVP responses will be permanently deleted."
+msgid ""
+"Cette action est irréversible. L'événement, ses invitations et toutes les "
+"réponses RSVP associées seront définitivement supprimés."
+msgstr ""
+"This action is irreversible. The event, its invitations and all associated "
+"RSVP responses will be permanently deleted."
 
 msgid "Chargement…"
 msgstr "Loading…"
@@ -4945,7 +5009,8 @@ msgstr "Choose a project"
 msgid "Choisir une direction"
 msgstr "Choose a department"
 
-msgid "Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe :"
+msgid ""
+"Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe :"
 msgstr "Click the button below to set a new password:"
 
 msgid "Cliquez sur une direction pour la sélectionner ou désélectionner."
@@ -4954,14 +5019,23 @@ msgstr "Click on a department to select or deselect it."
 msgid "Confirmer l'import"
 msgstr "Confirm import"
 
-msgid "Connectez-vous au tableau de bord CSIG pour mettre à jour l'avancement."
+msgid ""
+"Connectez-vous au tableau de bord CSIG pour mettre à jour l'avancement."
 msgstr "Log in to the CSIG dashboard to update the progress."
 
-msgid "Consultant, prestataire, partenaire — la fiche est créée et stockée avec le marqueur « Externe »."
-msgstr "Consultant, contractor, partner — the record is created and stored with the «External» marker."
+msgid ""
+"Consultant, prestataire, partenaire — la fiche est créée et stockée avec le "
+"marqueur « Externe »."
+msgstr ""
+"Consultant, contractor, partner — the record is created and stored with the "
+"«External» marker."
 
-msgid "Contrôlez la conformité réglementaire et les droits disponibles avant transmission à la Direction."
-msgstr "Check regulatory compliance and available entitlements before forwarding to Management."
+msgid ""
+"Contrôlez la conformité réglementaire et les droits disponibles avant "
+"transmission à la Direction."
+msgstr ""
+"Check regulatory compliance and available entitlements before forwarding to "
+"Management."
 
 msgid "Date de début par défaut"
 msgstr "Default start date"
@@ -4975,14 +5049,23 @@ msgstr "Department:"
 msgid "Direction à affecter"
 msgstr "Department to assign"
 
-msgid "Décision officielle de la Direction Générale / Coordination. Une notification sera envoyée automatiquement à l'agent et à la chaîne de validation."
-msgstr "Official decision from General Management / Coordination. A notification will be sent automatically to the agent and the approval chain."
+msgid ""
+"Décision officielle de la Direction Générale / Coordination. Une "
+"notification sera envoyée automatiquement à l'agent et à la chaîne de "
+"validation."
+msgstr ""
+"Official decision from General Management / Coordination. A notification "
+"will be sent automatically to the agent and the approval chain."
 
 msgid "Erreur de chargement"
 msgstr "Loading error"
 
-msgid "Feuilles individuelles (optionnel) : col A = Jalon · E = Début · F = Fin · G = Étapes multi-lignes"
-msgstr "Individual sheets (optional): col A = Milestone · E = Start · F = End · G = Multi-line steps"
+msgid ""
+"Feuilles individuelles (optionnel) : col A = Jalon · E = Début · F = Fin · G"
+" = Étapes multi-lignes"
+msgstr ""
+"Individual sheets (optional): col A = Milestone · E = Start · F = End · G = "
+"Multi-line steps"
 
 msgid "Fichier Excel"
 msgstr "Excel file"
@@ -5008,8 +5091,12 @@ msgstr "Manage global roles and permissions associated with each profile."
 msgid "Historique de vos notifications"
 msgstr "Your notification history"
 
-msgid "Il a peut-être <strong>déjà été utilisé</strong> ou il a <strong>expiré</strong> (validité : 3 jours)."
-msgstr "It may have <strong>already been used</strong> or it has <strong>expired</strong> (valid for 3 days)."
+msgid ""
+"Il a peut-être <strong>déjà été utilisé</strong> ou il a "
+"<strong>expiré</strong> (validité : 3 jours)."
+msgstr ""
+"It may have <strong>already been used</strong> or it has "
+"<strong>expired</strong> (valid for 3 days)."
 
 msgid "Import en masse depuis un fichier Excel (.xlsx)"
 msgstr "Bulk import from an Excel file (.xlsx)"
@@ -5023,8 +5110,12 @@ msgstr "Import projects from Excel"
 msgid "Individuel"
 msgstr "Individual"
 
-msgid "Invitation en attente — le compte s'activera automatiquement quand l'employé définira son mot de passe."
-msgstr "Invitation pending — the account will activate automatically when the employee sets their password."
+msgid ""
+"Invitation en attente — le compte s'activera automatiquement quand l'employé"
+" définira son mot de passe."
+msgstr ""
+"Invitation pending — the account will activate automatically when the "
+"employee sets their password."
 
 msgid "Inviter"
 msgstr "Invite"
@@ -5035,29 +5126,53 @@ msgstr "JSON of projects to import"
 msgid "JSON généré — vérifiez avant import"
 msgstr "Generated JSON — check before import"
 
-msgid "L'employé sera rattaché à la direction du projet et stocké dans le système."
-msgstr "The employee will be attached to the project department and stored in the system."
+msgid ""
+"L'employé sera rattaché à la direction du projet et stocké dans le système."
+msgstr ""
+"The employee will be attached to the project department and stored in the "
+"system."
 
-msgid "Le compte sera créé inactif. Un email d'invitation sera envoyé à la personne pour qu'elle définisse elle-même son mot de passe."
-msgstr "The account will be created inactive. An invitation email will be sent so the person can set their own password."
+msgid ""
+"Le compte sera créé inactif. Un email d'invitation sera envoyé à la personne"
+" pour qu'elle définisse elle-même son mot de passe."
+msgstr ""
+"The account will be created inactive. An invitation email will be sent so "
+"the person can set their own password."
 
-msgid "Le lien sera valable <strong>3 jours</strong>. Vérifiez aussi vos spams."
-msgstr "The link will be valid for <strong>3 days</strong>. Also check your spam folder."
+msgid ""
+"Le lien sera valable <strong>3 jours</strong>. Vérifiez aussi vos spams."
+msgstr ""
+"The link will be valid for <strong>3 days</strong>. Also check your spam "
+"folder."
 
-msgid "Le système génère un JSON que vous pouvez relire et corriger avant de valider."
-msgstr "The system generates a JSON that you can review and correct before validating."
+msgid ""
+"Le système génère un JSON que vous pouvez relire et corriger avant de "
+"valider."
+msgstr ""
+"The system generates a JSON that you can review and correct before "
+"validating."
 
-msgid "Les conditions <em>restreignent</em> une permission à un sous-ensemble."
+msgid ""
+"Les conditions <em>restreignent</em> une permission à un sous-ensemble."
 msgstr "Conditions <em>restrict</em> a permission to a subset."
 
-msgid "Les permissions détaillées pourront être configurées après la création."
+msgid ""
+"Les permissions détaillées pourront être configurées après la création."
 msgstr "Detailed permissions can be configured after creation."
 
-msgid "Les permissions sont gérées par le rôle attribué. Pour modifier les permissions d'un rôle, rendez-vous sur"
-msgstr "Permissions are managed by the assigned role. To modify a role's permissions, go to"
+msgid ""
+"Les permissions sont gérées par le rôle attribué. Pour modifier les "
+"permissions d'un rôle, rendez-vous sur"
+msgstr ""
+"Permissions are managed by the assigned role. To modify a role's "
+"permissions, go to"
 
-msgid "Merci de vous être inscrit sur notre plateforme. Pour activer votre compte, veuillez cliquer sur le bouton ci-dessous :"
-msgstr "Thank you for registering on our platform. To activate your account, please click the button below:"
+msgid ""
+"Merci de vous être inscrit sur notre plateforme. Pour activer votre compte, "
+"veuillez cliquer sur le bouton ci-dessous :"
+msgstr ""
+"Thank you for registering on our platform. To activate your account, please "
+"click the button below:"
 
 msgid "Mois précédent"
 msgstr "Previous month"
@@ -5068,26 +5183,40 @@ msgstr "Next month"
 msgid "Notifications"
 msgstr "Notifications"
 
-msgid "Nous avons reçu une demande de réinitialisation du mot de passe pour le compte associé à votre adresse email."
-msgstr "We received a password reset request for the account associated with your email address."
+msgid ""
+"Nous avons reçu une demande de réinitialisation du mot de passe pour le "
+"compte associé à votre adresse email."
+msgstr ""
+"We received a password reset request for the account associated with your "
+"email address."
 
-msgid "Optionnel pour une personne externe — mais nécessaire pour créer un compte."
+msgid ""
+"Optionnel pour une personne externe — mais nécessaire pour créer un compte."
 msgstr "Optional for an external person — but required to create an account."
 
 msgid "Participants invités"
 msgstr "Invited participants"
 
-msgid "Pensez à désigner un suppléant pour faciliter la continuité du service. Une note de passation bien rédigée accélère la validation."
-msgstr "Remember to designate a deputy to facilitate service continuity. A well-written handover note speeds up validation."
+msgid ""
+"Pensez à désigner un suppléant pour faciliter la continuité du service. Une "
+"note de passation bien rédigée accélère la validation."
+msgstr ""
+"Remember to designate a deputy to facilitate service continuity. A well-"
+"written handover note speeds up validation."
 
-msgid "Personne désignée pour assurer la continuité du service pendant votre absence."
+msgid ""
+"Personne désignée pour assurer la continuité du service pendant votre "
+"absence."
 msgstr "Person designated to ensure service continuity during your absence."
 
 msgid "Peut-être"
 msgstr "Maybe"
 
-msgid "Pour activer votre compte et choisir votre mot de passe, cliquez sur le bouton ci-dessous :"
-msgstr "To activate your account and set your password, click the button below:"
+msgid ""
+"Pour activer votre compte et choisir votre mot de passe, cliquez sur le "
+"bouton ci-dessous :"
+msgstr ""
+"To activate your account and set your password, click the button below:"
 
 msgid "Projets associés"
 msgstr "Associated projects"
@@ -5101,8 +5230,12 @@ msgstr "Start over"
 msgid "Refuser"
 msgstr "Decline"
 
-msgid "Remplissez ce formulaire pour soumettre votre demande. Elle suivra le circuit officiel : Hiérarchie → RH → Direction."
-msgstr "Fill in this form to submit your request. It will follow the official process: Hierarchy → HR → Management."
+msgid ""
+"Remplissez ce formulaire pour soumettre votre demande. Elle suivra le "
+"circuit officiel : Hiérarchie → RH → Direction."
+msgstr ""
+"Fill in this form to submit your request. It will follow the official "
+"process: Hierarchy → HR → Management."
 
 msgid "Retirer"
 msgstr "Remove"
@@ -5116,35 +5249,68 @@ msgstr "Custom roles"
 msgid "Rôles système"
 msgstr "System roles"
 
-msgid "Saisissez l'adresse email de votre compte. Si elle existe, vous recevrez un lien pour choisir un nouveau mot de passe."
-msgstr "Enter your account email address. If it exists, you will receive a link to set a new password."
+msgid ""
+"Saisissez l'adresse email de votre compte. Si elle existe, vous recevrez un "
+"lien pour choisir un nouveau mot de passe."
+msgstr ""
+"Enter your account email address. If it exists, you will receive a link to "
+"set a new password."
 
-msgid "Si un compte actif correspond à cette adresse, un <strong>lien de réinitialisation</strong> vient d'être envoyé."
-msgstr "If an active account matches this address, a <strong>reset link</strong> has just been sent."
+msgid ""
+"Si un compte actif correspond à cette adresse, un <strong>lien de "
+"réinitialisation</strong> vient d'être envoyé."
+msgstr ""
+"If an active account matches this address, a <strong>reset link</strong> has"
+" just been sent."
 
-msgid "Si votre lien d'invitation a expiré ou a été perdu, saisissez l'adresse email associée à votre compte. Un nouveau lien vous sera envoyé."
-msgstr "If your invitation link has expired or been lost, enter the email address associated with your account. A new link will be sent."
+msgid ""
+"Si votre lien d'invitation a expiré ou a été perdu, saisissez l'adresse "
+"email associée à votre compte. Un nouveau lien vous sera envoyé."
+msgstr ""
+"If your invitation link has expired or been lost, enter the email address "
+"associated with your account. A new link will be sent."
 
-msgid "Si vous n'avez pas demandé cette inscription, vous pouvez ignorer cet email."
+msgid ""
+"Si vous n'avez pas demandé cette inscription, vous pouvez ignorer cet email."
 msgstr "If you did not request this registration, you can ignore this email."
 
-msgid "Si vous n'avez pas demandé cette réinitialisation, vous pouvez ignorer cet email et votre mot de passe restera inchangé."
-msgstr "If you did not request this reset, you can ignore this email and your password will remain unchanged."
+msgid ""
+"Si vous n'avez pas demandé cette réinitialisation, vous pouvez ignorer cet "
+"email et votre mot de passe restera inchangé."
+msgstr ""
+"If you did not request this reset, you can ignore this email and your "
+"password will remain unchanged."
 
-msgid "Si vous ne recevez rien dans quelques minutes, contactez votre administrateur pour qu'il renvoie l'invitation depuis le tableau de bord."
-msgstr "If you receive nothing within a few minutes, contact your administrator to resend the invitation from the dashboard."
+msgid ""
+"Si vous ne recevez rien dans quelques minutes, contactez votre "
+"administrateur pour qu'il renvoie l'invitation depuis le tableau de bord."
+msgstr ""
+"If you receive nothing within a few minutes, contact your administrator to "
+"resend the invitation from the dashboard."
 
-msgid "Si vous ne recevez rien, votre adresse email est peut-être différente. Contactez votre administrateur si besoin."
-msgstr "If you receive nothing, your email address may be different. Contact your administrator if needed."
+msgid ""
+"Si vous ne recevez rien, votre adresse email est peut-être différente. "
+"Contactez votre administrateur si besoin."
+msgstr ""
+"If you receive nothing, your email address may be different. Contact your "
+"administrator if needed."
 
-msgid "Sommaire : col A = Nom projet · B = Responsable · C = Type/Description · D = Priorité (LOW/MEDIUM/HIGH)"
-msgstr "Summary: col A = Project name · B = Manager · C = Type/Description · D = Priority (LOW/MEDIUM/HIGH)"
+msgid ""
+"Sommaire : col A = Nom projet · B = Responsable · C = Type/Description · D ="
+" Priorité (LOW/MEDIUM/HIGH)"
+msgstr ""
+"Summary: col A = Project name · B = Manager · C = Type/Description · D = "
+"Priority (LOW/MEDIUM/HIGH)"
 
-msgid "Structure organisationnelle et répartition des ressources par direction."
+msgid ""
+"Structure organisationnelle et répartition des ressources par direction."
 msgstr "Organizational structure and resource allocation by department."
 
-msgid "Suivez vos demandes en temps réel et soumettez-en de nouvelles en quelques clics."
-msgstr "Track your requests in real time and submit new ones in just a few clicks."
+msgid ""
+"Suivez vos demandes en temps réel et soumettez-en de nouvelles en quelques "
+"clics."
+msgstr ""
+"Track your requests in real time and submit new ones in just a few clicks."
 
 msgid "Supprimer cet événement ?"
 msgstr "Delete this event?"
@@ -5152,8 +5318,12 @@ msgstr "Delete this event?"
 msgid "Sélectionnez un rôle pour créer automatiquement un compte utilisateur."
 msgstr "Select a role to automatically create a user account."
 
-msgid "Tapez un mot-clé dans la barre de recherche pour trouver des projets, partenaires, employés, demandes ou documents."
-msgstr "Type a keyword in the search bar to find projects, partners, employees, requests or documents."
+msgid ""
+"Tapez un mot-clé dans la barre de recherche pour trouver des projets, "
+"partenaires, employés, demandes ou documents."
+msgstr ""
+"Type a keyword in the search bar to find projects, partners, employees, "
+"requests or documents."
 
 msgid "Tous les employés"
 msgstr "All employees"
@@ -5188,10 +5358,16 @@ msgstr "View all notifications"
 msgid "Votre invitation"
 msgstr "Your invitation"
 
-msgid "Vous avez demandé la réinitialisation de votre mot de passe. Cliquez sur le bouton ci-dessous pour définir un nouveau mot de passe :"
-msgstr "You requested a password reset. Click the button below to set a new password:"
+msgid ""
+"Vous avez demandé la réinitialisation de votre mot de passe. Cliquez sur le "
+"bouton ci-dessous pour définir un nouveau mot de passe :"
+msgstr ""
+"You requested a password reset. Click the button below to set a new "
+"password:"
 
-msgid "Vous pouvez modifier le JSON ci-dessous avant de valider. Respectez le format :"
+msgid ""
+"Vous pouvez modifier le JSON ci-dessous avant de valider. Respectez le "
+"format :"
 msgstr "You can edit the JSON below before validating. Follow the format:"
 
 msgid "Vérifiez et corrigez le JSON avant de confirmer l'import"
@@ -5203,11 +5379,17 @@ msgstr "HR verified"
 msgid "avec une feuille nommée"
 msgstr "with a sheet named"
 
-msgid "choisissez un mot de passe sécurisé pour activer votre accès au tableau de bord."
+msgid ""
+"choisissez un mot de passe sécurisé pour activer votre accès au tableau de "
+"bord."
 msgstr "choose a secure password to activate your dashboard access."
 
-msgid "le compte est créé inactif. L'employé reçoit un email avec un lien sécurisé pour définir lui-même son mot de passe (lien valable 3 jours)."
-msgstr "the account is created inactive. The employee receives an email with a secure link to set their own password (link valid for 3 days)."
+msgid ""
+"le compte est créé inactif. L'employé reçoit un email avec un lien sécurisé "
+"pour définir lui-même son mot de passe (lien valable 3 jours)."
+msgstr ""
+"the account is created inactive. The employee receives an email with a "
+"secure link to set their own password (link valid for 3 days)."
 
 msgid "personnes"
 msgstr "people"
@@ -5215,9 +5397,12 @@ msgstr "people"
 msgid "projet(s) extrait(s) du fichier Excel."
 msgstr "project(s) extracted from Excel file."
 
-msgid "Évaluez l'impact de cette absence sur le fonctionnement du service avant de transmettre à la RH."
-msgstr "Assess the impact of this absence on service operations before forwarding to HR."
-
+msgid ""
+"Évaluez l'impact de cette absence sur le fonctionnement du service avant de "
+"transmettre à la RH."
+msgstr ""
+"Assess the impact of this absence on service operations before forwarding to"
+" HR."
 
 msgid "%(n)d participant(s) ajouté(s)."
 msgstr "%(n)d participant(s) added."
@@ -5243,38 +5428,55 @@ msgstr "No project created — all names already exist."
 msgid "Avis hiérarchique congé"
 msgstr "Hierarchical leave opinion"
 
-msgid "Ce jalon contient des sous-étapes : sa progression est calculée automatiquement."
-msgstr "This milestone contains sub-steps: its progress is calculated automatically."
+msgid ""
+"Ce jalon contient des sous-étapes : sa progression est calculée "
+"automatiquement."
+msgstr ""
+"This milestone contains sub-steps: its progress is calculated automatically."
 
 msgid "Code unique : "
 msgstr "Unique code: "
 
-msgid "Demande de congé soumise par un membre de votre équipe (avis hiérarchique requis) :"
-msgstr "Leave request submitted by a member of your team (hierarchical opinion required):"
+msgid ""
+"Demande de congé soumise par un membre de votre équipe (avis hiérarchique "
+"requis) :"
+msgstr ""
+"Leave request submitted by a member of your team (hierarchical opinion "
+"required):"
 
-msgid "Demande de congé soumise. Elle suit maintenant le circuit de validation."
+msgid ""
+"Demande de congé soumise. Elle suit maintenant le circuit de validation."
 msgstr "Leave request submitted. It is now following the approval process."
 
 msgid "Destinataire"
 msgstr "Recipient"
 
-msgid "Document officiel genere par le systeme de gestion des conges - CSIG Dashboard"
-msgstr "Official document generated by the leave management system - CSIG Dashboard"
+msgid ""
+"Document officiel genere par le systeme de gestion des conges - CSIG "
+"Dashboard"
+msgstr ""
+"Official document generated by the leave management system - CSIG Dashboard"
 
 msgid "Décision finale congé"
 msgstr "Final leave decision"
 
-msgid "En tant que personne ayant attribué cette tâche, vous êtes informé que :"
+msgid ""
+"En tant que personne ayant attribué cette tâche, vous êtes informé que :"
 msgstr "As the person who assigned this task, you are informed that:"
 
-msgid "En tant que responsable, vous devez traiter {demonstrative} {type} impérativement :"
+msgid ""
+"En tant que responsable, vous devez traiter {demonstrative} {type} "
+"impérativement :"
 msgstr "As the manager, you must handle {demonstrative} {type} urgently:"
 
 msgid "Fonction / Poste"
 msgstr "Function / Position"
 
-msgid "Impossible de supprimer {name} : {count} demande(s) de congé sont liées à cette fiche."
-msgstr "Cannot delete {name}: {count} leave request(s) are linked to this record."
+msgid ""
+"Impossible de supprimer {name} : {count} demande(s) de congé sont liées à "
+"cette fiche."
+msgstr ""
+"Cannot delete {name}: {count} leave request(s) are linked to this record."
 
 msgid "Invitation à un événement"
 msgstr "Event invitation"
@@ -5291,10 +5493,14 @@ msgstr "Milestone completed"
 msgid "La date de début de collaboration ne peut pas être dans le futur."
 msgstr "The collaboration start date cannot be in the future."
 
-msgid "La date de la sous-étape doit être antérieure ou égale à celle du jalon (%(date)s)."
-msgstr "The sub-step date must be before or equal to the milestone date (%(date)s)."
+msgid ""
+"La date de la sous-étape doit être antérieure ou égale à celle du jalon "
+"(%(date)s)."
+msgstr ""
+"The sub-step date must be before or equal to the milestone date (%(date)s)."
 
-msgid "La date de la sous-étape doit être comprise entre %(start)s et %(end)s."
+msgid ""
+"La date de la sous-étape doit être comprise entre %(start)s et %(end)s."
 msgstr "The sub-step date must be between %(start)s and %(end)s."
 
 msgid "La date de signature ne peut pas être postérieure à la date limite."
@@ -5351,7 +5557,8 @@ msgstr "RSVP status"
 msgid "Tous ces participants sont déjà invités."
 msgstr "All these participants are already invited."
 
-msgid "Type de fichier non autorisé (%(ext)s). Extensions acceptées : %(allowed)s."
+msgid ""
+"Type de fichier non autorisé (%(ext)s). Extensions acceptées : %(allowed)s."
 msgstr "File type not allowed (%(ext)s). Accepted extensions: %(allowed)s."
 
 msgid "Un email est requis pour créer un compte utilisateur."
@@ -5366,8 +5573,12 @@ msgstr "Your workspace"
 msgid "Votre réponse (%(status)s) a été enregistrée."
 msgstr "Your response (%(status)s) has been recorded."
 
-msgid "Vous pouvez sélectionner plusieurs fichiers à la fois (Ctrl/Cmd + clic) ou les glisser-déposer."
-msgstr "You can select multiple files at once (Ctrl/Cmd + click) or drag and drop them."
+msgid ""
+"Vous pouvez sélectionner plusieurs fichiers à la fois (Ctrl/Cmd + clic) ou "
+"les glisser-déposer."
+msgstr ""
+"You can select multiple files at once (Ctrl/Cmd + click) or drag and drop "
+"them."
 
 msgid "Vue de votre direction"
 msgstr "Your department view"
@@ -5390,17 +5601,33 @@ msgstr "Delete « %(name)s »?"
 msgid "Renvoyer l'invitation à %(email)s ?"
 msgstr "Resend invitation to %(email)s?"
 
-msgid "Si un compte en attente est associé à cette adresse, un <strong>nouveau lien d'activation</strong> vient d'être envoyé."
-msgstr "If a pending account is associated with this address, a <strong>new activation link</strong> has just been sent."
+msgid ""
+"Si un compte en attente est associé à cette adresse, un <strong>nouveau lien"
+" d'activation</strong> vient d'être envoyé."
+msgstr ""
+"If a pending account is associated with this address, a <strong>new "
+"activation link</strong> has just been sent."
 
-msgid "Le lien sera valable <strong>3 jours</strong>. Pensez à vérifier vos spams."
-msgstr "The link will be valid for <strong>3 days</strong>. Remember to check your spam folder."
+msgid ""
+"Le lien sera valable <strong>3 jours</strong>. Pensez à vérifier vos spams."
+msgstr ""
+"The link will be valid for <strong>3 days</strong>. Remember to check your "
+"spam folder."
 
-msgid "Ce lien est valable <strong>3 jours</strong>. Si vous n'avez pas demandé ce compte, ignorez cet email."
-msgstr "This link is valid for <strong>3 days</strong>. If you did not request this account, ignore this email."
+msgid ""
+"Ce lien est valable <strong>3 jours</strong>. Si vous n'avez pas demandé ce "
+"compte, ignorez cet email."
+msgstr ""
+"This link is valid for <strong>3 days</strong>. If you did not request this "
+"account, ignore this email."
 
-msgid "Ce lien est valable <strong>3 jours</strong>. Si vous n'avez pas demandé cette réinitialisation, ignorez cet email — votre mot de passe reste inchangé."
-msgstr "This link is valid for <strong>3 days</strong>. If you did not request this reset, ignore this email — your password remains unchanged."
+msgid ""
+"Ce lien est valable <strong>3 jours</strong>. Si vous n'avez pas demandé "
+"cette réinitialisation, ignorez cet email — votre mot de passe reste "
+"inchangé."
+msgstr ""
+"This link is valid for <strong>3 days</strong>. If you did not request this "
+"reset, ignore this email — your password remains unchanged."
 
 msgid "Chef de projet sur %(count)s projet :"
 msgid_plural "Chef de projet sur %(count)s projets :"
@@ -5408,7 +5635,8 @@ msgstr[0] "Project manager on %(count)s project:"
 msgstr[1] "Project manager on %(count)s projects:"
 
 msgid "Membre de %(count)s projet — les appartenances seront supprimées"
-msgid_plural "Membre de %(count)s projets — les appartenances seront supprimées"
+msgid_plural ""
+"Membre de %(count)s projets — les appartenances seront supprimées"
 msgstr[0] "Member of %(count)s project — memberships will be deleted"
 msgstr[1] "Member of %(count)s projects — memberships will be deleted"
 
@@ -5481,3 +5709,342 @@ msgid "<strong>%(n)s</strong> utilisateur aura ces permissions."
 msgid_plural "<strong>%(n)s</strong> utilisateurs auront ces permissions."
 msgstr[0] "<strong>%(n)s</strong> user will have these permissions."
 msgstr[1] "<strong>%(n)s</strong> users will have these permissions."
+
+msgid "%(name)s retiré(e) de l'événement."
+msgstr "{name} removed from the event."
+
+msgid "Ajout automatique du responsable '%(name)s' à l'équipe"
+msgstr "Automatic addition of the manager '%(name)s' to the team"
+
+msgid "Ce compte n'a pas d'adresse email."
+msgstr "This account has no email address."
+
+msgid "Ce rôle est assigné à {count} utilisateur(s). Réassignez-les d'abord."
+msgstr "This role is assigned to {count} user(s). Please reassign them first."
+
+msgid "Cette demande n'est pas au stade de la vérification RH."
+msgstr "This request is not at the HR verification stage."
+
+msgid "Cette demande n'est pas prête pour la décision finale."
+msgstr "This request is not ready for the final decision."
+
+msgid "Cette demande n'est plus en attente d'avis hiérarchique."
+msgstr "This request is no longer awaiting manager review."
+
+msgid "Compte '{username}' créé mais l'email n'a pas pu être envoyé : {msg}."
+msgstr "Account '{username}' created but the email could not be sent: {msg}."
+
+msgid ""
+"Compte créé (identifiant : {username}) mais l'email n'a pas pu être envoyé :"
+" {msg}"
+msgstr ""
+"Account created (username: {username}) but the email could not be sent: "
+"{msg}"
+
+msgid "Compte non créé : {name} n'a pas d'adresse email."
+msgstr "Account not created: {name} has no email address."
+
+msgid "Demande '{title}' approuvée."
+msgstr "Request '{title}' approved."
+
+msgid "Demande '{title}' rejetée."
+msgstr "Request '{title}' rejected."
+
+msgid "Document '{title}' signé."
+msgstr "Document '{title}' signed."
+
+msgid "Document '{title}' validé, en attente de signature."
+msgstr "Document '{title}' validated, awaiting signature."
+
+msgid "Import JSON : création du projet '%(name)s'"
+msgstr "JSON import: project '%(name)s' created"
+
+msgid "Impossible d'ajouter le besoin. Vérifiez le formulaire."
+msgstr "Could not add the need. Please check the form."
+
+msgid "Impossible d'ajouter le commentaire. Vérifiez le formulaire."
+msgstr "Could not add the comment. Please check the form."
+
+msgid "L'attestation n'est disponible que pour les demandes approuvées."
+msgstr "The certificate is only available for approved requests."
+
+msgid "L'employé n'a pas d'adresse email."
+msgstr "The employee has no email address."
+
+msgid "L'utilisateur {username} a été modifié avec succès."
+msgstr "User {username} was modified successfully."
+
+msgid "L'utilisateur {username} a été supprimé."
+msgstr "User {username} was deleted."
+
+msgid "L'utilisateur {username} a été {status}."
+msgstr "User {username} has been {status}."
+
+msgid ""
+"Le compte de {username} n'est pas en attente d'invitation (il a déjà un mot "
+"de passe)."
+msgstr ""
+"The account of {username} is not awaiting an invitation (it already has a "
+"password)."
+
+msgid "Le nom et l'identifiant sont obligatoires."
+msgstr "The name and the identifier are required."
+
+msgid "Personne {label} '{name}' créée et ajoutée au projet."
+msgstr "Person {label} '{name}' created and added to the project."
+
+msgid "Photo de profil supprimée."
+msgstr "Profile picture deleted."
+
+msgid "Un employé avec l'email « %(email)s » existe déjà."
+msgstr "An employee with the email \"%(email)s\" already exists."
+
+msgid ""
+"Votre compte est en attente d'activation. Consultez votre email pour le lien"
+" d'invitation."
+msgstr ""
+"Your account is awaiting activation. Check your email for the invitation "
+"link."
+
+msgid ""
+"Votre compte n'est pas encore lié à un employé. Contactez un administrateur."
+msgstr ""
+"Your account is not yet linked to an employee. Contact an administrator."
+
+msgid "Votre profil n'est pas lié à un employé."
+msgstr "Your profile is not linked to an employee."
+
+msgid "Vous devez appartenir à une direction pour soumettre une demande."
+msgstr "You must belong to a department to submit a request."
+
+msgid "Vous n'avez pas accès au calendrier."
+msgstr "You do not have access to the calendar."
+
+msgid "Vous n'avez pas accès aux documents."
+msgstr "You do not have access to documents."
+
+msgid "Vous n'avez pas accès à ce budget."
+msgstr "You do not have access to this budget."
+
+msgid "Vous n'avez pas accès à ce document."
+msgstr "You do not have access to this document."
+
+msgid "Vous n'avez pas accès à ce projet."
+msgstr "You do not have access to this project."
+
+msgid "Vous n'avez pas la permission d'exporter les rapports."
+msgstr "You do not have permission to export reports."
+
+msgid "Vous n'avez pas la permission de consulter les partenaires."
+msgstr "You do not have permission to view partners."
+
+msgid "Vous n'avez pas la permission de créer des directions."
+msgstr "You do not have permission to create departments."
+
+msgid "Vous n'avez pas la permission de gérer les directions."
+msgstr "You do not have permission to manage departments."
+
+msgid "Vous n'avez pas la permission de gérer les rôles."
+msgstr "You do not have permission to manage roles."
+
+msgid "Vous n'avez pas la permission de modifier les directions."
+msgstr "You do not have permission to edit departments."
+
+msgid "Vous n'avez pas la permission de supprimer ce projet."
+msgstr "You do not have permission to delete this project."
+
+msgid "Vous n'avez pas la permission de supprimer les directions."
+msgstr "You do not have permission to delete departments."
+
+msgid "Vous n'avez pas les permissions pour ajouter des besoins à ce projet."
+msgstr "You do not have permission to add needs to this project."
+
+msgid ""
+"Vous n'avez pas les permissions pour ajouter des commentaires à ce projet."
+msgstr "You do not have permission to add comments to this project."
+
+msgid ""
+"Vous n'avez pas les permissions pour ajouter des documents à ce projet."
+msgstr "You do not have permission to add documents to this project."
+
+msgid "Vous n'avez pas les permissions pour ajouter des jalons à ce projet."
+msgstr "You do not have permission to add milestones to this project."
+
+msgid "Vous n'avez pas les permissions pour ajouter des membres à ce projet."
+msgstr "You do not have permission to add members to this project."
+
+msgid "Vous n'avez pas les permissions pour ajouter des sous-étapes."
+msgstr "You do not have permission to add sub-steps."
+
+msgid "Vous n'avez pas les permissions pour créer des projets."
+msgstr "You do not have permission to create projects."
+
+msgid "Vous n'avez pas les permissions pour créer des utilisateurs."
+msgstr "You do not have permission to create users."
+
+msgid "Vous n'avez pas les permissions pour créer un projet."
+msgstr "You do not have permission to create a project."
+
+msgid "Vous n'avez pas les permissions pour gérer les budgets."
+msgstr "You do not have permission to manage budgets."
+
+msgid "Vous n'avez pas les permissions pour gérer les dossiers de ce projet."
+msgstr "You do not have permission to manage folders for this project."
+
+msgid "Vous n'avez pas les permissions pour gérer les employés."
+msgstr "You do not have permission to manage employees."
+
+msgid "Vous n'avez pas les permissions pour gérer les utilisateurs."
+msgstr "You do not have permission to manage users."
+
+msgid "Vous n'avez pas les permissions pour modifier ce jalon."
+msgstr "You do not have permission to modify this milestone."
+
+msgid "Vous n'avez pas les permissions pour modifier ce projet."
+msgstr "You do not have permission to modify this project."
+
+msgid "Vous n'avez pas les permissions pour modifier cette sous-étape."
+msgstr "You do not have permission to modify this sub-step."
+
+msgid "Vous n'avez pas les permissions pour modifier des utilisateurs."
+msgstr "You do not have permission to modify users."
+
+msgid ""
+"Vous n'avez pas les permissions pour modifier les documents de ce projet."
+msgstr "You do not have permission to modify documents for this project."
+
+msgid ""
+"Vous n'avez pas les permissions pour modifier les membres de ce projet."
+msgstr "You do not have permission to modify members of this project."
+
+msgid "Vous n'avez pas les permissions pour supprimer ce jalon."
+msgstr "You do not have permission to delete this milestone."
+
+msgid "Vous n'avez pas les permissions pour supprimer cette sous-étape."
+msgstr "You do not have permission to delete this sub-step."
+
+msgid ""
+"Vous n'avez pas les permissions pour supprimer des membres de ce projet."
+msgstr "You do not have permission to remove members from this project."
+
+msgid "Vous n'avez pas les permissions pour supprimer des utilisateurs."
+msgstr "You do not have permission to delete users."
+
+msgid ""
+"Vous n'avez pas les permissions pour supprimer les documents de ce projet."
+msgstr "You do not have permission to delete documents for this project."
+
+msgid "Vous n'avez pas les permissions."
+msgstr "You do not have the required permissions."
+
+msgid "Vous ne pouvez approuver que les demandes de votre direction."
+msgstr "You can only approve requests from your department."
+
+msgid "Vous ne pouvez rejeter que les demandes de votre direction."
+msgstr "You can only reject requests from your department."
+
+msgid "Vous ne pouvez supprimer que les utilisateurs de votre direction."
+msgstr "You can only delete users from your department."
+
+msgid "Vue d'ensemble de la CSIG"
+msgstr "Overview of CSIG"
+
+msgid ""
+"{username} est en attente d'invitation. Renvoyez l'invitation pour qu'il "
+"active son compte lui-même."
+msgstr ""
+"{username} is awaiting an invitation. Resend the invitation so they can "
+"activate their own account."
+
+msgid "Échec de l'envoi : {msg}"
+msgstr "Failed to send: {msg}"
+
+msgid "Ajout du besoin '%(title)s'"
+msgstr "Need '%(title)s' added"
+
+msgid "Ajout d'un commentaire"
+msgstr "Comment added"
+
+msgid "Création du projet '%(name)s'"
+msgstr "Project '%(name)s' created"
+
+msgid "Modification des informations du projet"
+msgstr "Project information modified"
+
+msgid "Ajout du jalon '%(name)s'"
+msgstr "Milestone '%(name)s' added"
+
+msgid "Modification du jalon '%(name)s'"
+msgstr "Milestone '%(name)s' modified"
+
+msgid "Suppression du jalon '%(milestone_name)s'"
+msgstr "Milestone '%(milestone_name)s' deleted"
+
+msgid "Ajout de la sous-étape '%(sub_name)s' au jalon '%(milestone_name)s'"
+msgstr "Sub-step '%(sub_name)s' added to milestone '%(milestone_name)s'"
+
+msgid "Modification de la sous-étape '%(name)s'"
+msgstr "Sub-step '%(name)s' modified"
+
+msgid "Suppression de la sous-étape '%(sub_name)s'"
+msgstr "Sub-step '%(sub_name)s' deleted"
+
+msgid "Réassignation du jalon '%(name)s'"
+msgstr "Milestone '%(name)s' reassigned"
+
+msgid "Réassignation de la sous-étape '%(name)s'"
+msgstr "Sub-step '%(name)s' reassigned"
+
+msgid "Sous-étape '%(name)s' marquée comme %(status)s"
+msgstr "Sub-step '%(name)s' marked as %(status)s"
+
+msgid "Jalon '%(name)s' marqué comme %(label)s"
+msgstr "Milestone '%(name)s' marked as %(label)s"
+
+msgid "Statut de '%(name)s' : %(status_old)s → %(status_new)s"
+msgstr "Status of '%(name)s': %(status_old)s → %(status_new)s"
+
+msgid "Statut du besoin '%(title)s' → %(status)s"
+msgstr "Need '%(title)s' status → %(status)s"
+
+msgid "Ajout de la tâche '%(name)s'"
+msgstr "Task '%(name)s' added"
+
+msgid "Mise à jour de la tâche '%(name)s'"
+msgstr "Task '%(name)s' updated"
+
+msgid "Création du dossier '%(name)s'"
+msgstr "Folder '%(name)s' created"
+
+msgid "Modification du dossier '%(name)s'"
+msgstr "Folder '%(name)s' modified"
+
+msgid "Suppression du dossier '%(folder_name)s'"
+msgstr "Folder '%(folder_name)s' deleted"
+
+msgid "Ajout du document '%(title)s'"
+msgstr "Document '%(title)s' added"
+
+msgid "Modification du document '%(title)s'"
+msgstr "Document '%(title)s' modified"
+
+msgid "Suppression du document '%(doc_title)s'"
+msgstr "Document '%(doc_title)s' deleted"
+
+msgid "Ajout du membre '%(name)s' (%(role)s)"
+msgstr "Member '%(name)s' added (%(role)s)"
+
+msgid "Rôle de '%(name)s' modifié → '%(role)s'"
+msgstr "Role of '%(name)s' changed → '%(role)s'"
+
+msgid "Retrait du membre '%(member_name)s'"
+msgstr "Member '%(member_name)s' removed"
+
+msgid "Statut changé vers '%(status_label)s'"
+msgstr "Status changed to '%(status_label)s'"
+
+msgid "Erreur de lecture : %(error)s"
+msgstr "Error reading: %(error)s"
+
+msgid "JSON invalide : %(error)s"
+msgstr "Invalid JSON: %(error)s"

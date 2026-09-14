@@ -210,7 +210,7 @@
                 </div>
                 <div style="flex: 1;">
                     <p class="font-medium text-sm">{{ activity.user.get_full_name|default:activity.user.username }}</p>
-                    <p class="text-xs text-gray-500">{{ activity.description|default:activity.get_action_display }}</p>
+                    <p class="text-xs text-gray-500">{{ activity.rendered_description|default:activity.get_action_display }}</p>
                 </div>
                 <div class="text-xs text-gray-400">
                     {{ activity.created_at|date:"d/m/Y H:i" }}

@@ -42,7 +42,7 @@
                                 {{ activity.get_action_display }}
                             </span>
                         </td>
-                        <td>{{ activity.description|default:"-" }}</td>
+                        <td>{{ activity.rendered_description|default:activity.get_action_display }}</td>
                         <td class="text-gray-500">{{ activity.ip_address|default:"-" }}</td>
                         <td class="text-gray-500">{{ activity.created_at|date:"d/m/Y H:i:s" }}</td>
                     </tr>

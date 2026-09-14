@@ -459,7 +459,7 @@
           <div style="display:flex;flex-direction:column;">
             {% for activity in activities|slice:":5" %}
             <div style="padding:7px 0;{% if not forloop.last %}border-bottom:1px solid #f1f5f9;{% endif %}">
-              <p class="text-xs" style="color:#374151;margin:0 0 2px;line-height:1.4;">{{ activity.description }}</p>
+              <p class="text-xs" style="color:#374151;margin:0 0 2px;line-height:1.4;">{{ activity.rendered_description }}</p>
               <span style="font-size:10px;color:#9ca3af;">{{ activity.created_at|date:"d/m à H:i" }}</span>
             </div>
             {% endfor %}
@@ -1201,7 +1201,7 @@
         {% for activity in activities %}
         <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 14px;background:#f8fafc;border-radius:8px;border-left:3px solid {% if 'ajout' in activity.action %}#22c55e{% elif 'suppr' in activity.action or 'retrait' in activity.action %}#ef4444{% elif 'modif' in activity.action or 'toggle' in activity.action or 'changement' in activity.action %}#3b82f6{% else %}#94a3b8{% endif %};">
           <div style="flex:1;">
-            <p class="text-sm" style="color:#374151;margin:0;">{{ activity.description }}</p>
+            <p class="text-sm" style="color:#374151;margin:0;">{{ activity.rendered_description }}</p>
             <p class="text-xs text-gray-400" style="margin:3px 0 0;">{% trans 'par' %} <strong>{{ activity.user }}</strong> • {{ activity.created_at|date:"d/m/Y à H:i" }}</p>
           </div>
         </div>
