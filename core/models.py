@@ -1074,6 +1074,7 @@ class UserActivity(models.Model):
         ('create', _('Création')),
         ('update', _('Modification')),
         ('delete', _('Suppression')),
+        ('activate', _('Activation')),
         ('view', _('Consultation')),
     ]
     

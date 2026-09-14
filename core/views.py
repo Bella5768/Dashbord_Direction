@@ -250,7 +250,7 @@ def _create_or_update_user_for_employee(request, employee, system_role):
     UserActivity.objects.create(
         user=request.user,
         action='create',
-        description=f"Création du compte {username} pour {employee.name}",
+        description=_("Création du compte %(username)s pour %(name)s") % {"username": username, "name": employee.name},
         ip_address=get_client_ip(request),
         user_agent=request.META.get('HTTP_USER_AGENT', '')[:500],
     )
@@ -413,7 +413,7 @@ def password_reset_confirm(request, uidb64, token):
             UserActivity.objects.create(
                 user=user,
                 action='update',
-                description="Réinitialisation du mot de passe via email",
+                description=_("Réinitialisation du mot de passe via email"),
             )
             messages.success(request, _("Mot de passe réinitialisé. Vous pouvez vous connecter."))
             return redirect('core:login')
@@ -441,7 +441,7 @@ def password_change(request):
         UserActivity.objects.create(
             user=request.user,
             action='update',
-            description="Changement de mot de passe",
+            description=_("Changement de mot de passe"),
             ip_address=get_client_ip(request),
         )
         messages.success(request, _("Mot de passe modifié avec succès."))
@@ -503,7 +503,7 @@ def profile(request):
             UserActivity.objects.create(
                 user=user,
                 action='update',
-                description="Mise à jour du profil",
+                description=_("Mise à jour du profil"),
                 ip_address=get_client_ip(request),
             )
             messages.success(request, _("Profil mis à jour avec succès."))
@@ -2255,7 +2255,7 @@ def user_create(request):
             UserActivity.objects.create(
                 user=request.user,
                 action='create',
-                description=f"Création du compte {username} pour {emp.name}",
+                description=_("Création du compte %(username)s pour %(name)s") % {"username": username, "name": emp.name},
                 ip_address=get_client_ip(request),
                 user_agent=request.META.get('HTTP_USER_AGENT', '')[:500],
             )
@@ -2331,7 +2331,7 @@ def user_edit(request, user_id):
             UserActivity.objects.create(
                 user=request.user,
                 action='update',
-                description=f"Modification de l'utilisateur {user_obj.username}",
+                description=_("Modification de l'utilisateur %(username)s") % {"username": user_obj.username},
                 ip_address=get_client_ip(request),
                 user_agent=request.META.get('HTTP_USER_AGENT', '')[:500]
             )
@@ -2380,7 +2380,7 @@ def user_delete(request, user_id):
         UserActivity.objects.create(
             user=request.user,
             action='delete',
-            description=f"Suppression de l'utilisateur {username}",
+            description=_("Suppression de l'utilisateur %(username)s") % {"username": username},
             ip_address=get_client_ip(request),
             user_agent=request.META.get('HTTP_USER_AGENT', '')[:500]
         )
@@ -2476,7 +2476,7 @@ def account_activate(request, uidb64, token):
             UserActivity.objects.create(
                 user=user,
                 action='activate',
-                description="Activation du compte via lien email",
+                description=_("Activation du compte via lien email"),
             )
             from django.contrib.auth import update_session_auth_hash
             auth_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
