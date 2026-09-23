@@ -315,10 +315,9 @@
     <script src="{% static 'js/main.js' %}"></script>
     <script src="{% static 'vendor/chartjs/chart.umd.min.js' %}"></script>
     <script>
-    window.__CLOUDINARY_CLOUD_NAME__ = '{{ CLOUDINARY_CLOUD_NAME|default:"" }}';
-    window.__CLOUDINARY_UPLOAD_PRESET__ = '{{ CLOUDINARY_UPLOAD_PRESET|default:"" }}';
+    window.__UPLOAD_PRESIGN_URL__ = '{% url "core:api_upload_presign" %}';
     </script>
-    <script src="{% static 'js/cloudinary-upload.js' %}"></script>
+    <script src="{% static 'js/s3-upload.js' %}"></script>
     {% block extra_js %}{% endblock %}
 
     <!-- ── Confirmation Modal (global) ── -->

@@ -1,25 +1,47 @@
 /**
- * cloudinary-upload.js
- * Upload files directly to Cloudinary via unsigned upload preset.
- * Works with .file-drop wrappers and .lf-dropzone multi-file zones.
+ * s3-upload.js
+ * Upload files directly to Amazon S3 via a presigned POST, then store the
+ * public URL (CloudFront or S3) into the form field.
+ * Works with .file-drop wrappers and .lf-dropzone multi-file zones
+ * (same HTML contract as the former cloudinary-upload.js).
  */
 (function () {
     'use strict';
 
-    var CLOUD_NAME = window.__CLOUDINARY_CLOUD_NAME__ || '';
-    var UPLOAD_PRESET = window.__CLOUDINARY_UPLOAD_PRESET__ || '';
+    var PRESIGN_URL = window.__UPLOAD_PRESIGN_URL__ || '';
     var MAX_SIZE_MB = 20;
 
-    if (!CLOUD_NAME || !UPLOAD_PRESET) return;
+    if (!PRESIGN_URL) return;
 
-    var ALLOWED_EXTS = ['pdf','doc','docx','xls','xlsx','ppt','pptx','odt','ods','odp','png','jpg','jpeg','gif','webp','txt','csv','zip'];
+    function getCsrf() {
+        var el = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (el && el.value) return el.value;
+        return (window.django && window.django.csrf) || '';
+    }
 
     function isAllowedFile(file) {
+        var ALLOWED_EXTS = ['pdf','doc','docx','xls','xlsx','ppt','pptx','odt','ods','odp','png','jpg','jpeg','gif','webp','txt','csv','zip'];
         var ext = file.name.split('.').pop().toLowerCase();
         return ALLOWED_EXTS.indexOf(ext) !== -1;
     }
 
-    function uploadToCloudinary(file, onProgress) {
+    function requestPresign(filename) {
+        return fetch(PRESIGN_URL, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCsrf()
+            },
+            body: JSON.stringify({ filename: filename })
+        }).then(function (resp) {
+            if (!resp.ok) return resp.json().then(function (d) { throw new Error((d && d.error) || 'Erreur presign'); });
+            return resp.json();
+        });
+    }
+
+    function uploadToS3(file, onProgress) {
         return new Promise(function (resolve, reject) {
             if (!isAllowedFile(file)) {
                 reject(new Error('Type de fichier non autorise: ' + file.name));
@@ -30,39 +52,39 @@
                 return;
             }
 
-            var baseName = file.name.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9\u00C0-\u024F_-]/g, '_');
-
-            var formData = new FormData();
-            formData.append('file', file);
-            formData.append('upload_preset', UPLOAD_PRESET);
-            formData.append('resource_type', 'auto');
-            formData.append('public_id', baseName);
-
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', 'https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/auto/upload');
-
-            if (onProgress) {
-                xhr.upload.addEventListener('progress', function (e) {
-                    if (e.lengthComputable) {
-                        onProgress(Math.round((e.loaded / e.total) * 100));
-                    }
+            requestPresign(file.name).then(function (presign) {
+                var formData = new FormData();
+                var fields = presign.fields || {};
+                Object.keys(fields).forEach(function (k) {
+                    formData.append(k, fields[k]);
                 });
-            }
+                formData.append('file', file);
 
-            xhr.onload = function () {
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    var resp = JSON.parse(xhr.responseText);
-                    resolve({ url: resp.secure_url, name: file.name });
-                } else {
-                    var err;
-                    try { err = JSON.parse(xhr.responseText); } catch (e) { err = {}; }
-                    reject(new Error((err.error && err.error.message) || 'Erreur upload Cloudinary'));
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', presign.url);
+
+                if (onProgress) {
+                    xhr.upload.addEventListener('progress', function (e) {
+                        if (e.lengthComputable) {
+                            onProgress(Math.round((e.loaded / e.total) * 100));
+                        }
+                    });
                 }
-            };
-            xhr.onerror = function () {
-                reject(new Error('Erreur reseau lors de l\'upload'));
-            };
-            xhr.send(formData);
+
+                xhr.onload = function () {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        resolve({ url: presign.public_url, name: file.name });
+                    } else {
+                        var err;
+                        try { err = JSON.parse(new XMLSerializer().serializeToString(xhr.responseXML)); } catch (e) { err = null; }
+                        reject(new Error('Erreur upload S3' + (err && err.Message ? ': ' + err.Message : '')));
+                    }
+                };
+                xhr.onerror = function () {
+                    reject(new Error('Erreur reseau lors de l\'upload'));
+                };
+                xhr.send(formData);
+            }).catch(reject);
         });
     }
 
@@ -81,7 +103,7 @@
     }
 
     /**
-     * Initialize a .file-drop wrapper for Cloudinary upload.
+     * Initialize a .file-drop wrapper for S3 upload.
      *
      * Expected HTML structure:
      *   <div class="file-drop" data-field="file">
@@ -117,7 +139,7 @@
 
             var progress = createProgress(wrapper);
 
-            uploadToCloudinary(file, function (pct) {
+            uploadToS3(file, function (pct) {
                 progress.setProgress(pct);
             }).then(function (result) {
                 progress.remove();
@@ -215,7 +237,7 @@
             Array.from(files).forEach(function (file) {
                 var progress = createProgress(chipsContainer);
 
-                uploadToCloudinary(file, function (pct) {
+                uploadToS3(file, function (pct) {
                     progress.setProgress(pct);
                 }).then(function (result) {
                     progress.remove();

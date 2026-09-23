@@ -4395,8 +4395,9 @@ def project_document_delete(request, doc_id):
 
 @login_required
 def project_document_download(request, doc_id):
-    """Télécharger un document de projet — redirect avec fl_attachment pour forcer le téléchargement."""
+    """Télécharger un document de projet — redirect fl_attachment (Cloudinary) ou presign S3."""
     from django.http import HttpResponseRedirect
+    from .media_utils import force_download_url
 
     doc = get_object_or_404(ProjectDocument.objects.select_related('project'), pk=doc_id)
     project = doc.project
@@ -4409,7 +4410,7 @@ def project_document_download(request, doc_id):
         messages.error(request, _("Fichier non trouvé."))
         return redirect('core:project_detail', project_id=project.id)
 
-    url = doc.file.replace('/upload/', '/upload/fl_attachment/')
+    url = force_download_url(doc.file, doc.title or 'document')
     return HttpResponseRedirect(url)
 
 
@@ -4883,8 +4884,9 @@ def project_document_file_proxy(request, doc_id):
 
 @login_required
 def document_download(request, doc_id):
-    """Télécharger un document — redirection directe vers Cloudinary."""
+    """Télécharger un document — redirect fl_attachment (Cloudinary) ou presign S3."""
     from django.http import HttpResponseRedirect
+    from .media_utils import force_download_url
 
     doc = get_object_or_404(Document, pk=doc_id)
 
@@ -4902,7 +4904,7 @@ def document_download(request, doc_id):
         messages.error(request, _("Aucun fichier attaché à ce document."))
         return redirect('core:documents')
 
-    url = doc.file.replace('/upload/', '/upload/fl_attachment/')
+    url = force_download_url(doc.file, doc.title or 'document')
     return HttpResponseRedirect(url)
 
 
@@ -5444,3 +5446,79 @@ def api_project_update_status(request, project_id):
         return JsonResponse({'success': True, 'status': new_status})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
+
+@login_required
+def api_upload_presign(request):
+    """Génère une presigned POST S3 pour un upload navigateur direct.
+
+    Le navigateur envoie ensuite le fichier directement vers S3 (pas de transit
+    serveur), puis stocke l'URL publique (CloudFront ou S3) dans le champ du
+    formulaire. Requiert AWS_STORAGE_BUCKET_NAME + credentials configurees.
+    """
+    import json
+    import os
+    import re
+    import uuid
+    import boto3
+    import mimetypes
+    from django.conf import settings
+
+    MAX_UPLOAD_SIZE = 20 * 1024 * 1024
+
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    bucket = getattr(settings, 'AWS_STORAGE_BUCKET_NAME', '')
+    if not bucket:
+        return JsonResponse({'error': 'AWS_S3 non configure'}, status=503)
+
+    body = json.loads(request.body or b'{}')
+    filename = (body.get('filename') or '').strip()
+    if not filename:
+        return JsonResponse({'error': 'Nom de fichier requis'}, status=400)
+
+    ALLOWED_EXTS = {'.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
+                    '.odt', '.ods', '.odp', '.png', '.jpg', '.jpeg', '.gif',
+                    '.webp', '.txt', '.csv', '.zip'}
+    ext = os.path.splitext(filename)[1].lower()
+    if ext not in ALLOWED_EXTS:
+        return JsonResponse({'error': 'Type de fichier non autorisé'}, status=400)
+
+    # Chemin S3 : dossier par année/mois + nom nettoye + suffixe aleatoire.
+    base_name = os.path.splitext(filename)[0]
+    safe_name = re.sub(r'[^a-zA-Z0-9_-]', '_', base_name)[:80] or 'file'
+    key = f'uploads/{timezone.now():%Y/%m}/{safe_name}_{uuid.uuid4().hex[:8]}{ext}'
+
+    content_type = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+    session = boto3.Session(
+        aws_access_key_id=getattr(settings, 'AWS_ACCESS_KEY_ID', ''),
+        aws_secret_access_key=getattr(settings, 'AWS_SECRET_ACCESS_KEY', ''),
+        region_name=getattr(settings, 'AWS_S3_REGION', 'us-east-1'),
+    )
+    try:
+        presigned = session.client('s3').generate_presigned_post(
+            bucket,
+            key,
+            Fields={'Content-Type': content_type},
+            Conditions=[
+                {'Content-Type': content_type},
+                ['content-length-range', 1, MAX_UPLOAD_SIZE],
+                ['starts-with', '$key', key[:20]],
+            ],
+            ExpiresIn=3600,
+        )
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+    custom_domain = getattr(settings, 'AWS_S3_CUSTOM_DOMAIN', '')
+    if custom_domain:
+        public_url = f'https://{custom_domain}/{key}'
+    else:
+        public_url = f'https://{bucket}.s3.{getattr(settings, "AWS_S3_REGION", "us-east-1")}.amazonaws.com/{key}'
+
+    return JsonResponse({
+        'url': presigned['url'],
+        'fields': presigned['fields'],
+        'public_url': public_url,
+        'filename': filename,
+    })

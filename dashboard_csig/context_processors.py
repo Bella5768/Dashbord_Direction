@@ -1,8 +1,9 @@
 import os
 
 
-def cloudinary_settings(request):
+def aws_media_settings(request):
     return {
-        'CLOUDINARY_CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME', ''),
-        'CLOUDINARY_UPLOAD_PRESET': os.getenv('CLOUDINARY_UPLOAD_PRESET', ''),
+        'AWS_S3_REGION': os.getenv('AWS_S3_REGION', ''),
+        'AWS_STORAGE_BUCKET_NAME': os.getenv('AWS_STORAGE_BUCKET_NAME', ''),
+        'AWS_CLOUDFRONT_DOMAIN': os.getenv('AWS_CLOUDFRONT_DOMAIN', ''),
     }

@@ -166,6 +166,7 @@ urlpatterns = [
     path('api/projets/<int:project_id>/status/', views.api_project_update_status, name='api_project_update_status'),
     path('api/projets/<int:project_id>/tasks/create/', views.api_project_task_create, name='api_project_task_create'),
     path('api/tasks/<int:milestone_id>/update/', views.api_project_task_update, name='api_project_task_update'),
+    path('api/upload/presign/', views.api_upload_presign, name='api_upload_presign'),
 
     # Conges
     path('conges/', views_leave.leave_list, name='leave_list'),

@@ -324,8 +324,9 @@ def leave_document_delete(request, leave_id, doc_id):
 
 @login_required
 def leave_document_download(request, leave_id, doc_id):
-    """Télécharger une pièce jointe de congé — redirection directe vers Cloudinary."""
+    """Télécharger une pièce jointe de congé — fl_attachment (Cloudinary) ou presign S3."""
     from django.http import HttpResponseRedirect
+    from .media_utils import force_download_url
 
     leave = get_object_or_404(LeaveRequest, pk=leave_id)
     doc = get_object_or_404(LeaveDocument, pk=doc_id, leave_request=leave)
@@ -333,13 +334,13 @@ def leave_document_download(request, leave_id, doc_id):
     if not doc.file:
         return redirect('core:leave_detail', leave_id=leave.id)
 
-    url = doc.file.replace('/upload/', '/upload/fl_attachment/')
+    url = force_download_url(doc.file, getattr(doc, 'label', None) or 'document')
     return HttpResponseRedirect(url)
 
 
 @login_required
 def leave_document_file_proxy(request, leave_id, doc_id):
-    """Rediriger vers le fichier d'une pièce jointe de congé (fichiers publics Cloudinary)."""
+    """Rediriger vers le fichier d'une pièce jointe de congé (S3/CloudFront)."""
     from django.http import HttpResponseRedirect
 
     leave = get_object_or_404(LeaveRequest, pk=leave_id)

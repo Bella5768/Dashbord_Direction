@@ -50,8 +50,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'cloudinary_storage',
-    'cloudinary',
+    'storages',
     'channels',
     'core',
 ]
@@ -83,7 +82,7 @@ TEMPLATES = [
                 'django.template.context_processors.i18n',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'dashboard_csig.context_processors.cloudinary_settings',
+                'dashboard_csig.context_processors.aws_media_settings',
             ],
         },
     },
@@ -203,23 +202,52 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Cloudinary media storage
-if os.getenv('CLOUDINARY_CLOUD_NAME'):
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-    CLOUDINARY_URL = os.getenv('CLOUDINARY_URL', '')
-    if not CLOUDINARY_URL and os.getenv('CLOUDINARY_CLOUD_NAME'):
-        CLOUDINARY_URL = f"cloudinary://{os.getenv('CLOUDINARY_API_KEY')}:{os.getenv('CLOUDINARY_API_SECRET')}@{os.getenv('CLOUDINARY_CLOUD_NAME')}"
+# Amazon S3 + CloudFront media storage (replace Cloudinary)
+if os.getenv('AWS_STORAGE_BUCKET_NAME'):
+    AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID', '')
+    AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY', '')
+    AWS_S3_REGION = os.getenv('AWS_S3_REGION', os.getenv('AWS_REGION', 'us-east-1'))
+    AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
+    AWS_DEFAULT_ACL = None
+    AWS_QUERYSTRING_AUTH = False
+    # URLs CloudFront (ou S3 direct si non renseigné)
+    _cloudfront_domain = os.getenv('AWS_CLOUDFRONT_DOMAIN', '')
+    if _cloudfront_domain:
+        AWS_S3_CUSTOM_DOMAIN = _cloudfront_domain.rstrip('/')
+    else:
+        AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION}.amazonaws.com'
+
+    STORAGES = {
+        'default': {
+            'BACKEND': 'storages.backends.s3.S3Storage',
+            'OPTIONS': {},
+        },
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        },
+    }
+else:
+    STORAGES = {
+        'default': {
+            'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        },
+    }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Email Configuration
-# Use SendGrid if API key is configured, otherwise fallback to Outlook SMTP
-if os.getenv('SENDGRID_API_KEY'):
+# Priorité : Amazon SES (API) → SendGrid → SMTP Outlook/Gmail
+if os.getenv('AWS_ACCESS_KEY_ID') and os.getenv('AWS_SECRET_ACCESS_KEY') and os.getenv('AWS_SES_REGION'):
+    EMAIL_BACKEND = 'core.email_backend.SESBackend'
+    DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@csig.edu.gn')
+elif os.getenv('SENDGRID_API_KEY'):
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_HOST = 'smtp.sendgrid.net'
     EMAIL_PORT = 587

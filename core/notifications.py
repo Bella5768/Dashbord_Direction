@@ -75,7 +75,9 @@ def _task_gender_ctx(task_type):
 
 
 def _is_email_configured():
-    """Vérifie qu'un backend d'envoi est configuré (Outlook ou SendGrid)."""
+    """Vérifie qu'un backend d'envoi est configuré (SES, SendGrid ou SMTP)."""
+    if getattr(settings, 'AWS_ACCESS_KEY_ID', '') and getattr(settings, 'AWS_SECRET_ACCESS_KEY', ''):
+        return True
     host_user = getattr(settings, 'EMAIL_HOST_USER', '')
     host_password = getattr(settings, 'EMAIL_HOST_PASSWORD', '')
     return bool(host_user and host_password)
