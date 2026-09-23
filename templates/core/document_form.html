@@ -62,7 +62,7 @@
                     {% if document and document.file %}
                     <div class="file-drop-current">
                         <i class="fa-solid fa-file" width="14" height="14"></i>
-                        <span>{% trans 'Fichier actuel' %} : <a href="{% url 'core:document_file_proxy' document.id %}" target="_blank">{{ document.file|truncatechars:40 }}</a></span>
+                        <span>{% trans 'Fichier actuel' %} : <a href="{% url 'core:document_file_proxy' document.slug %}" target="_blank">{{ document.file|truncatechars:40 }}</a></span>
                     </div>
                     {% endif %}
                     <div class="file-drop" data-existing-url="{{ document.file|default:'' }}">

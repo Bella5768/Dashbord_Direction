@@ -47,8 +47,10 @@ def generate_unique_code(leave):
     digest = hashlib.sha256(raw.encode('utf-8')).hexdigest().upper()
     # 8 caracteres alphanumeriques (sans 0/O/I/1 pour eviter confusion)
     safe = ''.join(ch for ch in digest if ch not in '01OIL')[:8].ljust(8, 'X')
+    # Court identifiant dérivé du UUID (lisible et unique)
+    short_id = str(leave.id).replace('-', '')[:6].upper() or '000000'
     year = leave.final_decision_at.year if leave.final_decision_at else datetime.now().year
-    return f"CSIG-CONG-{year}-{leave.id:05d}-{safe}"
+    return f"CSIG-CONG-{year}-{short_id}-{safe}"
 
 
 # --- Helpers ----------------------------------------------------------------

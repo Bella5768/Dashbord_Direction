@@ -47,7 +47,7 @@
                 </thead>
                 <tbody>
                     {% for project in results.projects %}
-                    <tr style="cursor: pointer;" onclick="window.location='{% url 'core:project_detail' project.id %}'">
+                    <tr style="cursor: pointer;" onclick="window.location='{% url 'core:project_detail' project.slug %}'">
                         <td><p class="font-medium">{{ project.name }}</p></td>
                         <td>{{ project.direction.code }}</td>
                         <td>{{ project.manager }}</td>
@@ -96,7 +96,7 @@
                 </thead>
                 <tbody>
                     {% for partner in results.partners %}
-                    <tr style="cursor: pointer;" onclick="window.location='{% url 'core:partner_edit' partner.id %}'">
+                    <tr style="cursor: pointer;" onclick="window.location='{% url 'core:partner_edit' partner.slug %}'">
                         <td><p class="font-medium">{{ partner.name }}</p></td>
                         <td>{{ partner.get_partner_type_display }}</td>
                         <td>{{ partner.contact_person }}</td>
@@ -137,7 +137,7 @@
                 </thead>
                 <tbody>
                     {% for employee in results.employees %}
-                    <tr style="cursor: pointer;" onclick="window.location='{% url 'core:employee_edit' employee.id %}'">
+                    <tr style="cursor: pointer;" onclick="window.location='{% url 'core:employee_edit' employee.slug %}'">
                         <td><p class="font-medium">{{ employee.name }}</p></td>
                         <td>{{ employee.role }}</td>
                         <td>{{ employee.direction.code }}</td>

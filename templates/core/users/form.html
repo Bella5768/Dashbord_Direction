@@ -47,7 +47,7 @@
                     <p style="font-size:11px;color:var(--gray-400);margin:10px 0 0;">
                         {% trans 'Pour modifier ces informations, mettez à jour la' %}
                         {% if user_obj.profile.employee %}
-                        <a href="{% url 'core:employee_edit' user_obj.profile.employee.id %}" style="color:var(--primary-600);">{% trans 'fiche employé' %}</a>.
+                        <a href="{% url 'core:employee_edit' user_obj.profile.employee.slug %}" style="color:var(--primary-600);">{% trans 'fiche employé' %}</a>.
                         {% else %}
                         {% trans 'fiche employé' %}.
                         {% endif %}

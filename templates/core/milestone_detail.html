@@ -88,7 +88,7 @@
 <nav class="md-bc">
   <a href="{% url 'core:projects' %}">{% trans 'Projets' %}</a>
   <span class="md-bc-sep">›</span>
-  <a href="{% url 'core:project_detail' project.id %}">{{ project.name }}</a>
+  <a href="{% url 'core:project_detail' project.slug %}">{{ project.name }}</a>
   <span class="md-bc-sep">›</span>
   <span class="md-bc-cur">{{ milestone.name }}</span>
 </nav>
@@ -127,9 +127,9 @@
           </div>
           {% if can_edit %}
           <div class="md-actions">
-            <a href="{% url 'core:milestone_edit' milestone.id %}" class="btn btn-outline btn-sm">{% trans 'Modifier' %}</a>
+            <a href="{% url 'core:milestone_edit' milestone.slug %}" class="btn btn-outline btn-sm">{% trans 'Modifier' %}</a>
             <a href="#" class="btn btn-sm" style="background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;"
-               data-delete-url="{% url 'core:milestone_delete' milestone.id %}"
+               data-delete-url="{% url 'core:milestone_delete' milestone.slug %}"
                data-delete-type="{% trans 'le jalon' %}"
                data-delete-name="{{ milestone.name }}">{% trans 'Supprimer' %}</a>
           </div>
@@ -160,7 +160,7 @@
         <h3 class="card-title">{% trans 'Changer le statut' %}</h3>
       </div>
       <div class="card-content">
-        <form method="post" action="{% url 'core:milestone_update_status' milestone.id %}" class="md-status-form">
+        <form method="post" action="{% url 'core:milestone_update_status' milestone.slug %}" class="md-status-form">
           {% csrf_token %}
           {% for val, label in milestone.TASK_STATUS_CHOICES %}
           <button type="submit" name="status" value="{{ val }}"
@@ -181,7 +181,7 @@
           <p class="text-sm text-gray-500">{{ sub_done }}/{{ sub_total }} {% blocktrans count count=sub_total %}complétée{% plural %}complétées{% endblocktrans %}</p>
         </div>
         {% if can_edit %}
-        <a href="{% url 'core:sub_milestone_create' milestone.id %}" class="btn btn-primary btn-sm" style="display:flex;align-items:center;gap:6px;">
+        <a href="{% url 'core:sub_milestone_create' milestone.slug %}" class="btn btn-primary btn-sm" style="display:flex;align-items:center;gap:6px;">
           <i class="fa-solid fa-circle-plus" width="14" height="14" ></i>
           {% trans 'Ajouter' %}
         </a>
@@ -194,7 +194,7 @@
           {% with is_mine=sub.assigned_to|is_user_employee:user_employee %}
           <div class="msub-row{% if sub.completed %} row-done{% elif is_mine %} row-mine{% endif %}">
             {% if can_edit or is_mine %}
-            <a href="{% url 'core:sub_milestone_toggle' sub.id %}"
+            <a href="{% url 'core:sub_milestone_toggle' sub.slug %}"
                class="msub-check{% if sub.completed %} done{% endif %}"
                title="{% if sub.completed %}{% trans 'Marquer non terminée' %}{% else %}{% trans 'Marquer terminée' %}{% endif %}">
               {% if sub.completed %}<i class="fa-solid fa-check"></i>{% endif %}
@@ -223,11 +223,11 @@
 
             {% if can_edit %}
             <div class="msub-acts">
-              <a href="{% url 'core:sub_milestone_edit' sub.id %}" class="action-btn" title="{% trans 'Modifier' %}">
+              <a href="{% url 'core:sub_milestone_edit' sub.slug %}" class="action-btn" title="{% trans 'Modifier' %}">
                 <i class="fa-solid fa-pencil" width="12" height="12" ></i>
               </a>
               <a href="#" class="action-btn danger" title="{% trans 'Supprimer' %}"
-                 data-delete-url="{% url 'core:sub_milestone_delete' sub.id %}"
+                 data-delete-url="{% url 'core:sub_milestone_delete' sub.slug %}"
                  data-delete-type="{% trans 'la sous-étape' %}"
                  data-delete-name="{{ sub.name }}">
                 <i class="fa-solid fa-trash-can" width="12" height="12" ></i>
@@ -243,7 +243,7 @@
           <i class="fa-solid fa-clipboard" width="36" height="36" style="color:#d1d5db;margin:0 auto 10px;" ></i>
           <p class="text-gray-500" style="margin-bottom:12px;">{% trans 'Aucune sous-étape définie.' %}</p>
           {% if can_edit %}
-          <a href="{% url 'core:sub_milestone_create' milestone.id %}" class="btn btn-primary btn-sm">{% trans 'Ajouter la première sous-étape' %}</a>
+          <a href="{% url 'core:sub_milestone_create' milestone.slug %}" class="btn btn-primary btn-sm">{% trans 'Ajouter la première sous-étape' %}</a>
           {% endif %}
         </div>
         {% endif %}
@@ -265,7 +265,7 @@
 
           <div class="md-info-field">
             <span class="md-info-label">{% trans 'Projet' %}</span>
-            <span class="md-info-val"><a href="{% url 'core:project_detail' project.id %}">{{ project.name }}</a></span>
+            <span class="md-info-val"><a href="{% url 'core:project_detail' project.slug %}">{{ project.name }}</a></span>
           </div>
 
           <div class="md-info-field">
@@ -328,7 +328,7 @@
         {% endif %}
         {% if can_edit %}
         <div class="md-manage">
-          <a href="{% url 'core:milestone_edit' milestone.id %}">
+          <a href="{% url 'core:milestone_edit' milestone.slug %}">
             <i class="fa-solid fa-pencil" ></i>
             {% trans 'Gérer les assignés' %}
           </a>
@@ -338,7 +338,7 @@
     </div>
 
     <!-- Retour -->
-    <a href="{% url 'core:project_detail' project.id %}" class="btn btn-outline btn-sm" style="text-align:center;">
+    <a href="{% url 'core:project_detail' project.slug %}" class="btn btn-outline btn-sm" style="text-align:center;">
       {% trans '← Retour au projet' %}
     </a>
 

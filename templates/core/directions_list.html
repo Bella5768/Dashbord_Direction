@@ -83,11 +83,11 @@
                         </td>
                         <td style="text-align: right;">
                             <div class="flex justify-end gap-2">
-                                <a href="{% url 'core:direction_edit' direction.id %}" class="btn btn-outline btn-sm" title="{% trans 'Modifier' %}">
+                                <a href="{% url 'core:direction_edit' direction.slug %}" class="btn btn-outline btn-sm" title="{% trans 'Modifier' %}">
                                     <i class="fa-solid fa-pencil" width="16" height="16" ></i>
                                 </a>
                                 <a href="#" class="btn btn-danger btn-sm" title="{% trans 'Supprimer' %}"
-                                   data-delete-url="{% url 'core:direction_delete' direction.id %}"
+                                   data-delete-url="{% url 'core:direction_delete' direction.slug %}"
                                    data-delete-type="{% trans 'la direction' %}"
                                    data-delete-name="{{ direction.name }}">
                                     <i class="fa-solid fa-trash-can" width="16" height="16" ></i>

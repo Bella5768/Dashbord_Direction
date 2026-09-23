@@ -33,11 +33,11 @@
         {% trans "Retour" %}
     </a>
     <div style="display:flex;gap:8px;">
-        <a href="{% url 'core:project_role_duplicate' role.pk %}" class="btn btn-outline">
+        <a href="{% url 'core:project_role_duplicate' role.slug %}" class="btn btn-outline">
             <i class="fa-solid fa-copy" width="14" height="14"></i>
             {% trans "Dupliquer" %}
         </a>
-        <a href="{% url 'core:project_role_edit' role.pk %}" class="btn btn-primary">
+        <a href="{% url 'core:project_role_edit' role.slug %}" class="btn btn-primary">
             <i class="fa-solid fa-pencil" width="14" height="14"></i>
             {% trans "Modifier" %}
         </a>
@@ -48,11 +48,11 @@
         {% trans "Retour" %}
     </a>
     <div style="display:flex;gap:8px;">
-        <a href="{% url 'core:role_duplicate' role.pk %}" class="btn btn-outline">
+        <a href="{% url 'core:role_duplicate' role.slug %}" class="btn btn-outline">
             <i class="fa-solid fa-copy" width="14" height="14"></i>
             {% trans "Dupliquer" %}
         </a>
-        <a href="{% url 'core:role_edit' role.pk %}" class="btn btn-primary">
+        <a href="{% url 'core:role_edit' role.slug %}" class="btn btn-primary">
             <i class="fa-solid fa-pencil" width="14" height="14"></i>
             {% trans "Modifier" %}
         </a>
@@ -145,17 +145,17 @@
         <div class="card">
             <div class="card-content" style="display:flex;flex-direction:column;gap:8px;">
                 {% if is_project %}
-                <a href="{% url 'core:project_role_edit' role.pk %}" class="btn btn-primary" style="width:100%;justify-content:center;">
+                <a href="{% url 'core:project_role_edit' role.slug %}" class="btn btn-primary" style="width:100%;justify-content:center;">
                     <i class="fa-solid fa-pencil" width="14" height="14"></i>
                     {% trans "Modifier les permissions" %}
                 </a>
-                <a href="{% url 'core:project_role_duplicate' role.pk %}" class="btn btn-outline" style="width:100%;justify-content:center;">
+                <a href="{% url 'core:project_role_duplicate' role.slug %}" class="btn btn-outline" style="width:100%;justify-content:center;">
                     <i class="fa-solid fa-copy" width="14" height="14"></i>
                     {% trans "Dupliquer ce rôle" %}
                 </a>
                 {% if not role.is_system %}
                 <a href="#" class="btn btn-outline" style="width:100%;justify-content:center;color:#dc2626;border-color:#fca5a5;"
-                   data-delete-url="{% url 'core:project_role_delete' role.pk %}"
+                   data-delete-url="{% url 'core:project_role_delete' role.slug %}"
                    data-delete-type="{% trans 'le rôle' %}"
                    data-delete-name="{{ role.name }}">
                     <i class="fa-solid fa-trash-can" width="14" height="14"></i>
@@ -163,17 +163,17 @@
                 </a>
                 {% endif %}
                 {% else %}
-                <a href="{% url 'core:role_edit' role.pk %}" class="btn btn-primary" style="width:100%;justify-content:center;">
+                <a href="{% url 'core:role_edit' role.slug %}" class="btn btn-primary" style="width:100%;justify-content:center;">
                     <i class="fa-solid fa-pencil" width="14" height="14"></i>
                     {% trans "Modifier les permissions" %}
                 </a>
-                <a href="{% url 'core:role_duplicate' role.pk %}" class="btn btn-outline" style="width:100%;justify-content:center;">
+                <a href="{% url 'core:role_duplicate' role.slug %}" class="btn btn-outline" style="width:100%;justify-content:center;">
                     <i class="fa-solid fa-copy" width="14" height="14"></i>
                     {% trans "Dupliquer ce rôle" %}
                 </a>
                 {% if not role.is_system %}
                 <a href="#" class="btn btn-outline" style="width:100%;justify-content:center;color:#dc2626;border-color:#fca5a5;"
-                   data-delete-url="{% url 'core:role_delete' role.pk %}"
+                   data-delete-url="{% url 'core:role_delete' role.slug %}"
                    data-delete-type="{% trans 'le rôle' %}"
                    data-delete-name="{{ role.name }}">
                     <i class="fa-solid fa-trash-can" width="14" height="14"></i>

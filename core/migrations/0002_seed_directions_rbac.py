@@ -1,15 +1,48 @@
 """
-Data migration : crée les permissions, les rôles de base, les rôles projet,
-et migre les utilisateurs existants depuis l'ancien champ role (CharField)
-vers le nouveau FK Role.
+Data migration : seeds de base.
 
-L'ancien role était stocké dans le champ 'role' avant la migration 0036.
-Comme 0036 a supprimé ce champ, on ne peut pas le lire ici.
-Les utilisateurs existants recevront le rôle 'visiteur' par défaut ;
-un admin devra réassigner les rôles via l'interface.
+- Directions (code/name)
+- Permissions globales + permissions projet
+- Rôles globaux (Role) et rôles projet (ProjectRole)
+
+Fusion des anciennes migrations 0010, 0036, 0037 et 0039, adaptées à une
+base neuve (schéma UUID) : pas de migration d'utilisateurs (base vide).
 """
 from django.db import migrations
+from django.utils.text import slugify
 
+
+class UniqueSlugMixin:
+    """Reproduit la génération de slug du modèle SluggableModel."""
+
+    @staticmethod
+    def make_slug(model, value):
+        base = (slugify(value) or 'item')[:170]
+        candidate = base
+        n = 1
+        while model.objects.filter(slug=candidate).exists():
+            n += 1
+            candidate = f"{base}-{n}"
+        return candidate
+
+
+# ---------------------------------------------------------------------------
+# Directions
+# ---------------------------------------------------------------------------
+DIRECTIONS = [
+    {'code': 'APPTECH', 'name': "Direction d'appui technique"},
+    {'code': 'DG', 'name': 'Direction Générale'},
+    {'code': 'SEC', 'name': 'Secrétariat'},
+    {'code': 'SANTE', 'name': 'Direction Santé'},
+    {'code': 'INNOV', 'name': 'Comité Innovation'},
+    {'code': 'STRAT', 'name': 'Comité Stratégique'},
+    {'code': 'LABO', 'name': 'Comité laboratoire'},
+    {'code': 'FIN', 'name': 'Comité Finances'},
+    {'code': 'NUMCLD', 'name': "Centre d'expertise_Numerique/cloud"},
+    {'code': 'COPIL', 'name': 'Comité COPIL'},
+    {'code': 'INFRA', 'name': 'Comité Infrastructures'},
+    {'code': 'STAFF', 'name': 'Comité Staff'},
+]
 
 # ---------------------------------------------------------------------------
 # Permissions globales
@@ -86,7 +119,6 @@ PERMISSIONS = [
 # Permissions projet (scope ProjectRole)
 # ---------------------------------------------------------------------------
 PROJECT_PERMISSIONS = [
-    # (action, subject, condition, description)
     ('update', 'Project',      '', 'Modifier le projet'),
     ('manage', 'ProjectMember','', 'Gérer les membres du projet'),
     ('create', 'Milestone',    '', 'Ajouter des jalons'),
@@ -300,23 +332,27 @@ PROJECT_ROLES = [
     },
 ]
 
-# Correspondance ancien slug CharField → nouveau slug Role
-OLD_ROLE_MAP = {
-    'admin':              'admin',
-    'directeur_general':  'directeur_general',
-    'directeur':          'directeur',
-    'chef_projet':        'chef_projet',
-    'employe':            'employe',
-    'visiteur':           'visiteur',
-}
+# Rôles projet devant recevoir aussi update:Document (ex-0039)
+ROLES_WITH_UPDATE_DOC = ['responsable', 'membre', 'ressource_externe_edit']
 
 
 def seed_forward(apps, schema_editor):
     Permission  = apps.get_model('core', 'Permission')
     Role        = apps.get_model('core', 'Role')
     ProjectRole = apps.get_model('core', 'ProjectRole')
+    Direction   = apps.get_model('core', 'Direction')
 
-    # 1. Créer toutes les permissions
+    # Directions
+    for item in DIRECTIONS:
+        obj, created = Direction.objects.get_or_create(
+            code=item['code'],
+            defaults={'name': item['name']},
+        )
+        if created and not obj.slug:
+            obj.slug = UniqueSlugMixin.make_slug(Direction, obj.code or obj.name)
+            obj.save(update_fields=['slug'])
+
+    # Permissions globales
     perm_cache = {}
     for action, subject, condition, description in PERMISSIONS:
         p, _ = Permission.objects.get_or_create(
@@ -325,7 +361,7 @@ def seed_forward(apps, schema_editor):
         )
         perm_cache[(action, subject, condition)] = p
 
-    # 2. Créer les permissions projet (peuvent se chevaucher avec les globales)
+    # Permissions projet (chevauchées)
     for action, subject, condition, description in PROJECT_PERMISSIONS:
         key = (action, subject, condition)
         if key not in perm_cache:
@@ -335,8 +371,7 @@ def seed_forward(apps, schema_editor):
             )
             perm_cache[key] = p
 
-    # 3. Créer les rôles globaux
-    role_objects = {}
+    # Rôles globaux
     for role_data in ROLES:
         role, _ = Role.objects.get_or_create(
             slug=role_data['slug'],
@@ -350,9 +385,8 @@ def seed_forward(apps, schema_editor):
             perm = perm_cache.get((action, subject, condition))
             if perm:
                 role.permissions.add(perm)
-        role_objects[role_data['slug']] = role
 
-    # 4. Créer les rôles projet
+    # Rôles projet
     for pr_data in PROJECT_ROLES:
         pr, _ = ProjectRole.objects.get_or_create(
             slug=pr_data['slug'],
@@ -367,40 +401,39 @@ def seed_forward(apps, schema_editor):
             if perm:
                 pr.permissions.add(perm)
 
-    # 5. Migrer les utilisateurs depuis l'ancien role CharField (_role_legacy)
-    UserProfile = apps.get_model('core', 'UserProfile')
-    visiteur_role = role_objects.get('visiteur')
-
-    for profile in UserProfile.objects.all():
-        legacy = (profile._role_legacy or '').strip()
-        new_role = role_objects.get(OLD_ROLE_MAP.get(legacy, ''))
-        if new_role:
-            profile.role = new_role
-        elif visiteur_role:
-            profile.role = visiteur_role
-        profile.save(update_fields=['role'])
+    # update:Document sur les rôles « éditeurs » (ex-0039)
+    try:
+        update_doc = Permission.objects.get(action='update', subject='Document', condition='')
+    except Permission.DoesNotExist:
+        update_doc, _ = Permission.objects.get_or_create(
+            action='update', subject='Document', condition='',
+            defaults={'description': 'Modifier les documents du projet'},
+        )
+    for slug in ROLES_WITH_UPDATE_DOC:
+        try:
+            role = ProjectRole.objects.get(slug=slug)
+            role.permissions.add(update_doc)
+        except ProjectRole.DoesNotExist:
+            pass
 
 
 def seed_backward(apps, schema_editor):
     Role        = apps.get_model('core', 'Role')
     ProjectRole = apps.get_model('core', 'ProjectRole')
     Permission  = apps.get_model('core', 'Permission')
+    Direction   = apps.get_model('core', 'Direction')
     Role.objects.all().delete()
     ProjectRole.objects.all().delete()
     Permission.objects.all().delete()
+    Direction.objects.filter(code__in=[d['code'] for d in DIRECTIONS]).delete()
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0036_rbac_permission_role'),
+        ('core', '0001_initial'),
     ]
 
     operations = [
         migrations.RunPython(seed_forward, seed_backward),
-        # Supprimer la colonne temporaire une fois les rôles assignés
-        migrations.RemoveField(
-            model_name='userprofile',
-            name='_role_legacy',
-        ),
     ]

@@ -273,7 +273,7 @@
 
     <div class="rpt-list">
         {% for project in all_projects %}
-        <div class="rpt-prow s-{{ project.status }}" onclick="window.location.href='{% url 'core:project_detail' project.id %}'">
+        <div class="rpt-prow s-{{ project.status }}" onclick="window.location.href='{% url 'core:project_detail' project.slug %}'">
             <div class="rpt-pgrid cols-5">
                 <!-- Nom + responsable -->
                 <div>
@@ -463,7 +463,7 @@
 
     <div class="rpt-list">
         {% for project in all_projects %}
-        <div class="rpt-prow s-{{ project.status }}" onclick="window.location.href='{% url 'core:project_detail' project.id %}'">
+        <div class="rpt-prow s-{{ project.status }}" onclick="window.location.href='{% url 'core:project_detail' project.slug %}'">
             <div class="rpt-pgrid cols-4">
                 <!-- Nom + responsable -->
                 <div>

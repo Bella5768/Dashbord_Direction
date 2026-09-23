@@ -6,6 +6,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .models import Permission, Role, ProjectRole
+from .views import get_sluggable_or_404
 
 
 def _require_role_admin(request):
@@ -65,7 +66,7 @@ def role_detail(request, role_id):
     if guard:
         return guard
 
-    role = get_object_or_404(Role, pk=role_id)
+    role = get_sluggable_or_404(Role, role_id)
     all_permissions = Permission.objects.all().order_by('subject', 'action')
     role_perm_ids = set(role.permissions.values_list('id', flat=True))
 
@@ -113,7 +114,7 @@ def role_create(request):
             role = Role.objects.create(name=name, slug=slug, description=description)
             role.permissions.set(Permission.objects.filter(id__in=perm_ids))
             messages.success(request, _("Rôle « {name} » créé avec succès.").format(name=name))
-            return redirect('core:role_detail', role_id=role.pk)
+            return redirect('core:role_detail', role_id=role.slug)
 
     context = {'subjects': subjects, 'role_perm_ids': set()}
     return render(request, 'core/roles/role_form.html', context)
@@ -125,7 +126,7 @@ def role_edit(request, role_id):
     if guard:
         return guard
 
-    role = get_object_or_404(Role, pk=role_id)
+    role = get_sluggable_or_404(Role, role_id)
     all_permissions = Permission.objects.all().order_by('subject', 'action')
     subjects = {}
     for perm in all_permissions:
@@ -145,7 +146,7 @@ def role_edit(request, role_id):
             role.permissions.set(Permission.objects.filter(id__in=perm_ids))
         role.save()
         messages.success(request, _("Rôle « {name} » mis à jour.").format(name=role.name))
-        return redirect('core:role_detail', role_id=role.pk)
+        return redirect('core:role_detail', role_id=role.slug)
 
     context = {
         'role': role,
@@ -162,7 +163,7 @@ def role_duplicate(request, role_id):
     if guard:
         return guard
 
-    source = get_object_or_404(Role, pk=role_id)
+    source = get_sluggable_or_404(Role, role_id)
     base_slug = f"{source.slug}-copie"
     slug, n = base_slug, 2
     while Role.objects.filter(slug=slug).exists():
@@ -177,7 +178,7 @@ def role_duplicate(request, role_id):
     )
     new_role.permissions.set(source.permissions.all())
     messages.success(request, _("Rôle « {name} » créé à partir de « {source} ».").format(name=new_role.name, source=source.name))
-    return redirect('core:role_edit', role_id=new_role.pk)
+    return redirect('core:role_edit', role_id=new_role.slug)
 
 
 @login_required
@@ -186,13 +187,13 @@ def role_delete(request, role_id):
     if guard:
         return guard
 
-    role = get_object_or_404(Role, pk=role_id)
+    role = get_sluggable_or_404(Role, role_id)
     if role.is_system:
         messages.error(request, _("Les rôles système ne peuvent pas être supprimés."))
         return redirect('core:roles_list')
     if role.users.exists():
         messages.error(request, _("Ce rôle est assigné à {count} utilisateur(s). Réassignez-les d'abord.").format(count=role.users.count()))
-        return redirect('core:role_detail', role_id=role.pk)
+        return redirect('core:role_detail', role_id=role.slug)
     if request.method == 'POST':
         name = role.name
         role.delete()
@@ -263,7 +264,7 @@ def project_role_edit(request, role_id):
     if guard:
         return guard
 
-    role = get_object_or_404(ProjectRole, pk=role_id)
+    role = get_sluggable_or_404(ProjectRole, role_id)
     all_permissions = Permission.objects.all().order_by('subject', 'action')
     subjects = {}
     for perm in all_permissions:
@@ -299,7 +300,7 @@ def project_role_duplicate(request, role_id):
     if guard:
         return guard
 
-    source = get_object_or_404(ProjectRole, pk=role_id)
+    source = get_sluggable_or_404(ProjectRole, role_id)
     base_slug = f"{source.slug}-copie"
     slug, n = base_slug, 2
     while ProjectRole.objects.filter(slug=slug).exists():
@@ -314,7 +315,7 @@ def project_role_duplicate(request, role_id):
     )
     new_role.permissions.set(source.permissions.all())
     messages.success(request, _("Rôle projet « {name} » créé.").format(name=new_role.name))
-    return redirect('core:project_role_edit', role_id=new_role.pk)
+    return redirect('core:project_role_edit', role_id=new_role.slug)
 
 
 @login_required
@@ -323,7 +324,7 @@ def project_role_detail(request, role_id):
     if guard:
         return guard
 
-    role = get_object_or_404(ProjectRole, pk=role_id)
+    role = get_sluggable_or_404(ProjectRole, role_id)
     all_permissions = Permission.objects.all().order_by('subject', 'action')
     role_perm_ids = set(role.permissions.values_list('id', flat=True))
 
@@ -347,7 +348,7 @@ def project_role_delete(request, role_id):
     if guard:
         return guard
 
-    role = get_object_or_404(ProjectRole, pk=role_id)
+    role = get_sluggable_or_404(ProjectRole, role_id)
     if role.is_system:
         messages.error(request, _("Les rôles système ne peuvent pas être supprimés."))
         return redirect('core:project_roles_list')

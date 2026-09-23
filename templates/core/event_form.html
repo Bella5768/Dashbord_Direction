@@ -134,7 +134,7 @@
                     {% if event %}{% trans 'Enregistrer' %}{% else %}{% trans "Créer l'événement" %}{% endif %}
                 </button>
                 {% if event %}
-                <a href="{% url 'core:event_detail' event.id %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
+                <a href="{% url 'core:event_detail' event.slug %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
                 {% else %}
                 <a href="{% url 'core:calendar' %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
                 {% endif %}

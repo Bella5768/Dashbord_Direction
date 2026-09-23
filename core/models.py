@@ -1,6 +1,8 @@
+import uuid
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import gettext
+from django.utils.text import slugify
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
@@ -8,10 +10,56 @@ from django.core.exceptions import ValidationError
 
 
 # =====================================================================
+# Base UUID : toutes les PK du module core sont des UUID
+# auth.User (django.contrib.auth) garde sa PK entière — hors périmètre.
+# =====================================================================
+
+class UUIDModel(models.Model):
+    """Modèle avec PK UUID. Les FK internes au module core suivent le
+    type UUID ; les FK vers User restent des entiers."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False,
+                          verbose_name=_("ID"))
+
+    class Meta:
+        abstract = True
+
+
+class SluggableModel(UUIDModel):
+    """Ajoute un slug unique (généré depuis slug_source()) pour des URLs
+    lisibles. Le slug est stable : une fois généré il n'est pas recalculé
+    lors des sauvegardes ultérieures."""
+    slug = models.SlugField(max_length=200, unique=True, null=True, blank=True,
+                            editable=False, db_index=True, verbose_name=_("Slug"))
+
+    class Meta:
+        abstract = True
+
+    def slug_source(self):
+        return str(self)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = self._make_unique_slug()
+        super().save(*args, **kwargs)
+
+    def _make_unique_slug(self):
+        base = (slugify(str(self.slug_source())) or 'item')[:170]
+        candidate = base
+        n = 1
+        qs = type(self).objects.all()
+        if self.pk:
+            qs = qs.exclude(pk=self.pk)
+        while qs.filter(slug=candidate).exists():
+            n += 1
+            candidate = f"{base}-{n}"
+        return candidate
+
+
+# =====================================================================
 # RBAC : Permission / Role / ProjectRole
 # =====================================================================
 
-class Permission(models.Model):
+class Permission(UUIDModel):
     ACTION_CHOICES = [
         ('read', _('Lire')),
         ('create', _('Créer')),
@@ -64,7 +112,7 @@ class Permission(models.Model):
         return f"{self.get_action_display()} : {self.get_subject_display()}{cond}"
 
 
-class Role(models.Model):
+class Role(UUIDModel):
     name        = models.CharField(max_length=100, verbose_name=_("Nom"))
     slug        = models.SlugField(max_length=50, unique=True, verbose_name=_("Identifiant"))
     description = models.TextField(blank=True, verbose_name=_("Description"))
@@ -81,7 +129,7 @@ class Role(models.Model):
         return self.name
 
 
-class ProjectRole(models.Model):
+class ProjectRole(UUIDModel):
     name        = models.CharField(max_length=100, verbose_name=_("Nom"))
     slug        = models.SlugField(max_length=50, unique=True, verbose_name=_("Identifiant"))
     description = models.TextField(blank=True, verbose_name=_("Description"))
@@ -102,7 +150,7 @@ class ProjectRole(models.Model):
 # Profil utilisateur
 # =====================================================================
 
-class UserProfile(models.Model):
+class UserProfile(UUIDModel):
     user                = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     role                = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True, related_name='users', verbose_name=_("Rôle"))
     direction           = models.ForeignKey('Direction', on_delete=models.SET_NULL, null=True, blank=True, related_name='users', verbose_name=_("Direction"))
@@ -358,7 +406,7 @@ def save_user_profile(sender, instance, **kwargs):
         instance.profile.save()
 
 
-class Direction(models.Model):
+class Direction(SluggableModel):
     name = models.CharField(max_length=200, verbose_name=_("Nom"))
     code = models.CharField(max_length=10, unique=True, verbose_name=_("Code"))
     color = models.CharField(max_length=7, default="#3b82f6", verbose_name=_("Couleur"))
@@ -368,11 +416,14 @@ class Direction(models.Model):
         verbose_name_plural = _("Directions")
         ordering = ['name']
     
+    def slug_source(self):
+        return self.code or self.name
+
     def __str__(self):
         return f"{self.code} - {self.name}"
 
 
-class Project(models.Model):
+class Project(SluggableModel):
     STATUS_CHOICES = [
         ('planifie', _('Planifié')),
         ('en_cours', _('En cours')),
@@ -474,7 +525,7 @@ class Project(models.Model):
         return 0
 
 
-class ProjectMember(models.Model):
+class ProjectMember(UUIDModel):
     """Membres d'un projet — le rôle et ses permissions sont portés par ProjectRole."""
 
     project      = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='members', verbose_name=_("Projet"))
@@ -535,7 +586,7 @@ class ProjectMember(models.Model):
         return not self.can_perform_actions()
 
 
-class Milestone(models.Model):
+class Milestone(SluggableModel):
     TASK_STATUS_CHOICES = [
         ('a_faire', _('À faire')),
         ('en_cours', _('En cours')),
@@ -615,7 +666,7 @@ class Milestone(models.Model):
         self.save(update_fields=['completed', 'status', 'completed_at'])
 
 
-class SubMilestone(models.Model):
+class SubMilestone(SluggableModel):
     """Sous-étapes d'un jalon"""
     milestone = models.ForeignKey(Milestone, on_delete=models.CASCADE, related_name='sub_milestones', verbose_name=_("Jalon parent"))
     name = models.CharField(max_length=200, verbose_name=_("Nom de la sous-étape"))
@@ -665,7 +716,7 @@ class SubMilestone(models.Model):
         super().save(*args, **kwargs)
 
 
-class ProjectNeed(models.Model):
+class ProjectNeed(SluggableModel):
     PRIORITY_CHOICES = [
         ('basse', _('Basse')),
         ('moyenne', _('Moyenne')),
@@ -701,7 +752,7 @@ class ProjectNeed(models.Model):
         return self.status in ('ouvert', 'en_cours')
 
 
-class ProjectComment(models.Model):
+class ProjectComment(UUIDModel):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='comments', verbose_name=_("Projet"))
     message = models.TextField(verbose_name=_("Commentaire"))
     created_by = models.CharField(max_length=100, verbose_name=_("Créé par"))
@@ -716,7 +767,7 @@ class ProjectComment(models.Model):
         return f"{self.project.name} - {self.created_by}"
 
 
-class ProjectActivity(models.Model):
+class ProjectActivity(UUIDModel):
     """Journal d'activité pour suivre toutes les modifications sur un projet"""
     ACTION_CHOICES = [
         ('creation', _('Création')),
@@ -797,7 +848,7 @@ def update_project_progress_on_sub_milestone_delete(sender, instance, **kwargs):
     instance.milestone.project.recalculate_progress(save=True)
 
 
-class ProjectFolder(models.Model):
+class ProjectFolder(SluggableModel):
     """Dossier pour organiser les documents d'un projet"""
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='folders', verbose_name=_("Projet"))
     name = models.CharField(max_length=200, verbose_name=_("Nom du dossier"))
@@ -820,7 +871,7 @@ class ProjectFolder(models.Model):
         return self.name
 
 
-class ProjectDocument(models.Model):
+class ProjectDocument(SluggableModel):
     """Document lié à un projet et stocké dans un dossier"""
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='project_documents', verbose_name=_("Projet"))
     folder = models.ForeignKey(ProjectFolder, on_delete=models.SET_NULL, null=True, blank=True, related_name='documents', verbose_name=_("Dossier"))
@@ -839,7 +890,7 @@ class ProjectDocument(models.Model):
         return f"{self.project.name} - {self.title}"
 
 
-class Document(models.Model):
+class Document(SluggableModel):
     TYPE_CHOICES = [
         ('contrat', _('Contrat')),
         ('budget', _('Budget')),
@@ -890,7 +941,7 @@ class Document(models.Model):
             })
 
 
-class Partner(models.Model):
+class Partner(SluggableModel):
     TYPE_CHOICES = [
         ('entreprise', _('Entreprise')),
         ('universite', _('Université')),
@@ -930,7 +981,7 @@ class Partner(models.Model):
                 })
 
 
-class Event(models.Model):
+class Event(SluggableModel):
     TYPE_CHOICES = [
         ('reunion', _('Réunion')),
         ('evenement', _('Événement')),
@@ -980,7 +1031,7 @@ class Event(models.Model):
         return f"{m} min"
 
 
-class EventMember(models.Model):
+class EventMember(UUIDModel):
     STATUS_CHOICES = [
         ('invite',    _('Invité')),
         ('accepte',   _('Accepté')),
@@ -1011,7 +1062,7 @@ class EventMember(models.Model):
         return self.status != 'invite'
 
 
-class Request(models.Model):
+class Request(SluggableModel):
     STATUS_CHOICES = [
         ('en_attente', _('En attente')),
         ('approuve', _('Approuvé')),
@@ -1048,7 +1099,7 @@ class Request(models.Model):
             })
 
 
-class Employee(models.Model):
+class Employee(SluggableModel):
     name = models.CharField(max_length=100, verbose_name=_("Nom"))
     direction = models.ForeignKey(Direction, on_delete=models.SET_NULL, null=True, blank=True, related_name='employees', verbose_name=_("Direction"))
     role = models.CharField(max_length=100, verbose_name=_("Rôle / Fonction"))
@@ -1082,7 +1133,7 @@ class Employee(models.Model):
         return ''
 
 
-class UserActivity(models.Model):
+class UserActivity(UUIDModel):
     """Log des activités utilisateur"""
     ACTION_CHOICES = [
         ('login', _('Connexion')),
@@ -1125,7 +1176,7 @@ class UserActivity(models.Model):
         return f"{self.user.username} - {self.get_action_display()} - {self.created_at}"
 
 
-class Budget(models.Model):
+class Budget(UUIDModel):
     direction = models.ForeignKey(Direction, on_delete=models.SET_NULL, null=True, blank=True, related_name='budgets', verbose_name=_("Direction"))
     project = models.ForeignKey(Project, on_delete=models.CASCADE, null=True, blank=True, related_name='budget_lines', verbose_name=_("Projet"))
     allocated = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name=_("Budget alloué"))
@@ -1158,7 +1209,7 @@ class Budget(models.Model):
 # Conges
 # =====================================================================
 
-class LeaveRequest(models.Model):
+class LeaveRequest(UUIDModel):
     """Demande de conge - workflow CSIG (Employe -> Hierarchie -> RH -> Direction)."""
 
     TYPE_CHOICES = [
@@ -1312,7 +1363,7 @@ class LeaveRequest(models.Model):
         }.get(self.status, self.get_status_display())
 
 
-class Notification(models.Model):
+class Notification(UUIDModel):
     """Notification in-app pour un utilisateur."""
 
     TYPE_CHOICES = [
@@ -1354,7 +1405,7 @@ class Notification(models.Model):
             self.save(update_fields=['is_read'])
 
 
-class LeaveDocument(models.Model):
+class LeaveDocument(UUIDModel):
     """Piece jointe supplementaire pour une demande de conge."""
     leave_request = models.ForeignKey(LeaveRequest, on_delete=models.CASCADE, related_name='documents', verbose_name=_("Demande"))
     file = models.URLField(max_length=500, default='', blank=True, verbose_name=_("Fichier"))

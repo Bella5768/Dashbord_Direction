@@ -218,7 +218,7 @@
                                 <div class="calendar-day-events">
                                     {% with day_events=events_by_day|get_item:day %}
                                         {% for evt in day_events %}
-                                        <a href="{% url 'core:event_detail' evt.id %}"
+                                        <a href="{% url 'core:event_detail' evt.slug %}"
                                            class="calendar-event-pill {{ evt.event_type }}"
                                            title="{{ evt.title }} · {{ evt.time|time:'H:i' }}">{{ evt.title }}</a>
                                         {% endfor %}
@@ -270,15 +270,15 @@
                             </div>
                         </div>
                         <div class="ev-item-actions">
-                            <a href="{% url 'core:event_detail' event.id %}" class="action-btn primary" title="{% trans 'Voir' %}">
+                            <a href="{% url 'core:event_detail' event.slug %}" class="action-btn primary" title="{% trans 'Voir' %}">
                                 <i class="fa-solid fa-eye" width="14" height="14"></i>
                             </a>
                             {% if can_manage %}
-                            <a href="{% url 'core:event_edit' event.id %}" class="action-btn primary" title="{% trans 'Modifier' %}">
+                            <a href="{% url 'core:event_edit' event.slug %}" class="action-btn primary" title="{% trans 'Modifier' %}">
                                 <i class="fa-solid fa-pencil" width="14" height="14"></i>
                             </a>
                             <a href="#" class="action-btn danger" title="{% trans 'Supprimer' %}"
-                               data-delete-url="{% url 'core:event_delete' event.id %}"
+                               data-delete-url="{% url 'core:event_delete' event.slug %}"
                                data-delete-type="{% trans "l'événement" %}"
                                data-delete-name="{{ event.title }}">
                                 <i class="fa-solid fa-trash-can" width="14" height="14"></i>

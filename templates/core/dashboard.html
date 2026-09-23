@@ -172,7 +172,7 @@
       {% if active_projects %}
       <div style="display:flex;flex-direction:column;gap:14px;">
         {% for project in active_projects %}
-        <a href="{% url 'core:project_detail' project.id %}" data-project-id="{{ project.id }}"
+        <a href="{% url 'core:project_detail' project.slug %}" data-project-id="{{ project.id }}"
            style="text-decoration:none;display:block;padding:14px;border-radius:10px;border:1px solid #e2e8f0;background:#f8fafc;transition:box-shadow .15s;"
            onmouseenter="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'" onmouseleave="this.style.boxShadow='none'">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px;">
@@ -254,7 +254,7 @@
   <div class="card-content">
     <div class="item-list">
       {% for project in late_projects %}
-      <a href="{% url 'core:project_detail' project.id %}" class="request-item" data-project-id="{{ project.id }}" style="text-decoration:none;">
+      <a href="{% url 'core:project_detail' project.slug %}" class="request-item" data-project-id="{{ project.id }}" style="text-decoration:none;">
         <div class="request-header">
           <span class="badge badge-danger">{% trans 'En retard' %}</span>
           <span style="font-size:11px;color:#64748b;">{{ project.direction.code|default:"—" }}</span>
@@ -302,7 +302,7 @@
   <div class="card-content">
     <div class="item-list">
       {% for task in my_milestones %}
-      <a href="{% url 'core:project_detail' task.project.id %}" class="request-item" style="text-decoration:none;">
+      <a href="{% url 'core:project_detail' task.project.slug %}" class="request-item" style="text-decoration:none;">
         <div class="request-header">
           <span class="badge badge-info">{% trans 'Jalon' %}</span>
           <span style="font-size:11px;color:#64748b;">{{ task.project.name }}</span>
@@ -312,7 +312,7 @@
       </a>
       {% endfor %}
       {% for task in my_submilestones %}
-      <a href="{% url 'core:project_detail' task.milestone.project.id %}" class="request-item" style="text-decoration:none;">
+      <a href="{% url 'core:project_detail' task.milestone.project.slug %}" class="request-item" style="text-decoration:none;">
         <div class="request-header">
           <span class="badge badge-secondary">{% trans 'Sous-étape' %}</span>
           <span style="font-size:11px;color:#64748b;">{{ task.milestone.project.name }}</span>

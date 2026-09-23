@@ -285,7 +285,7 @@
           <i class="fa-solid fa-check" width="16" height="16" ></i>
           {% trans 'Ajouter le membre' %}
         </button>
-        <a href="{% url 'core:project_detail' project.id %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
+        <a href="{% url 'core:project_detail' project.slug %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
       </div>
     </form>
   </div>

@@ -148,11 +148,11 @@
     </div>
     <div class="pdetail-actions">
       {% if can_edit_project %}
-      <a href="{% url 'core:project_edit' project.id %}" class="btn btn-primary btn-sm">{% trans 'Modifier' %}</a>
+      <a href="{% url 'core:project_edit' project.slug %}" class="btn btn-primary btn-sm">{% trans 'Modifier' %}</a>
       {% endif %}
       {% if user.profile.is_directeur_general %}
       <a href="#" class="btn btn-sm" style="background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;"
-         data-delete-url="{% url 'core:project_delete' project.id %}"
+         data-delete-url="{% url 'core:project_delete' project.slug %}"
          data-delete-type="{% trans 'le projet' %}"
          data-delete-name="{{ project.name }}">{% trans 'Supprimer' %}</a>
       {% endif %}
@@ -175,7 +175,7 @@
       <span class="pdetail-mi">
         <i class="fa-solid fa-user" ></i>
         <span class="pdetail-ml">{% trans 'Responsable' %}</span>
-        <span class="pdetail-mv">{% if project.manager_employee %}<a href="{% url 'core:employee_edit' project.manager_employee.id %}" style="color:#1e3a5f;text-decoration:none;">{{ project.manager_employee.name }}</a>{% else %}{{ project.manager }}{% endif %}</span>
+        <span class="pdetail-mv">{% if project.manager_employee %}<a href="{% url 'core:employee_edit' project.manager_employee.slug %}" style="color:#1e3a5f;text-decoration:none;">{{ project.manager_employee.name }}</a>{% else %}{{ project.manager }}{% endif %}</span>
       </span>
       {% if project.start_date %}
       <span class="pdetail-mi">
@@ -376,7 +376,7 @@
             {% for m in overdue_milestones|slice:":4" %}
             <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;">
               <div style="flex:1;min-width:0;">
-                <a href="{% url 'core:milestone_detail' m.id %}" class="text-sm font-medium" style="color:#991b1b;text-decoration:none;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ m.name }}</a>
+                <a href="{% url 'core:milestone_detail' m.slug %}" class="text-sm font-medium" style="color:#991b1b;text-decoration:none;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ m.name }}</a>
                 {% if m.assigned_to.exists %}<div class="text-xs text-gray-400">{% for emp in m.assigned_to.all %}{{ emp.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</div>{% endif %}
               </div>
               <div style="flex-shrink:0;margin-left:12px;text-align:right;">
@@ -406,7 +406,7 @@
             {% for m in upcoming_milestones|slice:":4" %}
             <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;">
               <div style="flex:1;min-width:0;">
-                <a href="{% url 'core:milestone_detail' m.id %}" class="text-sm font-medium" style="color:#1e40af;text-decoration:none;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ m.name }}</a>
+                <a href="{% url 'core:milestone_detail' m.slug %}" class="text-sm font-medium" style="color:#1e40af;text-decoration:none;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ m.name }}</a>
                 {% if m.assigned_to.exists %}<div class="text-xs text-gray-400">{% for emp in m.assigned_to.all %}{{ emp.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</div>{% endif %}
               </div>
               <div style="flex-shrink:0;margin-left:12px;text-align:right;">
@@ -640,7 +640,7 @@
       </div>
       {% endif %}
       {% if can_add_milestones %}
-      <a href="{% url 'core:milestone_create' project.id %}" class="btn btn-primary btn-sm" style="display:flex;align-items:center;gap:6px;">
+      <a href="{% url 'core:milestone_create' project.slug %}" class="btn btn-primary btn-sm" style="display:flex;align-items:center;gap:6px;">
         <i class="fa-solid fa-circle-plus" width="15" height="15" ></i>
         {% trans 'Ajouter un jalon' %}
       </a>
@@ -662,7 +662,7 @@
 
               <!-- Case à cocher / numéro -->
               {% if sub_stats.total == 0 and can_add_milestones or sub_stats.total == 0 and is_my_milestone %}
-              <a href="{% url 'core:milestone_toggle' milestone.id %}"
+              <a href="{% url 'core:milestone_toggle' milestone.slug %}"
                  class="mrow-check{% if milestone.completed %} done{% endif %}"
                  title="{% if milestone.completed %}{% trans 'Marquer non terminé' %}{% else %}{% trans 'Marquer terminé' %}{% endif %}">
                 {% if milestone.completed %}<i class="fa-solid fa-check"></i>{% endif %}
@@ -675,7 +675,7 @@
 
               <div class="mrow-info">
                 <div class="mrow-title-row">
-                  <a href="{% url 'core:milestone_detail' milestone.id %}" class="mrow-name{% if milestone.completed %} done{% endif %}">
+                  <a href="{% url 'core:milestone_detail' milestone.slug %}" class="mrow-name{% if milestone.completed %} done{% endif %}">
                     {{ milestone.name }}
                     <i class="fa-solid fa-arrow-up-right-from-square" width="12" height="12" style="opacity:0;transition:opacity .15s;flex-shrink:0;" ></i>
                   </a>
@@ -733,7 +733,7 @@
               </div>
               {% if can_add_milestones %}
               <div class="mrow-acts">
-                <form method="post" action="{% url 'core:milestone_update_status' milestone.id %}" style="display:inline;">
+                <form method="post" action="{% url 'core:milestone_update_status' milestone.slug %}" style="display:inline;">
                   {% csrf_token %}
                   <select name="status" onchange="onStatusChange({{milestone.id}}, this.value)" title="{% trans 'Changer le statut' %}" class="mrow-status-sel">
                     <option value="a_faire" {% if milestone.status == 'a_faire' %}selected{% endif %}>{% trans 'À faire' %}</option>
@@ -743,12 +743,12 @@
                     <option value="termine" {% if milestone.status == 'termine' %}selected{% endif %}>{% trans 'Terminé' %}</option>
                   </select>
                 </form>
-                <a href="{% url 'core:sub_milestone_create' milestone.id %}" class="action-btn" title="{% trans 'Ajouter une sous-étape' %}" style="font-weight:700;font-size:15px;color:#3b82f6;text-decoration:none;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;">+</a>
-                <a href="{% url 'core:milestone_edit' milestone.id %}" class="action-btn" title="{% trans 'Modifier' %}">
+                <a href="{% url 'core:sub_milestone_create' milestone.slug %}" class="action-btn" title="{% trans 'Ajouter une sous-étape' %}" style="font-weight:700;font-size:15px;color:#3b82f6;text-decoration:none;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;">+</a>
+                <a href="{% url 'core:milestone_edit' milestone.slug %}" class="action-btn" title="{% trans 'Modifier' %}">
                   <i class="fa-solid fa-pencil" width="13" height="13" ></i>
                 </a>
                 <a href="#" class="action-btn danger" title="{% trans 'Supprimer' %}"
-                   data-delete-url="{% url 'core:milestone_delete' milestone.id %}"
+                   data-delete-url="{% url 'core:milestone_delete' milestone.slug %}"
                    data-delete-type="{% trans 'le jalon' %}"
                    data-delete-name="{{ milestone.name }}">
                   <i class="fa-solid fa-trash-can" width="13" height="13" ></i>
@@ -766,7 +766,7 @@
             <div class="msub-item{% if is_my_sub and not sub.completed %} mine{% endif %}" data-sid="{{ sub.id }}" data-mid="{{ milestone.id }}">
               <div class="msub-lhs">
                 {% if can_add_milestones or is_my_sub %}
-                <a href="{% url 'core:sub_milestone_toggle' sub.id %}"
+                <a href="{% url 'core:sub_milestone_toggle' sub.slug %}"
                    class="msub-check{% if sub.completed %} done{% endif %}"
                    title="{% if sub.completed %}{% trans 'Marquer non terminée' %}{% else %}{% trans 'Marquer terminée' %}{% endif %}">
                   {% if sub.completed %}<i class="fa-solid fa-check"></i>{% endif %}
@@ -800,11 +800,11 @@
               </div>
               {% if can_add_milestones %}
               <div class="msub-acts">
-                <a href="{% url 'core:sub_milestone_edit' sub.id %}" class="action-btn" title="{% trans 'Modifier' %}">
+                <a href="{% url 'core:sub_milestone_edit' sub.slug %}" class="action-btn" title="{% trans 'Modifier' %}">
                   <i class="fa-solid fa-pencil" width="12" height="12" ></i>
                 </a>
                 <a href="#" class="action-btn danger" title="{% trans 'Supprimer' %}"
-                   data-delete-url="{% url 'core:sub_milestone_delete' sub.id %}"
+                   data-delete-url="{% url 'core:sub_milestone_delete' sub.slug %}"
                    data-delete-type="{% trans 'la sous-étape' %}"
                    data-delete-name="{{ sub.name }}">
                   <i class="fa-solid fa-trash-can" width="12" height="12" ></i>
@@ -828,7 +828,7 @@
         <i class="fa-solid fa-clipboard" width="40" height="40" style="color:#d1d5db;margin:0 auto 12px;" ></i>
         <p class="text-gray-500" style="margin-bottom:16px;">{% trans 'Aucun jalon défini pour ce projet.' %}</p>
         {% if can_add_milestones %}
-        <a href="{% url 'core:milestone_create' project.id %}" class="btn btn-primary btn-sm">{% trans 'Ajouter le premier jalon' %}</a>
+        <a href="{% url 'core:milestone_create' project.slug %}" class="btn btn-primary btn-sm">{% trans 'Ajouter le premier jalon' %}</a>
         {% endif %}
       </div>
       {% endif %}
@@ -855,7 +855,7 @@
         <p class="text-sm text-gray-500">{% with cnt=members|length %}{% blocktrans count count=cnt %}{{ count }} membre{% plural %}{{ count }} membres{% endblocktrans %}{% endwith %}</p>
       </div>
       {% if can_manage_members %}
-      <a href="{% url 'core:project_member_add' project.id %}" class="btn btn-primary btn-sm" style="display:flex;align-items:center;gap:6px;">
+      <a href="{% url 'core:project_member_add' project.slug %}" class="btn btn-primary btn-sm" style="display:flex;align-items:center;gap:6px;">
         <i class="fa-solid fa-circle-plus" width="15" height="15" ></i>
         {% trans 'Ajouter un membre' %}
       </a>
@@ -917,7 +917,7 @@
         <i class="fa-solid fa-users" width="40" height="40" style="color:#d1d5db;margin:0 auto 12px;" ></i>
         <p class="text-gray-500" style="margin-bottom:16px;">{% trans 'Aucun membre dans ce projet.' %}</p>
         {% if can_manage_members %}
-        <a href="{% url 'core:project_member_add' project.id %}" class="btn btn-primary btn-sm">{% trans 'Ajouter le premier membre' %}</a>
+        <a href="{% url 'core:project_member_add' project.slug %}" class="btn btn-primary btn-sm">{% trans 'Ajouter le premier membre' %}</a>
         {% endif %}
       </div>
       {% endif %}
@@ -935,11 +935,11 @@
       </div>
       {% if can_add_documents %}
       <div class="flex gap-2">
-        <a href="{% url 'core:project_folder_create' project.id %}" class="btn btn-outline btn-sm" style="display:flex;align-items:center;gap:5px;">
+        <a href="{% url 'core:project_folder_create' project.slug %}" class="btn btn-outline btn-sm" style="display:flex;align-items:center;gap:5px;">
           <i class="fa-solid fa-folder" width="14" height="14" ></i>
           {% trans 'Dossier' %}
         </a>
-        <a href="{% url 'core:project_document_create' project.id %}" class="btn btn-primary btn-sm" style="display:flex;align-items:center;gap:5px;">
+        <a href="{% url 'core:project_document_create' project.slug %}" class="btn btn-primary btn-sm" style="display:flex;align-items:center;gap:5px;">
           <i class="fa-solid fa-circle-plus" width="14" height="14" ></i>
           {% trans 'Document' %}
         </a>
@@ -963,22 +963,22 @@
             <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">
               <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
                 <i class="fa-solid fa-folder-open" width="16" height="16" style="color:#fbbf24;flex-shrink:0;" ></i>
-                <a href="{% url 'core:project_folder_detail' folder.id %}" class="text-sm font-medium" style="color:#1e3a5f;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ folder.name }}</a>
+                <a href="{% url 'core:project_folder_detail' folder.slug %}" class="text-sm font-medium" style="color:#1e3a5f;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ folder.name }}</a>
                 {% if folder.parent %}<span class="text-xs text-gray-400" style="white-space:nowrap;">/ {{ folder.parent.name }}</span>{% endif %}
               </div>
               {% if can_add_documents %}
               <div class="flex gap-1" style="flex-shrink:0;margin-left:6px;">
-                <a href="{% url 'core:project_folder_create' project.id %}?parent={{ folder.id }}" class="action-btn" title="{% trans 'Sous-dossier' %}">
+                <a href="{% url 'core:project_folder_create' project.slug %}?parent={{ folder.id }}" class="action-btn" title="{% trans 'Sous-dossier' %}">
                   <i class="fa-solid fa-circle-plus" width="12" height="12" ></i>
                 </a>
-                <a href="{% url 'core:project_document_create' project.id %}?folder={{ folder.id }}" class="action-btn" title="{% trans 'Ajouter document' %}">
+                <a href="{% url 'core:project_document_create' project.slug %}?folder={{ folder.id }}" class="action-btn" title="{% trans 'Ajouter document' %}">
                   <i class="fa-solid fa-file-lines" width="12" height="12" ></i>
                 </a>
-                <a href="{% url 'core:project_folder_edit' folder.id %}" class="action-btn" title="{% trans 'Modifier' %}">
+                <a href="{% url 'core:project_folder_edit' folder.slug %}" class="action-btn" title="{% trans 'Modifier' %}">
                   <i class="fa-solid fa-pencil" width="12" height="12" ></i>
                 </a>
                 <a href="#" class="action-btn danger" title="{% trans 'Supprimer' %}"
-                   data-delete-url="{% url 'core:project_folder_delete' folder.id %}"
+                   data-delete-url="{% url 'core:project_folder_delete' folder.slug %}"
                    data-delete-type="{% trans 'le dossier' %}"
                    data-delete-name="{{ folder.name }}">
                   <i class="fa-solid fa-trash-can" width="12" height="12" ></i>
@@ -1012,19 +1012,19 @@
               </div>
               <div class="flex gap-1" style="flex-shrink:0;margin-left:6px;">
                 {% if doc.file %}
-                <a href="{% url 'core:project_document_preview' doc.id %}" class="action-btn" title="{% trans 'Aperçu' %}">
+                <a href="{% url 'core:project_document_preview' doc.slug %}" class="action-btn" title="{% trans 'Aperçu' %}">
                   <i class="fa-solid fa-eye" width="13" height="13" ></i>
                 </a>
-                <a href="{% url 'core:project_document_download' doc.id %}" class="action-btn" title="{% trans 'Télécharger' %}">
+                <a href="{% url 'core:project_document_download' doc.slug %}" class="action-btn" title="{% trans 'Télécharger' %}">
                   <i class="fa-solid fa-download" width="13" height="13" ></i>
                 </a>
                 {% endif %}
                 {% if can_add_documents %}
-                <a href="{% url 'core:project_document_edit' doc.id %}" class="action-btn" title="{% trans 'Modifier' %}">
+                <a href="{% url 'core:project_document_edit' doc.slug %}" class="action-btn" title="{% trans 'Modifier' %}">
                   <i class="fa-solid fa-pencil" width="13" height="13" ></i>
                 </a>
                 <a href="#" class="action-btn danger" title="{% trans 'Supprimer' %}"
-                   data-delete-url="{% url 'core:project_document_delete' doc.id %}"
+                   data-delete-url="{% url 'core:project_document_delete' doc.slug %}"
                    data-delete-type="{% trans 'le document' %}"
                    data-delete-name="{{ doc.title }}">
                   <i class="fa-solid fa-trash-can" width="13" height="13" ></i>
@@ -1046,8 +1046,8 @@
         <p class="text-gray-500" style="margin-bottom:16px;">{% trans 'Aucun dossier ni document.' %}</p>
         {% if can_add_documents %}
         <div class="flex gap-2" style="justify-content:center;">
-          <a href="{% url 'core:project_folder_create' project.id %}" class="btn btn-outline btn-sm">{% trans 'Créer un dossier' %}</a>
-          <a href="{% url 'core:project_document_create' project.id %}" class="btn btn-primary btn-sm">{% trans 'Ajouter un document' %}</a>
+          <a href="{% url 'core:project_folder_create' project.slug %}" class="btn btn-outline btn-sm">{% trans 'Créer un dossier' %}</a>
+          <a href="{% url 'core:project_document_create' project.slug %}" class="btn btn-primary btn-sm">{% trans 'Ajouter un document' %}</a>
         </div>
         {% endif %}
       </div>
@@ -1092,15 +1092,15 @@
               <span class="badge {% if need.priority == 'haute' %}badge-danger{% elif need.priority == 'moyenne' %}badge-warning{% else %}badge-secondary{% endif %}" style="flex-shrink:0;">{{ need.get_priority_display }}</span>
               {% if can_manage_members and need.is_open %}
               <div style="display:flex;gap:4px;">
-                <form method="post" action="{% url 'core:project_need_update_status' need.id %}" style="display:inline;">
+                <form method="post" action="{% url 'core:project_need_update_status' need.slug %}" style="display:inline;">
                   {% csrf_token %}<input type="hidden" name="status" value="en_cours">
                   <button type="submit" style="font-size:10px;padding:2px 8px;background:#dbeafe;color:#1d4ed8;border:none;border-radius:4px;cursor:pointer;" title="{% trans 'Marquer en cours' %}">{% trans 'En cours' %}</button>
                 </form>
-                <form method="post" action="{% url 'core:project_need_update_status' need.id %}" style="display:inline;">
+                <form method="post" action="{% url 'core:project_need_update_status' need.slug %}" style="display:inline;">
                   {% csrf_token %}<input type="hidden" name="status" value="resolu">
                   <button type="submit" style="font-size:10px;padding:2px 8px;background:#dcfce7;color:#166534;border:none;border-radius:4px;cursor:pointer;" title="{% trans 'Marquer résolu' %}">{% trans 'Résolu' %}</button>
                 </form>
-                <form method="post" action="{% url 'core:project_need_update_status' need.id %}" style="display:inline;">
+                <form method="post" action="{% url 'core:project_need_update_status' need.slug %}" style="display:inline;">
                   {% csrf_token %}<input type="hidden" name="status" value="rejete">
                   <button type="submit" style="font-size:10px;padding:2px 8px;background:#fef2f2;color:#dc2626;border:none;border-radius:4px;cursor:pointer;" title="{% trans 'Rejeter' %}">{% trans 'Rejeter' %}</button>
                 </form>
@@ -1116,7 +1116,7 @@
       {% endif %}
 
       {% if can_perform_actions %}
-      <form method="post" action="{% url 'core:project_need_create' project.id %}" style="border-top:1px solid #e5e7eb;padding-top:16px;">
+      <form method="post" action="{% url 'core:project_need_create' project.slug %}" style="border-top:1px solid #e5e7eb;padding-top:16px;">
         {% csrf_token %}
         <p class="text-sm font-medium" style="color:#374151;margin-bottom:10px;">{% trans 'Ajouter un besoin' %}</p>
         <div style="display:flex;flex-direction:column;gap:10px;">
@@ -1169,7 +1169,7 @@
       {% endif %}
 
       {% if can_perform_actions %}
-      <form method="post" action="{% url 'core:project_comment_create' project.id %}" style="border-top:1px solid #e5e7eb;padding-top:16px;">
+      <form method="post" action="{% url 'core:project_comment_create' project.slug %}" style="border-top:1px solid #e5e7eb;padding-top:16px;">
         {% csrf_token %}
         <p class="text-sm font-medium" style="color:#374151;margin-bottom:10px;">{% trans 'Nouveau commentaire' %}</p>
         <textarea class="form-control" name="message" rows="3" placeholder="{% trans 'Votre commentaire…' %}" required></textarea>
@@ -1190,7 +1190,7 @@
         <h3 class="card-title">{% trans "Journal d'activité" %}</h3>
         <p class="text-sm text-gray-500">{% trans '20 dernières actions' %}</p>
       </div>
-      <a href="{% url 'core:export_project_activities' project.id %}" class="btn btn-outline btn-sm" style="display:flex;align-items:center;gap:6px;">
+      <a href="{% url 'core:export_project_activities' project.slug %}" class="btn btn-outline btn-sm" style="display:flex;align-items:center;gap:6px;">
         <i class="fa-solid fa-download" width="14" height="14" ></i>
         {% trans 'Exporter PDF' %}
       </a>
@@ -1829,7 +1829,7 @@ function renderCalendar() {
 <!-- ── WebSocket temps réel : progression du projet ── -->
 <script>
 (function(){
-  var PROJECT_ID = {{ project.id }};
+  var PROJECT_ID = "{{ project.id }}";
 
   function progClass(pct) {
     return pct >= 80 ? 'high' : pct >= 50 ? 'mid' : 'low';
@@ -1954,7 +1954,7 @@ function renderCalendar() {
   }
 
   window._onProjUpdate = function(data) {
-    if (+data.project_id !== PROJECT_ID) return;
+    if (String(data.project_id) !== PROJECT_ID) return;
     handleUpdate(data);
   };
 })();

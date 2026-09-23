@@ -113,7 +113,7 @@ def notify_jalon_completed(milestone, actor_user):
     Ne notifie pas l'acteur lui-même.
     """
     project = milestone.project
-    link = reverse('core:project_detail', args=[project.id]) + '#jalons'
+    link = reverse('core:project_detail', args=[project.slug]) + '#jalons'
 
     # Notifier le manager du projet (si c'est un User distinct de l'acteur)
     manager_user = getattr(project, 'manager_user', None)
@@ -143,7 +143,7 @@ def notify_sous_etape_completed(sub_milestone, actor_user):
     """Notifie les assignés du jalon parent quand une sous-étape est complétée."""
     milestone = sub_milestone.milestone
     project = milestone.project
-    link = reverse('core:project_detail', args=[project.id]) + '#jalons'
+    link = reverse('core:project_detail', args=[project.slug]) + '#jalons'
 
     for emp in milestone.assigned_to.all():
         user = _user_from_employee(emp)
@@ -167,7 +167,7 @@ def notify_membre_ajoute(member, actor_user):
     if not user or user == actor_user:
         return
     project = member.project
-    link = reverse('core:project_detail', args=[project.id])
+    link = reverse('core:project_detail', args=[project.slug])
     role_label = member.project_role.name if member.project_role else 'membre'
     _create(
         user,
@@ -184,7 +184,7 @@ def notify_membre_ajoute(member, actor_user):
 
 def notify_commentaire(project, actor_user):
     """Notifie les membres du projet d'un nouveau commentaire (sauf l'auteur)."""
-    link = reverse('core:project_detail', args=[project.id]) + '#commentaires'
+    link = reverse('core:project_detail', args=[project.slug]) + '#commentaires'
     author = actor_user.get_full_name() or actor_user.username
 
     for pm in project.members.select_related('employee__user_profile__user').all():
@@ -285,7 +285,7 @@ def notify_event_members_updated(event, actor_user, exclude_employee_ids=None):
     exclude_employee_ids — set d'IDs à exclure (membres nouvellement ajoutés
     dans le même cycle : ils reçoivent déjà une notif d'invitation).
     """
-    link = reverse('core:event_detail', args=[event.id])
+    link = reverse('core:event_detail', args=[event.slug])
     actor_name = actor_user.get_full_name() or actor_user.username
     date_fmt = event.date.strftime('%d/%m/%Y')
     exclude = exclude_employee_ids or set()
@@ -328,7 +328,7 @@ def notify_event_member_invited(event_member, actor_user):
     if not user or user == actor_user:
         return
     event = event_member.event
-    link = reverse('core:event_detail', args=[event.id])
+    link = reverse('core:event_detail', args=[event.slug])
     actor_name = actor_user.get_full_name() or actor_user.username
     date_fmt = event.date.strftime('%d/%m/%Y')
     time_fmt = event.time.strftime('%H:%M')
@@ -347,7 +347,7 @@ def notify_event_rsvp(event_member, actor_user):
     creator = event.created_by
     if not creator or creator == actor_user:
         return
-    link = reverse('core:event_detail', args=[event.id])
+    link = reverse('core:event_detail', args=[event.slug])
     employee_name = event_member.employee.name
     status_label = event_member.get_status_display()
     _create(

@@ -164,7 +164,7 @@
                                     <i class="fa-solid fa-trash-can" width="16" height="16" ></i>
                                 </a>
                                 {% elif budget.project %}
-                                <a href="{% url 'core:project_edit' budget.project.id %}" class="action-btn" title="{% trans 'Modifier le projet' %}">
+                                <a href="{% url 'core:project_edit' budget.project.slug %}" class="action-btn" title="{% trans 'Modifier le projet' %}">
                                     <i class="fa-solid fa-pencil" width="16" height="16" ></i>
                                 </a>
                                 {% endif %}
@@ -249,7 +249,7 @@
 <!-- Employees Grid -->
 <div id="filter-content" class="grid grid-3" style="margin-top:20px;">
     {% for employee in employees %}
-    <div class="employee-card {% if employee.workload >= 85 %}workload-high{% elif employee.workload >= 70 %}workload-medium{% else %}workload-low{% endif %}" data-href="{% url 'core:employee_edit' employee.id %}">
+    <div class="employee-card {% if employee.workload >= 85 %}workload-high{% elif employee.workload >= 70 %}workload-medium{% else %}workload-low{% endif %}" data-href="{% url 'core:employee_edit' employee.slug %}">
 
         <div class="ec-header">
             <div class="ec-avatar" style="background: {{ employee.direction.color }}; color: #fff;overflow:hidden;">{% if employee.avatar_url %}<img src="{{ employee.avatar_url }}" alt="" style="width:100%;height:100%;object-fit:cover;">{% else %}{{ employee.name|first|upper }}{% endif %}</div>
@@ -266,10 +266,10 @@
                 </div>
             </div>
             <div class="ec-actions">
-                <a href="{% url 'core:employee_edit' employee.id %}" class="action-btn primary" title="{% trans 'Modifier' %}">
+                <a href="{% url 'core:employee_edit' employee.slug %}" class="action-btn primary" title="{% trans 'Modifier' %}">
                     <i class="fa-solid fa-pencil" width="14" height="14"></i>
                 </a>
-                <a href="{% url 'core:employee_delete' employee.id %}" class="action-btn danger" title="{% trans 'Supprimer' %}">
+                <a href="{% url 'core:employee_delete' employee.slug %}" class="action-btn danger" title="{% trans 'Supprimer' %}">
                     <i class="fa-solid fa-trash-can" width="14" height="14"></i>
                 </a>
             </div>

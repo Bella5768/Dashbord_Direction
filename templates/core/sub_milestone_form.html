@@ -129,7 +129,7 @@
               <i class="fa-solid fa-check" width="16" height="16" ></i>
               {% if sub_milestone %}{% trans 'Enregistrer' %}{% else %}{% trans 'Créer la sous-étape' %}{% endif %}
             </button>
-            <a href="{% url 'core:project_detail' project.id %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
+            <a href="{% url 'core:project_detail' project.slug %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
           </div>
 
         </form>

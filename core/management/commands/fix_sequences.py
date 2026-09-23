@@ -1,17 +1,14 @@
-"""Corriger les séquences PostgreSQL après import de données."""
+"""Corriger les séquences PostgreSQL après import de données.
+
+Depuis la migration UUID (PK devenues des UUID générés par uuid5), seul
+auth_user / auth_group conservent une séquence integer. Les tables core_*
+n'ont plus de séquence 'id', elles sont ignorées proprement (skip).
+"""
 from django.core.management.base import BaseCommand
 from django.db import connection
 
 
 TABLES = [
-    'core_useractivity', 'core_userprofile', 'core_employee',
-    'core_direction', 'core_project', 'core_projectdocument',
-    'core_document', 'core_partner', 'core_event', 'core_request',
-    'core_budget', 'core_leaverequest', 'core_notification',
-    'core_leavedocument', 'core_milestone', 'core_submilestone',
-    'core_projectneed', 'core_projectcomment', 'core_projectactivity',
-    'core_projectfolder', 'core_projectmember', 'core_permission',
-    'core_role', 'core_role_permissions', 'core_eventmember',
     'auth_user', 'auth_group',
 ]
 

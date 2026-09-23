@@ -148,7 +148,7 @@
 <div id="filter-content" class="projects-grid">
     {% for project in projects %}
     <div class="project-card status-{{ project.computed_status }}"
-         data-detail-url="{% url 'core:project_detail' project.id %}"
+         data-detail-url="{% url 'core:project_detail' project.slug %}"
          data-project-id="{{ project.id }}"
          role="link" tabindex="0" aria-label="{{ project.name }}">
 
@@ -189,7 +189,7 @@
                     {{ project.end_date|date:"d/m/Y" }}
                 </span>
                 {% endif %}
-                <a href="{% url 'core:project_detail' project.id %}" class="pc-open" onclick="event.stopPropagation()">
+                <a href="{% url 'core:project_detail' project.slug %}" class="pc-open" onclick="event.stopPropagation()">
                     {% trans 'Ouvrir' %} <i class="fa-solid fa-arrow-right" width="12" height="12"></i>
                 </a>
             </div>

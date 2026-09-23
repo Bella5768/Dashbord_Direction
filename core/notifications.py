@@ -244,7 +244,7 @@ def notify_project_member_added(member, added_by_user):
     subject = _("[CSIG] Ajout au projet : {project}").format(project=member.project.name)
 
     site_url = getattr(settings, 'SITE_URL', '').rstrip('/')
-    project_url = f"{site_url}{reverse('core:project_detail', args=[member.project.id])}" if site_url else ''
+    project_url = f"{site_url}{reverse('core:project_detail', args=[member.project.slug])}" if site_url else ''
     text, html = _render_email('project_member_added.html', {
         'employee_name': employee.name,
         'project_name': member.project.name,
@@ -613,7 +613,7 @@ def _event_email_ctx(event, actor_user, action):
     }
     label = action_labels.get(action, _('Événement'))
     site_url = getattr(settings, 'SITE_URL', '').rstrip('/')
-    event_url = f"{site_url}{reverse('core:event_detail', args=[event.id])}" if site_url and event.id else ''
+    event_url = f"{site_url}{reverse('core:event_detail', args=[event.slug])}" if site_url and event.slug else ''
     return {
         'title': f"{label} : {event.title}",
         'action_link': event_url,
