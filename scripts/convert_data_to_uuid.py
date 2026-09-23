@@ -8,7 +8,10 @@ La nouvelle base (celle des settings Django actifs) doit déjà être migrée
 (core.0001 UUID + core.0002 seeds).
 
 Règles :
-- auth_user est copié tel quel (PK int conservées ; les FK vers User restent int).
+- auth_user est converti en core.User (PK UUID déterministe
+  ``uuid5(NAMESPACE_URL, "User:<old_id>")``) ; toutes les colonnes FK vers
+  l'utilisateur (*_user_id, created_by_id, assigned_by_id, receiver_id…) sont
+  remappées vers ces nouveaux UUID.
 - Les seeds (Direction/Permission/Role/ProjectRole) sont réconciliés par clé
   naturelle avec ceux déjà présents dans la nouvelle base ; les directions
   manquantes sont créées.
@@ -31,9 +34,11 @@ django.setup()
 
 import psycopg
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.db import transaction
 from core import models as M
+
+User = get_user_model()
 
 OLD_URL = sys.argv[1] if len(sys.argv) > 1 else None
 if not OLD_URL:
@@ -68,31 +73,43 @@ old.autocommit = True
 cur = old.cursor()
 
 # ---------------------------------------------------------------------------
-# 1) auth_user
+# 1) auth_user -> core.User (PK UUID)
+# Mapping : ancien id int -> nouveau UUID (determiné par new_id('User', old_id))
 # ---------------------------------------------------------------------------
-print("== auth_user ==")
-existing_user_ids = set(User.objects.values_list('pk', flat=True))
+print("== auth_user -> core.User (UUID) ==")
+existing_by_username = {u.username: u.id for u in M.User.objects.all()}
 user_rows = execute(cur, "SELECT id, password, last_login, is_superuser, username, last_name, email, is_staff, is_active, date_joined, first_name FROM auth_user ORDER BY id")
+user_map = {}   # old int user id -> new uuid
 created_users = 0
 for (uid, password, last_login, is_superuser, username, last_name, email,
      is_staff, is_active, date_joined, first_name) in user_rows:
-    if uid in existing_user_ids:
-        continue
-    User.objects.create(
-        id=uid,
-        password=password,
-        last_login=last_login,
-        is_superuser=is_superuser,
-        username=username,
-        last_name=last_name,
-        email=email,
-        is_staff=is_staff,
-        is_active=is_active,
-        date_joined=date_joined,
-        first_name=first_name,
-    )
-    created_users += 1
-print(f"  utilisateurs créés : {created_users} / {len(user_rows)}")
+    new_pk = existing_by_username.get(username)
+    if new_pk is None:
+        new_pk = new_id('User', uid)
+        M.User.objects.create(
+            id=new_pk,
+            password=password,
+            last_login=last_login,
+            is_superuser=is_superuser,
+            username=username,
+            last_name=last_name,
+            email=email,
+            is_staff=is_staff,
+            is_active=is_active,
+            date_joined=date_joined,
+            first_name=first_name,
+        )
+        existing_by_username[username] = new_pk
+        created_users += 1
+    user_map[uid] = new_pk
+print(f"  utilisateurs créés : {created_users} / {len(user_rows)} (ids remappés)")
+
+
+def user_fk(old_int):
+    """Convertit un ancien id utilisateur (int) en l'UUID correspondant."""
+    if old_int is None:
+        return None
+    return user_map.get(old_int)
 
 # ---------------------------------------------------------------------------
 # 2) Seeds : Direction / Permission / Role / ProjectRole réconciliés
@@ -305,9 +322,10 @@ def copy_userprofile(map_emp):
          direction_id, user_id, employee_id, employee_identifier, role_id) in rows:
         # Le signal post_save(created) a déjà créé un profil vide pour l'utilisateur :
         # on le réutilise (conserve son UUID) et on complète ses champs.
-        obj = M.UserProfile.objects.filter(user_id=user_id).first()
+        new_user_id = user_fk(user_id)
+        obj = M.UserProfile.objects.filter(user_id=new_user_id).first()
         if obj is None:
-            obj = M.UserProfile(id=new_id('UserProfile', old_id), user_id=user_id)
+            obj = M.UserProfile(id=new_id('UserProfile', old_id), user_id=new_user_id)
         obj.phone = phone or ''
         obj.avatar = avatar or ''
         obj.is_active_profile = is_active_profile if is_active_profile is not None else True
@@ -345,7 +363,7 @@ def copy_milestones(map_proj):
             project_id=map_proj[project_id],
             manual_progress=manual_progress,
             need=need or '',
-            assigned_by_id=assigned_by_id,
+            assigned_by_id=user_fk(assigned_by_id),
             due_date=due_date,
             completed_at=completed_at,
             status=status,
@@ -379,7 +397,7 @@ def copy_submilestones(map_mil):
             created_at=created_at,
             milestone_id=map_mil[milestone_id],
             need=need or '',
-            assigned_by_id=assigned_by_id,
+            assigned_by_id=user_fk(assigned_by_id),
             due_date=due_date,
             completed_at=completed_at,
         )
@@ -570,7 +588,7 @@ def copy_events(map_emp):
             duration=duration,
             location=location or '',
             created_at=created_at,
-            created_by_id=created_by_id,
+            created_by_id=user_fk(created_by_id),
             updated_at=updated_at,
         )
         map_evt[old_id] = obj.id
@@ -643,10 +661,10 @@ def copy_leave(map_emp):
             updated_at=updated_at,
             direction_id=dir_map[direction_id][1] if direction_id else None,
             employee_id=map_emp[employee_id],
-            final_user_id=final_user_id,
-            hr_user_id=hr_user_id,
-            manager_user_id=manager_user_id,
-            user_id=user_id,
+            final_user_id=user_fk(final_user_id),
+            hr_user_id=user_fk(hr_user_id),
+            manager_user_id=user_fk(manager_user_id),
+            user_id=user_fk(user_id),
         )
         map_leave[old_id] = obj.id
         created += 1
@@ -687,7 +705,7 @@ def copy_user_activity():
             ip_address=str(ip_address) if ip_address else '',
             user_agent=user_agent or '',
             created_at=created_at,
-            user_id=user_id,
+            user_id=user_fk(user_id),
             description_context=description_context or {},
         )
         created += 1

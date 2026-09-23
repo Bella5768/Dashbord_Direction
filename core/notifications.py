@@ -417,8 +417,8 @@ def notify_due_date_alert(employee, task_type, task_name, project_name, due_date
 
 def _leave_recipients_step(leave, step):
     """Construit la liste des destinataires (name, email, role_label) pour une étape donnée."""
-    from django.contrib.auth.models import User
-    User_ = User
+    from django.contrib.auth import get_user_model
+    User_ = get_user_model()
     recipients = []
     seen = set()
 

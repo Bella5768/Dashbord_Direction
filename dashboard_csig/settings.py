@@ -193,6 +193,7 @@ TIME_ZONE = 'Africa/Conakry'
 LOGIN_URL = 'core:login'
 LOGIN_REDIRECT_URL = 'core:dashboard'
 LOGOUT_REDIRECT_URL = 'core:login'
+AUTH_USER_MODEL = 'core.User'
 
 USE_I18N = True
 

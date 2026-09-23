@@ -1,8 +1,7 @@
 import types
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from django.contrib.auth.models import User
-from .models import Direction, Project, Milestone, Document, Partner, Event, EventMember, Request, Employee, Budget, UserProfile, LeaveRequest, LeaveDocument
+from .models import Direction, Project, Milestone, Document, Partner, Event, EventMember, Request, Employee, Budget, UserProfile, LeaveRequest, LeaveDocument, User
 
 # Restreindre l'admin Django aux superusers uniquement (pas à tous les is_staff)
 admin.site.has_permission = types.MethodType(
@@ -36,7 +35,6 @@ class UserAdmin(BaseUserAdmin):
     get_direction.short_description = 'Direction'
 
 
-admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
 
 

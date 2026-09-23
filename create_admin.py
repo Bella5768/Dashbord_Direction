@@ -8,8 +8,10 @@ sys.path.insert(0, '/home/dgdashbord/Dashbord_Direction')
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'dashboard_csig.settings')
 django.setup()
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from core.models import UserProfile, Direction
+
+User = get_user_model()
 
 def create_super_admin():
     """Crée un super-administrateur avec tous les accès"""

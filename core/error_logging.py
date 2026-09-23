@@ -4,7 +4,9 @@ import traceback
 from django.conf import settings
 from django.utils import timezone
 from typing import Optional, Dict, Any
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 logger = logging.getLogger(__name__)

@@ -60,11 +60,11 @@ urlpatterns = [
     path('utilisateurs/nouveau/', views.user_create, name='user_create'),
     path('utilisateurs/activer/<uidb64>/<token>/', views.account_activate, name='account_activate'),
     path('utilisateurs/nouveau-lien/', views.request_new_activation, name='request_new_activation'),
-    path('utilisateurs/<int:user_id>/modifier/', views.user_edit, name='user_edit'),
-    path('utilisateurs/<int:user_id>/supprimer/', views.user_delete, name='user_delete'),
-    path('utilisateurs/<int:user_id>/toggle/', views.user_toggle_status, name='user_toggle_status'),
-    path('utilisateurs/<int:user_id>/password/', views.user_change_password, name='user_change_password'),
-    path('utilisateurs/<int:user_id>/renvoyer-invitation/', views.resend_invitation, name='resend_invitation'),
+    path('utilisateurs/<uuid:user_id>/modifier/', views.user_edit, name='user_edit'),
+    path('utilisateurs/<uuid:user_id>/supprimer/', views.user_delete, name='user_delete'),
+    path('utilisateurs/<uuid:user_id>/toggle/', views.user_toggle_status, name='user_toggle_status'),
+    path('utilisateurs/<uuid:user_id>/password/', views.user_change_password, name='user_change_password'),
+    path('utilisateurs/<uuid:user_id>/renvoyer-invitation/', views.resend_invitation, name='resend_invitation'),
     path('utilisateurs/activites/', views.user_activities, name='user_activities'),
     
     # Project CRUD

@@ -1,9 +1,8 @@
 from django import forms
 from django.db.models import Q
-from django.contrib.auth.models import User
 from django.contrib.auth.forms import SetPasswordForm  # noqa: F401  (réexporté pour les vues)
 from django.utils.translation import gettext_lazy as _
-from .models import UserProfile, Direction, Employee, Event, Role
+from .models import UserProfile, Direction, Employee, Event, Role, User
 from core.fields import IntlPhoneField
 
 

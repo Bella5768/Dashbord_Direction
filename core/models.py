@@ -3,20 +3,29 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import gettext
 from django.utils.text import slugify
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.core.exceptions import ValidationError
 
 
-# =====================================================================
-# Base UUID : toutes les PK du module core sont des UUID
-# auth.User (django.contrib.auth) garde sa PK entière — hors périmètre.
-# =====================================================================
+class User(AbstractUser):
+    """Utilisateur applicatif — PK UUID (clé primaire native, plus d'AutoField).
+
+    Conseil : toute FK vers l'utilisateur doit utiliser ``settings.AUTH_USER_MODEL``
+    (== 'core.User').
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False,
+                          verbose_name=_("ID"))
+
+    class Meta:
+        verbose_name = _("Utilisateur")
+        verbose_name_plural = _("Utilisateurs")
+
 
 class UUIDModel(models.Model):
     """Modèle avec PK UUID. Les FK internes au module core suivent le
-    type UUID ; les FK vers User restent des entiers."""
+    type UUID ; les FK vers User pointent sur core.User (UUID)."""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False,
                           verbose_name=_("ID"))
 

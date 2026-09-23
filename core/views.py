@@ -4,7 +4,7 @@ from django.urls import reverse
 from django.http import JsonResponse, HttpResponse
 from django.db.models import Sum, Count, Avg, Q, Case, When, IntegerField
 from django.utils import timezone
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from datetime import datetime, timedelta, date as _date
@@ -16,7 +16,7 @@ from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
 from reportlab.pdfgen import canvas
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
-from .models import Direction, Project, Document, Partner, Event, EventMember, Request, Employee, Budget, UserProfile, UserActivity, ProjectMember, Milestone, SubMilestone, ProjectNeed, ProjectComment, ProjectDocument, ProjectFolder, ProjectActivity, Role, ProjectRole, LeaveRequest
+from .models import Direction, Project, Document, Partner, Event, EventMember, Request, Employee, Budget, UserProfile, UserActivity, ProjectMember, Milestone, SubMilestone, ProjectNeed, ProjectComment, ProjectDocument, ProjectFolder, ProjectActivity, Role, ProjectRole, LeaveRequest, User
 from .notifs import push_section_refresh, push_project_meta, push_milestone_status
 
 
@@ -200,7 +200,7 @@ def _generate_username(full_name):
     """Génère un username unique au format nom.prenom (sans accents, ASCII uniquement)."""
     import unicodedata
     import re
-    from django.contrib.auth.models import User as _User
+    _User = get_user_model()
 
     def _norm(s):
         s = unicodedata.normalize('NFD', s)
@@ -224,7 +224,7 @@ def _generate_username(full_name):
 
 def _create_or_update_user_for_employee(request, employee, system_role):
     """Crée ou met à jour le compte utilisateur lié à un employé et envoie l'invitation."""
-    from django.contrib.auth.models import User as DjangoUser
+    DjangoUser = get_user_model()
     from .models import UserProfile
 
     if not employee.email:
@@ -367,7 +367,7 @@ def logout_view(request):
 
 def password_reset_request(request):
     """Formulaire de demande de réinitialisation de mot de passe (publique)."""
-    from django.contrib.auth.models import User as DjangoUser
+    DjangoUser = get_user_model()
 
     sent = False
     form_error = None
@@ -402,7 +402,7 @@ def password_reset_confirm(request, uidb64, token):
     from django.contrib.auth.tokens import default_token_generator
     from django.utils.http import urlsafe_base64_decode
     from django.utils.encoding import force_str
-    from django.contrib.auth.models import User as DjangoUser
+    DjangoUser = get_user_model()
     from django.contrib.auth.forms import SetPasswordForm
 
     user = None
@@ -499,7 +499,7 @@ def profile(request):
         if not email:
             errors['email'] = "L'adresse email est requise."
         elif email != user.email:
-            from django.contrib.auth.models import User as DjangoUser
+            DjangoUser = get_user_model()
             if DjangoUser.objects.filter(email__iexact=email).exclude(pk=user.pk).exists():
                 errors['email'] = "Cette adresse email est déjà utilisée par un autre compte."
 
@@ -2165,7 +2165,7 @@ def direction_delete(request, direction_id):
 @login_required
 def users_list(request):
     """Liste des utilisateurs"""
-    from django.contrib.auth.models import User
+    User = get_user_model()
     from .models import UserActivity
     
     # Check permission
@@ -2227,7 +2227,7 @@ def users_list(request):
 def user_create(request):
     """Crée un compte inactif et envoie un email d'invitation à l'employé."""
     from .forms import UserCreateForm
-    from django.contrib.auth.models import User as DjangoUser
+    DjangoUser = get_user_model()
     import json
 
     if not request.user.profile.has_manage_users_permission():
@@ -2322,7 +2322,7 @@ def user_create(request):
 @login_required
 def user_edit(request, user_id):
     """Modifier un utilisateur"""
-    from django.contrib.auth.models import User
+    User = get_user_model()
     from .forms import UserUpdateForm
     
     if not request.user.profile.has_manage_users_permission():
@@ -2376,7 +2376,7 @@ def user_edit(request, user_id):
 @login_required
 def user_delete(request, user_id):
     """Supprimer un utilisateur"""
-    from django.contrib.auth.models import User
+    User = get_user_model()
     
     if not request.user.profile.has_manage_users_permission():
         messages.error(request, _("Vous n'avez pas les permissions pour supprimer des utilisateurs."))
@@ -2422,7 +2422,7 @@ def user_delete(request, user_id):
 @login_required
 def user_toggle_status(request, user_id):
     """Activer/Désactiver un utilisateur"""
-    from django.contrib.auth.models import User
+    User = get_user_model()
     
     if not request.user.profile.has_manage_users_permission():
         messages.error(request, _("Vous n'avez pas les permissions."))
@@ -2465,7 +2465,7 @@ def account_activate(request, uidb64, token):
     from django.utils.http import urlsafe_base64_decode
     from django.utils.encoding import force_str
     from django.contrib.auth import login as auth_login
-    from django.contrib.auth.models import User as DjangoUser
+    DjangoUser = get_user_model()
     from django.contrib.auth.forms import SetPasswordForm
 
     if request.user.is_authenticated:
@@ -2521,7 +2521,7 @@ def account_activate(request, uidb64, token):
 
 def request_new_activation(request):
     """Page publique : l'utilisateur entre son email pour recevoir un nouveau lien d'activation."""
-    from django.contrib.auth.models import User as DjangoUser
+    DjangoUser = get_user_model()
 
     sent = False
     form_error = None
@@ -2555,7 +2555,7 @@ def request_new_activation(request):
 @login_required
 def resend_invitation(request, user_id):
     """Renvoie l'email d'invitation à un utilisateur inactif (POST uniquement)."""
-    from django.contrib.auth.models import User as DjangoUser
+    DjangoUser = get_user_model()
 
     if not request.user.profile.has_manage_users_permission():
         return redirect('core:dashboard')
@@ -4610,7 +4610,7 @@ def project_member_add(request, project_id):
                     # --- Créer un compte de connexion (flow invitation) ---
                     create_user = request.POST.get('create_user') == 'on'
                     if create_user and new_employee.email:
-                        from django.contrib.auth.models import User as DjangoUser
+                        DjangoUser = get_user_model()
                         from .models import Role as SysRole
                         default_role_slug = 'visiteur' if is_external else 'employe'
                         new_user_role_slug = request.POST.get('new_user_role', default_role_slug) or default_role_slug
