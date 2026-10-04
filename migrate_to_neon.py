@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Migration SQLite/MySQL → Neon PostgreSQL
+Migration SQLite → PostgreSQL
 
 Usage:
     python migrate_to_neon.py                # export + import complet
@@ -71,13 +71,12 @@ IMPORT_ORDER_JSON = json.dumps(IMPORT_ORDER)
 
 
 # ═══════════════════════════════════════════════════════════════════════
-#  WORKER EXPORT — sous-processus avec DATABASE_URL='' (SQLite/MySQL)
+#  WORKER EXPORT — sous-processus avec DATABASE_URL='' (SQLite)
 # ═══════════════════════════════════════════════════════════════════════
 
 EXPORT_WORKER = '''\
 import os, sys, json
 os.environ["DATABASE_URL"] = ""
-os.environ["MYSQL_HOST"] = ""
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "dashboard_csig.settings")
 
 import django; django.setup()
@@ -243,7 +242,7 @@ def _run_worker(script, args, env_overrides=None):
 
 
 def export_data():
-    """Exporte depuis SQLite/MySQL vers data_export.json."""
+    """Exporte depuis SQLite vers data_export.json."""
     print("📦 Export depuis la DB source...")
     return _run_worker(EXPORT_WORKER, [EXPORT_FILE])
 
@@ -260,7 +259,7 @@ def import_data():
 
     print("\n📥 Import vers Neon...")
     return _run_worker(IMPORT_WORKER, [EXPORT_FILE, IMPORT_ORDER_JSON],
-                       env_overrides={'DATABASE_URL': neon_url, 'MYSQL_HOST': ''})
+                       env_overrides={'DATABASE_URL': neon_url})
 
 
 def verify():

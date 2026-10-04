@@ -45,9 +45,8 @@ Les dépendances nécessaires sont déjà incluses dans `requirements.txt` :
 
 Le projet utilise la priorité suivante pour les bases de données :
 
-1. **Neon PostgreSQL** (si `DATABASE_URL` est défini) - **CHOIX PRINCIPAL**
-2. **MySQL** (si `MYSQL_HOST` est défini) - Option de repli
-3. **SQLite** (par défaut) - Développement local
+1. **PostgreSQL** (si `DATABASE_URL` est défini) - **CHOIX PRINCIPAL**
+2. **SQLite** (par défaut) - Développement local
 
 ## Migration des données existantes
 

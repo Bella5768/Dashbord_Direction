@@ -1,0 +1,58 @@
+# CSIG Dashboard — environnement de développement (équivalent local de la prod ECS)
+# App (daphne) + PostgreSQL + Redis, avec les mêmes variables .env qu'en production.
+#
+# Usage :
+#   cp .env.example .env   (ajuster DATABASE_URL + REDIS_URL comme ci-dessous)
+#   docker compose up --build
+#   → Application : http://localhost:8000
+services:
+  app:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000 --noreload
+    env_file:
+      - .env
+    environment:
+      # Pointe vers les services compose (en production : RDS + ElastiCache)
+      DATABASE_URL: postgresql://csig:csig@db:5432/csigdb
+      REDIS_URL: redis://redis:6379/0
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
+      DJANGO_DEBUG: "True"
+      SKIP_MIGRATE: "0"
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: csig
+      POSTGRES_PASSWORD: csig
+      POSTGRES_DB: csigdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U csig -d csigdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:

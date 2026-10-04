@@ -14,10 +14,10 @@ La **Cité des Sciences et de l'Innovation de Guinée (CSIG)** a besoin d'une pl
 - Fournir des rapports et statistiques pour la prise de décision
 
 ### 1.3 Technologies Utilisées
-- **Backend** : Django 4.x (Python)
+- **Backend** : Django 5.x (Python)
 - **Frontend** : HTML5, CSS3, JavaScript
-- **Base de données** : SQLite (développement) / MySQL (production)
-- **Hébergement** : PythonAnywhere
+- **Base de données** : PostgreSQL (production) / SQLite (développement)
+- **Hébergement** : AWS (ECS Fargate + RDS)
 - **Génération PDF** : ReportLab
 
 ---
@@ -362,8 +362,8 @@ Dashboard_CSIG/
 - Django Debug Toolbar
 
 ### 5.2 Environnement de Production
-- PythonAnywhere
-- MySQL
+- AWS (ECS Fargate + RDS)
+- PostgreSQL
 - Collectstatic pour les fichiers statiques
 - DEBUG = False
 

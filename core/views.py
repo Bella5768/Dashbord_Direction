@@ -2,6 +2,7 @@ from django.utils.translation import gettext as _
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.http import JsonResponse, HttpResponse
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Sum, Count, Avg, Q, Case, When, IntegerField
 from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout, get_user_model
@@ -181,7 +182,7 @@ def get_accessible_projects_qs(user):
             emp = profile.employee
             if emp and emp.is_external:
                 return qs.filter(members__employee_id=employee_id).distinct()
-        except (AttributeError, ValueError) as e:
+        except (AttributeError, ValueError, ObjectDoesNotExist) as e:
             from .error_logging import ErrorLogger
             ErrorLogger.log_exception(e, context={'function': 'get_accessible_projects_qs'}, user=user)
 
@@ -236,9 +237,8 @@ def _create_or_update_user_for_employee(request, employee, system_role):
         linked_profile.direction = employee.direction
         linked_profile.save(update_fields=['role', 'direction', 'updated_at'])
         return True, _("Le rôle système du compte lié a été mis à jour.")
-    except (AttributeError, ValueError) as e:
-        from .error_logging import ErrorLogger
-        ErrorLogger.log_exception(e, context={'function': '_create_or_update_user_for_employee', 'employee': employee.name}, user=request.user)
+    except ObjectDoesNotExist:
+        pass
 
     username = _generate_username(employee.name)
     name_parts = employee.name.strip().split()
@@ -5183,18 +5183,19 @@ def employee_edit(request, employee_id):
             obj.save()
 
             # Synchroniser User lié si la fiche est modifiée
-            try:
-                linked_profile = obj.user_profile
-                linked_user = linked_profile.user
-                name_parts = obj.name.split() if obj.name else []
-                linked_user.first_name = name_parts[0] if name_parts else ''
-                linked_user.last_name = ' '.join(name_parts[1:]) if len(name_parts) > 1 else ''
-                if obj.email:
-                    linked_user.email = obj.email
-                linked_user.save(update_fields=['first_name', 'last_name', 'email'])
-            except (AttributeError, ValueError) as e:
-                from .error_logging import ErrorLogger
-                ErrorLogger.log_exception(e, context={'function': 'employee_update', 'employee': obj.name}, user=request.user)
+            if hasattr(obj, 'user_profile'):
+                try:
+                    linked_profile = obj.user_profile
+                    linked_user = linked_profile.user
+                    name_parts = obj.name.split() if obj.name else []
+                    linked_user.first_name = name_parts[0] if name_parts else ''
+                    linked_user.last_name = ' '.join(name_parts[1:]) if len(name_parts) > 1 else ''
+                    if obj.email:
+                        linked_user.email = obj.email
+                    linked_user.save(update_fields=['first_name', 'last_name', 'email'])
+                except (AttributeError, ValueError) as e:
+                    from .error_logging import ErrorLogger
+                    ErrorLogger.log_exception(e, context={'function': 'employee_update', 'employee': obj.name}, user=request.user)
 
             system_role = form.cleaned_data.get('system_role')
             if system_role:

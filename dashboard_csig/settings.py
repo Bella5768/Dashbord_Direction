@@ -34,8 +34,6 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1',
     'http://localhost:*',
     'http://127.0.0.1:*',
-    'https://*.pythonanywhere.com',
-    'https://dgdashbord.pythonanywhere.com',
 ]
 
 _extra_csrf = [o.strip() for o in os.getenv('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',') if o.strip()]
@@ -107,10 +105,10 @@ else:
     }
 
 # Database Configuration
-# Priority: Neon PostgreSQL (DATABASE_URL) > MySQL > SQLite
+# Priority: PostgreSQL (DATABASE_URL, ex. Amazon RDS) > SQLite
 _database_url = os.getenv('DATABASE_URL', '')
 if _database_url:
-    # Neon PostgreSQL (primary choice)
+    # PostgreSQL (primary choice)
     tmpPostgres = urlparse(_database_url)
     DATABASES = {
         'default': {
@@ -119,23 +117,8 @@ if _database_url:
             'USER': tmpPostgres.username,
             'PASSWORD': tmpPostgres.password,
             'HOST': tmpPostgres.hostname,
-            'PORT': 5432,
+            'PORT': tmpPostgres.port or 5432,
             'OPTIONS': dict(parse_qsl(tmpPostgres.query)),
-        }
-    }
-elif os.getenv('MYSQL_HOST'):
-    # MySQL (fallback option)
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.getenv('MYSQL_DATABASE', ''),
-            'USER': os.getenv('MYSQL_USER', ''),
-            'PASSWORD': os.getenv('MYSQL_PASSWORD', ''),
-            'HOST': os.getenv('MYSQL_HOST', ''),
-            'PORT': os.getenv('MYSQL_PORT', '3306'),
-            'OPTIONS': {
-                'charset': 'utf8mb4',
-            },
         }
     }
 else:

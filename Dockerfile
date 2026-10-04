@@ -19,8 +19,8 @@ RUN pip install --no-cache-dir --timeout 60 -r requirements.txt
 COPY . .
 
 # Compiler les traductions (locale/*.po → .mo) et les fichiers statiques
-RUN mkdir -p locale && python manage.py compilemessages -l fr -l en --ignore=static || true
-RUN SECRET_KEY=dummy python manage.py collectstatic --noinput
+RUN mkdir -p locale && DJANGO_SECRET_KEY=dummy python manage.py compilemessages -l fr -l en --ignore=static || true
+RUN DJANGO_SECRET_KEY=dummy python manage.py collectstatic --noinput
 
 # ---- Image d'exécution ----
 FROM python:3.13-slim

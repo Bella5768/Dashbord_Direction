@@ -11,4 +11,6 @@ fi
 PORT="${PORT:-8080}"
 echo "[entrypoint] daphne sur le port ${PORT}"
 
-exec daphne -b 0.0.0.0 -p "${PORT}" dashboard_csig.asgi:application
+# --proxy-headers : fait confiance aux en-têtes X-Forwarded-* de l'ALB
+# (IP client réelle + schéma https derrière le reverse proxy).
+exec daphne -b 0.0.0.0 -p "${PORT}" --proxy-headers dashboard_csig.asgi:application

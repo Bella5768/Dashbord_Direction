@@ -68,7 +68,7 @@ aws sts get-caller-identity
 
 # Poser des variables à réutiliser partout
 AWS_REGION=eu-north-1                # région principale
-ACCOUNT_ID=000000000000             # ton compte (voir get-caller-identity)
+ACCOUNT_ID=499243079539             # ton compte (voir get-caller-identity)
 export AWS_REGION ACCOUNT_ID
 ```
 
@@ -211,14 +211,36 @@ RT_ID=$(aws ec2 describe-route-tables --filters "Name=vpc-id,Values=$VPC_ID" --q
 aws ec2 create-route --route-table-id "$RT_ID" --destination-cidr-block 0.0.0.0/0 --gateway-id "$IGW_ID"
 aws ec2 associate-route-table --subnet-id "$SUBNET_PUB1" --route-table-id "$RT_ID"
 aws ec2 associate-route-table --subnet-id "$SUBNET_PUB2" --route-table-id "$RT_ID"
-
-# (Optionnel) NAT pour les subnets privés → réseau complet Fargate sans IP publique
 ```
 
-Par simplicité pour ce guide on place les **tâches Fargate dans les subnets
-publics** (`assignPublicIp=ENABLED`), l'ALB restant le point d'entrée. Pour un
-déploiement de production strict, ajouter un NAT Gateway et passer les tâches
-en privé (`assignPublicIp=DISABLED`).
+### Subnets privés (RDS, ElastiCache, tâches) — 2 AZ
+
+RDS et ElastiCache **exigent** des subnets privés (le groupe de subnets DB
+accepte les sous-réseaux privés uniquement). On les crée ici avec un NAT
+Gateway pour que les tâches Fargate privées puissent sortir (pull ECR, SES) :
+
+```bash
+SUBNET_PRI1=$(aws ec2 create-subnet --vpc-id "$VPC_ID" --cidr-block 10.0.10.0/24 --availability-zone "${AWS_REGION}a" --query 'Subnet.SubnetId' --output text)
+SUBNET_PRI2=$(aws ec2 create-subnet --vpc-id "$VPC_ID" --cidr-block 10.0.11.0/24 --availability-zone "${AWS_REGION}b" --query 'Subnet.SubnetId' --output text)
+
+# EIP + NAT Gateway (réside dans un subnet public)
+EIP_NAT=$(aws ec2 allocate-address --domain vpc --query 'AllocationId' --output text)
+NAT_ID=$(aws ec2 create-nat-gateway --subnet-id "$SUBNET_PUB1" --allocation-id "$EIP_NAT" --query 'NatGateway.NatGatewayId' --output text)
+aws ec2 wait nat-gateway-available --nat-gateway-ids "$NAT_ID"
+
+# Route table privée → NAT Gateway (sortie internet)
+RT_PRI=$(aws ec2 create-route-table --vpc-id "$VPC_ID" --query 'RouteTable.RouteTableId' --output text)
+aws ec2 create-route --route-table-id "$RT_PRI" --destination-cidr-block 0.0.0.0/0 --nat-gateway-id "$NAT_ID"
+aws ec2 associate-route-table --subnet-id "$SUBNET_PRI1" --route-table-id "$RT_PRI"
+aws ec2 associate-route-table --subnet-id "$SUBNET_PRI2" --route-table-id "$RT_PRI"
+
+echo "SUBNET_PRI1=$SUBNET_PRI1"; echo "SUBNET_PRI2=$SUBNET_PRI2"
+```
+
+Par simplicité, ce guide place les **tâches Fargate dans les subnets publics**
+(`assignPublicIp=ENABLED`), l'ALB restant le point d'entrée. Pour une
+architecture de production stricte, passer les tâches en privé
+(`assignPublicIp=DISABLED`, subnets ci-dessus — NAT déjà en place).
 
 ```bash
 # Récupérer les IDs si besoin
@@ -269,6 +291,12 @@ aws rds describe-db-engine-versions --engine postgres \
   --query "DBEngineVersions[?EngineVersion >= '16'].{Version:EngineVersion,Default:DefaultForEngine}" \
   --output table
 
+# Groupe de subnets privées du VPC (OBLIGATOIRE avant de créer l'instance RDS)
+aws rds create-db-subnet-group \
+  --db-subnet-group-name csig-db-subs \
+  --db-subnet-group-description "Subnets prives pour RDS" \
+  --subnet-ids "$SUBNET_PRI1" "$SUBNET_PRI2"
+
 # Créer la base (attendre ~10 min)
 aws rds create-db-instance \
   --db-instance-identifier csig-db \
@@ -288,18 +316,6 @@ aws rds create-db-instance \
 # Attendre que le statut passe à "available"
 aws rds wait db-instance-available --db-instance-identifier csig-db
 ```
-
-> Si `--db-subnet-group-name csig-db-subs` n'existe pas encore, il faut d'abord
-> créer un groupe de subnets **privées** du VPC (obligatoire pour RDS) :
-
-```bash
-aws rds create-db-subnet-group \
-  --db-subnet-group-name csig-db-subs \
-  --db-subnet-group-description "Subnets prives pour RDS" \
-  --subnet-ids "$SUBNET_PRI1" "$SUBNET_PRI2"
-```
-
-(Adapter `SUBNET_PRI1/2` aux subnets privés créés à l'étape 2.)
 
 Récupérer l'endpoint :
 
@@ -656,12 +672,17 @@ echo "TG_ARN=$TG_ARN"
 
 **Listener HTTPS (443)** — certificat ACM obligatoire :
 
+> **Région ACM** : le certificat du **ALB** doit être créé dans **la même région
+> que l'ALB** (`$AWS_REGION`, ici `eu-north-1`). Seul un certificat **CloudFront**
+> (distribution du CDN) se crée en `us-east-1` (obligatoire). Ne pas confondre
+> les deux.
+
 ```bash
-# Demander le certificat pour le domaine (option A : DNS validation)
+# Demander le certificat pour le domaine (validation DNS) — régional ALB
 CERT_ARN=$(aws acm request-certificate \
   --domain-name dashbord.csig.edu.gn \
   --validation-method DNS \
-  --region us-east-1 \          # ACM CloudFront global : us-east-1 ; régional : ta région
+  --region "$AWS_REGION" \
   --query 'CertificateArn' --output text)
 # → ajouter le CNAME de validation chez l'hébergeur, attendre "ISSUED"
 
@@ -745,7 +766,7 @@ aws route53 change-resource-record-sets --hosted-zone-id ZONE_ID \
         "Name": "dashbord.csig.edu.gn",
         "Type": "A",
         "AliasTarget": {
-          "HostedZoneId": "Z3HSL7lWd73wFK",
+          "HostedZoneId": "Z23TAZ6LKFMNIO",
           "DNSName": "<ALB_DNS>",
           "EvaluateTargetHealth": false
         }
@@ -754,8 +775,8 @@ aws route53 change-resource-record-sets --hosted-zone-id ZONE_ID \
   }'
 ```
 
-> `Z3HSL7lWd73wFK` = hosted zone ID des ALB (eu-north-1). À remplacer selon la
-> région (voir la doc ELB v2 "Elastic Load Balancing endpoints").
+> `Z23TAZ6LKFMNIO` = hosted zone ID des ALB (eu-north-1). Seulement pour un
+> **alias A** Route 53 ; en CNAME classique, aucune hosted zone ID n'est requise.
 
 Tester :
 

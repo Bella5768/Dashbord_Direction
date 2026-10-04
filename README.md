@@ -20,7 +20,7 @@ Plateforme de pilotage et de suivi stratégique pour la Cité des Sciences et de
 
 - **Backend** : Django 4.2 / 5.1 (`requirements.txt`)
 - **Frontend** : HTML5, CSS3, JavaScript (Vanilla)
-- **Base de données** : PostgreSQL Neon (production) — repli MySQL ou SQLite
+- **Base de données** : PostgreSQL Neon (production) — repli SQLite (développement)
 - **Temps réel** : Django Channels + Redis (InMemory en développement)
 - **Internationalisation** : Django i18n (français par défaut)
 - **Graphiques** : Chart.js
@@ -143,8 +143,7 @@ NEON_SETUP.md            # Configuration Neon PostgreSQL
 La base est choisie par priorité dans `settings.py` :
 
 1. **PostgreSQL** si `DATABASE_URL` est défini (recommandé, ex. Neon/RDS)
-2. **MySQL** si `MYSQL_HOST` est défini
-3. **SQLite** sinon (développement local rapide)
+2. **SQLite** sinon (développement local rapide)
 
 Exemple `.env` :
 
