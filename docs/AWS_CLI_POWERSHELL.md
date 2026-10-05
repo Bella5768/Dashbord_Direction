@@ -135,6 +135,22 @@ $json = @"                      # @" ... "@ = interpole $variables
 En cas de doute sur un `--query`, l'enlever et lire la sortie brute
 `--output json`, ou passer par `--output text` + `ConvertFrom-Json`.
 
+### Alias : uniquement dans un multiselect `{...}`
+
+JMESPath distingue deux formes, et l'alias `clé:valeur` n'existe que dans la
+première :
+
+```
+--query "Subnets[].[SubnetId,State]"                        # projection : PAS d'alias
+--query "Subnets[].[FreeIPs:AvailableIpAddressCount]"        # ERREUR : Expecting: comma, got: colon
+
+--query "Subnets[].{Id:SubnetId,State:State}"               # multiselect : alias OK
+--query "LoadBalancers[0].{Arn:LoadBalancerArn,Dns:DNSName}"  # idem
+```
+
+Réflexe : en cas de `Parse error`, retirer l'alias, ou passer par
+`--output text` et lire les en-têtes de colonne.
+
 ---
 
 ## 6. Erreurs de validation = rien n'a été créé
