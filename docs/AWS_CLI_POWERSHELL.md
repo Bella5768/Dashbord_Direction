@@ -192,7 +192,64 @@ $ALB = aws elbv2 create-load-balancer ... --output json | ConvertFrom-Json
 
 ---
 
-## 9. Avant de coller un bloc de commandes
+## 9. Vérifier le nom exact de la sous-commande
+
+Les noms d'opérations ne sont pas devinables, et l'erreur du CLI dit souvent
+juste ce qu'il faut :
+
+```
+[ERROR]: Found invalid choice 'describe-orderable-db-instance-engines'
+Maybe you meant:
+  * describe-orderable-db-instance-options
+```
+
+Erreurs de nom déjà commises sur ce déploiement :
+
+| Faux | Vrai |
+|------|------|
+| `rds describe-orderable-db-instance-engines` | `rds describe-orderable-db-instance-options` |
+| `elbv2 modify-target-group --attributes k=v` | `elbv2 modify-target-group-attributes --attributes Key=..,Value=..` |
+| `--default-root-object ""` | option à omettre (valeur vide refusée) |
+
+```
+aws <service> help                      # liste des opérations du service
+aws <service> <operation> help          # syntaxe complète + arguments requis
+```
+
+---
+
+## 10. RDS : `Some input subnets are invalid`
+
+Erreur de `create-db-subnet-group`. Les sous-réseaux existent pourtant (ils
+apparaissent dans `describe-subnets`), donc causes possibles :
+
+1. **sous-réseaux dans deux VPC différents** → RDS exige un seul VPC par groupe ;
+2. **VPC ou sous-réseaux encore en `pending`** (créés il y a quelques minutes) →
+   attendre que `State` passe à `available` ;
+3. **moins de 2 adresses IP libres** dans un sous-réseau ;
+4. **erreur de copie d'ID** dans la commande.
+
+Toujours vérifier avant de recréer :
+
+```powershell
+aws ec2 describe-subnets --subnet-ids "$A,$B" --query "Subnets[].[SubnetId,VpcId,State,AvailabilityZone,AvailableIpAddressCount]" --output table
+aws ec2 describe-vpcs --vpc-ids vpc-xxx --query "Vpcs[].[VpcId,State,CidrBlock]" --output table
+```
+
+Après création, confirmer le statut avant de lancer l'instance :
+
+```powershell
+aws rds describe-db-subnet-groups --query "DBSubnetGroups[].[DBSubnetGroupName,SubnetGroupStatus,VpcId]" --output table
+```
+
+Erreur en cascade à ne pas diagnostiquer séparément :
+`CreateDBInstance` → `DBSubnetGroupNotFoundFault` n'est que la conséquence du
+groupe de sous-réseaux non créé. Idem `DBInstanceNotFound` à `describe-db-instances`
+après un échec de création.
+
+---
+
+## 11. Avant de coller un bloc de commandes
 
 1. On est en **PowerShell**, pas bash : pas de `\` en fin de ligne.
 2. Chaque argument de liste : virgule ou espace ? (voir § 1).
