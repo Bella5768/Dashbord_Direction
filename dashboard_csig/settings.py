@@ -151,13 +151,21 @@ SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
 
 if not DEBUG:
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
+    # TLS et HSTS pilotés par variable : le certificat ACM n'est pas disponible
+    # lors du premier déploiement (le domaine n'est pas encore dans le compte),
+    # or SECURE_SSL_REDIRECT + les cookies "Secure" rendent le site inutilisable
+    # derrière un ALB en HTTP seul. Les défauts restent le mode sûr (1) ; on ne
+    # passe à 0 que pour la recette en HTTP, puis on revient à 1 dès que le
+    # certificat est en place sur l'ALB.
+    _ssl_on = os.getenv('DJANGO_SECURE_SSL', '1').lower() in ('1', 'true', 'yes', 'on')
+    _hsts_on = os.getenv('DJANGO_HSTS', '1').lower() in ('1', 'true', 'yes', 'on')
+    SESSION_COOKIE_SECURE = _ssl_on
+    CSRF_COOKIE_SECURE = _ssl_on
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    SECURE_SSL_REDIRECT = True
-    SECURE_HSTS_SECONDS = 31536000
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
+    SECURE_SSL_REDIRECT = _ssl_on
+    SECURE_HSTS_SECONDS = 31536000 if _hsts_on else 0
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = _hsts_on
+    SECURE_HSTS_PRELOAD = _hsts_on
 
 LANGUAGE_CODE = 'fr'
 

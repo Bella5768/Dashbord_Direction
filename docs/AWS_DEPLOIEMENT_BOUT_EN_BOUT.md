@@ -657,6 +657,7 @@ Fichier `task-definition.json` (adapter l'image et les ARNs) :
   "family": "csig-dashboard",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["FARGATE"],
+  "runtimePlatform": { "cpuArchitecture": "X86_64", "operatingSystemFamily": "LINUX" },
   "cpu": "512",
   "memory": "1024",
   "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/csig-ecs-execution-role",
@@ -674,8 +675,11 @@ Fichier `task-definition.json` (adapter l'image et les ARNs) :
         { "name": "SITE_URL", "value": "https://dashbord.csig.edu.gn" },
         { "name": "AWS_S3_REGION", "value": "eu-north-1" },
         { "name": "AWS_STORAGE_BUCKET_NAME", "value": "csig-media" },
+        { "name": "AWS_CLOUDFRONT_DOMAIN", "value": "dXXXX.cloudfront.net" },
         { "name": "AWS_SES_REGION", "value": "eu-north-1" },
-        { "name": "DEFAULT_FROM_EMAIL", "value": "noreply@csig.edu.gn" }
+        { "name": "DEFAULT_FROM_EMAIL", "value": "noreply@csig.edu.gn" },
+        { "name": "DJANGO_SECURE_SSL", "value": "1" },
+        { "name": "DJANGO_HSTS", "value": "1" }
       ],
       "secrets": [
         { "name": "DJANGO_SECRET_KEY", "valueFrom": "arn:aws:ssm:eu-north-1:499243079539:parameter/csig/prod/django_secret_key" },
@@ -703,6 +707,19 @@ Enregistrer :
 ```bash
 aws ecs register-task-definition --cli-input-json file://task-definition.json --region "$AWS_REGION"
 ```
+
+> **Phase sans certificat (avant le domaine)** : le certificat ACM suppose de
+> pouvoir valider le DNS de `csig.edu.gn`. Tant que ce n'est pas possible,
+> démarrer l'ALB avec un listener HTTP seul sur le port 80 et mettre
+> `DJANGO_SECURE_SSL=0` + `DJANGO_HSTS=0` dans l'`environment` de la task
+> definition. Sans cela, `SECURE_SSL_REDIRECT` renvoie une boucle de 301 et les
+> cookies `Secure` ne sont jamais renvoyés par le navigateur : **la connexion est
+> impossible**. Ces deux variables sont pilotées par `settings.py`, défaut `1`
+> (mode sûr). Remettre `1` (ou supprimer les lignes) dès que l'écouteur 443
+> porte le certificat ACM.
+
+> `runtimePlatform` est explicite : sans lui, Fargate prend `LATEST` par défaut,
+> qui peut être un runtime retiré et faire échouer le lancement de la tâche.
 
 ### 10.3 ALB (Application Load Balancer)
 
@@ -964,6 +981,10 @@ AWS_S3_REGION=eu-north-1
 AWS_CLOUDFRONT_DOMAIN=dXYZ.cloudfront.net
 AWS_SES_REGION=eu-north-1
 DEFAULT_FROM_EMAIL=noreply@csig.edu.gn
+# 1 = TLS et HSTS actifs (défaut). Mettre 0 / 0 uniquement tant que l'ALB
+# n'a qu'un listener HTTP 80, sinon le login est impossible (cf. étape 10.2).
+DJANGO_SECURE_SSL=1
+DJANGO_HSTS=1
 ```
 
 Variables **sensibles** — jamais en clair, injectées via `secrets[].valueFrom`
