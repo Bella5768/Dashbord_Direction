@@ -14,3 +14,4 @@ node_modules/
 .idea/
 *.log
 db.sqlite3
+docs/

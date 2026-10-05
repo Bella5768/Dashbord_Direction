@@ -1,9 +1,6 @@
 Django>=5.1.5,<5.3
 openpyxl>=3.1.0
-pandas>=2.0.0
-Pillow>=10.4.0
 reportlab>=4.2.0
-gunicorn>=21.2.0
 whitenoise>=6.6.0
 psycopg2-binary>=2.9.9
 dj-database-url>=2.1.0
@@ -14,3 +11,9 @@ daphne==4.1.0
 polib>=1.2.0
 boto3>=1.34.0
 django-storages[s3]>=1.14.2
+# Volontairement absents de l'image de production (~145 Mo économisés) :
+#   - pandas + numpy : uniquement scripts/db/analyze_excel.py -> requirements-dev.txt
+#   - gunicorn       : le serveur est daphne (ASGI), jamais gunicorn
+# Pillow n'est plus listé ici parce qu'il n'est pas utilisé directement (aucun
+# ImageField) : il reste installé indirectement, reportlab l'exige
+# (pillow>=9.0.0), notamment pour lire le logo JPEG des PDF.

@@ -1,0 +1,9 @@
+# Dépendances de développement uniquement — NON installées dans l'image Docker.
+# Usage :
+#   venv\Scripts\pip install -r requirements-dev.txt
+-r requirements.txt
+
+# Analyse de données Excel (scripts/db/analyze_excel.py).
+# pandas n'est pas utilisé par l'application : il est absent de l'image de
+# production pour economy (~142 Mo avec numpy).
+pandas>=2.0.0
