@@ -7,6 +7,11 @@ l'emploi, validée sur les docs officielles AWS (CLI 2.37, 2026).
 > **Prérequis** : accès AWS (CLI authentifié, `aws sts get-caller-identity` ✓),
 > Docker, `postgresql-client` (pg_dump) pour la migration de données.
 
+> **Toutes les commandes ci-dessous sont écrites pour PowerShell** (le poste est
+> sous Windows). Pour ne pas répéter les erreurs de syntaxe déjà commises
+> (`--subnets $A,$B`, `--matcher HttpCode`, `--cli-input-json` mal formé, etc.),
+> lire `docs/AWS_CLI_POWERSHELL.md` avant de coller un bloc de commandes.
+
 ---
 
 ## Architecture cible
