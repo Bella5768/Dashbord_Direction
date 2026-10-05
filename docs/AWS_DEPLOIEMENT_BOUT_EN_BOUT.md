@@ -886,6 +886,68 @@ Une fois tout validé sur AWS :
 
 ---
 
+## Étape 14 — CI/CD : cible retenue, activation plus tard
+
+Décision : le **premier déploiement reste manuel** (étapes 1 à 13). La cible
+retenue pour la suite est **GitHub Actions + AWS OIDC**, pas CodePipeline : le
+dépôt est déjà sur GitHub, le runner est gratuit, et surtout il n'y a **aucune
+clé AWS à stocker dans GitHub** (OIDC échange un jeton d'identité contre des
+credentials temporaires d'une heure, révocables par expiration).
+
+Quand l'appliquer : après un premier déploiement manuel réussi, et dès que les
+mises en production sont régulières. Le pipeline ne reproduira que les étapes 8
+et 10 (build/push ECR + mise à jour du service).
+
+### Ce que fera le workflow (`.github/workflows/deploy.yml`)
+
+Sur `push` sur `master` :
+
+1. **Garde-fou** : `manage.py check` et `makemigrations --check --dry-run`
+   (le projet n'a pas de suite de tests automatisés : c'est le seul filet
+   disponible, et il attrape les migrations manquantes et les erreurs de config).
+2. **Authentification OIDC** : `aws-actions/configure-aws-credentials` sur le
+   rôle `csig-github-actions` — aucun secret AWS dans les variables du dépôt.
+3. **Image** : build Docker, tag = SHA du commit, push vers
+   `$ACCOUNT_ID.dkr.ecr.eu-north-1.amazonaws.com/csig-dashboard`.
+4. **Task definition** : substitution du champ `"image"` dans
+   `task-definition.json`, puis `register-task-definition` (famille
+   `csig-dashboard`).
+5. **Déploiement** : `update-service`, puis `aws ecs wait services-stable`
+   (le job échoue si le service ne converge pas).
+
+### Rôle IAM à demander le jour venu
+
+Un rôle **séparé** de `csig-task-role` et `csig-ecs-execution-role`, jamais
+réutilisé :
+
+- trust policy : provider OIDC GitHub (`token.actions.githubusercontent.com`),
+  condition `repo:Bella5768/Dashbord_Direction:ref:refs/heads/master` — seule la
+  branche `master` de ce dépôt peut donc endosser ce rôle ;
+- permissions : `ecr:GetAuthorizationToken`, `ecr:BatchCheckLayerAvailability`,
+  `ecr:PutImage`, `ecr:InitiateLayerUpload`, `ecr:UploadLayerPart`,
+  `ecr:CompleteLayerUpload`, `ecr:BatchGetImage`,
+  `ecs:RegisterTaskDefinition`, `ecs:DescribeTaskDefinition`,
+  `ecs:UpdateService`, `ecs:DescribeServices` ;
+- `iam:PassRole` sur `csig-ecs-execution-role` et `csig-task-role`, conditionné
+  par `iam:PassedToService = ecs-tasks.amazonaws.com`.
+
+Ce rôle **ne doit pas** accéder aux paramètres SSM : les secrets sont lus au
+runtime par le rôle d'exécution ECS, pas par la CI. Ni S3, ni RDS, ni
+ElastiCache, ni IAM. Il est permanent mais étroit — c'est lui qui remplace, à
+terme, la politique de déploiement temporaire de `docs/AWS_ADMIN_DEMANDE.md`.
+
+### Ce qui reste manuel
+
+La création de l'infrastructure (étapes 1 à 7, 9 et 11 : VPC, RDS, Redis, S3,
+SES, ECS/ALB, SSM, DNS) : c'est ponctuel et sans vocation à être automatisé.
+Seuls le build et le déploiement de l'image le seront.
+
+> Si CodePipeline/CodeBuild est préféré plus tard, seules l'étape 2 et la liste
+> de permissions changent : le `Dockerfile` et le `task-definition.json` sont
+> réutilisables tels quels.
+
+---
+
 ## Annexe A — Variables d'environnement finales (conteneur ECS)
 
 Variables **non sensibles** (dans `environment` de la task definition) :
