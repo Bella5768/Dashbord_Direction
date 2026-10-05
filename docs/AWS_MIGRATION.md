@@ -20,43 +20,27 @@ ressources et la configuration.
 
 ## 1. Identité et accès (IAM)
 
-Créer un utilisateur programme + un rôle de tâche ECS.
+Le conteneur n'embarque **aucune clé AWS** : sur ECS Fargate, les credentials
+proviennent du rôle de tâche. Aucun utilisateur IAM supplémentaire n'est
+requis ; le push d'image vers ECR utilise les credentials existants du poste.
 
-**1.1 Utilisateur (credentials pour CI/CD et tests locaux)**
+**1.1 Credentials en développement local (optionnel)**
 
-Créer un utilisateur `csig-deploy` avec la politique suivante (attachée
-directement, en attendant une politique gérée) :
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": ["s3:*"],
-      "Resource": ["arn:aws:s3:::csig-media", "arn:aws:s3:::csig-media/*"]
-    },
-    {
-      "Effect": "Allow",
-      "Action": ["ses:SendEmail", "ses:SendRawEmail"],
-      "Resource": "*"
-    },
-    {
-      "Effect": "Allow",
-      "Action": ["ecr:GetAuthorizationToken", "ecr:BatchGetImage", "ecr:GetDownloadUrlForLayer"],
-      "Resource": "*"
-    }
-  ]
-}
-```
-
-Générer une **Access Key** → elle alimente `AWS_ACCESS_KEY_ID` /
-`AWS_SECRET_ACCESS_KEY` dans le conteneur et le `.env` local.
+Sans clé, boto3 utilise sa chaîne de credentials par défaut (profil `~/.aws/credentials`,
+SSO, etc.). Pour un poste sans profil, définir `AWS_ACCESS_KEY_ID` /
+`AWS_SECRET_ACCESS_KEY` dans le `.env` local — uniquement pour le développement :
+ne jamais les mettre dans la task definition ni dans l'image Docker.
 
 **1.2 Rôle de tâche ECS**
 
-Créer un rôle `csig-task-role` (trust policy ECS tasks, `ecs-tasks.amazonaws.com`)
-avec les mêmes droits S3/SES (le conteneur a besoin de boto3).
+Créer un rôle `csig-task-role` (trust policy `ecs-tasks.amazonaws.com`) portant la
+politique `media-and-mail` décrite dans `docs/AWS_ADMIN_DEMANDE.md` §4 : les
+actions S3 réellement utilisées, bornées à `arn:aws:s3:::csig-media[/ *]`, et
+`ses:SendRawEmail` conditionné à `ses:FromAddress`.
+
+> Le rôle de tâche reste requis pour le runtime : `s3:ListBucket` est notamment
+> nécessaire pour que boto3 résolve la région du bucket lors de la génération
+> des URLs d'upload.
 
 ---
 
@@ -235,14 +219,19 @@ aws ecs create-cluster --cluster-name csig-prod
 
 **7.2 Task definition** (`task-definition.json`) — point clé :
 
-- `executionRoleArn` : rôle ECS (tire l'image ECR).
+- `executionRoleArn` : rôle ECS (tire l'image ECR + injecte les secrets).
 - `taskRoleArn` : `csig-task-role` (S3 + SES).
 - Conteneur : image ECR, `portMappings` → `containerPort: 8080, hostPort: 8080`.
-- Variables d'environnement (secrets) : `DJANGO_SECRET_KEY`, `DATABASE_URL`,
-  `REDIS_URL`, `AWS_*`, `DJANGO_ALLOWED_HOSTS`, `SITE_URL`, `DEBUG=False`.
-  Les mots de passe passent par **Secrets Manager** si possible.
-- `healthCheck` : `CMD-SHELL` curl sur `/healthz` si tu as une route ; sinon
-  utiliser le healthcheck HTTP du Load Balancer.
+- Variables d'environnement : `DJANGO_ALLOWED_HOSTS`, `DJANGO_CSRF_TRUSTED_ORIGINS`,
+  `SITE_URL`, `DJANGO_DEBUG=False`, `AWS_STORAGE_BUCKET_NAME`, `AWS_S3_REGION`,
+  `AWS_S3_CUSTOM_DOMAIN`, `AWS_SES_REGION`, `DEFAULT_FROM_EMAIL`.
+- Secrets (jamais en clair, via `secrets[].valueFrom` → SSM Parameter Store) :
+  `DJANGO_SECRET_KEY`, `DATABASE_URL`, `REDIS_URL`.
+- **Pas de `healthCheck` dans la task definition** : ECS Fargate ignore le
+  `HEALTHCHECK` du Dockerfile. Le suivi de santé se fait uniquement via le
+  **target group de l'ALB** : `GET /healthz/` sur le port 8080 (la route existe,
+  `dashboard_csig/urls.py`). L'image est volontairement minimale et ne contient
+  ni `curl` ni `wget`.
 
 **7.3 Load Balancer (ALB)** — indispensable pour le HTTPS et les WebSockets :
 
@@ -278,8 +267,8 @@ DJANGO_CSRF_TRUSTED_ORIGINS=https://dashbord.csig.edu.gn
 SITE_URL=https://dashbord.csig.edu.gn
 DATABASE_URL=postgresql://...@....rds.amazonaws.com:5432/csigdb?sslmode=require
 REDIS_URL=rediss://....cache.amazonaws.com:6379/0
-AWS_ACCESS_KEY_ID=AKIA...      # ou via taskRole
-AWS_SECRET_ACCESS_KEY=...
+# Pas de AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY : le rôle de tâche
+# csig-task-role fournit les credentials au conteneur.
 AWS_STORAGE_BUCKET_NAME=csig-media
 AWS_S3_REGION=us-east-1
 AWS_CLOUDFRONT_DOMAIN=dXYZ.cloudfront.net

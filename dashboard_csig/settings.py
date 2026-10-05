@@ -191,8 +191,15 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # Amazon S3 + CloudFront media storage (replace Cloudinary)
 if os.getenv('AWS_STORAGE_BUCKET_NAME'):
-    AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID', '')
-    AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY', '')
+    # Credentials AWS : optionnelles. Absentes => boto3 utilise sa chaîne par
+    # défaut (rôle de tâche ECS sur Fargate, profil local, métadonnées).
+    # Ne jamais les définir en chaîne vide : django-storages les passerait
+    # explicitement au client S3 et invaliderait le rôle de tâche ECS.
+    _aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID') or ''
+    _aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY') or ''
+    if _aws_access_key_id and _aws_secret_access_key:
+        AWS_ACCESS_KEY_ID = _aws_access_key_id
+        AWS_SECRET_ACCESS_KEY = _aws_secret_access_key
     AWS_S3_REGION = os.getenv('AWS_S3_REGION', os.getenv('AWS_REGION', 'us-east-1'))
     AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
     AWS_DEFAULT_ACL = None
@@ -227,7 +234,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Email Configuration
 # Priorité : Amazon SES (API) → SendGrid → SMTP Outlook/Gmail
-if os.getenv('AWS_ACCESS_KEY_ID') and os.getenv('AWS_SECRET_ACCESS_KEY') and os.getenv('AWS_SES_REGION'):
+# SES est choisi dès que AWS_SES_REGION est défini : les credentials peuvent
+# venir du rôle de tâche ECS (chaîne boto3 par défaut), pas seulement de l'env.
+if os.getenv('AWS_SES_REGION'):
     EMAIL_BACKEND = 'core.email_backend.SESBackend'
     DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@csig.edu.gn')
 elif os.getenv('SENDGRID_API_KEY'):

@@ -44,7 +44,7 @@ l'emploi, validée sur les docs officielles AWS (CLI 2.37, 2026).
 
 | # | Service AWS           | Nom                  | Rôle |
 |---|-----------------------|----------------------|------|
-| 0 | IAM                   | `csig-deploy`, rôles ECS | accès et permissions |
+| 0 | IAM                   | rôles ECS (`csig-ecs-execution-role`, `csig-task-role`) | runtime sans clé |
 | 1 | VPC + Subnets (Réseau)| -                    | réseau privé |
 | 2 | Security Groups       | `csig-*`             | isolation pare-feu |
 | 3 | RDS PostgreSQL        | `csig-db`            | base de données |
@@ -79,52 +79,49 @@ export AWS_REGION ACCOUNT_ID
 
 ## Étape 1 — Identité et accès (IAM)
 
-### 1.1 Utilisateur de déploiement `csig-deploy`
+### 1.1 Qui a besoin de quoi (aucun Access Key dans le conteneur)
 
-Obligatoire pour : pousser l'image ECR, créer/updater les tâches ECS, lire les
-logs CloudWatch. D'autres services (RDS, SES, S3) sont créés avec le même
-utilisateur dans ce guide.
+Le conteneur **n'embarque aucune clé AWS** : sur ECS Fargate il reçoit ses
+credentials du *rôle de tâche* (section 1.3), injectés par l'agent. Conséquences :
 
-```bash
-# Créer l'utilisateur sans console (accès programme uniquement)
-aws iam create-user --user-name csig-deploy
-```
-
-Politique attachée directement (customer managed simple, en attendant une
-stratégie plus fine) :
+- **Aucun utilisateur IAM `csig-deploy` n'est nécessaire**, ni clé Access Key
+  supplémentaire : le push de l'image vers ECR (étape 8) utilise les
+  credentials AWS que l'opérateur possède déjà.
+- Les variables `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` ne sont **pas**
+  dans la task definition (annexe A) : le code bascule automatiquement sur la
+  chaîne de credentials boto3 quand elles sont absentes
+  (`core/media_utils.py::aws_session`).
+- La seule permission IAM demandée au compte qui **déploie** est
+  `iam:PassRole` (ci-dessous), nécessaire pour rattacher les 2 rôles ECS.
 
 ```json
 {
   "Version": "2012-10-17",
   "Statement": [
-    { "Effect": "Allow", "Action": ["ecr:GetAuthorizationToken"], "Resource": "*" },
-    { "Effect": "Allow", "Action": ["s3:*"], "Resource": ["arn:aws:s3:::csig-media", "arn:aws:s3:::csig-media/*"] },
-    { "Effect": "Allow", "Action": ["ses:SendEmail", "ses:SendRawEmail"], "Resource": "*" },
-    { "Effect": "Allow", "Action": ["elasticache:DescribeCacheClusters", "elasticache:DescribeReplicationGroups"], "Resource": "*" },
-    { "Effect": "Allow", "Action": ["rds:DescribeDBInstances"], "Resource": "*" }
+    {
+      "Effect": "Allow",
+      "Action": "iam:PassRole",
+      "Resource": [
+        "arn:aws:iam::ACCOUNT_ID:role/csig-ecs-execution-role",
+        "arn:aws:iam::ACCOUNT_ID:role/csig-task-role"
+      ],
+      "Condition": {
+        "StringEquals": { "iam:PassedToService": "ecs-tasks.amazonaws.com" }
+      }
+    }
   ]
 }
 ```
 
-```bash
-# Enregistrer la politique par défaut (s3 + ses + ecr) :
-# → soit via un fichier policy.json, soit directement inline :
-aws iam put-user-policy \
-  --user-name csig-deploy \
-  --policy-name csig-deploy-policy \
-  --policy-document '{"Version":"2012-10-17","Statement":[
-    {"Effect":"Allow","Action":["ecr:GetAuthorizationToken"],"Resource":"*"},
-    {"Effect":"Allow","Action":["s3:*"],"Resource":["arn:aws:s3:::csig-media","arn:aws:s3:::csig-media/*"]},
-    {"Effect":"Allow","Action":["ses:SendEmail","ses:SendRawEmail"],"Resource":"*"}
-  ]}'
-```
+> La condition `iam:PassedToService` restreint ces rôles au service ECS.
+> Elle est optionnelle mais recommandée.
 
-Créer l'Access Key (gardée dans le secret du CI ou le `.env` du conteneur) :
-
-```bash
-aws iam create-access-key --user-name csig-deploy
-# → noter AccessKeyId + SecretAccessKey (affiché une seule fois)
-```
+> **Attention — droits de bootstrapping.** Exécuter ce guide (créer VPC,
+> RDS, ElastiCache, ECR, ECS, ALB, ACM, CloudFront, SES, Route 53, paramètres
+> SSM) exige des droits de *déploiement* bien plus larges que ceux du runtime :
+> ce sont les API d'administration, utilisées une seule fois. La liste exacte de
+> ces actions est dans `docs/AWS_ADMIN_DEMANDE.md` §7 ; ces droits sont
+> ponctuels et la politique doit être retirée après le déploiement.
 
 ### 1.2 Rôle d'exécution ECS
 
@@ -152,31 +149,49 @@ echo "$ECS_EXECUTION_ROLE_ARN"
 
 ### 1.3 Rôle de tâche (permissions du conteneur)
 
-Le conteneur a besoin de S3 (médias) et de SES (emails) **au runtime** :
+Le conteneur a besoin de S3 (médias) et de SES (emails) **au runtime**, et
+rien d'autre. Ces permissions correspondent exactement aux appels AWS du code :
+
+| Action | Appelée par |
+|--------|--------------|
+| `s3:PutObject` | upload navigateur direct (presigned POST), `core/views.py::api_upload_presign` |
+| `s3:GetObject` | téléchargement enforcer (URL presignée), `core/media_utils.py::force_download_url` |
+| `s3:DeleteObject` | suppression d'un média |
+| `s3:ListBucket` | **obligatoire** : boto3 résout la région du bucket via `HeadBucket` pour générer l'URL d'upload (`botocore/utils.py`) |
+| `s3:GetBucketLocation` | résolution de région complémentaire |
+| `ses:SendRawEmail` | envoi des emails, `core/email_backend.py::SESBackend` (`send_raw_email`) |
 
 ```bash
 aws iam create-role \
   --role-name csig-task-role \
   --assume-role-policy-document '{
-    "Version":"2012-10-17",
-    "Statement":[{"Effect":"Allow","Principal":{"Service":"ecs-tasks.amazonaws.com"},"Action":"sts:AssumeRole"}]
+  "Version":"2012-10-17",
+  "Statement":[{"Effect":"Allow","Principal":{"Service":"ecs-tasks.amazonaws.com"},"Action":"sts:AssumeRole"}]
   }'
 
 aws iam put-role-policy \
   --role-name csig-task-role \
   --policy-name media-and-mail \
   --policy-document '{
-    "Version":"2012-10-17",
-    "Statement":[
-      {"Effect":"Allow","Action":["s3:GetObject","s3:PutObject","s3:DeleteObject","s3:ListBucket"],
-       "Resource":["arn:aws:s3:::csig-media","arn:aws:s3:::csig-media/*"]},
-      {"Effect":"Allow","Action":["ses:SendEmail","ses:SendRawEmail"],"Resource":"*"}
-    ]
-  }'
-
-CSIG_TASK_ROLE_ARN=$(aws iam get-role --role-name csig-task-role --query 'Role.Arn' --output text)
-echo "$CSIG_TASK_ROLE_ARN"
+  "Version":"2012-10-17",
+  "Statement":[
+    {"Sid":"BucketLevel","Effect":"Allow",
+     "Action":["s3:GetBucketLocation","s3:ListBucket"],
+     "Resource":"arn:aws:s3:::csig-media"},
+    {"Sid":"BucketObjects","Effect":"Allow",
+     "Action":["s3:GetObject","s3:PutObject","s3:DeleteObject"],
+     "Resource":"arn:aws:s3:::csig-media/*"},
+    {"Sid":"SendMail","Effect":"Allow",
+     "Action":["ses:SendRawEmail"],"Resource":"*",
+     "Condition":{"StringEquals":{"ses:FromAddress":"noreply@csig.edu.gn"}}}
+  ]
+}'
 ```
+
+> Le rôle est **borné au bucket du projet** et à la seule action SES utilisée par
+> le code (`send_raw_email`), avec la condition `ses:FromAddress` qui reflète
+> `DEFAULT_FROM_EMAIL` (le code n'envoie jamais depuis une autre adresse).
+> Si `DEFAULT_FROM_EMAIL` change, la condition doit être mise à jour.
 
 ---
 
@@ -213,34 +228,35 @@ aws ec2 associate-route-table --subnet-id "$SUBNET_PUB1" --route-table-id "$RT_I
 aws ec2 associate-route-table --subnet-id "$SUBNET_PUB2" --route-table-id "$RT_ID"
 ```
 
-### Subnets privés (RDS, ElastiCache, tâches) — 2 AZ
+### Subnets privés (RDS, ElastiCache) — 2 AZ
 
-RDS et ElastiCache **exigent** des subnets privés (le groupe de subnets DB
-accepte les sous-réseaux privés uniquement). On les crée ici avec un NAT
-Gateway pour que les tâches Fargate privées puissent sortir (pull ECR, SES) :
+RDS et ElastiCache **exigent** des sous-réseaux privés (le groupe de sous-réseaux
+DB n'accepte que les sous-réseaux privés). Ils sont créés ici **pour la base et
+le cache uniquement**, sans passerelle NAT :
 
 ```bash
 SUBNET_PRI1=$(aws ec2 create-subnet --vpc-id "$VPC_ID" --cidr-block 10.0.10.0/24 --availability-zone "${AWS_REGION}a" --query 'Subnet.SubnetId' --output text)
 SUBNET_PRI2=$(aws ec2 create-subnet --vpc-id "$VPC_ID" --cidr-block 10.0.11.0/24 --availability-zone "${AWS_REGION}b" --query 'Subnet.SubnetId' --output text)
 
-# EIP + NAT Gateway (réside dans un subnet public)
-EIP_NAT=$(aws ec2 allocate-address --domain vpc --query 'AllocationId' --output text)
-NAT_ID=$(aws ec2 create-nat-gateway --subnet-id "$SUBNET_PUB1" --allocation-id "$EIP_NAT" --query 'NatGateway.NatGatewayId' --output text)
-aws ec2 wait nat-gateway-available --nat-gateway-ids "$NAT_ID"
-
-# Route table privée → NAT Gateway (sortie internet)
-RT_PRI=$(aws ec2 create-route-table --vpc-id "$VPC_ID" --query 'RouteTable.RouteTableId' --output text)
-aws ec2 create-route --route-table-id "$RT_PRI" --destination-cidr-block 0.0.0.0/0 --nat-gateway-id "$NAT_ID"
-aws ec2 associate-route-table --subnet-id "$SUBNET_PRI1" --route-table-id "$RT_PRI"
-aws ec2 associate-route-table --subnet-id "$SUBNET_PRI2" --route-table-id "$RT_PRI"
-
 echo "SUBNET_PRI1=$SUBNET_PRI1"; echo "SUBNET_PRI2=$SUBNET_PRI2"
 ```
 
-Par simplicité, ce guide place les **tâches Fargate dans les subnets publics**
-(`assignPublicIp=ENABLED`), l'ALB restant le point d'entrée. Pour une
-architecture de production stricte, passer les tâches en privé
-(`assignPublicIp=DISABLED`, subnets ci-dessus — NAT déjà en place).
+> **Pas de passerelle NAT**, et c'est délibéré : elle est facturée en continu
+> (≈ 0,045 €/h, soit ~33 €/mois, **plus** le trafic facturé au Go) alors qu'elle
+> n'est pas nécessaire à cette architecture.
+>
+> Pourquoi elle est inutile ici :
+> - les tâches Fargate sont placées dans les **sous-réseaux publics** avec une IP
+>   publique (`assignPublicIp=ENABLED`) : leur sortie Internet (ECR, CloudWatch,
+>   S3, SES) passe par la passerelle Internet du VPC ;
+> - RDS et ElastiCache, en sous-réseaux privés, **n'ont besoin d'aucune sortie**
+>   Internet ;
+> - l'entrée directe vers les tâches reste fermée : leur groupe de sécurité
+>   n'accepte le port 8080 que depuis le groupe de sécurité de l'ALB.
+>
+> Si l'organisation exige un jour des tâches **sans IP publique**, la NAT devra
+> être créée à ce moment-là (les VPC endpoints S3/ECR/CloudWatch ne couvrent pas
+> le trafic SES).
 
 ```bash
 # Récupérer les IDs si besoin
@@ -495,9 +511,10 @@ AWS_CLOUDFRONT_DOMAIN=$DIST_DOMAIN
 
 ## Étape 7 — Emails (Amazon SES)
 
-Le projet choisit le backend SES dès que `AWS_ACCESS_KEY_ID` +
-`AWS_SECRET_ACCESS_KEY` + `AWS_SES_REGION` sont définies
-(`core.email_backend.SESBackend`, qui utilise `send_raw_email`).
+Le projet choisit le backend SES dès que `AWS_SES_REGION` est défini
+(`core.email_backend.SESBackend`, qui utilise `send_raw_email`). Les credentials
+proviennent du rôle de tâche `csig-task-role` ; aucune clé n'est requise dans
+l'environnement du conteneur.
 
 ### 7.1 Vérifier le domaine (production)
 
@@ -554,29 +571,72 @@ docker push "$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/csig-dashboard:latest
 
 ---
 
-## Étape 9 — Secrets (optionnel mais recommandé)
+## Étape 9 — Secrets de l'application (SSM Parameter Store)
 
-Les mots de passe (DB, Django SECRET_KEY) ne doivent pas traîner en clair dans
-le JSON de la task definition. Les stocker dans **Secrets Manager** :
+Les 3 secrets de l'application (clé Django, base de données, Redis) sont stockés
+dans **SSM Parameter Store** en `SecureString`, et injectés dans le conteneur via
+`secrets[].valueFrom` de la task definition — **jamais en clair** dans la task
+definition ni dans l'image Docker.
+
+> Pourquoi Parameter Store plutôt que Secrets Manager : les paramètres standard
+> sont **sans frais** (jusqu'à 4 Ko par valeur) et sans coût d'API par
+> consultation, alors que Secrets Manager est facturé par secret et par tranche
+> de 10 000 appels. Pour 3 petites valeurs, Parameter Store est le choix
+> raisonnable. (Réf. [AWS prescriptive guidance — secrets management](https://docs.aws.amazon.com/prescriptive-guidance/latest/aws-startup-security-baseline/wkld-03.html))
 
 ```bash
-aws secretsmanager create-secret \
-  --name csig/prod \
-  --secret-string "$(cat <<'EOF'
-{
-  "DJANGO_SECRET_KEY": "une-cle-tres-longue-et-aleatoire",
-  "DJANGO_ADMIN_PASSWORD": "mot-de-passe-admin-fort",
-  "DATABASE_URL": "postgresql://csig_admin:FortMotDePasse!2026@$RDS_ENDPOINT:5432/csigdb?sslmode=require",
-  "REDIS_URL": "rediss://$CACHE_ENDPOINT:6379/0"
-}
-EOF
-)"
+# Clé secrète Django (générer une valeur aléatoire longue)
+DJANGO_SECRET=$(python -c "import secrets;print(secrets.token_urlsafe(64))")
+
+aws ssm put-parameter --name /csig/prod/django_secret_key --type SecureString --overwrite \
+  --value "$DJANGO_SECRET"
+
+aws ssm put-parameter --name /csig/prod/database_url --type SecureString --overwrite \
+  --value "postgresql://csig_admin:FortMotDePasse!2026@$RDS_ENDPOINT:5432/csigdb?sslmode=require"
+
+aws ssm put-parameter --name /csig/prod/redis_url --type SecureString --overwrite \
+  --value "rediss://$CACHE_ENDPOINT:6379/0"
+
+aws ssm get-parameters-by-path --path /csig/prod --with-decryption
 ```
 
-Dans la task definition, ces variables seront référencées via
-`valueFrom: arn:aws:secretsmanager:...:secret:csig/prod:key::`. Sur Windows la
-construction `$(cat <<EOF)` n'est pas disponible — utiliser un fichier JSON
-temporaire (voir `echo '{"DJANGO_SECRET_KEY":"..."}' > secret.json`).
+> Les paramètres `SecureString` sont chiffrés avec la clé AWS gérée
+> `alias/aws/ssm` par défaut : **aucune** permission `kms:Decrypt` n'est donc
+> nécessaire dans le rôle d'exécution.
+
+### 9.1 Permissions du rôle d'exécution pour lire les secrets
+
+C'est l'agent ECS, via le **rôle d'exécution**, qui récupère les secrets et les
+injecte dans le conteneur (réf. [ECS — task execution IAM role](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_execution_IAM_role.html)).
+Il faut donc ajouter au rôle `csig-ecs-execution-role` :
+
+```bash
+aws iam put-role-policy \
+  --role-name csig-ecs-execution-role \
+  --policy-name app-secrets \
+  --policy-document '{
+  "Version":"2012-10-17",
+  "Statement":[
+    {"Sid":"AppSecrets","Effect":"Allow",
+     "Action":["ssm:GetParameters"],
+     "Resource":[
+       "arn:aws:ssm:eu-north-1:499243079539:parameter/csig/prod/django_secret_key",
+       "arn:aws:ssm:eu-north-1:499243079539:parameter/csig/prod/database_url",
+       "arn:aws:ssm:eu-north-1:499243079539:parameter/csig/prod/redis_url"
+     ]}
+  ]
+}'
+```
+
+> L'action est `ssm:GetParameters` (pluriel), telle que requise par ECS. Les
+> 3 paramètres sont nommés explicitement : aucune permission en lecture large
+> sur l'ensemble du Parameter Store.
+>
+> Variante Secrets Manager, si l'organisation l'impose :
+> `secretsmanager:GetSecretValue` sur
+> `arn:aws:secretsmanager:eu-north-1:499243079539:secret:csig/prod-*`
+> (le joker remplace le suffixe aléatoire que Secrets Manager ajoute à l'ARN,
+> et il ne faut pas inclure de version).
 
 ---
 
@@ -615,9 +675,12 @@ Fichier `task-definition.json` (adapter l'image et les ARNs) :
         { "name": "AWS_S3_REGION", "value": "eu-north-1" },
         { "name": "AWS_STORAGE_BUCKET_NAME", "value": "csig-media" },
         { "name": "AWS_SES_REGION", "value": "eu-north-1" },
-        { "name": "DEFAULT_FROM_EMAIL", "value": "noreply@csig.edu.gn" },
-        { "name": "AWS_ACCESS_KEY_ID", "value": "AKIA.." },
-        { "name": "AWS_SECRET_ACCESS_KEY", "value": ".." }
+        { "name": "DEFAULT_FROM_EMAIL", "value": "noreply@csig.edu.gn" }
+      ],
+      "secrets": [
+        { "name": "DJANGO_SECRET_KEY", "valueFrom": "arn:aws:ssm:eu-north-1:499243079539:parameter/csig/prod/django_secret_key" },
+        { "name": "DATABASE_URL",      "valueFrom": "arn:aws:ssm:eu-north-1:499243079539:parameter/csig/prod/database_url" },
+        { "name": "REDIS_URL",         "valueFrom": "arn:aws:ssm:eu-north-1:499243079539:parameter/csig/prod/redis_url" }
       ],
       "logConfiguration": {
         "logDriver": "awslogs",
@@ -825,22 +888,71 @@ Une fois tout validé sur AWS :
 
 ## Annexe A — Variables d'environnement finales (conteneur ECS)
 
+Variables **non sensibles** (dans `environment` de la task definition) :
+
 ```ini
-DJANGO_SECRET_KEY=<secret>                         # ou via Secrets Manager
 DJANGO_DEBUG=False
 DJANGO_ALLOWED_HOSTS=dashbord.csig.edu.gn,<ALB_DNS>
 DJANGO_CSRF_TRUSTED_ORIGINS=https://dashbord.csig.edu.gn
 SITE_URL=https://dashbord.csig.edu.gn
-DATABASE_URL=postgresql://csig_admin:...@csig-db...:5432/csigdb?sslmode=require
-REDIS_URL=rediss://csig-...cache.amazonaws.com:6379/0
-AWS_ACCESS_KEY_ID=AKIA...      # clés csig-deploy (ou via taskRole/pod identity)
-AWS_SECRET_ACCESS_KEY=...
+# Pas de AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY :
+# le rôle de tâche csig-task-role fournit les credentials au conteneur.
 AWS_STORAGE_BUCKET_NAME=csig-media
 AWS_S3_REGION=eu-north-1
 AWS_CLOUDFRONT_DOMAIN=dXYZ.cloudfront.net
 AWS_SES_REGION=eu-north-1
 DEFAULT_FROM_EMAIL=noreply@csig.edu.gn
 ```
+
+Variables **sensibles** — jamais en clair, injectées via `secrets[].valueFrom`
+(étape 9) :
+
+```ini
+DJANGO_SECRET_KEY  <- ssm:/csig/prod/django_secret_key
+DATABASE_URL       <- ssm:/csig/prod/database_url
+REDIS_URL          <- ssm:/csig/prod/redis_url
+```
+
+---
+
+## Annexe D — Droits nécessaires, par phase
+
+Trois périmètres bien distincts, à ne pas confondre :
+
+### Runtime — le conteneur (permanent)
+
+Couverture par les 2 rôles ECS uniquement, sans aucune clé :
+
+| Rôle | Politique |
+|------|-----------|
+| `csig-ecs-execution-role` | managée `AmazonECSTaskExecutionRolePolicy` (tirer l'image ECR, écrire les logs CloudWatch) + inline `app-secrets` (`ssm:GetParameters` sur les 3 paramètres nommés) |
+| `csig-task-role` | inline `media-and-mail` (bucket `csig-media` + `ses:SendRawEmail`), bornée au bucket et à l'expéditeur |
+
+Aucune clé AWS n'est nécessaire dans le conteneur ni dans la task definition, et
+aucun secret n'y figure en clair.
+
+### Déploiement — l'opérateur (une fois, puis retrait)
+
+Pour exécuter les étapes 2 à 10 de ce guide, l'opérateur doit pouvoir créer les
+ressources du projet. La liste exacte des actions demandées figure dans
+`docs/AWS_ADMIN_DEMANDE.md` §7 ; en résumé :
+
+`ec2` (VPC, sous-réseaux, tables de routage, groupes de sécurité),
+`rds`, `elasticache`, `ecr`, `ecs`, `elasticloadbalancer`, `acm`, `cloudfront`,
+`s3` (création du bucket et de sa politique), `sesv2` (identité email),
+`route53`, `ssm` (écriture des 3 paramètres), et côté IAM
+`iam:CreateServiceLinkedRole` + `iam:PassRole` sur les 2 rôles ECS.
+
+Ces droits sont **ponctuels** : ils servent à créer l'infrastructure, pas à faire
+tourner l'application. Deux options :
+
+1. l'opérateur possède déjà ces droits → il exécute le guide lui-même, aucune
+   demande d'accès supplémentaire ;
+2. sinon, la politique explicite de la demande est accordée **pour la durée du
+   déploiement**, puis retirée.
+
+`PowerUserAccess` n'est pas nécessaire : il donne plus que requis et ne
+correspond à aucun des deux périmètres ci-dessus.
 
 > Corrélation avec `settings.py` : `DATABASE_URL` → PostgreSQL ; `REDIS_URL` →
 > channel layer ; `AWS_STORAGE_BUCKET_NAME` → django-storages S3 ;

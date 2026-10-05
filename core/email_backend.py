@@ -63,11 +63,6 @@ class SESBackend(BaseEmailBackend):
     def send_messages(self, email_messages):
         if not email_messages:
             return 0
-        if not getattr(settings, 'AWS_ACCESS_KEY_ID', '') or not getattr(settings, 'AWS_SECRET_ACCESS_KEY', ''):
-            if not self.fail_silently:
-                raise ValueError("Envoyer un email avec SESBackend nécessite que "
-                                 "AWS_ACCESS_KEY_ID et AWS_SECRET_ACCESS_KEY soient définis.")
-            return 0
         sent = 0
         for message in email_messages:
             if self._send_message(message):
@@ -75,12 +70,19 @@ class SESBackend(BaseEmailBackend):
         return sent
 
     def _send_message(self, message):
-        import boto3
-        session = boto3.Session(
-            aws_access_key_id=getattr(settings, 'AWS_ACCESS_KEY_ID', ''),
-            aws_secret_access_key=getattr(settings, 'AWS_SECRET_ACCESS_KEY', ''),
-            region_name=getattr(settings, 'AWS_SES_REGION', getattr(settings, 'AWS_REGION', 'us-east-1')),
+        from core.media_utils import aws_session
+
+        session = aws_session(
+            region=getattr(settings, 'AWS_SES_REGION', '')
+            or getattr(settings, 'AWS_REGION', '')
+            or 'us-east-1',
         )
+        if session.get_credentials() is None:
+            raise ValueError(
+                "Aucun credential AWS disponible pour SESBackend. Définissez "
+                "AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY, ou laissez le rôle de "
+                "tâche ECS fournir les credentials au conteneur."
+            )
         client = session.client('ses')
         raw = message.message().as_bytes()
         try:
