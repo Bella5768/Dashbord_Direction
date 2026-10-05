@@ -1,4 +1,5 @@
 import uuid
+from datetime import date as _date_value, timedelta
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import gettext
@@ -7,6 +8,15 @@ from django.contrib.auth.models import AbstractUser
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.core.exceptions import ValidationError
+import calendar as _pycal
+
+
+def _add_months(base, n):
+    """Retourne la date décalée de n mois (bornée au dernier jour du mois cible)."""
+    mm = (base.month - 1 + n) % 12 + 1
+    yy = base.year + (base.month - 1 + n) // 12
+    last_day = _pycal.monthrange(yy, mm)[1]
+    return base.replace(year=yy, month=mm, day=min(base.day, last_day))
 
 
 class User(AbstractUser):
@@ -272,9 +282,6 @@ class UserProfile(UUIDModel):
         return self.can('approve', 'Request')
 
     # Événements
-    def has_create_events_permission(self):
-        return self.can('manage', 'Event')
-
     def can_manage_events(self):
         return self.can('manage', 'Event')
 
@@ -397,10 +404,6 @@ class UserProfile(UUIDModel):
             if action in ('approve', 'manage') and subject in ('LeaveRequest', 'all') and cond != 'hr_pipeline':
                 return True
         return False
-
-    # Calendrier
-    def can_view_calendar(self):
-        return self.can('read', 'Event')
 
 
 @receiver(post_save, sender=User)
@@ -1003,6 +1006,19 @@ class Event(SluggableModel):
     time = models.TimeField(verbose_name=_("Heure"))
     duration = models.IntegerField(default=60, verbose_name=_("Durée (minutes)"))
     location = models.CharField(max_length=200, blank=True, verbose_name=_("Lieu"))
+    frequency = models.CharField(
+        max_length=10,
+        choices=[
+            ('none', _('Aucune')),
+            ('daily', _('Quotidienne')),
+            ('weekly', _('Hebdomadaire')),
+            ('monthly', _('Mensuelle')),
+        ],
+        default='none', verbose_name=_("Récurrence")
+    )
+    recurrence_end = models.DateField(null=True, blank=True, verbose_name=_("Fin de la récurrence"))
+    recurrence_exceptions = models.JSONField(default=list, blank=True,
+                                             verbose_name=_("Exceptions de récurrence"))
     participants = models.ManyToManyField(Direction, related_name='events', verbose_name=_("Participants"), blank=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_events', verbose_name=_("Créé par"))
     created_at = models.DateTimeField(auto_now_add=True, null=True, verbose_name=_("Créé le"))
@@ -1022,6 +1038,27 @@ class Event(SluggableModel):
             raise ValidationError({
                 'duration': _("La durée doit être positive.")
             })
+        if self.frequency and self.frequency != 'none' and not self.recurrence_end:
+            raise ValidationError({
+                'recurrence_end': _("La fin de la récurrence est requise.")
+            })
+        if self.recurrence_end and self.recurrence_end < self.date:
+            raise ValidationError({
+                'recurrence_end': _("La fin de la récurrence doit être après la date de début.")
+            })
+        if self.recurrence_exceptions:
+            parsed = []
+            for value in self.recurrence_exceptions:
+                try:
+                    parsed.append(self._iso_to_date(value))
+                except (ValueError, TypeError):
+                    raise ValidationError({
+                        'recurrence_exceptions': _("Format de date d'exception invalide.")
+                    })
+            if self.date in parsed:
+                raise ValidationError({
+                    'recurrence_exceptions': _("La date de début ne peut pas être une exception.")
+                })
 
     def is_past(self):
         from django.utils import timezone
@@ -1038,6 +1075,66 @@ class Event(SluggableModel):
         elif h:
             return f"{h}h"
         return f"{m} min"
+
+    @staticmethod
+    def _iso_to_date(value):
+        from django.utils.dateparse import parse_date
+        if isinstance(value, _date_value):
+            return value
+        return parse_date(str(value))
+
+    def is_recurring(self):
+        return bool(self.frequency) and self.frequency != 'none'
+
+    def recurrence_exception_dates(self):
+        from django.utils.dateparse import parse_date
+        dates = []
+        for value in (self.recurrence_exceptions or []):
+            d = parse_date(str(value))
+            if isinstance(d, _date_value):
+                dates.append(d)
+        return set(dates)
+
+    def _series_dates(self, end_limit):
+        """Étapes de la série entre self.date et self.recurrence_end (inclus)."""
+        stop = self.recurrence_end or self.date
+        dates = []
+        if not self.is_recurring():
+            return [self.date]
+        if self.frequency == 'daily':
+            step = timedelta(days=1)
+            d = self.date
+            while d <= stop and d <= end_limit:
+                dates.append(d)
+                d += step
+        elif self.frequency == 'weekly':
+            step = timedelta(days=7)
+            d = self.date
+            while d <= stop and d <= end_limit:
+                dates.append(d)
+                d += step
+        elif self.frequency == 'monthly':
+            d = self.date
+            guard = 0
+            while d <= stop and d <= end_limit and guard < 600:
+                dates.append(d)
+                d = _add_months(d, 1)
+                guard += 1
+        return dates
+
+    def occurrence_dates(self, start, end):
+        """Dates d'occurrence de la série comprises dans [start, end]."""
+        end_limit = min(end, self.recurrence_end or end)
+        out = []
+        for d in self._series_dates(end_limit):
+            if d < start:
+                continue
+            if d > end:
+                break
+            if d in self.recurrence_exception_dates():
+                continue
+            out.append(d)
+        return out
 
 
 class EventMember(UUIDModel):

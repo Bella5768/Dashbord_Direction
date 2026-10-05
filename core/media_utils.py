@@ -12,6 +12,29 @@ from django.conf import settings
 logger = logging.getLogger(__name__)
 
 
+def aws_session(region=None):
+    """Retourne une session boto3.
+
+    N'utilise les clés d'environnement que si elles sont réellement définies,
+    sinon laisse boto3 résoudre les credentials via sa chaîne par défaut
+    (task role ECS sur Fargate, profil local, métadonnées d'instance).
+    """
+    import boto3
+
+    kwargs = {}
+    access_key = getattr(settings, 'AWS_ACCESS_KEY_ID', '') or ''
+    secret_key = getattr(settings, 'AWS_SECRET_ACCESS_KEY', '') or ''
+    if access_key and secret_key:
+        kwargs['aws_access_key_id'] = access_key
+        kwargs['aws_secret_access_key'] = secret_key
+    kwargs['region_name'] = (
+        region
+        or getattr(settings, 'AWS_S3_REGION', '') or getattr(settings, 'AWS_REGION', '')
+        or 'us-east-1'
+    )
+    return boto3.Session(**kwargs)
+
+
 def is_s3_url(url):
     """Détecte si une URL de fichier est hébergée sur S3/CloudFront."""
     if not url:
@@ -38,21 +61,17 @@ def force_download_url(url, filename=''):
     if not is_s3_url(url):
         return url.replace('/upload/', '/upload/fl_attachment/')
 
-    import boto3
     from django.utils.encoding import iri_to_uri
 
     try:
         bucket = settings.AWS_STORAGE_BUCKET_NAME
-        region = getattr(settings, 'AWS_S3_REGION', 'us-east-1')
-        session = boto3.Session(
-            aws_access_key_id=getattr(settings, 'AWS_ACCESS_KEY_ID', ''),
-            aws_secret_access_key=getattr(settings, 'AWS_SECRET_ACCESS_KEY', ''),
-            region_name=region,
-        )
+        region = getattr(settings, 'AWS_S3_REGION', '') or getattr(settings, 'AWS_REGION', '') or 'us-east-1'
+        session = aws_session(region=region)
         # Extraire la clé S3 depuis l'URL publique
         custom = getattr(settings, 'AWS_S3_CUSTOM_DOMAIN', '') or ''
-        if custom:
-            host = custom.rstrip('/').split('://')[-1].split('/')[0]
+        host = custom.rstrip('/').split('://')[-1].split('/')[0] if custom else ''
+        key = ''
+        if host and host in url:
             key = url.split(host, 1)[-1].lstrip('/')
         else:
             prefix = f'{bucket}.s3.{region}.amazonaws.com/'

@@ -35,6 +35,8 @@ urlpatterns = [
     path('evenements/<slug:event_id>/modifier/', views.event_edit, name='event_edit'),
     path('evenements/<slug:event_id>/supprimer/', views.event_delete, name='event_delete'),
     path('evenements/<slug:event_id>/rsvp/', views.event_rsvp, name='event_rsvp'),
+    path('evenements/<slug:event_id>/ics/', views.event_ics, name='event_ics'),
+    path('evenements/<slug:event_id>/detacher/', views.event_detach, name='event_detach'),
     path('evenements/<slug:event_id>/membres/ajouter/', views.event_add_members, name='event_add_members'),
     path('evenements/<slug:event_id>/membres/<uuid:member_id>/retirer/', views.event_remove_member, name='event_remove_member'),
     

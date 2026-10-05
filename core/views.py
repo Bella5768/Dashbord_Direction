@@ -1191,6 +1191,18 @@ def calendar(request):
     if month < 1 or month > 12:
         month = today.month
 
+    view = request.GET.get('view', 'month')
+    if view not in ('month', 'list', 'week'):
+        view = 'month'
+
+    # Semaine affichée (vue semaine) : date passée, sinon aujourd'hui
+    try:
+        nav_date = _date.fromisoformat(request.GET.get('date', str(today)))
+    except (ValueError, TypeError):
+        nav_date = today
+    week_monday = nav_date - timedelta(days=nav_date.weekday())
+    week_days = [week_monday + timedelta(days=i) for i in range(7)]
+
     _cal_profile = request.user.profile
     _cal_is_global = _cal_profile.is_admin() or _cal_profile.is_directeur_general()
     _cal_dir_id = getattr(_cal_profile, 'direction_id', None)
@@ -1201,47 +1213,165 @@ def calendar(request):
     elif not _cal_is_global:
         _base_events = _base_events.none()
 
-    events_qs = _base_events.filter(date__year=year, date__month=month)
+    # Filtres (direction, type, mes invitations)
+    direction_filter = request.GET.get('direction') or None
+    type_filter = request.GET.get('type') or None
+    mine_only = request.GET.get('mine') == '1'
+    employee = getattr(request.user.profile, 'employee', None)
+
+    if direction_filter:
+        _base_events = _base_events.filter(participants__id=direction_filter)
+    if type_filter in ('reunion', 'evenement'):
+        _base_events = _base_events.filter(event_type=type_filter)
+    if mine_only:
+        my_ids = EventMember.objects.filter(employee=employee).values('event_id') if employee else EventMember.objects.none()
+        _base_events = _base_events.filter(id__in=my_ids)
+
+    # Période affichée
+    if view == 'week':
+        start_date, end_date = week_days[0], week_days[6]
+    else:
+        start_date = _date(year, month, 1)
+        end_date = _date(year, month, cal.monthrange(year, month)[1])
+
+    # Événements de la période : uniques + occurrences des séries récurrentes
+    period_events = list(
+        _base_events.filter(frequency='none', date__range=(start_date, end_date))
+        .order_by('date', 'time')
+    )
+    for ev in _base_events.exclude(frequency='none').filter(date__lte=end_date):
+        for occ_date in ev.occurrence_dates(start_date, end_date):
+            period_events.append(_Occurrence(ev, occ_date))
+    period_events.sort(key=lambda e: (e.date, e.time))
+
+    # Positionnement dans la grille hebdomadaire (top/height en %, créneau 07h-19h)
+    hour_start = 7 * 60
+    hour_span = 12 * 60
+    for ev in period_events:
+        s = max(ev.time.hour * 60 + ev.time.minute, hour_start)
+        e = min(s + (ev.duration or 60), hour_start + hour_span)
+        ev.top_pct = round((s - hour_start) / hour_span * 100, 1)
+        ev.height_pct = max(6, round((e - s) / hour_span * 100, 1))
+
+    events_by_day = {}
+    for event in period_events:
+        events_by_day.setdefault(event.date.day, []).append(event)
+
+    clashing_ids = _overlap_ids(period_events)
+
+    # Statut RSVP de l'utilisateur courant sur les événements affichés
+    my_rsvp = {}
+    if employee and period_events:
+        visible_ids = [ev.id for ev in period_events]
+        my_rsvp = dict(
+            EventMember.objects.filter(employee=employee, event_id__in=visible_ids)
+            .values_list('event_id', 'status')
+        )
+
+    week_by_day = {i: [] for i in range(7)}
+    if view == 'week':
+        for event in period_events:
+            idx = (event.date - week_days[0]).days
+            if 0 <= idx < 7:
+                week_by_day[idx].append(event)
 
     stats = {
-        'reunions': events_qs.filter(event_type='reunion').count(),
-        'evenements': events_qs.filter(event_type='evenement').count(),
-        'total': events_qs.count(),
+        'reunions': sum(1 for e in period_events if e.event_type == 'reunion'),
+        'evenements': sum(1 for e in period_events if e.event_type == 'evenement'),
+        'total': len(period_events),
     }
+    month_events = period_events
 
-    upcoming = _base_events.filter(date__gte=today)[:5]
+    horizon = today + timedelta(days=60)
+    upcoming = []
+    for ev in _base_events.filter(frequency='none', date__gte=today, date__lte=horizon).order_by('date', 'time'):
+        upcoming.append(ev)
+    for ev in _base_events.exclude(frequency='none').filter(date__lte=horizon):
+        for occ_date in ev.occurrence_dates(today, horizon)[:3]:
+            upcoming.append(_Occurrence(ev, occ_date))
+    upcoming.sort(key=lambda e: (e.date, e.time))
+    upcoming = upcoming[:5]
 
     cal_obj = cal.Calendar(firstweekday=0)
     month_days = cal_obj.monthdayscalendar(year, month)
 
-    events_by_day = {}
-    for event in events_qs:
-        day = event.date.day
-        if day not in events_by_day:
-            events_by_day[day] = []
-        events_by_day[day].append(event)
-
-    months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-              'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
-
     can_manage = request.user.profile.can_manage_events()
+
+    prev_week = week_monday - timedelta(days=7)
+    next_week = week_monday + timedelta(days=7)
+
+    filter_count = sum(bool(x) for x in (direction_filter, type_filter, mine_only))
 
     context = {
         'year': year,
         'month': month,
-        'month_name': months[month - 1],
+        'view': view,
+        'first_day': today.replace(year=year, month=month, day=1),
         'month_days': month_days,
         'events_by_day': events_by_day,
+        'month_events': month_events,
+        'week_days': week_days,
+        'week_by_day': week_by_day,
+        'week_monday': week_monday,
+        'date_param': week_monday.isoformat(),
+        'prev_date': prev_week.isoformat(),
+        'next_date': next_week.isoformat(),
+        'hours': range(7, 19),
+        'clashing_ids': clashing_ids,
+        'my_rsvp': my_rsvp,
+        'directions': Direction.objects.all(),
+        'current_direction': direction_filter,
+        'current_type': type_filter,
+        'mine_only': mine_only,
+        'filter_count': filter_count,
         'upcoming_events': upcoming,
         'today': today,
         'prev_month': month - 1 if month > 1 else 12,
         'prev_year': year if month > 1 else year - 1,
         'next_month': month + 1 if month < 12 else 1,
         'next_year': year if month < 12 else year + 1,
+        'months': range(1, 13),
+        'years': range(today.year - 2, today.year + 3),
         'stats': stats,
         'can_manage': can_manage,
     }
     return render(request, 'core/calendar.html', context)
+
+
+class _Occurrence:
+    """Occurrence virtuelle d'un événement récurrent (projeté à une date donnée).
+
+    Route les attributs vers l'événement-parent : id/slug/RSVP/détail restent partagés.
+    """
+    is_occurrence = True
+
+    def __init__(self, event, date):
+        self.event = event
+        self.date = date
+
+    def __repr__(self):
+        return f'<_Occurrence {self.event.title} @ {self.date.isoformat()}>'
+
+    def __getattr__(self, name):
+        return getattr(self.event, name)
+
+
+def _overlap_ids(events):
+    """Ids des événements qui se chevauchent avec un autre le même jour."""
+    clashing = set()
+    by_day = {}
+    for ev in events:
+        by_day.setdefault(ev.date, []).append(ev)
+    for day, evs in by_day.items():
+        ordered = sorted(evs, key=lambda e: (e.time, e.duration or 0))
+        for i, a in enumerate(ordered):
+            a_end = a.time.hour * 60 + a.time.minute + (a.duration or 60)
+            for b in ordered[i + 1:]:
+                b_start = b.time.hour * 60 + b.time.minute
+                if a_end <= b_start:
+                    break
+                clashing.update((a.id, b.id))
+    return clashing
 
 
 @login_required
@@ -1252,6 +1382,16 @@ def event_detail(request, event_id):
     if not request.user.profile.can_read_events():
         messages.error(request, _("Accès au calendrier insuffisant."))
         return redirect('core:dashboard')
+
+    # Occurrence visualisée (si ouverte depuis un lien ?occ=YYYY-MM-DD)
+    occurrence_date = None
+    if event.is_recurring():
+        occ_param = request.GET.get('occ') or request.POST.get('occ') or ''
+        if occ_param:
+            try:
+                occurrence_date = _date.fromisoformat(occ_param)
+            except (ValueError, TypeError):
+                occurrence_date = None
 
     can_manage = request.user.profile.can_manage_events()
     is_creator = event.created_by == request.user
@@ -1290,17 +1430,105 @@ def event_detail(request, event_id):
         'members': members,
         'my_membership': my_membership,
         'rsvp_counts': rsvp_counts,
-        'available_employees': available_employees,
+        'occurrence_date': occurrence_date,
+'available_employees': available_employees,
         'all_directions': all_directions,
-        'all_projects': all_projects,
     })
+
+
+@login_required
+def event_detach(request, event_id):
+    """Détache une occurrence d'une série récurrente en événement indépendant."""
+    event = get_sluggable_or_404(Event, event_id)
+
+    if not request.user.profile.can_read_events():
+        messages.error(request, _("Accès au calendrier insuffisant."))
+        return redirect('core:dashboard')
+
+    can_edit = request.user.profile.can_manage_events() or event.created_by == request.user
+    if not can_edit:
+        messages.error(request, _("Vous n'avez pas la permission de détacher cette occurrence."))
+        return redirect('core:event_detail', event_id=event.slug)
+
+    if event.is_recurring() and request.method == 'POST':
+        try:
+            occ_date = _date.fromisoformat(request.POST.get('date', ''))
+        except (ValueError, TypeError):
+            occ_date = None
+        if occ_date is None:
+            messages.error(request, _("Date d'occurrence invalide."))
+        elif occ_date not in event.occurrence_dates(event.date, event.recurrence_end or event.date):
+            messages.error(request, _("Cette date n'appartient pas à la série de récurrence."))
+        else:
+            detached = Event.objects.create(
+                title=event.title, event_type=event.event_type, description=event.description,
+                date=occ_date, time=event.time, duration=event.duration, location=event.location,
+                created_by=event.created_by, frequency='none',
+            )
+            detached.participants.set(event.participants.all())
+            EventMember.objects.bulk_create([
+                EventMember(event=detached, employee=m.employee, status=m.status, note=m.note)
+                for m in event.event_members.all()
+            ])
+            exceptions = list(event.recurrence_exceptions or [])
+            if occ_date.isoformat() not in exceptions:
+                exceptions.append(occ_date.isoformat())
+                event.recurrence_exceptions = exceptions
+                event.save(update_fields=['recurrence_exceptions'])
+            messages.success(request, _("Occurrence détachée en événement indépendant."))
+            return redirect('core:event_detail', event_id=detached.slug)
+
+    return redirect('core:event_detail', event_id=event.slug)
+
+
+@login_required
+def event_ics(request, event_id):
+    """Export iCalendar (.ics) d'un événement."""
+    event = get_sluggable_or_404(Event, event_id)
+
+    if not request.user.profile.can_read_events():
+        messages.error(request, _("Accès au calendrier insuffisant."))
+        return redirect('core:dashboard')
+
+    def _esc(value):
+        return (value or '').replace('\\', '\\\\').replace(';', '\\;').replace(',', '\\,').replace('\r', '').replace('\n', '\\n')
+
+    start_dt = datetime.combine(event.date, event.time)
+    end_dt = start_dt + timedelta(minutes=event.duration or 60)
+    fmt = '%Y%m%dT%H%M%S'
+    stamp = timezone.now().strftime('%Y%m%dT%H%M%SZ')
+
+    lines = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//CSIG//Dashboard Direction//FR',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH',
+        'BEGIN:VEVENT',
+        'UID:event-{0}@csig'.format(event.id),
+        'DTSTAMP:{0}'.format(stamp),
+        'DTSTART:{0}'.format(start_dt.strftime(fmt)),
+        'DTEND:{0}'.format(end_dt.strftime(fmt)),
+        'SUMMARY:{0}'.format(_esc(event.title)),
+        'DESCRIPTION:{0}'.format(_esc(event.description)),
+        'LOCATION:{0}'.format(_esc(event.location)),
+        'STATUS:CONFIRMED',
+        'END:VEVENT',
+        'END:VCALENDAR',
+    ]
+
+    response = HttpResponse('\r\n'.join(lines), content_type='text/calendar; charset=utf-8')
+    response['Content-Disposition'] = 'attachment; filename="evenement-{0}.ics"'.format(event.slug)
+    return response
 
 
 def _sync_event_members(event, actor_user):
     """
     Synchronise les EventMember selon les directions participantes (dans une transaction).
-    - Bulk-crée les membres manquants et les notifie (invite)
-    - Retire les membres non-répondants dont la direction est retirée
+    - Ajoute les membres des directions participantes et les notifie (invite)
+    - Ne retire jamais de membre automatiquement : le retrait est explicite
+      (event_remove_member), afin de préserver les invitations individuelles
+      ajoutées en dehors des directions participantes.
     Retourne le set d'employee_id nouvellement créés.
     """
     from django.db import transaction
@@ -1330,14 +1558,6 @@ def _sync_event_members(event, actor_user):
             for member in EventMember.objects.filter(event=event, employee_id__in=to_add_ids).select_related('employee'):
                 notify_event_member_invited(member, actor_user)
                 notify_event_member_email(member, actor_user)
-
-        # Retirer les membres non-répondants dont la direction est retirée
-        to_remove = [
-            m for emp_id, m in existing.items()
-            if emp_id not in expected_ids and m.status == 'invite'
-        ]
-        for m in to_remove:
-            m.delete()
 
     return to_add_ids
 
@@ -1470,6 +1690,10 @@ def event_rsvp(request, event_id):
     messages.success(request, _("Votre réponse (%(status)s) a été enregistrée.") % {
         'status': member.get_status_display()
     })
+    # Retour vers la page d'origine (ex: calendrier) si fournie et sûre
+    next_url = request.POST.get('next', '')
+    if next_url.startswith('/') and not next_url.startswith('//'):
+        return redirect(next_url)
     return redirect('core:event_detail', event_id=event_id)
 
 
@@ -2021,10 +2245,21 @@ def partners(request):
         partners_qs = partners_qs.filter(name__icontains=search)
     
     today = timezone.now().date()
-    upcoming_events = Event.objects.filter(
-        event_type='evenement',
-        date__gte=today
-    ).prefetch_related('participants')[:3]
+    _profile = request.user.profile
+    if _profile.can_read_events():
+        _is_global = request.user.is_superuser or _profile.is_admin() or _profile.is_directeur_general()
+        _dir_id = getattr(_profile, 'direction_id', None)
+        _events = Event.objects.all()
+        if not _is_global and _dir_id:
+            _events = _events.filter(participants__id=_dir_id)
+        elif not _is_global:
+            _events = Event.objects.none()
+        upcoming_events = _events.filter(
+            event_type='evenement',
+            date__gte=today
+        ).prefetch_related('participants')[:3]
+    else:
+        upcoming_events = Event.objects.none()
     
     partner_agg = Partner.objects.aggregate(
         total=Count('id'),
@@ -5475,7 +5710,6 @@ def api_upload_presign(request):
     import os
     import re
     import uuid
-    import boto3
     import mimetypes
     from django.conf import settings
 
@@ -5506,11 +5740,8 @@ def api_upload_presign(request):
     key = f'uploads/{timezone.now():%Y/%m}/{safe_name}_{uuid.uuid4().hex[:8]}{ext}'
 
     content_type = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
-    session = boto3.Session(
-        aws_access_key_id=getattr(settings, 'AWS_ACCESS_KEY_ID', ''),
-        aws_secret_access_key=getattr(settings, 'AWS_SECRET_ACCESS_KEY', ''),
-        region_name=getattr(settings, 'AWS_S3_REGION', 'us-east-1'),
-    )
+    from core.media_utils import aws_session
+    session = aws_session(region=getattr(settings, 'AWS_S3_REGION', '') or 'us-east-1')
     try:
         presigned = session.client('s3').generate_presigned_post(
             bucket,

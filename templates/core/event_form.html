@@ -103,6 +103,20 @@
                 </div>
             </div>
 
+            <div class="grid grid-2" style="gap: 16px;">
+                <div class="form-group">
+                    <label class="form-label" for="id_frequency">{% trans 'Récurrence' %}</label>
+                    {{ form.frequency }}
+                    {% if form.frequency.errors %}<p class="form-error">{{ form.frequency.errors.0 }}</p>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="id_recurrence_end">{% trans "Fin de la récurrence" %}</label>
+                    {{ form.recurrence_end }}
+                    {% if form.recurrence_end.errors %}<p class="form-error">{{ form.recurrence_end.errors.0 }}</p>{% endif %}
+                    <p class="form-hint" style="font-size:12px;color:#94a3b8;margin-top:4px;">{% trans "Requise si une récurrence est choisie." %}</p>
+                </div>
+            </div>
+
             <div class="form-group">
                 <label class="form-label" for="{{ form.description.id_for_label }}">{% trans 'Description' %}</label>
                 {{ form.description }}

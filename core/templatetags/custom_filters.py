@@ -1,7 +1,17 @@
 from django import template
 from datetime import date
+from django.utils.dates import MONTHS
 
 register = template.Library()
+
+
+@register.filter
+def month_label(month):
+    """Nom de mois localisé (via la traduction Django, ex: 'octobre', 'October')."""
+    try:
+        return str(MONTHS[int(month)])
+    except (ValueError, TypeError, KeyError):
+        return month
 
 
 @register.filter

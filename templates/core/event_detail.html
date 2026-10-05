@@ -100,6 +100,17 @@
 .rsvp-bar span { display: inline-flex; align-items: center; gap: 4px; }
 .rsvp-summary { display:flex; align-items:center; justify-content:space-between; margin-top:6px; }
 .rsvp-change-btn { font-size:11px;color:#0369a1;background:none;border:none;cursor:pointer;text-decoration:underline;padding:0; }
+.rsvp-note {
+    width: 100%; margin-top: 10px; padding: 8px 10px;
+    border: 1px solid #e2e8f0; border-radius: 8px;
+    font-size: 12px; color: #374151; font-family: inherit;
+    resize: vertical; background: #fff;
+    box-sizing: border-box;
+}
+.member-note {
+    font-size: 11px; color: #64748b; font-style: italic; margin-top: 2px;
+    background: #f8fafc; border-radius: 6px; padding: 4px 8px;
+}
 
 /* Panel ajout membres */
 .add-member-panel {
@@ -173,6 +184,10 @@
             <i class="fa-solid fa-arrow-left" width="14" height="14"></i>
             {% trans 'Calendrier' %}
         </a>
+        <a href="{% url 'core:event_ics' event.slug %}" class="btn btn-outline" title="{% trans 'Exporter vers votre agenda (.ics)' %}">
+            <i class="fa-solid fa-download" width="14" height="14"></i>
+            {% trans '.ics' %}
+        </a>
         {% if can_edit %}
         <a href="{% url 'core:event_edit' event.slug %}" class="btn btn-outline">
             <i class="fa-solid fa-pencil" width="14" height="14"></i>
@@ -190,6 +205,35 @@
         {% endif %}
     </div>
 </div>
+
+{% if event.is_recurring %}
+<div class="card" style="border-color:#e2e8f0;">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fa-solid fa-rotate" width="14" height="14"></i> {% trans 'Récurrence' %}</h3>
+    </div>
+    <div class="card-content">
+        <p style="font-size:13px;color:#64748b;margin:0;">
+            {% trans 'Répétition' %} {{ event.get_frequency_display }}
+            {% if event.recurrence_end %}&nbsp;—&nbsp;{% trans "jusqu'au" %} {{ event.recurrence_end|date:"d M Y" }}{% endif %}
+        </p>
+        {% if can_edit %}
+        <form method="post" action="{% url 'core:event_detach' event.slug %}"
+              style="display:flex; gap:8px; align-items:center; margin-top:12px; flex-wrap:wrap;">
+            {% csrf_token %}
+            <input type="date" name="date" class="form-control" style="max-width:180px;"
+                   value="{{ occurrence_date|date:'Y-m-d' }}" required>
+            <button type="submit" class="btn btn-outline" title="{% trans "Détacher l'occurrence" %}">
+                <i class="fa-solid fa-scissors" width="13" height="13"></i>
+                {% trans "Détacher l'occurrence" %}
+            </button>
+        </form>
+        <p class="form-hint" style="font-size:12px;color:#94a3b8;margin-top:6px;">
+            {% trans "Crée un événement indépendant et retire cette date de la série." %}
+        </p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
 
 <div class="ev-grid">
 
@@ -371,6 +415,7 @@
                         <div class="member-info">
                             <div class="member-name">{{ m.employee.name }}</div>
                             {% if m.employee.direction %}<div class="member-dir">{{ m.employee.direction.code }} — {{ m.employee.direction.name }}</div>{% endif %}
+                            {% if m.note %}<div class="member-note">« {{ m.note|truncatechars:80 }} »</div>{% endif %}
                         </div>
                         <span class="rsvp-badge {{ m.status }}">{{ m.get_status_display }}</span>
                         {% if can_edit %}
@@ -485,6 +530,8 @@
                                     {% trans 'Refuser' %}
                                 </button>
                             </div>
+                            <textarea name="note" rows="2" class="rsvp-note"
+                                      placeholder="{% trans 'Note optionnelle (motif, précision…)' %}">{{ my_membership.note|default:'' }}</textarea>
                         </form>
                     </div>
 

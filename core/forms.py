@@ -169,16 +169,18 @@ class EventForm(forms.ModelForm):
     """Formulaire pour les événements du calendrier"""
     class Meta:
         model = Event
-        fields = ['title', 'event_type', 'description', 'date', 'time', 'duration', 'location', 'participants']
+        fields = ['title', 'event_type', 'description', 'date', 'time', 'duration', 'location', 'participants', 'frequency', 'recurrence_end']
         widgets = {
             'date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'time': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
             'description': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
             'participants': forms.SelectMultiple(attrs={'class': 'form-control', 'size': 5}),
+            'recurrence_end': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['recurrence_end'].required = False
         for field_name, field in self.fields.items():
             if 'class' not in field.widget.attrs:
                 field.widget.attrs['class'] = 'form-control'
