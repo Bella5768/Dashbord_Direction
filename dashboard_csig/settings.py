@@ -275,7 +275,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Priorité : Amazon SES (API) → SendGrid → SMTP Outlook/Gmail
 # SES est choisi dès que AWS_SES_REGION est défini : les credentials peuvent
 # venir du rôle de tâche ECS (chaîne boto3 par défaut), pas seulement de l'env.
-if os.getenv('AWS_SES_REGION'):
+AWS_SES_REGION = os.getenv('AWS_SES_REGION', '')
+if AWS_SES_REGION:
     EMAIL_BACKEND = 'core.email_backend.SESBackend'
     DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@csig.edu.gn')
 elif os.getenv('SENDGRID_API_KEY'):
