@@ -246,12 +246,21 @@ a {
 .search-box input {
     width: 256px;
     height: 40px;
-    padding: 0 12px;
-    border: 1px solid #9ca3af;
-    border-radius: 8px;
+    padding: 0 14px;
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
     background-color: white;
     font-size: 14px;
     color: #111827;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.search-box.has-icon input {
+    padding-left: 38px;
+}
+
+.search-box input::placeholder {
+    color: var(--gray-400);
 }
 
 .search-box input:focus {
@@ -263,14 +272,20 @@ a {
 .search-box svg,
 .search-box i {
     position: absolute;
-    left: 12px;
+    left: 13px;
     top: 50%;
     transform: translateY(-50%);
     width: 16px;
     height: 16px;
     font-size: 14px;
-    color: var(--gray-500);
+    color: var(--gray-400);
     pointer-events: none;
+    transition: color 0.15s;
+}
+
+.search-box:focus-within svg,
+.search-box:focus-within i {
+    color: var(--primary-500);
 }
 
 .header-date {
@@ -2325,6 +2340,10 @@ a.calendar-event-pill:hover { opacity: .82; filter: brightness(.95); }
     
     .filters-bar {
         flex-wrap: wrap;
+    }
+
+    .search-box input {
+        width: 180px;
     }
 }
 

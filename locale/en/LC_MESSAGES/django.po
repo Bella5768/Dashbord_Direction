@@ -1,8 +1,9 @@
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-04 18:44+0000\n"
+"POT-Creation-Date: 2026-10-06 15:18+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -13,26 +14,24 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: .\core\api_utils.py:64 .\dashboard_csig\middleware.py:46
-#, fuzzy
 #| msgid "Vous n'avez pas la permission de créer des directions."
 msgid "Vous n'avez pas la permission d'effectuer cette action."
-msgstr "You do not have permission to create departments."
+msgstr "You do not have permission to perform this action."
 
 #: .\core\api_utils.py:71
-#, fuzzy
 #| msgid "Fichier introuvable."
 msgid "Ressource introuvable."
-msgstr "File not found."
+msgstr "Resource not found."
 
 #: .\core\api_utils.py:71
-#, fuzzy, python-format
+#, python-format
 #| msgid "Fichier introuvable."
 msgid "%(resource)s introuvable."
-msgstr "File not found."
+msgstr "%(resource)s not found."
 
 #: .\core\api_utils.py:80
 msgid "Une erreur inattendue s'est produite."
-msgstr ""
+msgstr "An unexpected error occurred."
 
 #: .\core\currencies.py:5
 msgid "GNF - Franc Guinéen"
@@ -636,7 +635,7 @@ msgstr "WST - Samoan Tala"
 
 #: .\core\currencies.py:169
 msgid "TOP - Pa'anga Tongan"
-msgstr ""
+msgstr "TOP - Tongan Paʻanga"
 
 #: .\core\currencies.py:170
 msgid "XPF - Franc CFP"
@@ -649,7 +648,7 @@ msgstr "Confirmation email sent."
 #: .\core\email_examples.py:145
 #, python-brace-format
 msgid "Erreur lors de l'envoi de l'email: {err}"
-msgstr ""
+msgstr "Error sending email: {err}"
 
 #: .\core\fields.py:25 .\core\fields.py:57
 msgid "Le code pays du numéro est invalide ou non pris en charge."
@@ -710,6 +709,8 @@ msgid ""
 "La fiche de %(name)s n'a pas d'adresse email. Ajoutez-en une avant de créer "
 "un compte."
 msgstr ""
+"The record for %(name)s has no email address. Add one before creating an "
+"account."
 
 #: .\core\forms.py:70
 #, python-format
@@ -738,8 +739,8 @@ msgstr "First name"
 #: .\templates\core\global_search.html:91
 #: .\templates\core\global_search.html:132
 #: .\templates\core\partner_form.html:18 .\templates\core\profile.html:117
-#: .\templates\core\roles\role_form.html:22 .\templates\core\users\form.html:39
-#: .\templates\core\users\form.html:68
+#: .\templates\core\roles\role_form.html:22
+#: .\templates\core\users\form.html:39 .\templates\core\users\form.html:68
 msgid "Nom"
 msgstr "Name"
 
@@ -810,10 +811,9 @@ msgid "La durée maximale est de 24h (1440 min)."
 msgstr "The maximum duration is 24h (1440 min)."
 
 #: .\core\forms_leave.py:22
-#, fuzzy
 #| msgid "Pièces justificatives"
 msgid "Pièces justificatives (JSON)"
-msgstr "Supporting documents"
+msgstr "Supporting documents (JSON)"
 
 #: .\core\forms_leave.py:94 .\core\forms_project.py:99 .\core\models.py:489
 #: .\core\models.py:1426
@@ -894,10 +894,9 @@ msgid "Progression (%)"
 msgstr "Progress (%)"
 
 #: .\core\forms_project.py:152
-#, fuzzy
 #| msgid "Utilisé si le jalon n'a pas de sous-étapes"
 msgid "Utilisé uniquement si le jalon n'a pas de sous-étapes"
-msgstr "Used if milestone has no sub-steps"
+msgstr "Used only if the milestone has no sub-steps"
 
 #: .\core\forms_project.py:167 .\core\models.py:637
 #, python-format
@@ -909,18 +908,23 @@ msgid "Décrivez le besoin lié à cette sous-étape..."
 msgstr "Describe the need related to this sub-step..."
 
 #: .\core\forms_project.py:206 .\core\models.py:708
-#, fuzzy, python-format
-#| msgid "La date de fin doit être postérieure ou égale à la date de début."
+#, python-format
+#| msgid ""
+#| "La date de fin doit être postérieure ou égale à la date de début."
 msgid ""
 "La date de la sous-étape doit être antérieure ou égale à celle du jalon "
 "(%(date)s)."
-msgstr "The end date must be after or equal to the start date."
+msgstr ""
+"The sub-step date must be earlier than or equal to the milestone date "
+"(%(date)s)."
 
 #: .\core\forms_project.py:215 .\core\models.py:716
-#, fuzzy, python-format
-#| msgid "La date du jalon doit être comprise entre %(start)s et %(end)s."
-msgid "La date de la sous-étape doit être comprise entre %(start)s et %(end)s."
-msgstr "The milestone date must be between %(start)s and %(end)s."
+#, python-format
+#| msgid ""
+#| "La date du jalon doit être comprise entre %(start)s et %(end)s."
+msgid ""
+"La date de la sous-étape doit être comprise entre %(start)s et %(end)s."
+msgstr "The sub-step date must be between %(start)s and %(end)s."
 
 #: .\core\forms_project.py:280 .\core\models.py:160 .\core\models.py:545
 msgid "Rôle projet"
@@ -990,20 +994,21 @@ msgid "Verrouillé sur votre direction."
 msgstr "Locked to your department."
 
 #: .\core\forms_project.py:485
-#, fuzzy, python-format
+#, python-format
 #| msgid "Le nom d'utilisateur « %(u)s » est déjà utilisé."
 msgid "L'email « %(email)s » est déjà utilisé par %(name)s."
-msgstr "The username «%(u)s» is already taken."
+msgstr "The email « %(email)s » is already used by %(name)s."
 
 #: .\core\forms_project.py:496
 msgid "L'organisation est obligatoire pour une personne externe."
-msgstr ""
+msgstr "The organization is required for an external person."
 
 #: .\core\forms_project.py:499
 msgid ""
-"L'email est obligatoire pour un employé interne (nécessaire pour la création "
-"de compte)."
+"L'email est obligatoire pour un employé interne (nécessaire pour la création"
+" de compte)."
 msgstr ""
+"Email is required for an internal employee (needed for account creation)."
 
 #: .\core\forms_project.py:502
 msgid "Un email est requis pour créer un compte utilisateur."
@@ -1011,7 +1016,7 @@ msgstr "An email is required to create a user account."
 
 #: .\core\models.py:29 .\core\models.py:40
 msgid "ID"
-msgstr ""
+msgstr "ID"
 
 #: .\core\models.py:32 .\core\models.py:813 .\core\models.py:1254
 #: .\core\models.py:1361 .\core\notifications.py:432 .\templates\base.html:236
@@ -1031,7 +1036,7 @@ msgstr "Users"
 
 #: .\core\models.py:51
 msgid "Slug"
-msgstr ""
+msgstr "Slug"
 
 #: .\core\models.py:83
 msgid "Lire"
@@ -1075,8 +1080,8 @@ msgstr "Edit"
 #: .\templates\core\calendar.html:749 .\templates\core\confirm_delete.html:4
 #: .\templates\core\confirm_delete.html:5
 #: .\templates\core\confirm_delete.html:58
-#: .\templates\core\directions_list.html:89 .\templates\core\documents.html:143
-#: .\templates\core\event_detail.html:203
+#: .\templates\core\directions_list.html:89
+#: .\templates\core\documents.html:143 .\templates\core\event_detail.html:203
 #: .\templates\core\event_detail.html:555
 #: .\templates\core\leaves\leave_detail.html:287
 #: .\templates\core\leaves\leave_detail.html:291
@@ -1122,7 +1127,8 @@ msgstr "All"
 #: .\templates\core\directions_list.html:61
 #: .\templates\core\global_search.html:32
 #: .\templates\core\milestone_detail.html:89 .\templates\core\projects.html:5
-#: .\templates\core\reports.html:158 .\templates\core\roles\role_detail.html:75
+#: .\templates\core\reports.html:158
+#: .\templates\core\roles\role_detail.html:75
 #: .\templates\core\roles\role_form.html:69
 msgid "Projets"
 msgstr "Projects"
@@ -1147,8 +1153,8 @@ msgstr "Project members"
 msgid "Budgets"
 msgstr "Budgets"
 
-#: .\core\models.py:99 .\core\models.py:1221 .\templates\core\dashboard.html:94
-#: .\templates\core\global_search.html:123
+#: .\core\models.py:99 .\core\models.py:1221
+#: .\templates\core\dashboard.html:94 .\templates\core\global_search.html:123
 #: .\templates\core\roles\role_detail.html:79
 #: .\templates\core\roles\role_form.html:73
 msgid "Employés"
@@ -1190,7 +1196,8 @@ msgstr "Events"
 
 #: .\core\models.py:105 .\core\models.py:428 .\templates\base.html:143
 #: .\templates\core\directions_list.html:4
-#: .\templates\core\directions_list.html:29 .\templates\core\resources.html:211
+#: .\templates\core\directions_list.html:29
+#: .\templates\core\resources.html:211
 #: .\templates\core\roles\role_detail.html:85
 #: .\templates\core\roles\role_form.html:79
 msgid "Directions"
@@ -1341,7 +1348,8 @@ msgstr "Suspended"
 #: .\templates\core\milestone_form.html:180 .\templates\core\my_tasks.html:166
 #: .\templates\core\project_detail.html:683
 #: .\templates\core\project_detail.html:743
-#: .\templates\core\project_detail.html:1265 .\templates\core\projects.html:134
+#: .\templates\core\project_detail.html:1265
+#: .\templates\core\projects.html:134
 msgid "Terminé"
 msgstr "Completed"
 
@@ -1454,10 +1462,9 @@ msgid "Projet"
 msgstr "Project"
 
 #: .\core\models.py:546
-#, fuzzy
 #| msgid "Date de début"
 msgid "Date d'ajout"
-msgstr "Start date"
+msgstr "Date added"
 
 #: .\core\models.py:549
 msgid "Membre de projet"
@@ -1721,10 +1728,9 @@ msgid "Changement de progression"
 msgstr "Progress changed"
 
 #: .\core\models.py:812 .\core\models.py:1257
-#, fuzzy
 #| msgid "Aucune description"
 msgid "Contexte description"
-msgstr "No description"
+msgstr "Description context"
 
 #: .\core\models.py:817
 msgid "Activité de projet"
@@ -1929,27 +1935,29 @@ msgstr "None"
 
 #: .\core\models.py:1013
 msgid "Quotidienne"
-msgstr ""
+msgstr "Daily"
 
 #: .\core\models.py:1014
 msgid "Hebdomadaire"
-msgstr ""
+msgstr "Weekly"
 
 #: .\core\models.py:1015
-#, fuzzy
 #| msgid "une nouvelle"
 msgid "Mensuelle"
-msgstr "a new"
+msgstr "Monthly"
 
+#: .\core\models.py:1017 .\templates\core\event_detail.html:212
+#: .\templates\core\event_form.html:108
 msgid "Récurrence"
 msgstr "Recurrence"
 
+#: .\core\models.py:1019 .\templates\core\event_form.html:113
 msgid "Fin de la récurrence"
 msgstr "Recurrence end"
 
 #: .\core\models.py:1021
 msgid "Exceptions de récurrence"
-msgstr ""
+msgstr "Recurrence exceptions"
 
 #: .\core\models.py:1022
 msgid "Participants"
@@ -1968,21 +1976,23 @@ msgstr "Modified on"
 msgid "La durée doit être positive."
 msgstr "The duration must be positive."
 
+#: .\core\models.py:1043
 msgid "La fin de la récurrence est requise."
 msgstr "An end date is required for recurring events."
 
+#: .\core\models.py:1047
 msgid "La fin de la récurrence doit être après la date de début."
 msgstr "The end of the recurrence must be after the start date."
 
 #: .\core\models.py:1056
 msgid "Format de date d'exception invalide."
-msgstr ""
+msgstr "Invalid exception date format."
 
 #: .\core\models.py:1060
-#, fuzzy
-#| msgid "La date de début de collaboration ne peut pas être dans le futur."
+#| msgid ""
+#| "La date de début de collaboration ne peut pas être dans le futur."
 msgid "La date de début ne peut pas être une exception."
-msgstr "The collaboration start date cannot be in the future."
+msgstr "The start date cannot be an exception."
 
 #: .\core\models.py:1142
 msgid "Invité"
@@ -2014,16 +2024,14 @@ msgid "Répondu le"
 msgstr "Replied on"
 
 #: .\core\models.py:1156
-#, fuzzy
 #| msgid "Créer l'événement"
 msgid "Membre d'événement"
-msgstr "Create event"
+msgstr "Event member"
 
 #: .\core\models.py:1157
-#, fuzzy
 #| msgid "Créer l'événement"
 msgid "Membres d'événement"
-msgstr "Create event"
+msgstr "Event members"
 
 #: .\core\models.py:1173 .\core\models.py:1342 .\core\models.py:1348
 #: .\core\models.py:1354 .\templates\core\leaves\leave_detail.html:335
@@ -2039,10 +2047,9 @@ msgid "Approuvé"
 msgstr "Approved"
 
 #: .\core\models.py:1190
-#, fuzzy
 #| msgid "Date de création"
 msgid "Date d'approbation"
-msgstr "Creation date"
+msgstr "Approval date"
 
 #: .\core\models.py:1193 .\core\models.py:1516
 msgid "Demande"
@@ -2056,11 +2063,11 @@ msgid "Demandes"
 msgstr "Requests"
 
 #: .\core\models.py:1204
-#, fuzzy
-#| msgid "La date de signature ne peut pas être postérieure à la date limite."
+#| msgid ""
+#| "La date de signature ne peut pas être postérieure à la date limite."
 msgid ""
 "La date d'approbation ne peut pas être antérieure à la date de création."
-msgstr "The signing date cannot be after the deadline."
+msgstr "The approval date cannot be earlier than the creation date."
 
 #: .\core\models.py:1211
 msgid "Rôle / Fonction"
@@ -2374,10 +2381,9 @@ msgid "Email non configuré"
 msgstr "Email not configured"
 
 #: .\core\notifications.py:117 .\core\notifications.py:149
-#, fuzzy
 #| msgid "Ce compte n'a pas d'adresse email."
 msgid "Cet utilisateur n'a pas d'adresse email"
-msgstr "This account has no email address."
+msgstr "This user has no email address"
 
 #: .\core\notifications.py:119
 msgid "[CSIG] Créez votre mot de passe – Accès au tableau de bord"
@@ -2422,7 +2428,7 @@ msgstr "Email credentials not configured"
 
 #: .\core\notifications.py:182
 msgid "Pas d'email pour cet employé"
-msgstr ""
+msgstr "No email for this employee"
 
 #: .\core\notifications.py:188
 #, python-brace-format
@@ -2454,16 +2460,14 @@ msgstr "Email sent to: {emails} (failures: {count})"
 
 #: .\core\notifications.py:225 .\core\notifications.py:337
 #: .\core\notifications.py:411
-#, fuzzy
 #| msgid "Échec de l'envoi : {msg}"
 msgid "Échec d'envoi"
-msgstr "Failed to send: {msg}"
+msgstr "Sending failed"
 
 #: .\core\notifications.py:240
-#, fuzzy
 #| msgid "Peut ajouter des membres"
 msgid "Pas d'email pour ce membre"
-msgstr "Can add members"
+msgstr "No email for this member"
 
 #: .\core\notifications.py:243 .\templates\core\milestone_form.html:271
 #: .\templates\core\sub_milestone_form.html:173
@@ -2493,11 +2497,11 @@ msgid "En tant que responsable de cette tâche, vous êtes informé que :"
 msgstr "As the person responsible for this task, you are notified that:"
 
 #: .\core\notifications.py:291
-#, fuzzy
-#| msgid "En tant que responsable de cette tâche, vous êtes informé que :"
+#| msgid ""
+#| "En tant que responsable de cette tâche, vous êtes informé que :"
 msgid ""
 "En tant que personne ayant attribué cette tâche, vous êtes informé que :"
-msgstr "As the person responsible for this task, you are notified that:"
+msgstr "As the person who assigned this task, you are informed that:"
 
 #: .\core\notifications.py:305
 msgid "Aucun destinataire avec email pour cette notification"
@@ -2527,8 +2531,8 @@ msgstr "Emails sent to: {emails} (failures: {count})"
 #, python-format
 msgid "EN RETARD de %(days)s jour"
 msgid_plural "EN RETARD de %(days)s jours"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%(days)s day overdue"
+msgstr[1] "%(days)s days overdue"
 
 #: .\core\notifications.py:359
 msgid "ALERTE ÉCHÉANCE DÉPASSÉE"
@@ -2540,13 +2544,12 @@ msgstr "[URGENT - OVERDUE]"
 
 #: .\core\notifications.py:362
 msgid "À FAIRE AUJOURD'HUI"
-msgstr ""
+msgstr "DUE TODAY"
 
 #: .\core\notifications.py:364
-#, fuzzy
 #| msgid "ALERTE ÉCHÉANCE DÉPASSÉE"
 msgid "ALERTE : ÉCHÉANCE AUJOURD'HUI"
-msgstr "OVERDUE ALERT"
+msgstr "ALERT: DUE TODAY"
 
 #: .\core\notifications.py:365
 msgid "[URGENT]"
@@ -2556,12 +2559,12 @@ msgstr "[URGENT]"
 #, python-format
 msgid "À faire dans %(days)s jour"
 msgid_plural "À faire dans %(days)s jours"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Due in %(days)s day"
+msgstr[1] "Due in %(days)s days"
 
 #: .\core\notifications.py:369
 msgid "RAPPEL D'ÉCHÉANCE"
-msgstr ""
+msgstr "DEADLINE REMINDER"
 
 #: .\core\notifications.py:370
 msgid "[RAPPEL]"
@@ -2576,12 +2579,14 @@ msgid "cette"
 msgstr "this"
 
 #: .\core\notifications.py:375
-#, fuzzy, python-brace-format
-#| msgid "En tant que responsable de cette tâche, vous êtes informé que :"
+#, python-brace-format
+#| msgid ""
+#| "En tant que responsable de cette tâche, vous êtes informé que :"
 msgid ""
 "En tant que responsable, vous devez traiter {demonstrative} {type} "
 "impérativement :"
-msgstr "As the person responsible for this task, you are notified that:"
+msgstr ""
+"As the person responsible, you must process {demonstrative} {type} urgently:"
 
 #: .\core\notifications.py:381
 #, python-brace-format
@@ -2603,6 +2608,7 @@ msgid ""
 "Demande de congé soumise par un membre de votre équipe (avis hiérarchique "
 "requis) :"
 msgstr ""
+"Leave request submitted by a member of your team (manager review required):"
 
 #: .\core\notifications.py:466
 msgid "Confirmation de soumission de votre demande de congé :"
@@ -2668,8 +2674,8 @@ msgstr "Final decision recorded (CC: General Management):"
 #, python-format
 msgid "%(start)s au %(end)s (%(days)s jour)"
 msgid_plural "%(start)s au %(end)s (%(days)s jours)"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%(start)s to %(end)s (%(days)s day)"
+msgstr[1] "%(start)s to %(end)s (%(days)s days)"
 
 #: .\core\notifications.py:539
 #, python-brace-format
@@ -2784,13 +2790,12 @@ msgstr "Travail - Justice - Solidarite"
 
 #: .\core\pdf_generator.py:87
 msgid "CITE DES SCIENCES ET DE L'INNOVATION DE GUINEE"
-msgstr ""
+msgstr "CITY OF SCIENCES AND INNOVATION OF GUINEA"
 
 #: .\core\pdf_generator.py:91
-#, fuzzy
 #| msgid "Centre de Suivi et d'Information de Gestion"
 msgid "Direction Generale - Centre de Suivi et d'Information de Gestion"
-msgstr "Centre de Suivi et d'Information de Gestion"
+msgstr "General Management - Centre de Suivi et d'Information de Gestion"
 
 #: .\core\pdf_generator.py:108
 msgid "ATTESTATION DE CONGE"
@@ -2830,8 +2835,8 @@ msgstr "Duration"
 #, python-format
 msgid "%(days)s jour"
 msgid_plural "%(days)s jours"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%(days)s day"
+msgstr[1] "%(days)s days"
 
 #: .\core\pdf_generator.py:260
 msgid "Suppleant"
@@ -2893,23 +2898,23 @@ msgstr "Verification"
 
 #: .\core\pdf_generator.py:452
 msgid "Scannez le QR code pour verifier l'authenticite"
-msgstr ""
+msgstr "Scan the QR code to verify authenticity"
 
 #: .\core\pdf_generator.py:454
 msgid "de ce document aupres de la Direction Generale CSIG."
 msgstr "of this document by the CSIG General Management."
 
 #: .\core\pdf_generator.py:467
-#, fuzzy
 #| msgid "Cité des Sciences et de l'Innovation de Guinée"
 msgid "Cite des Sciences et de l'Innovation de Guinee (CSIG)"
-msgstr "City of Sciences and Innovation of Guinea"
+msgstr "City of Sciences and Innovation of Guinea (CSIG)"
 
 #: .\core\pdf_generator.py:471
 msgid ""
 "Document officiel genere par le systeme de gestion des conges - CSIG "
 "Dashboard"
 msgstr ""
+"Official document generated by the leave management system - CSIG Dashboard"
 
 #: .\core\pdf_generator.py:476
 #, python-brace-format
@@ -2933,7 +2938,7 @@ msgstr "Official leave certificate"
 #, python-format
 msgid ""
 "Type de fichier non autorisé (%(ext)s). Extensions acceptées : %(allowed)s."
-msgstr ""
+msgstr "File type not allowed (%(ext)s). Accepted extensions: %(allowed)s."
 
 #: .\core\validators.py:24
 msgid "sans extension"
@@ -2941,7 +2946,7 @@ msgstr "without extension"
 
 #: .\core\validators.py:31
 msgid "Ce type de fichier n'est pas autorisé pour des raisons de sécurité."
-msgstr ""
+msgstr "This file type is not allowed for security reasons."
 
 #: .\core\views.py:232
 msgid "L'employé n'a pas d'adresse email."
@@ -2957,19 +2962,23 @@ msgid "Compte créé pour {name}. Invitation envoyée à {email}."
 msgstr "Account created for {name}. Invitation sent to {email}."
 
 #: .\core\views.py:278 .\core\views.py:2524
-#, fuzzy, python-brace-format
+#, python-brace-format
 #| msgid ""
 #| "Compte '{username}' créé mais l'email n'a pas pu être envoyé : {msg}."
 msgid ""
-"Compte créé (identifiant : {username}) mais l'email n'a pas pu être envoyé : "
+"Compte créé (identifiant : {username}) mais l'email n'a pas pu être envoyé :"
+" {msg}"
+msgstr ""
+"Account created (username: {username}) but the email could not be sent: "
 "{msg}"
-msgstr "Account '{username}' created but the email could not be sent: {msg}."
 
 #: .\core\views.py:345
 msgid ""
-"Votre compte est en attente d'activation. Consultez votre email pour le lien "
-"d'invitation."
+"Votre compte est en attente d'activation. Consultez votre email pour le lien"
+" d'invitation."
 msgstr ""
+"Your account is awaiting activation. Check your email for the invitation "
+"link."
 
 #: .\core\views.py:347
 msgid "Votre compte a été désactivé. Contactez un administrateur."
@@ -2978,6 +2987,11 @@ msgstr "Your account has been deactivated. Contact an administrator."
 #: .\core\views.py:349
 msgid "Identifiants incorrects."
 msgstr "Incorrect credentials."
+
+#: .\core\views.py:378 .\core\views.py:2767
+#| msgid "Verrouillé sur votre direction."
+msgid "Veuillez saisir votre adresse email."
+msgstr "Please enter your email address."
 
 #: .\core\views.py:440
 msgid "Mot de passe réinitialisé. Vous pouvez vous connecter."
@@ -3019,19 +3033,20 @@ msgstr "You do not have access to the calendar."
 msgid "Accès au calendrier insuffisant."
 msgstr "Insufficient calendar access."
 
+#: .\core\views.py:1450
 msgid "Vous n'avez pas la permission de détacher cette occurrence."
 msgstr "You do not have permission to detach this occurrence."
 
 #: .\core\views.py:1459
-#, fuzzy
 #| msgid "Statut invalide."
 msgid "Date d'occurrence invalide."
-msgstr "Invalid status."
+msgstr "Invalid occurrence date."
 
 #: .\core\views.py:1461
 msgid "Cette date n'appartient pas à la série de récurrence."
-msgstr ""
+msgstr "This date does not belong to the recurrence series."
 
+#: .\core\views.py:1478
 msgid "Occurrence détachée en événement indépendant."
 msgstr "Occurrence detached as an independent event."
 
@@ -3086,10 +3101,10 @@ msgid "Tous ces participants sont déjà invités."
 msgstr "All these participants are already invited."
 
 #: .\core\views.py:1770
-#, fuzzy, python-format
+#, python-format
 #| msgid "%(name)s retiré(e) de l'événement."
 msgid "%(name)s retiré(e) de l'événement."
-msgstr "{name} removed from the event."
+msgstr "%(name)s removed from the event."
 
 #: .\core\views.py:1778
 msgid "Accès insuffisant pour consulter les rapports."
@@ -3171,9 +3186,9 @@ msgstr "User {username} was deleted."
 
 #: .\core\views.py:2663 .\core\views.py:2834 .\core\views.py:5011
 #: .\core\views.py:5032 .\core\views.py:5053 .\core\views.py:5070
-#: .\core\views.py:5085 .\core\views.py:5246 .\core\views.py:5266
-#: .\core\views.py:5289 .\core\views.py:5310 .\core\views.py:5331
-#: .\core\views.py:5552
+#: .\core\views.py:5085 .\core\views.py:5248 .\core\views.py:5268
+#: .\core\views.py:5291 .\core\views.py:5312 .\core\views.py:5333
+#: .\core\views.py:5554
 msgid "Vous n'avez pas les permissions."
 msgstr "You do not have the required permissions."
 
@@ -3187,6 +3202,8 @@ msgid ""
 "{username} est en attente d'invitation. Renvoyez l'invitation pour qu'il "
 "active son compte lui-même."
 msgstr ""
+"{username} is awaiting invitation. Resend the invitation so they can "
+"activate their account themselves."
 
 #: .\core\views.py:2680
 #, python-brace-format
@@ -3199,6 +3216,8 @@ msgid ""
 "d'un autre utilisateur. Utilisez « Renvoyer l'invitation » pour lui "
 "permettre de définir lui-même son mot de passe."
 msgstr ""
+"For security reasons, you cannot change another user's password. Use “Resend"
+" invitation” so they can set their own password."
 
 #: .\core\views.py:2726
 msgid "Ce compte est déjà activé. Connectez-vous normalement."
@@ -3220,6 +3239,8 @@ msgid ""
 "Le compte de {username} n'est pas en attente d'invitation (il a déjà un mot "
 "de passe)."
 msgstr ""
+"The account for {username} is not awaiting invitation (it already has a "
+"password)."
 
 #: .\core\views.py:2812
 msgid "Ce compte n'a pas d'adresse email."
@@ -3253,12 +3274,11 @@ msgid "Impossible d'ajouter le besoin. Vérifiez le formulaire."
 msgstr "Could not add the need. Please check the form."
 
 #: .\core\views.py:3088
-#, fuzzy
 #| msgid ""
 #| "Vous n'avez pas les permissions pour ajouter des membres à ce projet."
 msgid ""
 "Vous n'avez pas les permissions pour ajouter des commentaires à ce projet."
-msgstr "You do not have permission to add members to this project."
+msgstr "You do not have permission to add comments to this project."
 
 #: .\core\views.py:3104
 msgid "Commentaire ajouté."
@@ -3382,6 +3402,7 @@ msgid ""
 "Ce jalon contient des sous-étapes : sa progression est calculée "
 "automatiquement."
 msgstr ""
+"This milestone contains sub-steps: its progress is calculated automatically."
 
 #: .\core\views.py:4164
 #, python-brace-format
@@ -3412,11 +3433,11 @@ msgid "Besoin marqué : {status}."
 msgstr "Need marked: {status}."
 
 #: .\core\views.py:4271
-#, fuzzy
 #| msgid "Votre compte a été désactivé. Contactez un administrateur."
 msgid ""
 "Votre compte n'est pas encore lié à un employé. Contactez un administrateur."
-msgstr "Your account has been deactivated. Contact an administrator."
+msgstr ""
+"Your account is not yet linked to an employee. Contact an administrator."
 
 #: .\core\views.py:4469 .\core\views.py:4524 .\core\views.py:4548
 msgid "Vous n'avez pas les permissions pour gérer les dossiers de ce projet."
@@ -3435,33 +3456,32 @@ msgid "Dossier supprimé."
 msgstr "Folder deleted."
 
 #: .\core\views.py:4574
-#, fuzzy
-#| msgid "Vous n'avez pas les permissions pour ajouter des jalons à ce projet."
-msgid "Vous n'avez pas les permissions pour ajouter des documents à ce projet."
-msgstr "You do not have permission to add milestones to this project."
+#| msgid ""
+#| "Vous n'avez pas les permissions pour ajouter des jalons à ce projet."
+msgid ""
+"Vous n'avez pas les permissions pour ajouter des documents à ce projet."
+msgstr "You do not have permission to add documents to this project."
 
 #: .\core\views.py:4586
 msgid "Document ajouté avec succès."
 msgstr "Document added successfully."
 
 #: .\core\views.py:4608
-#, fuzzy
 #| msgid "Vous n'avez pas les permissions pour modifier ce projet."
 msgid ""
 "Vous n'avez pas les permissions pour modifier les documents de ce projet."
-msgstr "You do not have permission to modify this project."
+msgstr "You do not have permission to edit documents in this project."
 
 #: .\core\views.py:4617 .\core\views.py:5041
 msgid "Document modifié avec succès."
 msgstr "Document updated successfully."
 
 #: .\core\views.py:4632
-#, fuzzy
 #| msgid ""
 #| "Vous n'avez pas les permissions pour gérer les dossiers de ce projet."
 msgid ""
 "Vous n'avez pas les permissions pour supprimer les documents de ce projet."
-msgstr "You do not have permission to manage folders for this project."
+msgstr "You do not have permission to delete documents in this project."
 
 #: .\core\views.py:4640 .\core\views.py:5060
 msgid "Document supprimé."
@@ -3471,7 +3491,7 @@ msgstr "Document deleted."
 msgid "Fichier non trouvé."
 msgstr "File not found."
 
-#: .\core\views.py:4681 .\core\views.py:5154 .\core\views.py:5180
+#: .\core\views.py:4681 .\core\views.py:5156 .\core\views.py:5182
 msgid "Aucun fichier attaché à ce document."
 msgstr "No file attached to this document."
 
@@ -3518,23 +3538,22 @@ msgid "Membre ajouté avec succès."
 msgstr "Member added successfully."
 
 #: .\core\views.py:4931
-#, fuzzy
 #| msgid ""
 #| "Vous n'avez pas les permissions pour ajouter des membres à ce projet."
-msgid "Vous n'avez pas les permissions pour modifier les membres de ce projet."
-msgstr "You do not have permission to add members to this project."
+msgid ""
+"Vous n'avez pas les permissions pour modifier les membres de ce projet."
+msgstr "You do not have permission to edit members of this project."
 
 #: .\core\views.py:4941
 msgid "Rôle du membre modifié avec succès."
 msgstr "Member role updated successfully."
 
 #: .\core\views.py:4989
-#, fuzzy
 #| msgid ""
 #| "Vous n'avez pas les permissions pour ajouter des membres à ce projet."
 msgid ""
 "Vous n'avez pas les permissions pour supprimer des membres de ce projet."
-msgstr "You do not have permission to add members to this project."
+msgstr "You do not have permission to remove members from this project."
 
 #: .\core\views.py:4997
 msgid "Membre supprimé du projet."
@@ -3554,109 +3573,110 @@ msgstr "Document '{title}' signed."
 msgid "Document '{title}' validé, en attente de signature."
 msgstr "Document '{title}' validated, awaiting signature."
 
-#: .\core\views.py:5173 .\core\views.py:5176
+#: .\core\views.py:5175 .\core\views.py:5178
 msgid "Vous n'avez pas accès à ce document."
 msgstr "You do not have access to this document."
 
-#: .\core\views.py:5221
+#: .\core\views.py:5223
 msgid "Vous devez appartenir à une direction pour soumettre une demande."
 msgstr "You must belong to a department to submit a request."
 
-#: .\core\views.py:5234
+#: .\core\views.py:5236
 msgid "Demande créée avec succès."
 msgstr "Request created successfully."
 
-#: .\core\views.py:5253
+#: .\core\views.py:5255
 msgid "Vous ne pouvez approuver que les demandes de votre direction."
 msgstr "You can only approve requests from your department."
 
-#: .\core\views.py:5258
+#: .\core\views.py:5260
 #, python-brace-format
 msgid "Demande '{title}' approuvée."
 msgstr "Request '{title}' approved."
 
-#: .\core\views.py:5273
+#: .\core\views.py:5275
 msgid "Vous ne pouvez rejeter que les demandes de votre direction."
 msgstr "You can only reject requests from your department."
 
-#: .\core\views.py:5277
+#: .\core\views.py:5279
 #, python-brace-format
 msgid "Demande '{title}' rejetée."
 msgstr "Request '{title}' rejected."
 
-#: .\core\views.py:5296
+#: .\core\views.py:5298
 msgid "Partenaire créé avec succès."
 msgstr "Partner created successfully."
 
-#: .\core\views.py:5319
+#: .\core\views.py:5321
 msgid "Partenaire modifié avec succès."
 msgstr "Partner updated successfully."
 
-#: .\core\views.py:5338
+#: .\core\views.py:5340
 msgid "Partenaire supprimé."
 msgstr "Partner deleted."
 
-#: .\core\views.py:5369
+#: .\core\views.py:5371
 msgid "Vous n'avez pas les permissions pour gérer les employés."
 msgstr "You do not have permission to manage employees."
 
-#: .\core\views.py:5391
+#: .\core\views.py:5393
 msgid "Employé créé avec succès."
 msgstr "Employee created successfully."
 
-#: .\core\views.py:5407
+#: .\core\views.py:5409
 msgid "Vous ne pouvez gérer que les employés de votre direction."
 msgstr "You can only manage employees from your department."
 
-#: .\core\views.py:5443
+#: .\core\views.py:5445
 msgid "Employé modifié avec succès."
 msgstr "Employee updated successfully."
 
-#: .\core\views.py:5457
+#: .\core\views.py:5459
 msgid "Vous ne pouvez supprimer que les employés de votre direction."
 msgstr "You can only delete employees from your department."
 
-#: .\core\views.py:5468
+#: .\core\views.py:5470
 #, python-brace-format
 msgid ""
 "Impossible de supprimer {name} : {count} demande(s) de congé sont liées à "
 "cette fiche."
 msgstr ""
+"Cannot delete {name}: {count} leave request(s) are linked to this record."
 
-#: .\core\views.py:5473
+#: .\core\views.py:5475
 #, python-brace-format
 msgid "Employé « {name} » supprimé."
 msgstr "Employee \"{name}\" deleted."
 
-#: .\core\views.py:5475
+#: .\core\views.py:5477
 #, python-brace-format
 msgid "Suppression impossible : {err}"
 msgstr "Deletion failed: {err}"
 
-#: .\core\views.py:5497 .\core\views.py:5518
+#: .\core\views.py:5499 .\core\views.py:5520
 msgid "Vous n'avez pas les permissions pour gérer les budgets."
 msgstr "You do not have permission to manage budgets."
 
-#: .\core\views.py:5504
+#: .\core\views.py:5506
 msgid "Budget créé avec succès."
 msgstr "Budget created successfully."
 
-#: .\core\views.py:5532 .\core\views.py:5566
+#: .\core\views.py:5534 .\core\views.py:5568
 msgid "Vous n'avez pas accès à ce budget."
 msgstr "You do not have access to this budget."
 
-#: .\core\views.py:5539
+#: .\core\views.py:5541
 msgid "Budget modifié avec succès."
 msgstr "Budget updated successfully."
 
-#: .\core\views.py:5571
+#: .\core\views.py:5573
 msgid "Budget supprimé."
 msgstr "Budget deleted."
 
 #: .\core\views_leave.py:261
 msgid ""
 "Demande de congé soumise. Elle suit maintenant le circuit de validation."
-msgstr ""
+msgstr "Leave request submitted. It now follows the approval workflow."
 
 #: .\core\views_leave.py:279
 msgid "Cette demande ne peut plus être modifiée."
@@ -3674,31 +3694,31 @@ msgstr "Request cancelled."
 msgid "Pièce jointe supprimée."
 msgstr "Attachment deleted."
 
-#: .\core\views_leave.py:366
+#: .\core\views_leave.py:373
 msgid "Cette demande n'est plus en attente d'avis hiérarchique."
 msgstr "This request is no longer awaiting manager review."
 
-#: .\core\views_leave.py:387
+#: .\core\views_leave.py:394
 msgid "Avis hiérarchique enregistré."
 msgstr "Manager review recorded."
 
-#: .\core\views_leave.py:399
+#: .\core\views_leave.py:406
 msgid "Cette demande n'est pas au stade de la vérification RH."
 msgstr "This request is not at the HR verification stage."
 
-#: .\core\views_leave.py:420
+#: .\core\views_leave.py:427
 msgid "Vérification RH enregistrée."
 msgstr "HR verification recorded."
 
-#: .\core\views_leave.py:432
+#: .\core\views_leave.py:439
 msgid "Cette demande n'est pas prête pour la décision finale."
 msgstr "This request is not ready for the final decision."
 
-#: .\core\views_leave.py:458
+#: .\core\views_leave.py:465
 msgid "Décision finale enregistrée et notifiée."
 msgstr "Final decision recorded and notified."
 
-#: .\core\views_leave.py:475
+#: .\core\views_leave.py:482
 msgid "L'attestation n'est disponible que pour les demandes approuvées."
 msgstr "The certificate is only available for approved requests."
 
@@ -3765,19 +3785,19 @@ msgstr "Project role \"{name}\" deleted."
 
 #: .\dashboard_csig\middleware.py:64
 msgid "Une erreur de base de données s'est produite. Veuillez réessayer."
-msgstr ""
+msgstr "A database error occurred. Please try again."
 
 #: .\dashboard_csig\middleware.py:85
 msgid ""
 "Une erreur inattendue s'est produite. L'équipe technique a été notifiée."
-msgstr ""
+msgstr "An unexpected error occurred. The technical team has been notified."
 
 # Settings labels
-#: .\dashboard_csig\settings.py:165 .\templates\base.html:186
+#: .\dashboard_csig\settings.py:204 .\templates\base.html:186
 msgid "Français"
 msgstr "French"
 
-#: .\dashboard_csig\settings.py:166 .\templates\base.html:190
+#: .\dashboard_csig\settings.py:205 .\templates\base.html:190
 msgid "English"
 msgstr "English"
 
@@ -4014,6 +4034,8 @@ msgstr "Filter"
 msgid "Réinitialiser"
 msgstr "Reset"
 
+#: .\templates\core\calendar.html:521 .\templates\core\calendar.html:596
+#: .\templates\core\calendar.html:678
 msgid "Récurrent"
 msgstr "Recurring"
 
@@ -4031,31 +4053,38 @@ msgstr "Decline"
 msgid "Aucun événement ce mois-ci"
 msgstr "No events this month"
 
-#: .\templates\core\calendar.html:646 .\templates\core\project_detail.html:1274
+#: .\templates\core\calendar.html:646
+#: .\templates\core\project_detail.html:1274
 msgid "Lun"
 msgstr "Mon"
 
-#: .\templates\core\calendar.html:647 .\templates\core\project_detail.html:1274
+#: .\templates\core\calendar.html:647
+#: .\templates\core\project_detail.html:1274
 msgid "Mar"
 msgstr "Tue"
 
-#: .\templates\core\calendar.html:648 .\templates\core\project_detail.html:1274
+#: .\templates\core\calendar.html:648
+#: .\templates\core\project_detail.html:1274
 msgid "Mer"
 msgstr "Wed"
 
-#: .\templates\core\calendar.html:649 .\templates\core\project_detail.html:1274
+#: .\templates\core\calendar.html:649
+#: .\templates\core\project_detail.html:1274
 msgid "Jeu"
 msgstr "Thu"
 
-#: .\templates\core\calendar.html:650 .\templates\core\project_detail.html:1274
+#: .\templates\core\calendar.html:650
+#: .\templates\core\project_detail.html:1274
 msgid "Ven"
 msgstr "Fri"
 
-#: .\templates\core\calendar.html:651 .\templates\core\project_detail.html:1274
+#: .\templates\core\calendar.html:651
+#: .\templates\core\project_detail.html:1274
 msgid "Sam"
 msgstr "Sat"
 
-#: .\templates\core\calendar.html:652 .\templates\core\project_detail.html:1274
+#: .\templates\core\calendar.html:652
+#: .\templates\core\project_detail.html:1274
 msgid "Dim"
 msgstr "Sun"
 
@@ -4226,7 +4255,8 @@ msgstr "My ongoing projects"
 #: .\templates\core\dashboard.html:425 .\templates\core\global_search.html:34
 #: .\templates\core\global_search.html:84
 #: .\templates\core\global_search.html:125
-#: .\templates\core\global_search.html:162 .\templates\core\users\list.html:194
+#: .\templates\core\global_search.html:162
+#: .\templates\core\users\list.html:194
 msgid "Voir tout"
 msgstr "View all"
 
@@ -4299,8 +4329,9 @@ msgid "Échéance"
 msgstr "Deadline"
 
 #: .\templates\core\dashboard.html:311 .\templates\core\dashboard.html:321
-msgid "Pas d\\"
-msgstr ""
+#| msgid "Sans date d'échéance"
+msgid "Pas d'échéance"
+msgstr "No deadline"
 
 #: .\templates\core\dashboard.html:333
 #: .\templates\core\leaves\leave_list.html:105
@@ -4336,12 +4367,14 @@ msgid_plural "%(n)s participants"
 msgstr[0] "%(n)s participant"
 msgstr[1] "%(n)s participants"
 
-#: .\templates\core\dashboard.html:464 .\templates\core\project_detail.html:341
+#: .\templates\core\dashboard.html:464
+#: .\templates\core\project_detail.html:341
 #: .\templates\core\project_detail.html:544 .\templates\core\reports.html:582
 msgid "Alloué"
 msgstr "Allocated"
 
-#: .\templates\core\dashboard.html:465 .\templates\core\project_detail.html:337
+#: .\templates\core\dashboard.html:465
+#: .\templates\core\project_detail.html:337
 #: .\templates\core\project_detail.html:541 .\templates\core\reports.html:312
 #: .\templates\core\reports.html:393 .\templates\core\reports.html:587
 #: .\templates\core\resources.html:101
@@ -4371,7 +4404,8 @@ msgstr "Color used to identify the department"
 # Common actions
 #: .\templates\core\direction_form.html:40
 #: .\templates\core\document_form.html:89
-#: .\templates\core\employee_form.html:102 .\templates\core\event_form.html:148
+#: .\templates\core\employee_form.html:102
+#: .\templates\core\event_form.html:148
 #: .\templates\core\milestone_form.html:226
 #: .\templates\core\partner_form.html:90
 #: .\templates\core\project_document_form.html:62
@@ -4396,7 +4430,7 @@ msgstr "List and manage organization departments"
 #: .\templates\core\directions_list.html:15
 msgid ""
 "Structure organisationnelle et répartition des ressources par direction."
-msgstr ""
+msgstr "Organizational structure and distribution of resources by department."
 
 #: .\templates\core\directions_list.html:19
 msgid "Nouvelle direction"
@@ -4451,16 +4485,14 @@ msgid "Cliquez ou glissez un fichier"
 msgstr "Click or drag a file"
 
 #: .\templates\core\document_preview.html:4
-#, fuzzy
 #| msgid "Aperçu"
 msgid "Apercu"
 msgstr "Preview"
 
 #: .\templates\core\document_preview.html:5
-#, fuzzy
 #| msgid "Aperçu du document"
 msgid "Apercu du document"
-msgstr "Document Preview"
+msgstr "Document preview"
 
 #: .\templates\core\document_preview.html:20
 #: .\templates\core\leaves\leave_detail.html:194
@@ -4472,13 +4504,11 @@ msgid "Retour"
 msgstr "Back"
 
 #: .\templates\core\document_preview.html:26
-#, fuzzy
 #| msgid "Aperçu PDF"
 msgid "Apercu PDF"
-msgstr "PDF Preview"
+msgstr "PDF preview"
 
 #: .\templates\core\document_preview.html:34
-#, fuzzy
 #| msgid "Prévisualisation non disponible"
 msgid "Previsualisation non disponible"
 msgstr "Preview not available"
@@ -4487,10 +4517,9 @@ msgstr "Preview not available"
 msgid ""
 "Ce format de fichier ne peut pas etre previsualise directement dans "
 "l'application."
-msgstr ""
+msgstr "This file format cannot be previewed directly in the application."
 
 #: .\templates\core\document_preview.html:41
-#, fuzzy
 #| msgid "Télécharger le fichier"
 msgid "Telecharger le fichier"
 msgstr "Download file"
@@ -4559,17 +4588,15 @@ msgstr "No document found"
 msgid "Gérer les ressources humaines"
 msgstr "Manage human resources"
 
-# Milestone forms
 #: .\templates\core\employee_form.html:11
-#, fuzzy
-#| msgid "Informations du jalon"
-msgid "Informations de l\\"
-msgstr "Milestone information"
+#| msgid "Informations du nouvel employé"
+msgid "Informations de l'employé"
+msgstr "Employee information"
 
 #: .\templates\core\employee_form.html:65
 msgid ""
 "Optionnel pour une personne externe — mais nécessaire pour créer un compte."
-msgstr ""
+msgstr "Optional for an external person — but required to create an account."
 
 #: .\templates\core\employee_form.html:88
 msgid "Sélectionnez un rôle pour créer automatiquement un compte utilisateur."
@@ -4594,15 +4621,14 @@ msgid "Supprimer cet événement ?"
 msgstr "Delete this event?"
 
 #: .\templates\core\event_confirm_delete.html:68
-#, fuzzy
 #| msgid ""
 #| "Cette action est irréversible. La demande sera annulée définitivement."
 msgid ""
 "Cette action est irréversible. L'événement, ses invitations et toutes les "
 "réponses RSVP associées seront définitivement supprimés."
 msgstr ""
-"This action is irreversible. The request will be permanently cancelled.This "
-"action is irreversible. The request will be permanently cancelled."
+"This action is irreversible. The event, its invitations and all associated "
+"RSVP responses will be permanently deleted."
 
 #: .\templates\core\event_confirm_delete.html:90
 #: .\templates\core\event_detail.html:319
@@ -4631,15 +4657,20 @@ msgstr "Export to your calendar (.ics)"
 msgid ".ics"
 msgstr ".ics"
 
+#: .\templates\core\event_detail.html:216
 msgid "Répétition"
 msgstr "Repeat"
 
+#: .\templates\core\event_detail.html:217
 msgid "jusqu'au"
 msgstr "until"
 
+#: .\templates\core\event_detail.html:225
+#: .\templates\core\event_detail.html:227
 msgid "Détacher l'occurrence"
 msgstr "Detach the occurrence"
 
+#: .\templates\core\event_detail.html:231
 msgid "Crée un événement indépendant et retire cette date de la série."
 msgstr "Creates an independent event and removes this date from the series."
 
@@ -4676,10 +4707,9 @@ msgid "Choisir un projet"
 msgstr "Choose a project"
 
 #: .\templates\core\event_detail.html:403
-#, fuzzy
-#| msgid "Toutes"
-msgid "Toute l\\"
-msgstr "All"
+#| msgid "Tout lire"
+msgid "Toute l'équipe"
+msgstr "The whole team"
 
 #: .\templates\core\event_detail.html:424
 msgid "Retirer"
@@ -4717,6 +4747,7 @@ msgstr "Edit this event"
 msgid "Informations de l'événement"
 msgstr "Event information"
 
+#: .\templates\core\event_form.html:116
 msgid "Requise si une récurrence est choisie."
 msgstr "Required if a recurrence is chosen."
 
@@ -4759,6 +4790,8 @@ msgid ""
 "Tapez un mot-clé dans la barre de recherche pour trouver des projets, "
 "partenaires, employés, demandes ou documents."
 msgstr ""
+"Type a keyword in the search bar to find projects, partners, employees, "
+"requests or documents."
 
 #: .\templates\core\global_search.html:20
 msgid "Aucun résultat"
@@ -4788,10 +4821,9 @@ msgid "Statut actuel"
 msgstr "Current status"
 
 #: .\templates\core\leaves\leave_detail.html:175
-#, fuzzy
 #| msgid "Télécharger"
-msgid "Télécharger l\\"
-msgstr "Download"
+msgid "Télécharger l'attestation"
+msgstr "Download the certificate"
 
 #: .\templates\core\leaves\leave_detail.html:180
 msgid "Cette action est irréversible. La demande sera annulée définitivement."
@@ -4880,6 +4912,8 @@ msgid ""
 "Évaluez l'impact de cette absence sur le fonctionnement du service avant de "
 "transmettre à la RH."
 msgstr ""
+"Assess the impact of this absence on service operations before forwarding to"
+" HR."
 
 #: .\templates\core\leaves\leave_detail.html:408
 msgid "Enregistrer mon avis"
@@ -4898,6 +4932,8 @@ msgid ""
 "Contrôlez la conformité réglementaire et les droits disponibles avant "
 "transmission à la Direction."
 msgstr ""
+"Check regulatory compliance and available balance before forwarding to "
+"Management."
 
 #: .\templates\core\leaves\leave_detail.html:436
 msgid "Valider la vérification RH"
@@ -4917,6 +4953,8 @@ msgid ""
 "notification sera envoyée automatiquement à l'agent et à la chaîne de "
 "validation."
 msgstr ""
+"Official decision from General Management / Coordination. A notification "
+"will be sent automatically to the employee and the approval chain."
 
 #: .\templates\core\leaves\leave_detail.html:464
 msgid "Enregistrer la décision finale"
@@ -4931,12 +4969,15 @@ msgid ""
 "Remplissez ce formulaire pour soumettre votre demande. Elle suivra le "
 "circuit officiel : Hiérarchie → RH → Direction."
 msgstr ""
+"Fill in this form to submit your request. It will follow the official "
+"workflow: Manager → HR → Management."
 
 #: .\templates\core\leaves\leave_form.html:258
 msgid "Décision Direction"
 msgstr "Management decision"
 
-#: .\templates\core\leaves\leave_form.html:276 .\templates\core\profile.html:60
+#: .\templates\core\leaves\leave_form.html:276
+#: .\templates\core\profile.html:60
 msgid "Informations personnelles"
 msgstr "Personal information"
 
@@ -4968,11 +5009,14 @@ msgstr "Replacement and file handover"
 msgid ""
 "Personne désignée pour assurer la continuité du service pendant votre "
 "absence."
-msgstr ""
+msgstr "Person designated to ensure service continuity during your absence."
 
 #: .\templates\core\leaves\leave_form.html:350
-msgid "Brève note de passation : dossiers en cours, points d\\"
+msgid ""
+"Brève note de passation : dossiers en cours, points d'attention, contacts "
+"utiles."
 msgstr ""
+"Brief handover note: ongoing files, points of attention, useful contacts."
 
 #: .\templates\core\leaves\leave_form.html:360
 msgid "Documents justificatifs"
@@ -4995,6 +5039,8 @@ msgid ""
 "Certificat médical, acte de naissance, convocation, ordre de mission… (PDF, "
 "image, Word)"
 msgstr ""
+"Medical certificate, birth certificate, summons, travel order… (PDF, image, "
+"Word)"
 
 #: .\templates\core\leaves\leave_form.html:379
 msgid "Pièces déjà jointes"
@@ -5059,6 +5105,8 @@ msgid ""
 "Pensez à désigner un suppléant pour faciliter la continuité du service. Une "
 "note de passation bien rédigée accélère la validation."
 msgstr ""
+"Remember to designate a substitute to facilitate service continuity. A well-"
+"written handover note speeds up approval."
 
 #: .\templates\core\leaves\leave_list.html:5
 msgid "Gestion des congés"
@@ -5072,7 +5120,7 @@ msgstr "CSIG workflow: Employee → Manager → HR → Management"
 msgid ""
 "Suivez vos demandes en temps réel et soumettez-en de nouvelles en quelques "
 "clics."
-msgstr ""
+msgstr "Track your requests in real time and submit new ones in a few clicks."
 
 # Requests
 #: .\templates\core\leaves\leave_list.html:110
@@ -5188,7 +5236,6 @@ msgstr "Change status"
 
 #: .\templates\core\milestone_detail.html:181
 #: .\templates\core\milestone_detail.html:301
-#, fuzzy
 #| msgid "complétée"
 msgid "complétée"
 msgid_plural "complétées"
@@ -5306,12 +5353,11 @@ msgstr "External"
 #: .\templates\core\project_detail.html:885
 #: .\templates\core\sub_milestone_form.html:177
 #: .\templates\core\sub_milestone_form.html:206
-#, fuzzy
 #| msgid "tâche"
 msgid "tâche"
 msgid_plural "tâches"
 msgstr[0] "task"
-msgstr[1] "task"
+msgstr[1] "tasks"
 
 #: .\templates\core\milestone_form.html:287
 #: .\templates\core\sub_milestone_form.html:189
@@ -5336,10 +5382,9 @@ msgid "Terminées"
 msgstr "Completed"
 
 #: .\templates\core\my_tasks.html:111
-#, fuzzy
 #| msgid "Toutes les tâches qui vous sont assignées"
-msgid "Aucune tâche ne vous est assignée pour l\\"
-msgstr "All tasks assigned to you"
+msgid "Aucune tâche ne vous est assignée pour l'instant."
+msgstr "No task is assigned to you at the moment."
 
 #: .\templates\core\my_tasks.html:125
 #, python-format
@@ -5471,16 +5516,14 @@ msgid "Changer le mot de passe"
 msgstr "Change password"
 
 #: .\templates\core\profile.html:68
-#, fuzzy
 #| msgid "Photo de profil supprimée."
 msgid "Photo de profil"
-msgstr "Profile picture deleted."
+msgstr "Profile photo"
 
 #: .\templates\core\profile.html:94
-#, fuzzy
 #| msgid "Supprimer la pièce jointe"
 msgid "Supprimer la photo"
-msgstr "Delete attachment"
+msgstr "Remove photo"
 
 #: .\templates\core\profile.html:109
 msgid "Votre prénom"
@@ -5498,7 +5541,7 @@ msgstr "Email address"
 msgid ""
 "Cet email est utilisé pour recevoir les notifications et les liens "
 "d'invitation."
-msgstr ""
+msgstr "This email is used to receive notifications and invitation links."
 
 #: .\templates\core\profile.html:148
 msgid "Optionnel."
@@ -5609,12 +5652,11 @@ msgid "Aucune échéance dans les 14 prochains jours."
 msgstr "No deadlines in the next 14 days."
 
 #: .\templates\core\project_detail.html:442
-#, fuzzy
 #| msgid "besoin ouvert"
 msgid "besoin ouvert"
 msgid_plural "besoins ouverts"
 msgstr[0] "open need"
-msgstr[1] "open need"
+msgstr[1] "open needs"
 
 #: .\templates\core\project_detail.html:444
 msgid "Voir les besoins"
@@ -5640,8 +5682,8 @@ msgstr "Remaining"
 #, python-format
 msgid "%(count)s étape définie"
 msgid_plural "%(count)s étapes définies"
-msgstr[0] "%(count)s defined step"
-msgstr[1] "%(count)s defined steps"
+msgstr[0] "%(count)s step defined"
+msgstr[1] "%(count)s steps defined"
 
 #: .\templates\core\project_detail.html:630
 msgid "Kanban"
@@ -5673,12 +5715,11 @@ msgid "Assigner"
 msgstr "Assign"
 
 #: .\templates\core\project_detail.html:711
-#, fuzzy
 #| msgid "sous-étape"
 msgid "sous-étape"
 msgid_plural "sous-étapes"
 msgstr[0] "sub-step"
-msgstr[1] "sub-step"
+msgstr[1] "sub-steps"
 
 #: .\templates\core\project_detail.html:746
 msgid "Ajouter une sous-étape"
@@ -5731,8 +5772,8 @@ msgstr "Add the first member"
 #, python-format
 msgid "%(count)s dossier"
 msgid_plural "%(count)s dossiers"
-msgstr[0] "%(count)s folder"
-msgstr[1] "%(count)s folders"
+msgstr[0] "%(count)s dossier"
+msgstr[1] "%(count)s dossiers"
 
 #: .\templates\core\project_detail.html:934
 #, python-format
@@ -5794,7 +5835,8 @@ msgstr "Mark in progress"
 msgid "Marquer résolu"
 msgstr "Mark resolved"
 
-#: .\templates\core\project_detail.html:1105 .\templates\core\requests.html:117
+#: .\templates\core\project_detail.html:1105
+#: .\templates\core\requests.html:117
 msgid "Rejeter"
 msgstr "Reject"
 
@@ -5935,8 +5977,8 @@ msgstr "Project information"
 #: .\templates\core\project_form.html:80
 msgid "Le montant sera automatiquement converti selon le taux de change"
 msgstr ""
-"The amount will be automatically converted according to the exchange rateThe "
-"amount will be automatically converted according to the exchange rate"
+"The amount will be automatically converted according to the exchange rateThe"
+" amount will be automatically converted according to the exchange rate"
 
 #: .\templates\core\project_form.html:110
 msgid "Créer le projet"
@@ -5977,21 +6019,26 @@ msgstr "with a sheet named"
 
 #: .\templates\core\project_import.html:86
 msgid ""
-"Sommaire : col A = Nom projet · B = Responsable · C = Type/Description · D = "
-"Priorité (LOW/MEDIUM/HIGH)"
+"Sommaire : col A = Nom projet · B = Responsable · C = Type/Description · D ="
+" Priorité (LOW/MEDIUM/HIGH)"
 msgstr ""
+"Summary: col A = Project name · B = Owner · C = Type/Description · D = "
+"Priority (LOW/MEDIUM/HIGH)"
 
 #: .\templates\core\project_import.html:87
 msgid ""
-"Feuilles individuelles (optionnel) : col A = Jalon · E = Début · F = Fin · G "
-"= Étapes multi-lignes"
+"Feuilles individuelles (optionnel) : col A = Jalon · E = Début · F = Fin · G"
+" = Étapes multi-lignes"
 msgstr ""
+"Individual sheets (optional): col A = Milestone · E = Start · F = End · G = "
+"Multi-line steps"
 
 #: .\templates\core\project_import.html:88
 msgid ""
 "Le système génère un JSON que vous pouvez relire et corriger avant de "
 "valider."
 msgstr ""
+"The system generates a JSON you can review and correct before validating."
 
 #: .\templates\core\project_import.html:97
 msgid "Fichier Excel"
@@ -6005,7 +6052,8 @@ msgstr "Drag and drop or click to browse"
 msgid "Direction à affecter"
 msgstr "Department to assign"
 
-#: .\templates\core\project_import.html:111 .\templates\core\users\form.html:99
+#: .\templates\core\project_import.html:111
+#: .\templates\core\users\form.html:99
 msgid "Aucune direction"
 msgstr "No department"
 
@@ -6041,7 +6089,7 @@ msgstr "Department:"
 msgid ""
 "Vous pouvez modifier le JSON ci-dessous avant de valider. Respectez le "
 "format :"
-msgstr ""
+msgstr "You can edit the JSON below before validating. Follow the format:"
 
 #: .\templates\core\project_import.html:164
 msgid "JSON des projets à importer"
@@ -6105,6 +6153,8 @@ msgstr "Create a new internal employee"
 msgid ""
 "L'employé sera rattaché à la direction du projet et stocké dans le système."
 msgstr ""
+"The employee will be attached to the project's department and stored in the "
+"system."
 
 #: .\templates\core\project_member_form.html:148
 msgid "Ex : Amadou Diallo"
@@ -6128,6 +6178,8 @@ msgid ""
 "Consultant, prestataire, partenaire — la fiche est créée et stockée avec le "
 "marqueur « Externe »."
 msgstr ""
+"Consultant, contractor, partner — the record is created and stored with the "
+"“External” marker."
 
 #: .\templates\core\project_member_form.html:179
 msgid "Ex : Marie Konaté"
@@ -6184,9 +6236,11 @@ msgstr "Create a login account for this person"
 
 #: .\templates\core\project_member_form.html:268
 msgid ""
-"Le compte sera créé inactif. Un email d'invitation sera envoyé à la personne "
-"pour qu'elle définisse elle-même son mot de passe."
+"Le compte sera créé inactif. Un email d'invitation sera envoyé à la personne"
+" pour qu'elle définisse elle-même son mot de passe."
 msgstr ""
+"The account will be created inactive. An invitation email will be sent so "
+"the person can set their own password."
 
 #: .\templates\core\project_member_form.html:271
 #: .\templates\core\roles\role_detail.html:129
@@ -6496,20 +6550,18 @@ msgstr "System"
 
 #: .\templates\core\roles\project_roles_list.html:62
 #: .\templates\core\roles\roles_list.html:94
-#, fuzzy
 #| msgid " permission"
 msgid " permission"
 msgid_plural " permissions"
 msgstr[0] " permission"
-msgstr[1] " permission"
+msgstr[1] " permissions"
 
 #: .\templates\core\roles\project_roles_list.html:67
-#, fuzzy
 #| msgid " membre"
 msgid " membre"
 msgid_plural " membres"
 msgstr[0] " member"
-msgstr[1] " member"
+msgstr[1] " members"
 
 #: .\templates\core\roles\project_roles_list.html:78
 #: .\templates\core\roles\roles_list.html:116
@@ -6702,11 +6754,12 @@ msgstr "Create role"
 #: .\templates\core\roles\role_form.html:153
 msgid ""
 "<strong>Gérer (tout)</strong> inclut lire, créer, modifier et supprimer."
-msgstr ""
+msgstr "<strong>Manage (all)</strong> includes read, create, edit and delete."
 
 #: .\templates\core\roles\role_form.html:154
-msgid "Les conditions <em>restreignent</em> une permission à un sous-ensemble."
-msgstr ""
+msgid ""
+"Les conditions <em>restreignent</em> une permission à un sous-ensemble."
+msgstr "Conditions <em>restrict</em> a permission to a subset."
 
 #: .\templates\core\roles\roles_list.html:4
 #: .\templates\core\roles\roles_list.html:5
@@ -6731,12 +6784,11 @@ msgid "Rôles personnalisés"
 msgstr "Custom roles"
 
 #: .\templates\core\roles\roles_list.html:99
-#, fuzzy
 #| msgid " utilisateur"
 msgid " utilisateur"
 msgid_plural " utilisateurs"
 msgstr[0] " user"
-msgstr[1] " user"
+msgstr[1] " users"
 
 #: .\templates\core\roles\roles_list.html:112
 msgid "autres"
@@ -6776,19 +6828,19 @@ msgstr "Create my password"
 
 #: .\templates\core\users\activate.html:6
 #: .\templates\registration\password_reset_confirm.html:6
-#: .\templates\registration\password_reset_confirm.html:65
+#: .\templates\registration\password_reset_confirm.html:66
 msgid "Lien invalide"
 msgstr "Invalid link"
 
-#: .\templates\core\users\activate.html:80
+#: .\templates\core\users\activate.html:81
 msgid "Créer votre mot de passe"
 msgstr "Create your password"
 
-#: .\templates\core\users\activate.html:81
+#: .\templates\core\users\activate.html:82
 msgid "Lien d'activation invalide"
 msgstr "Invalid activation link"
 
-#: .\templates\core\users\activate.html:91
+#: .\templates\core\users\activate.html:92
 #: .\templates\emails\account_activation.html:6
 #: .\templates\emails\account_invitation.html:4
 #: .\templates\emails\assignment.html:4
@@ -6798,149 +6850,153 @@ msgstr "Invalid activation link"
 #: .\templates\emails\password_reset_email.html:4
 #: .\templates\emails\project_member_added.html:4
 #: .\templates\emails\task_completed.html:4
-#: .\templates\registration\password_reset_confirm.html:72
+#: .\templates\registration\password_reset_confirm.html:73
 msgid "Bonjour"
 msgstr "Hello"
 
-#: .\templates\core\users\activate.html:92
+#: .\templates\core\users\activate.html:93
 msgid ""
 "choisissez un mot de passe sécurisé pour activer votre accès au tableau de "
 "bord."
-msgstr ""
+msgstr "choose a secure password to activate your access to the dashboard."
 
-#: .\templates\core\users\activate.html:96
+#: .\templates\core\users\activate.html:97
 #: .\templates\emails\account_invitation.html:15
 #: .\templates\emails\password_reset_email.html:11
-#: .\templates\registration\password_reset_confirm.html:77
+#: .\templates\registration\password_reset_confirm.html:78
 msgid "Votre identifiant de connexion"
 msgstr "Your login identifier"
 
-#: .\templates\core\users\activate.html:102
+#: .\templates\core\users\activate.html:103
 #: .\templates\registration\password_change.html:18
-#: .\templates\registration\password_reset_confirm.html:82
+#: .\templates\registration\password_reset_confirm.html:83
 msgid "Votre mot de passe doit :"
 msgstr "Your password must:"
 
-#: .\templates\core\users\activate.html:108
+#: .\templates\core\users\activate.html:109
 #: .\templates\registration\password_change.html:21
-#: .\templates\registration\password_reset_confirm.html:85
+#: .\templates\registration\password_reset_confirm.html:86
 msgid "Contenir au moins 8 caractères"
 msgstr "Contain at least 8 characters"
 
-#: .\templates\core\users\activate.html:115
+#: .\templates\core\users\activate.html:116
 #: .\templates\registration\password_change.html:25
-#: .\templates\registration\password_reset_confirm.html:89
+#: .\templates\registration\password_reset_confirm.html:90
 msgid "Contenir une majuscule et une minuscule"
 msgstr "Contain an uppercase and a lowercase letter"
 
-#: .\templates\core\users\activate.html:122
+#: .\templates\core\users\activate.html:123
 #: .\templates\registration\password_change.html:29
-#: .\templates\registration\password_reset_confirm.html:93
+#: .\templates\registration\password_reset_confirm.html:94
 msgid "Contenir au moins un chiffre"
 msgstr "Contain at least one digit"
 
-#: .\templates\core\users\activate.html:129
+#: .\templates\core\users\activate.html:130
 #: .\templates\registration\password_change.html:33
-#: .\templates\registration\password_reset_confirm.html:97
+#: .\templates\registration\password_reset_confirm.html:98
 msgid "Correspondre à la confirmation"
 msgstr "Match the confirmation"
 
-#: .\templates\core\users\activate.html:138
+#: .\templates\core\users\activate.html:139
 #: .\templates\core\users\change_password.html:11
 #: .\templates\core\users\change_password.html:18
 #: .\templates\registration\password_change.html:12
 #: .\templates\registration\password_change.html:63
 #: .\templates\registration\password_reset_confirm.html:6
-#: .\templates\registration\password_reset_confirm.html:104
+#: .\templates\registration\password_reset_confirm.html:105
 msgid "Nouveau mot de passe"
 msgstr "New password"
 
-#: .\templates\core\users\activate.html:144
-#: .\templates\core\users\activate.html:167
+#: .\templates\core\users\activate.html:145
+#: .\templates\core\users\activate.html:168
 #: .\templates\core\users\change_password.html:23
 #: .\templates\core\users\change_password.html:35
 #: .\templates\registration\password_change.html:51
 #: .\templates\registration\password_change.html:72
 #: .\templates\registration\password_change.html:98
-#: .\templates\registration\password_reset_confirm.html:110
-#: .\templates\registration\password_reset_confirm.html:128
+#: .\templates\registration\password_reset_confirm.html:111
+#: .\templates\registration\password_reset_confirm.html:129
 msgid "Afficher/masquer"
 msgstr "Show/hide"
 
-#: .\templates\core\users\activate.html:161
+#: .\templates\core\users\activate.html:162
 #: .\templates\core\users\change_password.html:30
-#: .\templates\registration\password_reset_confirm.html:122
+#: .\templates\registration\password_reset_confirm.html:123
 msgid "Confirmer le mot de passe"
 msgstr "Confirm password"
 
-#: .\templates\core\users\activate.html:190
+#: .\templates\core\users\activate.html:191
 #: .\templates\emails\account_activation.html:11
 #: .\templates\emails\account_invitation.html:24
 msgid "Activer mon compte"
 msgstr "Activate my account"
 
-#: .\templates\core\users\activate.html:202
-#: .\templates\registration\password_reset_confirm.html:155
+#: .\templates\core\users\activate.html:203
+#: .\templates\registration\password_reset_confirm.html:156
 msgid "Lien invalide ou expiré"
 msgstr "Invalid or expired link"
 
-#: .\templates\core\users\activate.html:203
+#: .\templates\core\users\activate.html:204
 msgid "Ce lien d'activation n'est plus valide."
 msgstr "This activation link is no longer valid."
 
-#: .\templates\core\users\activate.html:204
-#: .\templates\registration\password_reset_confirm.html:162
+#: .\templates\core\users\activate.html:205
+#: .\templates\registration\password_reset_confirm.html:163
 msgid ""
-"Il a peut-être <strong>déjà été utilisé</strong> ou il a <strong>expiré</"
-"strong> (validité : 3 jours)."
+"Il a peut-être <strong>déjà été utilisé</strong> ou il a "
+"<strong>expiré</strong> (validité : 3 jours)."
 msgstr ""
+"It may have <strong>already been used</strong> or it has "
+"<strong>expired</strong> (validity: 3 days)."
 
-#: .\templates\core\users\activate.html:208
+#: .\templates\core\users\activate.html:209
 msgid "Votre compte est peut-être déjà activé :"
 msgstr "Your account may already be activated:"
 
-#: .\templates\core\users\activate.html:209
-#: .\templates\core\users\request_activation.html:139
+#: .\templates\core\users\activate.html:210
+#: .\templates\core\users\request_activation.html:140
 #: .\templates\registration\login.html:537
 msgid "Se connecter"
 msgstr "Sign in"
 
-#: .\templates\core\users\activate.html:212
+#: .\templates\core\users\activate.html:213
+#: .\templates\registration\password_reset_confirm.html:160
 msgid "Recevoir un nouveau lien d'activation"
 msgstr "Receive a new activation link"
 
-#: .\templates\core\users\activate.html:219
-#: .\templates\core\users\request_activation.html:145
-msgid "CSIG – Centre de Suivi et d\\"
-msgstr ""
+#: .\templates\core\users\activate.html:220
+#: .\templates\core\users\request_activation.html:146
+#| msgid "Centre de Suivi et d'Information de Gestion"
+msgid "CSIG – Centre de Suivi et d'Information de Gestion"
+msgstr "CSIG – Centre de Suivi et d'Information de Gestion"
 
-#: .\templates\core\users\activate.html:226
+#: .\templates\core\users\activate.html:227
 #: .\templates\registration\password_change.html:131
-#: .\templates\registration\password_reset_confirm.html:181
+#: .\templates\registration\password_reset_confirm.html:182
 msgid "Très faible"
 msgstr "Very weak"
 
-#: .\templates\core\users\activate.html:227
+#: .\templates\core\users\activate.html:228
 #: .\templates\registration\password_change.html:132
-#: .\templates\registration\password_reset_confirm.html:182
+#: .\templates\registration\password_reset_confirm.html:183
 msgid "Faible"
 msgstr "Weak"
 
-#: .\templates\core\users\activate.html:228
+#: .\templates\core\users\activate.html:229
 #: .\templates\registration\password_change.html:133
-#: .\templates\registration\password_reset_confirm.html:183
+#: .\templates\registration\password_reset_confirm.html:184
 msgid "Moyen"
 msgstr "Medium"
 
-#: .\templates\core\users\activate.html:229
+#: .\templates\core\users\activate.html:230
 #: .\templates\registration\password_change.html:134
-#: .\templates\registration\password_reset_confirm.html:184
+#: .\templates\registration\password_reset_confirm.html:185
 msgid "Fort"
 msgstr "Strong"
 
-#: .\templates\core\users\activate.html:230
+#: .\templates\core\users\activate.html:231
 #: .\templates\registration\password_change.html:135
-#: .\templates\registration\password_reset_confirm.html:185
+#: .\templates\registration\password_reset_confirm.html:186
 msgid "Très fort"
 msgstr "Very strong"
 
@@ -6991,6 +7047,8 @@ msgid ""
 "le compte est créé inactif. L'employé reçoit un email avec un lien sécurisé "
 "pour définir lui-même son mot de passe (lien valable 3 jours)."
 msgstr ""
+"the account is created inactive. The employee receives an email with a "
+"secure link to set their own password (link valid for 3 days)."
 
 #: .\templates\core\users\create.html:31
 msgid "Sélectionner un employé"
@@ -7033,8 +7091,9 @@ msgid "avant de créer son compte."
 msgstr "before creating their account."
 
 #: .\templates\core\users\create.html:81
-msgid "Les permissions détaillées pourront être configurées après la création."
-msgstr ""
+msgid ""
+"Les permissions détaillées pourront être configurées après la création."
+msgstr "Detailed permissions can be configured after creation."
 
 #: .\templates\core\users\create.html:87
 msgid "Créer et envoyer l'invitation"
@@ -7123,10 +7182,9 @@ msgid "Aucun employé lié"
 msgstr "No linked employee"
 
 #: .\templates\core\users\form.html:114
-#, fuzzy
 #| msgid "la direction"
 msgid "Sans direction"
-msgstr "the department"
+msgstr "No department"
 
 #: .\templates\core\users\form.html:133
 msgid "Statut du compte"
@@ -7134,15 +7192,19 @@ msgstr "Account status"
 
 #: .\templates\core\users\form.html:137
 msgid ""
-"Invitation en attente — le compte s'activera automatiquement quand l'employé "
-"définira son mot de passe."
+"Invitation en attente — le compte s'activera automatiquement quand l'employé"
+" définira son mot de passe."
 msgstr ""
+"Invitation pending — the account will activate automatically once the "
+"employee sets their password."
 
 #: .\templates\core\users\form.html:150
 msgid ""
 "Les permissions sont gérées par le rôle attribué. Pour modifier les "
 "permissions d'un rôle, rendez-vous sur"
 msgstr ""
+"Permissions are managed by the assigned role. To change a role's "
+"permissions, go to"
 
 #: .\templates\core\users\form.html:150
 msgid "Gestion des rôles"
@@ -7254,63 +7316,71 @@ msgstr "No user found"
 msgid "Nouveau lien d'activation"
 msgstr "New activation link"
 
-#: .\templates\core\users\request_activation.html:59
+#: .\templates\core\users\request_activation.html:60
 #: .\templates\registration\password_reset.html:6
-#: .\templates\registration\password_reset.html:42
+#: .\templates\registration\password_reset.html:43
 msgid "Email envoyé"
 msgstr "Email sent"
 
-#: .\templates\core\users\request_activation.html:59
+#: .\templates\core\users\request_activation.html:60
 msgid "Demander un nouveau lien"
 msgstr "Request a new link"
 
-#: .\templates\core\users\request_activation.html:73
-#: .\templates\registration\password_reset.html:54
+#: .\templates\core\users\request_activation.html:74
+#: .\templates\registration\password_reset.html:55
 msgid "Vérifiez votre email"
 msgstr "Check your email"
 
-#: .\templates\core\users\request_activation.html:75
+#: .\templates\core\users\request_activation.html:76
 msgid ""
-"Si un compte en attente est associé à cette adresse, un <strong>nouveau lien "
-"d'activation</strong> vient d'être envoyé."
+"Si un compte en attente est associé à cette adresse, un <strong>nouveau lien"
+" d'activation</strong> vient d'être envoyé."
 msgstr ""
+"If a pending account is associated with this address, a <strong>new "
+"activation link</strong> has just been sent."
 
-#: .\templates\core\users\request_activation.html:77
+#: .\templates\core\users\request_activation.html:78
 msgid ""
 "Le lien sera valable <strong>3 jours</strong>. Pensez à vérifier vos spams."
 msgstr ""
+"The link will be valid for <strong>3 days</strong>. Remember to check your "
+"spam folder."
 
-#: .\templates\core\users\request_activation.html:80
+#: .\templates\core\users\request_activation.html:81
 msgid ""
 "Si vous ne recevez rien dans quelques minutes, contactez votre "
 "administrateur pour qu'il renvoie l'invitation depuis le tableau de bord."
 msgstr ""
+"If you receive nothing within a few minutes, contact your administrator to "
+"resend the invitation from the dashboard."
 
-#: .\templates\core\users\request_activation.html:84
-#: .\templates\registration\password_reset.html:62
+#: .\templates\core\users\request_activation.html:85
+#: .\templates\registration\password_reset.html:63
 msgid "Retour à la connexion"
 msgstr "Back to login"
 
-#: .\templates\core\users\request_activation.html:96
+#: .\templates\core\users\request_activation.html:97
 msgid ""
 "Si votre lien d'invitation a expiré ou a été perdu, saisissez l'adresse "
 "email associée à votre compte. Un nouveau lien vous sera envoyé."
 msgstr ""
+"If your invitation link has expired or was lost, enter the email address "
+"associated with your account. A new link will be sent to you."
 
-#: .\templates\core\users\request_activation.html:103
-#: .\templates\registration\password_reset.html:78
+#: .\templates\core\users\request_activation.html:104
+#: .\templates\registration\password_reset.html:79
 msgid "Adresse email du compte"
 msgstr "Account email address"
 
-#: .\templates\core\users\request_activation.html:124
+#: .\templates\core\users\request_activation.html:125
 msgid "Utilisez l'email avec lequel vous avez été invité(e)."
 msgstr "Use the email address with which you were invited."
 
-#: .\templates\core\users\request_activation.html:134
+#: .\templates\core\users\request_activation.html:135
 msgid "Envoyer le lien d'activation"
 msgstr "Send the activation link"
 
-#: .\templates\core\users\request_activation.html:139
+#: .\templates\core\users\request_activation.html:140
 msgid "Vous avez déjà un compte ?"
 msgstr "Already have an account?"
 
@@ -7323,6 +7393,8 @@ msgid ""
 "Merci de vous être inscrit sur notre plateforme. Pour activer votre compte, "
 "veuillez cliquer sur le bouton ci-dessous :"
 msgstr ""
+"Thank you for signing up on our platform. To activate your account, please "
+"click the button below:"
 
 #: .\templates\emails\account_activation.html:14
 #: .\templates\emails\password_reset.html:15
@@ -7336,7 +7408,7 @@ msgstr "This link expires in 24 hours."
 #: .\templates\emails\account_activation.html:19
 msgid ""
 "Si vous n'avez pas demandé cette inscription, vous pouvez ignorer cet email."
-msgstr ""
+msgstr "If you did not request this registration, you can ignore this email."
 
 #: .\templates\emails\account_invitation.html:8
 msgid "a créé un compte pour vous sur le tableau de bord CSIG."
@@ -7351,6 +7423,7 @@ msgid ""
 "Pour activer votre compte et choisir votre mot de passe, cliquez sur le "
 "bouton ci-dessous :"
 msgstr ""
+"To activate your account and choose your password, click the button below:"
 
 #: .\templates\emails\account_invitation.html:28
 #: .\templates\emails\password_reset_email.html:24
@@ -7362,6 +7435,8 @@ msgid ""
 "Ce lien est valable <strong>3 jours</strong>. Si vous n'avez pas demandé ce "
 "compte, ignorez cet email."
 msgstr ""
+"This link is valid for <strong>3 days</strong>. If you did not request this "
+"account, ignore this email."
 
 #: .\templates\emails\assignment.html:33
 #: .\templates\emails\project_member_added.html:30
@@ -7370,7 +7445,8 @@ msgid "Connectez-vous au tableau de bord CSIG pour consulter les détails."
 msgstr "Log in to the CSIG Dashboard to view the details."
 
 #: .\templates\emails\base_email.html:24
-#: .\templates\registration\password_reset_confirm.html:171
+#: .\templates\registration\password_reset.html:112
+#: .\templates\registration\password_reset_confirm.html:172
 msgid "Centre de Suivi et d'Information de Gestion"
 msgstr "Centre de Suivi et d'Information de Gestion"
 
@@ -7387,17 +7463,17 @@ msgid "Action requise"
 msgstr "Action required"
 
 #: .\templates\emails\due_date_alert.html:34
-#, fuzzy
-#| msgid "Connectez-vous au tableau de bord CSIG pour consulter les détails."
-msgid "Connectez-vous au tableau de bord CSIG pour mettre à jour l'avancement."
-msgstr "Log in to the CSIG Dashboard to view the details."
+#| msgid ""
+#| "Connectez-vous au tableau de bord CSIG pour consulter les détails."
+msgid ""
+"Connectez-vous au tableau de bord CSIG pour mettre à jour l'avancement."
+msgstr "Log in to the CSIG dashboard to update progress."
 
 #: .\templates\emails\leave.html:50
 msgid "Consulter la demande"
 msgstr "View request"
 
 #: .\templates\emails\notification.html:12
-#, fuzzy
 #| msgid "Voir le détail"
 msgid "Voir les détails"
 msgstr "View details"
@@ -7419,6 +7495,8 @@ msgid ""
 "Vous avez demandé la réinitialisation de votre mot de passe. Cliquez sur le "
 "bouton ci-dessous pour définir un nouveau mot de passe :"
 msgstr ""
+"You requested a password reset. Click the button below to set a new "
+"password:"
 
 #: .\templates\emails\password_reset.html:12
 #: .\templates\emails\password_reset_email.html:20
@@ -7434,18 +7512,22 @@ msgid ""
 "Si vous n'avez pas demandé cette réinitialisation, vous pouvez ignorer cet "
 "email et votre mot de passe restera inchangé."
 msgstr ""
+"If you did not request this reset, you can ignore this email and your "
+"password will remain unchanged."
 
 #: .\templates\emails\password_reset_email.html:7
 msgid ""
 "Nous avons reçu une demande de réinitialisation du mot de passe pour le "
 "compte associé à votre adresse email."
 msgstr ""
+"We received a password reset request for the account associated with your "
+"email address."
 
 #: .\templates\emails\password_reset_email.html:15
-#, fuzzy
 #| msgid "Choisir un nouveau mot de passe"
-msgid "Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe :"
-msgstr "Choose a new password"
+msgid ""
+"Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe :"
+msgstr "Click the button below to choose a new password:"
 
 #: .\templates\emails\password_reset_email.html:28
 msgid ""
@@ -7453,6 +7535,8 @@ msgid ""
 "cette réinitialisation, ignorez cet email — votre mot de passe reste "
 "inchangé."
 msgstr ""
+"This link is valid for <strong>3 days</strong>. If you did not request this "
+"reset, ignore this email — your password remains unchanged."
 
 #: .\templates\emails\project_member_added.html:5
 msgid "Vous avez été ajouté au projet suivant :"
@@ -7523,10 +7607,9 @@ msgid "Entrez votre mot de passe"
 msgstr "Enter your password"
 
 #: .\templates\registration\login.html:521
-#, fuzzy
 #| msgid "Confirmer le mot de passe"
 msgid "Afficher/masquer le mot de passe"
-msgstr "Confirm password"
+msgstr "Show/hide password"
 
 #: .\templates\registration\login.html:530
 msgid "Se souvenir de moi"
@@ -7559,666 +7642,83 @@ msgstr "Confirm new password"
 
 # Password reset page
 #: .\templates\registration\password_reset.html:6
-#: .\templates\registration\password_reset.html:42
+#: .\templates\registration\password_reset.html:43
 msgid "Mot de passe oublié"
 msgstr "Forgot password"
 
-#: .\templates\registration\password_reset.html:55
+#: .\templates\registration\password_reset.html:56
 msgid ""
 "Si un compte actif correspond à cette adresse, un <strong>lien de "
 "réinitialisation</strong> vient d'être envoyé."
 msgstr ""
+"If an active account matches this address, a <strong>reset link</strong> has"
+" just been sent."
 
-#: .\templates\registration\password_reset.html:56
+#: .\templates\registration\password_reset.html:57
 msgid ""
 "Le lien sera valable <strong>3 jours</strong>. Vérifiez aussi vos spams."
 msgstr ""
+"The link will be valid for <strong>3 days</strong>. Also check your spam "
+"folder."
 
-#: .\templates\registration\password_reset.html:58
+#: .\templates\registration\password_reset.html:59
 msgid ""
 "Si vous ne recevez rien, votre adresse email est peut-être différente. "
 "Contactez votre administrateur si besoin."
 msgstr ""
+"If you receive nothing, your email address may be different. Contact your "
+"administrator if needed."
 
-#: .\templates\registration\password_reset.html:72
+#: .\templates\registration\password_reset.html:73
 msgid ""
 "Saisissez l'adresse email de votre compte. Si elle existe, vous recevrez un "
 "lien pour choisir un nouveau mot de passe."
 msgstr ""
+"Enter your account's email address. If it exists, you will receive a link to"
+" choose a new password."
 
-#: .\templates\registration\password_reset.html:94
+#: .\templates\registration\password_reset.html:95
 msgid "Utilisez l'adresse associée à votre compte CSIG."
 msgstr "Use the address associated with your CSIG account."
 
-#: .\templates\registration\password_reset.html:103
+#: .\templates\registration\password_reset.html:104
 msgid "Envoyer le lien de réinitialisation"
 msgstr "Send reset link"
 
-#: .\templates\registration\password_reset.html:107
-#: .\templates\registration\password_reset_confirm.html:166
+#: .\templates\registration\password_reset.html:108
+#: .\templates\registration\password_reset_confirm.html:167
 msgid "Retour à la"
 msgstr "Back to"
 
-#: .\templates\registration\password_reset.html:107
-#: .\templates\registration\password_reset_confirm.html:166
+#: .\templates\registration\password_reset.html:108
+#: .\templates\registration\password_reset_confirm.html:167
 msgid "connexion"
 msgstr "login"
 
-#: .\templates\registration\password_reset.html:111
-#, fuzzy
-#| msgid "Centre de Suivi et d'Information de Gestion"
-msgid "Centre de Suivi et d\\"
-msgstr "Centre de Suivi et d'Information de Gestion"
-
-#: .\templates\registration\password_reset_confirm.html:65
+#: .\templates\registration\password_reset_confirm.html:66
 msgid "Choisir un nouveau mot de passe"
 msgstr "Choose a new password"
 
-#: .\templates\registration\password_reset_confirm.html:73
+#: .\templates\registration\password_reset_confirm.html:74
 msgid "choisissez un nouveau mot de passe sécurisé."
 msgstr "choose a secure new password."
 
-#: .\templates\registration\password_reset_confirm.html:143
+#: .\templates\registration\password_reset_confirm.html:144
 msgid "Enregistrer le nouveau mot de passe"
 msgstr "Save new password"
 
-#: .\templates\registration\password_reset_confirm.html:157
+#: .\templates\registration\password_reset_confirm.html:158
 msgid ""
 "Ce compte n'a pas encore été activé. Utilisez le lien d'activation qui vous "
 "a été envoyé par email."
 msgstr ""
+"This account has not been activated yet. Use the activation link sent to you"
+" by email."
 
-#: .\templates\registration\password_reset_confirm.html:159
-#, fuzzy
-#| msgid "Recevoir un nouveau lien d'activation"
-msgid "Recevoir un nouveau lien d\\"
-msgstr "Receive a new activation link"
-
-#: .\templates\registration\password_reset_confirm.html:161
+#: .\templates\registration\password_reset_confirm.html:162
 msgid "Ce lien de réinitialisation n'est plus valide."
 msgstr "This reset link is no longer valid."
 
-#: .\templates\registration\password_reset_confirm.html:164
+#: .\templates\registration\password_reset_confirm.html:165
 msgid "Faire une nouvelle demande"
 msgstr "Submit a new request"
-
-#~ msgid ""
-#~ "Pour réinitialiser votre mot de passe, veuillez contacter "
-#~ "l'administrateur système."
-#~ msgstr "To reset your password, please contact the system administrator."
-
-#~ msgid "Tous droits réservés"
-#~ msgstr "All rights reserved"
-
-#~ msgid "Non connecté"
-#~ msgstr "Not logged in"
-
-#~ msgid "FR"
-#~ msgstr "FR"
-
-#~ msgid "EN"
-#~ msgstr "EN"
-
-#~ msgid "CSIG"
-#~ msgstr "CSIG"
-
-# Dashboard
-#~ msgid "Vue d'ensemble de la direction générale"
-#~ msgstr "General Management overview"
-
-#~ msgid "Projets actifs"
-#~ msgstr "Active projects"
-
-#~ msgid "Budget total"
-#~ msgstr "Total budget"
-
-#~ msgid "Taux de réalisation"
-#~ msgstr "Completion rate"
-
-#~ msgid "Projets récents"
-#~ msgstr "Recent projects"
-
-#~ msgid "Voir tous les projets"
-#~ msgstr "View all projects"
-
-#~ msgid "Répartition par direction"
-#~ msgstr "Distribution by department"
-
-#~ msgid "Détails du projet"
-#~ msgstr "Project details"
-
-#~ msgid "Membres"
-#~ msgstr "Members"
-
-#~ msgid "Nouveau jalon"
-#~ msgstr "New milestone"
-
-#~ msgid "Nouvelle sous-étape"
-#~ msgstr "New sub-step"
-
-#~ msgid "Annulé"
-#~ msgstr "Cancelled"
-
-# Reports
-#~ msgid "Rapports et analyses"
-#~ msgstr "Reports and analytics"
-
-#~ msgid "Exporter Excel"
-#~ msgstr "Export Excel"
-
-# Messages
-#~ msgid "Créé avec succès"
-#~ msgstr "Created successfully"
-
-#~ msgid "Modifié avec succès"
-#~ msgstr "Modified successfully"
-
-#~ msgid "Supprimé avec succès"
-#~ msgstr "Deleted successfully"
-
-# Dashboard extra
-#~ msgid "Vue d'ensemble des activités de la CSIG"
-#~ msgstr "Overview of CSIG activities"
-
-#~ msgid "projets au total"
-#~ msgstr "total projects"
-
-#~ msgid "Budget par direction (en millions GNF)"
-#~ msgstr "Budget by department (in millions GNF)"
-
-#~ msgid "Évolution des projets"
-#~ msgstr "Project evolution"
-
-#~ msgid "Jalons du projet"
-#~ msgstr "Project milestones"
-
-#~ msgid "Répartition du budget par direction"
-#~ msgstr "Budget distribution by department"
-
-#~ msgid "Détail des budgets par direction"
-#~ msgstr "Budget details by department"
-
-#~ msgid "Liste des employés"
-#~ msgstr "Employee list"
-
-#~ msgid "Deadlines"
-#~ msgstr "Deadlines"
-
-#~ msgid "Légende"
-#~ msgstr "Legend"
-
-#~ msgid "Deadline"
-#~ msgstr "Deadline"
-
-#~ msgid "Identifiants incorrects. Veuillez réessayer."
-#~ msgstr "Incorrect credentials. Please try again."
-
-#~ msgid "Projets terminés"
-#~ msgstr "Completed projects"
-
-#~ msgid "Répartition des projets par statut"
-#~ msgstr "Project distribution by status"
-
-#~ msgid "Détail des projets"
-#~ msgstr "Project details"
-
-#~ msgid "Budget total alloué"
-#~ msgstr "Total allocated budget"
-
-#~ msgid "Budget total consommé"
-#~ msgstr "Total consumed budget"
-
-#~ msgid "Consommation budgétaire"
-#~ msgstr "Budget consumption"
-
-#~ msgid "Projets en retard"
-#~ msgstr "Delayed projects"
-
-#~ msgid "Performance par projet"
-#~ msgstr "Performance by project"
-
-#~ msgid "Budget utilisé"
-#~ msgstr "Budget used"
-
-#~ msgid "Overview"
-#~ msgstr "Overview"
-
-#~ msgid "Résumé général du projet"
-#~ msgstr "General project summary"
-
-#~ msgid "Avancement du projet"
-#~ msgstr "Project progress"
-
-#~ msgid "Consommation budget"
-#~ msgstr "Budget consumption"
-
-#~ msgid "Étapes / Jalons"
-#~ msgstr "Steps / Milestones"
-
-#~ msgid "Aucun besoin défini pour ce projet."
-#~ msgstr "No needs defined for this project."
-
-#~ msgid "Aucun commentaire pour ce projet."
-#~ msgstr "No comments for this project."
-
-#~ msgid "Vous n'avez pas les permissions pour ajouter des besoins."
-#~ msgstr "You do not have permissions to add needs."
-
-#~ msgid "Vous n'avez pas les permissions pour ajouter des commentaires."
-#~ msgstr "You do not have permissions to add comments."
-
-#~ msgid "Suivi & mise à jour"
-#~ msgstr "Tracking & update"
-
-#~ msgid "Options rapides pour suivre et mettre à jour le projet."
-#~ msgstr "Quick options to track and update the project."
-
-#~ msgid "Mettre à jour le projet"
-#~ msgstr "Update the project"
-
-#~ msgid "Nouveau dossier"
-#~ msgstr "New folder"
-
-#~ msgid "Cliquez pour sélectionner ou désélectionner des directions"
-#~ msgstr "Click to select or deselect departments"
-
-#~ msgid "Optionnel : décrivez le besoin lié à cette étape"
-#~ msgstr "Optional: describe the need related to this step"
-
-#~ msgid "Optionnel : décrivez le besoin lié à cette sous-étape"
-#~ msgstr "Optional: describe the need related to this sub-step"
-
-#~ msgid "Êtes-vous sûr de vouloir supprimer l'événement"
-#~ msgstr "Are you sure you want to delete the event"
-
-#~ msgid "Créer un nouvel employé (personne non enregistrée dans le système)"
-#~ msgstr "Create a new employee (person not registered in the system)"
-
-#~ msgid "Employés disponibles"
-#~ msgstr "Available employees"
-
-#~ msgid "Tous les employés sont déjà membres de ce projet"
-#~ msgstr "All employees are already members of this project"
-
-#~ msgid "Informations du nouvel employé"
-#~ msgstr "New employee information"
-
-#~ msgid "Poste/Fonction"
-#~ msgstr "Position/Function"
-
-#~ msgid "Rôle et permissions"
-#~ msgstr "Role and permissions"
-
-#~ msgid "Aucun employé"
-#~ msgstr "No employee"
-
-#~ msgid "Permissions détaillées"
-#~ msgstr "Detailed permissions"
-
-#~ msgid "Peut créer des projets"
-#~ msgstr "Can create projects"
-
-#~ msgid "Peut modifier les projets"
-#~ msgstr "Can edit projects"
-
-#~ msgid "Peut ajouter des jalons"
-#~ msgstr "Can add milestones"
-
-#~ msgid "Peut voir les budgets"
-#~ msgstr "Can view budgets"
-
-#~ msgid "Peut gérer les budgets"
-#~ msgstr "Can manage budgets"
-
-#~ msgid "Peut voir toutes les directions"
-#~ msgstr "Can view all departments"
-
-#~ msgid "Peut gérer les utilisateurs"
-#~ msgstr "Can manage users"
-
-#~ msgid "Peut approuver les demandes"
-#~ msgstr "Can approve requests"
-
-#~ msgid "Peut créer des événements"
-#~ msgstr "Can create events"
-
-#~ msgid "Niveaux de permissions"
-#~ msgstr "Permission levels"
-
-#~ msgid "Administrateur"
-#~ msgstr "Administrator"
-
-#~ msgid "Accès total à toutes les fonctionnalités"
-#~ msgstr "Full access to all features"
-
-#~ msgid "Directeur Général"
-#~ msgstr "General Director"
-
-#~ msgid "Gestion complète, approbation demandes"
-#~ msgstr "Full management, request approval"
-
-#~ msgid "Directeur"
-#~ msgstr "Director"
-
-#~ msgid "Projets, budgets, documents, partenaires"
-#~ msgstr "Projects, budgets, documents, partners"
-
-#~ msgid "Chef de Projet"
-#~ msgstr "Project Manager"
-
-#~ msgid "Projets, rapports"
-#~ msgstr "Projects, reports"
-
-#~ msgid "Tableau de bord, calendrier"
-#~ msgstr "Dashboard, calendar"
-
-#~ msgid "Visiteur"
-#~ msgstr "Visitor"
-
-#~ msgid "Tableau de bord uniquement"
-#~ msgstr "Dashboard only"
-
-# Activity log descriptions
-#~ msgid "Création du compte %(username)s pour %(name)s"
-#~ msgstr "Account created for %(name)s (%(username)s)"
-
-#~ msgid "Réinitialisation du mot de passe via email"
-#~ msgstr "Password reset via email"
-
-#~ msgid "Changement de mot de passe"
-#~ msgstr "Password changed"
-
-#~ msgid "Mise à jour du profil"
-#~ msgstr "Profile updated"
-
-#~ msgid "Modification de l'utilisateur %(username)s"
-#~ msgstr "User %(username)s modified"
-
-#~ msgid "Suppression de l'utilisateur %(username)s"
-#~ msgstr "User %(username)s deleted"
-
-#~ msgid "Activation du compte via lien email"
-#~ msgstr "Account activated via email link"
-
-#~ msgid "Il pourra vous aider à récupérer l'accès à votre compte."
-#~ msgstr "They can help you recover access to your account."
-
-#~ msgid "Contactez l'administrateur"
-#~ msgstr "Contact the administrator"
-
-#~ msgid "Tout module"
-#~ msgstr "Entire module"
-
-#~ msgid "%s utilisateur"
-#~ msgstr "%s user"
-
-#~ msgid "Comment"
-#~ msgstr "Comment"
-
-#~ msgid "LeaveRequest"
-#~ msgstr "LeaveRequest"
-
-#~ msgid "Project"
-#~ msgstr "Project"
-
-#~ msgid "all"
-#~ msgstr "all"
-
-#~ msgid "Partner"
-#~ msgstr "Partner"
-
-#~ msgid "utilisateur"
-#~ msgstr "user"
-
-#~ msgid "membre"
-#~ msgstr "member"
-
-#~ msgid "Report"
-#~ msgstr "Report"
-
-#~ msgid "<strong>%s</strong> utilisateur aura ces permissions."
-#~ msgstr "<strong>%s</strong> user will have these permissions."
-
-#~ msgid "en_cours"
-#~ msgstr "in_progress"
-
-#~ msgid "Event"
-#~ msgstr "Event"
-
-#~ msgid "Fran\\u00e7ais"
-#~ msgstr "French"
-
-#~ msgid "Milestone"
-#~ msgstr "Milestone"
-
-#~ msgid "Toutes directions"
-#~ msgstr "All departments"
-
-#~ msgid "ProjectMember"
-#~ msgstr "ProjectMember"
-
-#~ msgid "manage"
-#~ msgstr "manage"
-
-#~ msgid "Cette section est réservée au Directeur Général."
-#~ msgstr "This section is reserved for the General Director."
-
-#~ msgid "Request"
-#~ msgstr "Request"
-
-#~ msgid "permission"
-#~ msgstr "permission"
-
-#~ msgid "Seul le Directeur Général peut supprimer un projet."
-#~ msgstr "Only the General Director can delete a project."
-
-#~ msgid "User"
-#~ msgstr "User"
-
-#~ msgid "Supprimer « %s » ?"
-#~ msgstr "Delete « %s »?"
-
-#~ msgid "1/3 - Avis hierarchique"
-#~ msgstr "1/3 - Manager review"
-
-#~ msgid "2/3 - Verification RH"
-#~ msgstr "2/3 - HR verification"
-
-#~ msgid "3/3 - Decision Direction"
-#~ msgstr "3/3 - Final decision"
-
-#~ msgid "Termine - Approuvee"
-#~ msgstr "Done - Approved"
-
-#~ msgid "Termine - Rejetee"
-#~ msgstr "Done - Rejected"
-
-#~ msgid "Termine - Refus hierarchique"
-#~ msgstr "Done - Manager rejected"
-
-#~ msgid "Termine - Non conforme RH"
-#~ msgstr "Done - HR non-compliant"
-
-#~ msgid "Annulee"
-#~ msgstr "Cancelled"
-
-#~ msgid "1/3 - Avis hiérarchique"
-#~ msgstr "1/3 - Manager review"
-
-#~ msgid "2/3 - Vérification RH"
-#~ msgstr "2/3 - HR verification"
-
-#~ msgid "3/3 - Décision Direction"
-#~ msgstr "3/3 - Final decision"
-
-#~ msgid "Terminé - Approuvée"
-#~ msgstr "Done - Approved"
-
-#~ msgid "Terminé - Rejetée"
-#~ msgstr "Done - Rejected"
-
-#~ msgid "Terminé - Refus hiérarchique"
-#~ msgstr "Done - Manager rejected"
-
-#~ msgid "Terminé - Non conforme RH"
-#~ msgstr "Done - HR non-compliant"
-
-#~ msgid "%s utilisateurs"
-#~ msgstr "%s users"
-
-#~ msgid "<strong>%s</strong> utilisateurs auront ces permissions."
-#~ msgstr "<strong>%s</strong> users will have these permissions."
-
-#~ msgid "Détail des étapes de validation"
-#~ msgstr "Validation steps details"
-
-#~ msgid " permissions"
-#~ msgstr " permissions"
-
-#~ msgid " utilisateurs"
-#~ msgstr " users"
-
-#~ msgid " membres"
-#~ msgstr " members"
-
-#~ msgid "%s participant"
-#~ msgstr "%s participant"
-
-#~ msgid "%s projet au total"
-#~ msgstr "%s project total"
-
-#~ msgid "Renvoyer l'invitation à %s ?"
-#~ msgstr "Resend invitation to %s?"
-
-#~ msgid "%s dossier"
-#~ msgstr "%s folder"
-
-#~ msgid "%s document"
-#~ msgstr "%s document"
-
-#~ msgid "%s commentaire"
-#~ msgstr "%s comment"
-
-#~ msgid "%s membre"
-#~ msgstr "%s member"
-
-#~ msgid "%s étape définie"
-#~ msgstr "%s step defined"
-
-#~ msgid "%s besoin"
-#~ msgstr "%s need"
-
-#~ msgid "Chef de projet sur %s projet :"
-#~ msgstr "Project manager for %s project:"
-
-#~ msgid "Membre de %s projet — les appartenances seront supprimées"
-#~ msgstr "Member of %s project — memberships will be deleted"
-
-#~ msgid "%s tâche"
-#~ msgstr "%s task"
-
-#~ msgid "Sélectionner des directions..."
-#~ msgstr "Select departments..."
-
-#~ msgid "%s demande de congé liée — la suppression est bloquée"
-#~ msgstr "%s leave request linked — deletion is blocked"
-
-#~ msgid "%s terminée"
-#~ msgstr "%s completed"
-
-#~ msgid "Un employé avec l’email « %(email)s » existe déjà."
-#~ msgstr "An employee with email «%(email)s» already exists."
-
-#~ msgid "Code unique :"
-#~ msgstr "Unique code:"
-
-#~ msgid "Ajout automatique du responsable '%(name)s' à l'équipe"
-#~ msgstr "Automatic addition of the manager '%(name)s' to the team"
-
-#~ msgid "Import JSON : création du projet '%(name)s'"
-#~ msgstr "JSON import: project '%(name)s' created"
-
-#~ msgid "Ajout du besoin '%(title)s'"
-#~ msgstr "Need '%(title)s' added"
-
-#~ msgid "Ajout d'un commentaire"
-#~ msgstr "Comment added"
-
-#~ msgid "Création du projet '%(name)s'"
-#~ msgstr "Project '%(name)s' created"
-
-#~ msgid "Modification des informations du projet"
-#~ msgstr "Project information modified"
-
-#~ msgid "Ajout du jalon '%(name)s'"
-#~ msgstr "Milestone '%(name)s' added"
-
-#~ msgid "Modification du jalon '%(name)s'"
-#~ msgstr "Milestone '%(name)s' modified"
-
-#~ msgid "Suppression du jalon '%(milestone_name)s'"
-#~ msgstr "Milestone '%(milestone_name)s' deleted"
-
-#~ msgid "Ajout de la sous-étape '%(sub_name)s' au jalon '%(milestone_name)s'"
-#~ msgstr "Sub-step '%(sub_name)s' added to milestone '%(milestone_name)s'"
-
-#~ msgid "Modification de la sous-étape '%(name)s'"
-#~ msgstr "Sub-step '%(name)s' modified"
-
-#~ msgid "Suppression de la sous-étape '%(sub_name)s'"
-#~ msgstr "Sub-step '%(sub_name)s' deleted"
-
-#~ msgid "Réassignation du jalon '%(name)s'"
-#~ msgstr "Milestone '%(name)s' reassigned"
-
-#~ msgid "Réassignation de la sous-étape '%(name)s'"
-#~ msgstr "Sub-step '%(name)s' reassigned"
-
-#~ msgid "Sous-étape '%(name)s' marquée comme %(status)s"
-#~ msgstr "Sub-step '%(name)s' marked as %(status)s"
-
-#~ msgid "Jalon '%(name)s' marqué comme %(label)s"
-#~ msgstr "Milestone '%(name)s' marked as %(label)s"
-
-#~ msgid "Statut de '%(name)s' : %(status_old)s → %(status_new)s"
-#~ msgstr "Status of '%(name)s': %(status_old)s → %(status_new)s"
-
-#~ msgid "Statut du besoin '%(title)s' → %(status)s"
-#~ msgstr "Need '%(title)s' status → %(status)s"
-
-#~ msgid "Ajout de la tâche '%(name)s'"
-#~ msgstr "Task '%(name)s' added"
-
-#~ msgid "Mise à jour de la tâche '%(name)s'"
-#~ msgstr "Task '%(name)s' updated"
-
-#~ msgid "Création du dossier '%(name)s'"
-#~ msgstr "Folder '%(name)s' created"
-
-#~ msgid "Modification du dossier '%(name)s'"
-#~ msgstr "Folder '%(name)s' modified"
-
-#~ msgid "Suppression du dossier '%(folder_name)s'"
-#~ msgstr "Folder '%(folder_name)s' deleted"
-
-#~ msgid "Ajout du document '%(title)s'"
-#~ msgstr "Document '%(title)s' added"
-
-#~ msgid "Modification du document '%(title)s'"
-#~ msgstr "Document '%(title)s' modified"
-
-#~ msgid "Suppression du document '%(doc_title)s'"
-#~ msgstr "Document '%(doc_title)s' deleted"
-
-#~ msgid "Ajout du membre '%(name)s' (%(role)s)"
-#~ msgstr "Member '%(name)s' added (%(role)s)"
-
-#~ msgid "Rôle de '%(name)s' modifié → '%(role)s'"
-#~ msgstr "Role of '%(name)s' changed → '%(role)s'"
-
-#~ msgid "Retrait du membre '%(member_name)s'"
-#~ msgstr "Member '%(member_name)s' removed"
-
-#~ msgid "Statut changé vers '%(status_label)s'"
-#~ msgstr "Status changed to '%(status_label)s'"
-

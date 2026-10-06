@@ -308,7 +308,7 @@
           <span style="font-size:11px;color:#64748b;">{{ task.project.name }}</span>
         </div>
         <h4 class="request-title">{{ task.name }}</h4>
-        <p class="request-description">{% if task.due_date %}{% trans 'Échéance' %} {{ task.due_date|date:"d/m/Y" }}{% else %}{% trans 'Pas d\'échéance' %}{% endif %} — {{ task.progress }}%</p>
+        <p class="request-description">{% if task.due_date %}{% trans 'Échéance' %} {{ task.due_date|date:"d/m/Y" }}{% else %}{% trans "Pas d'échéance" %}{% endif %} — {{ task.progress }}%</p>
       </a>
       {% endfor %}
       {% for task in my_submilestones %}
@@ -318,7 +318,7 @@
           <span style="font-size:11px;color:#64748b;">{{ task.milestone.project.name }}</span>
         </div>
         <h4 class="request-title">{{ task.name }}</h4>
-        <p class="request-description">{% if task.due_date %}{% trans 'Échéance' %} {{ task.due_date|date:"d/m/Y" }}{% else %}{% trans 'Pas d\'échéance' %}{% endif %} — {{ task.progress }}%</p>
+        <p class="request-description">{% if task.due_date %}{% trans 'Échéance' %} {{ task.due_date|date:"d/m/Y" }}{% else %}{% trans "Pas d'échéance" %}{% endif %} — {{ task.progress }}%</p>
       </a>
       {% endfor %}
     </div>

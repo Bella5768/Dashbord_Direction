@@ -166,9 +166,10 @@
                     <p>{% block page_subtitle %}{% endblock %}</p>
                 </div>
                 <div class="header-actions">
-                    <form class="search-box" action="{% url 'core:global_search' %}" method="get">
-                        <i class="fa-solid fa-magnifying-glass" ></i>
-                        <input type="text" name="q" placeholder="{% trans 'Rechercher...' %}" value="{{ request.GET.q }}">
+                    <form class="search-box has-icon" action="{% url 'core:global_search' %}" method="get" role="search">
+                        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                        <input type="search" name="q" placeholder="{% trans 'Rechercher...' %}"
+                               aria-label="{% trans 'Rechercher...' %}" autocomplete="off" value="{{ request.GET.q }}">
                     </form>
                     <!-- Selecteur de langue -->
                     <div style="position:relative;display:inline-block;" id="lang-switcher">

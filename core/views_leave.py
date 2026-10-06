@@ -331,6 +331,9 @@ def leave_document_download(request, leave_id, doc_id):
     leave = get_object_or_404(LeaveRequest, pk=leave_id)
     doc = get_object_or_404(LeaveDocument, pk=doc_id, leave_request=leave)
 
+    if not _user_can_view_leave(request.user, leave):
+        return HttpResponseForbidden("Vous n'avez pas accès à ce document.")
+
     if not doc.file:
         return redirect('core:leave_detail', leave_id=leave.id)
 
@@ -340,16 +343,20 @@ def leave_document_download(request, leave_id, doc_id):
 
 @login_required
 def leave_document_file_proxy(request, leave_id, doc_id):
-    """Rediriger vers le fichier d'une pièce jointe de congé (S3/CloudFront)."""
+    """Rediriger vers une URL S3 présignée courte d'une pièce jointe de congé."""
     from django.http import HttpResponseRedirect
+    from .media_utils import presigned_inline_url
 
     leave = get_object_or_404(LeaveRequest, pk=leave_id)
     doc = get_object_or_404(LeaveDocument, pk=doc_id, leave_request=leave)
 
+    if not _user_can_view_leave(request.user, leave):
+        return HttpResponseForbidden("Vous n'avez pas accès à ce document.")
+
     if not doc.file:
         return HttpResponseRedirect('/')
 
-    return HttpResponseRedirect(doc.file)
+    return HttpResponseRedirect(presigned_inline_url(doc.file))
 
 
 # ---------------------------------------------------------------------------

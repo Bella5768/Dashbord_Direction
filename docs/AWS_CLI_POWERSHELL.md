@@ -38,6 +38,43 @@ Règle : se renseigner sur la forme attendue de l'argument avant de l'écrire.
 
 ---
 
+## 1 bis. PowerShell mange les guillemets des JSON inline
+
+Un JSON passé en **apostrophes** perd tous ses `"` au moment où PowerShell
+construit la ligne de commande pour l'exécutable natif. Le CLI reçoit alors
+`{containerOverrides:[...]}` et refuse :
+
+```
+ParamValidation: Error parsing parameter '--overrides': Invalid JSON:
+Expecting property name enclosed in double quotes: line 1 column 2
+```
+
+Ce n'est **pas** un problème de syntaxe JSON : le document était valide.
+C'est un bug de passage d'arguments de PowerShell 5.1 vers les processus natifs.
+
+**Solution fiable : un fichier + `--cli-input-json file://...`.** C'est aussi la
+seule forme lisible et rejouable.
+
+```powershell
+# 1) Ecrire le JSON dans un fichier (ici avec l'editeur, pas a la main)
+aws ecs run-task --cli-input-json file://probe.runtask.json --region eu-north-1
+```
+
+Variantes évitees volontairement, pour mémoire :
+
+| Forme | Verdict |
+|-------|---------|
+| `'{"a":1}'` | **cassé** — guillemets mangés |
+| `'{\"a\":1}'` | fonctionne parfois, illisible, fragile |
+| `` `--` `` (stop-parsing) | casse les autres variables de la ligne |
+| `--cli-input-json file://x.json` | **retenu** |
+
+Le même piège touche `--overrides`, `--container-definitions`,
+`--network-configuration`, `--placement-constraints`, et toutShort form contenant
+des `"`. Réflexe : dès qu'un argument contient du JSON, passer par un fichier.
+
+---
+
 ## 2. Raccourcis `--option clé=valeur` : certains exigent la valeur
 
 Un raccourci sans `=` est accepté uniquement par le parseur de JMESPath du CLI,
@@ -236,26 +273,65 @@ aws <service> <operation> help          # syntaxe complète + arguments requis
 
 ## 10. RDS : `Some input subnets are invalid`
 
-Erreur de `create-db-subnet-group`. Les sous-réseaux existent pourtant (ils
-apparaissent dans `describe-subnets`), donc causes possibles :
+Erreur de `create-db-subnet-group` (code API `InvalidParameterValue`, alors que
+la doc annonce `InvalidSubnet` pour ce cas). **Cause la plus fréquente en
+pratique : incohérence transitoire du plan de contrôle RDS**, quand les
+sous-réseaux viennent d'être créés (minutes) : `describe-subnets` les renvoie
+`available`, RDS ne les voit pas encore. Ce n'est **pas** une erreur de syntaxe.
 
-1. **sous-réseaux dans deux VPC différents** → RDS exige un seul VPC par groupe ;
-2. **VPC ou sous-réseaux encore en `pending`** (créés il y a quelques minutes) →
-   attendre que `State` passe à `available` ;
-3. **moins de 2 adresses IP libres** dans un sous-réseau ;
-4. **erreur de copie d'ID** dans la commande.
+La preuve : la même commande a réussi sans rien changer une fois le délai
+passé, sur `csig-db-subnets` (sous-réseaux créés par l'admin, puis refusés,
+puis acceptés à l'identique).
 
-Toujours vérifier avant de recréer :
+### Causes réelles, par ordre de fréquence
+
+1. **région/provider mismatch** → le sous-réseau est dans une autre région que
+   l'endpoint RDS visé (cause n°1 dans les retours d'expérience publics) ;
+2. **incohérence transitoire** après création des sous-réseaux ;
+3. **sous-réseaux dans deux VPC différents** → RDS exige un seul VPC par groupe ;
+4. **moins de 2 AZ couvertes**, ou **2 AZ en réalité identiques** ;
+5. **moins de 2 adresses IP libres** dans un sous-réseau ;
+6. **Local Zone / Wavelength** → refusé par RDS (AZ ID de type `eun1-az1`
+   = AZ régionale normale, donc OK) ;
+7. **erreur de copie d'ID** dans la commande.
+
+### Marche à suivre
+
+D'abord la région et les attributs complets, avec la région forcée :
 
 ```powershell
-aws ec2 describe-subnets --subnet-ids "$A,$B" --query "Subnets[].[SubnetId,VpcId,State,AvailabilityZone,AvailableIpAddressCount]" --output table
-aws ec2 describe-vpcs --vpc-ids vpc-xxx --query "Vpcs[].[VpcId,State,CidrBlock]" --output table
+aws configure get region
+aws ec2 describe-subnets --region eu-north-1 --subnet-ids subnet-a subnet-b --query "Subnets[].{Id:SubnetId,AZ:AvailabilityZone,AZId:AvailabilityZoneId,Vpc:VpcId,State:State,Owner:OwnerId,Free:AvailableIpAddressCount}" --output table
 ```
+
+Puis **la sonde à un seul sous-réseau**, qui isole la cause. Le nom est jetable :
+
+```powershell
+aws rds create-db-subnet-group --region eu-north-1 --db-subnet-group-name csig-db-probe --db-subnet-group-description probe --subnet-ids subnet-a
+```
+
+| Réponse de la sonde | Diagnostic | Suite |
+|---|---|---|
+| `DBSubnetGroupDoesNotCoverEnoughAZs` | sous-réseau **valide**, seul le 2e AZ manque | retester la paire |
+| `InvalidParameterValue ... invalid` | ce sous-réseau précis est rejeté | vérifier région / VPC / AZ ID |
+| succès | sous-réseau valide | supprimer la sonde |
+
+Si la sonde est valide, **relancer la paire à l'identique** : c'est le test qui
+distingue incohérence transitoire et rejet réel.
+
+```powershell
+aws rds create-db-subnet-group --region eu-north-1 --db-subnet-group-name csig-db-probe2 --db-subnet-group-description probe2 --subnet-ids subnet-a subnet-b
+aws rds delete-db-subnet-group --region eu-north-1 --db-subnet-group-name csig-db-probe2
+```
+
+Si la paire échoue aussi avec des attributs conformes : ouvrir un ticket AWS
+Support **en fournissant le `Request ID`** de l'erreur. Il est présent dans la
+sortie du CLI et c'est la seule chose utile à transmettre.
 
 Après création, confirmer le statut avant de lancer l'instance :
 
 ```powershell
-aws rds describe-db-subnet-groups --query "DBSubnetGroups[].[DBSubnetGroupName,SubnetGroupStatus,VpcId]" --output table
+aws rds describe-db-subnet-groups --region eu-north-1 --query "DBSubnetGroups[].[DBSubnetGroupName,SubnetGroupStatus,VpcId]" --output table
 ```
 
 Erreur en cascade à ne pas diagnostiquer séparément :

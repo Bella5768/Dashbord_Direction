@@ -375,7 +375,7 @@ def password_reset_request(request):
     if request.method == 'POST':
         email = request.POST.get('email', '').strip()
         if not email:
-            form_error = "Veuillez saisir votre adresse email."
+            form_error = _("Veuillez saisir votre adresse email.")
         else:
             try:
                 user = DjangoUser.objects.get(email__iexact=email, is_active=True)
@@ -2764,7 +2764,7 @@ def request_new_activation(request):
     if request.method == 'POST':
         email = request.POST.get('email', '').strip()
         if not email:
-            form_error = "Veuillez saisir votre adresse email."
+            form_error = _("Veuillez saisir votre adresse email.")
         else:
             try:
                 user = DjangoUser.objects.get(email__iexact=email, is_active=False)
@@ -5094,8 +5094,9 @@ def document_validate(request, doc_id):
 
 @login_required
 def document_file_proxy(request, doc_id):
-    """Rediriger vers le fichier du document (fichiers publics Cloudinary)."""
+    """Rediriger vers une URL S3 présignée courte du document (accès authentifié)."""
     from django.http import HttpResponseRedirect
+    from .media_utils import presigned_inline_url
 
     doc = get_sluggable_or_404(Document, doc_id)
 
@@ -5112,13 +5113,14 @@ def document_file_proxy(request, doc_id):
     if not doc.file:
         return HttpResponseRedirect('/')
 
-    return HttpResponseRedirect(doc.file)
+    return HttpResponseRedirect(presigned_inline_url(doc.file))
 
 
 @login_required
 def project_document_file_proxy(request, doc_id):
-    """Rediriger vers le fichier du document de projet (fichiers publics Cloudinary)."""
+    """Rediriger vers une URL S3 présignée courte du document de projet."""
     from django.http import HttpResponseRedirect
+    from .media_utils import presigned_inline_url
 
     doc = get_sluggable_or_404(ProjectDocument, doc_id)
     project = doc.project
@@ -5129,7 +5131,7 @@ def project_document_file_proxy(request, doc_id):
     if not doc.file:
         return HttpResponseRedirect('/')
 
-    return HttpResponseRedirect(doc.file)
+    return HttpResponseRedirect(presigned_inline_url(doc.file))
 
 
 @login_required

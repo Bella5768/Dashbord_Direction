@@ -49,6 +49,60 @@ def is_s3_url(url):
     return bool(host and host in lower)
 
 
+def _s3_key_from_url(url):
+    """Extrait la clé S3 d'une URL publique S3/CloudFront, ou None."""
+    if not url:
+        return None
+    bucket = getattr(settings, 'AWS_STORAGE_BUCKET_NAME', '') or ''
+    region = getattr(settings, 'AWS_S3_REGION', '') or getattr(settings, 'AWS_REGION', '') or 'us-east-1'
+    custom = getattr(settings, 'AWS_S3_CUSTOM_DOMAIN', '') or ''
+    host = custom.rstrip('/').split('://')[-1].split('/')[0] if custom else ''
+    key = ''
+    if host and host in url:
+        key = url.split(host, 1)[-1].lstrip('/')
+    else:
+        for prefix in (
+            f'{bucket}.s3.{region}.amazonaws.com/',
+            f'{bucket}.s3.amazonaws.com/',
+        ):
+            if bucket and prefix in url:
+                key = url.split(prefix, 1)[-1]
+                break
+    if not key:
+        return None
+    return key.split('?', 1)[0]
+
+
+def _presign_get(key, params=None):
+    """Génère une URL S3 présignée courte (5 min) pour un objet."""
+    region = getattr(settings, 'AWS_S3_REGION', '') or getattr(settings, 'AWS_REGION', '') or 'us-east-1'
+    session = aws_session(region=region)
+    return session.client('s3').generate_presigned_url(
+        'get_object',
+        Params={'Bucket': settings.AWS_STORAGE_BUCKET_NAME, 'Key': key, **(params or {})},
+        ExpiresIn=300,
+    )
+
+
+def presigned_inline_url(url):
+    """URL presignée courte pour l'affichage inline d'un fichier S3/CloudFront.
+
+    L'accès reste ainsi conditionné à la vue Django authentifiée (le bucket est
+    privé) : l'URL brute stockée en base n'est jamais servie directement.
+    Renvoie l'URL d'origine telle quelle si ce n'est pas un fichier S3.
+    """
+    if not is_s3_url(url):
+        return url
+    try:
+        key = _s3_key_from_url(url)
+        if not key:
+            return url
+        return _presign_get(key)
+    except Exception as e:
+        logger.warning("presigned_inline_url: impossible de presigner %s: %s", url, e)
+        return url
+
+
 def force_download_url(url, filename=''):
     """Retourne une URL qui force le téléchargement.
 
@@ -64,35 +118,11 @@ def force_download_url(url, filename=''):
     from django.utils.encoding import iri_to_uri
 
     try:
-        bucket = settings.AWS_STORAGE_BUCKET_NAME
-        region = getattr(settings, 'AWS_S3_REGION', '') or getattr(settings, 'AWS_REGION', '') or 'us-east-1'
-        session = aws_session(region=region)
-        # Extraire la clé S3 depuis l'URL publique
-        custom = getattr(settings, 'AWS_S3_CUSTOM_DOMAIN', '') or ''
-        host = custom.rstrip('/').split('://')[-1].split('/')[0] if custom else ''
-        key = ''
-        if host and host in url:
-            key = url.split(host, 1)[-1].lstrip('/')
-        else:
-            prefix = f'{bucket}.s3.{region}.amazonaws.com/'
-            if prefix in url:
-                key = url.split(prefix, 1)[-1]
-            elif f'{bucket}.s3.amazonaws.com/' in url:
-                key = url.split(f'{bucket}.s3.amazonaws.com/', 1)[-1]
-            else:
-                return url
-        key = key.split('?', 1)[0]
-
+        key = _s3_key_from_url(url)
+        if not key:
+            return url
         disposition = f'attachment; filename="{filename}"' if filename else 'attachment'
-        return session.client('s3').generate_presigned_url(
-            'get_object',
-            Params={
-                'Bucket': bucket,
-                'Key': key,
-                'ResponseContentDisposition': iri_to_uri(disposition),
-            },
-            ExpiresIn=300,
-        )
+        return _presign_get(key, {'ResponseContentDisposition': iri_to_uri(disposition)})
     except Exception as e:
         logger.warning("force_download_url: impossible de presigner %s: %s", url, e)
         return url

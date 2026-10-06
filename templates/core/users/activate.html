@@ -73,6 +73,7 @@
   </style>
 </head>
 <body>
+{% include 'includes/lang_switcher.html' %}
 <div class="card">
   <div class="banner">
     <h1>CSIG Dashboard</h1>
@@ -216,7 +217,7 @@
 
   </div>
 
-  <div class="footer">© {% now "Y" %} {% trans 'CSIG – Centre de Suivi et d\'Information de Gestion' %}</div>
+  <div class="footer">© {% now "Y" %} {% trans "CSIG – Centre de Suivi et d'Information de Gestion" %}</div>
 </div>
 
 {% if valid %}

@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CSIG Dashboard 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-04 18:44+0000\n"
+"POT-Creation-Date: 2026-10-06 15:18+0000\n"
 "PO-Revision-Date: 2026-02-08 18:00+0000\n"
 "Last-Translator: CSIG <support@csig.edu.gn>\n"
 "Language-Team: French\n"
@@ -2937,6 +2937,10 @@ msgstr ""
 msgid "Identifiants incorrects."
 msgstr ""
 
+#: .\core\views.py:378 .\core\views.py:2767
+msgid "Veuillez saisir votre adresse email."
+msgstr ""
+
 #: .\core\views.py:440
 msgid "Mot de passe réinitialisé. Vous pouvez vous connecter."
 msgstr ""
@@ -3128,9 +3132,9 @@ msgstr ""
 
 #: .\core\views.py:2663 .\core\views.py:2834 .\core\views.py:5011
 #: .\core\views.py:5032 .\core\views.py:5053 .\core\views.py:5070
-#: .\core\views.py:5085 .\core\views.py:5246 .\core\views.py:5266
-#: .\core\views.py:5289 .\core\views.py:5310 .\core\views.py:5331
-#: .\core\views.py:5552
+#: .\core\views.py:5085 .\core\views.py:5248 .\core\views.py:5268
+#: .\core\views.py:5291 .\core\views.py:5312 .\core\views.py:5333
+#: .\core\views.py:5554
 msgid "Vous n'avez pas les permissions."
 msgstr ""
 
@@ -3416,7 +3420,7 @@ msgstr ""
 msgid "Fichier non trouvé."
 msgstr ""
 
-#: .\core\views.py:4681 .\core\views.py:5154 .\core\views.py:5180
+#: .\core\views.py:4681 .\core\views.py:5156 .\core\views.py:5182
 msgid "Aucun fichier attaché à ce document."
 msgstr ""
 
@@ -3493,102 +3497,102 @@ msgstr ""
 msgid "Document '{title}' validé, en attente de signature."
 msgstr ""
 
-#: .\core\views.py:5173 .\core\views.py:5176
+#: .\core\views.py:5175 .\core\views.py:5178
 msgid "Vous n'avez pas accès à ce document."
 msgstr ""
 
-#: .\core\views.py:5221
+#: .\core\views.py:5223
 msgid "Vous devez appartenir à une direction pour soumettre une demande."
 msgstr ""
 
-#: .\core\views.py:5234
+#: .\core\views.py:5236
 msgid "Demande créée avec succès."
 msgstr ""
 
-#: .\core\views.py:5253
+#: .\core\views.py:5255
 msgid "Vous ne pouvez approuver que les demandes de votre direction."
 msgstr ""
 
-#: .\core\views.py:5258
+#: .\core\views.py:5260
 #, python-brace-format
 msgid "Demande '{title}' approuvée."
 msgstr ""
 
-#: .\core\views.py:5273
+#: .\core\views.py:5275
 msgid "Vous ne pouvez rejeter que les demandes de votre direction."
 msgstr ""
 
-#: .\core\views.py:5277
+#: .\core\views.py:5279
 #, python-brace-format
 msgid "Demande '{title}' rejetée."
 msgstr ""
 
-#: .\core\views.py:5296
+#: .\core\views.py:5298
 msgid "Partenaire créé avec succès."
 msgstr ""
 
-#: .\core\views.py:5319
+#: .\core\views.py:5321
 msgid "Partenaire modifié avec succès."
 msgstr ""
 
-#: .\core\views.py:5338
+#: .\core\views.py:5340
 msgid "Partenaire supprimé."
 msgstr ""
 
-#: .\core\views.py:5369
+#: .\core\views.py:5371
 msgid "Vous n'avez pas les permissions pour gérer les employés."
 msgstr ""
 
-#: .\core\views.py:5391
+#: .\core\views.py:5393
 msgid "Employé créé avec succès."
 msgstr ""
 
-#: .\core\views.py:5407
+#: .\core\views.py:5409
 msgid "Vous ne pouvez gérer que les employés de votre direction."
 msgstr ""
 
-#: .\core\views.py:5443
+#: .\core\views.py:5445
 msgid "Employé modifié avec succès."
 msgstr ""
 
-#: .\core\views.py:5457
+#: .\core\views.py:5459
 msgid "Vous ne pouvez supprimer que les employés de votre direction."
 msgstr ""
 
-#: .\core\views.py:5468
+#: .\core\views.py:5470
 #, python-brace-format
 msgid ""
 "Impossible de supprimer {name} : {count} demande(s) de congé sont liées à "
 "cette fiche."
 msgstr ""
 
-#: .\core\views.py:5473
+#: .\core\views.py:5475
 #, python-brace-format
 msgid "Employé « {name} » supprimé."
 msgstr ""
 
-#: .\core\views.py:5475
+#: .\core\views.py:5477
 #, python-brace-format
 msgid "Suppression impossible : {err}"
 msgstr ""
 
-#: .\core\views.py:5497 .\core\views.py:5518
+#: .\core\views.py:5499 .\core\views.py:5520
 msgid "Vous n'avez pas les permissions pour gérer les budgets."
 msgstr ""
 
-#: .\core\views.py:5504
+#: .\core\views.py:5506
 msgid "Budget créé avec succès."
 msgstr ""
 
-#: .\core\views.py:5532 .\core\views.py:5566
+#: .\core\views.py:5534 .\core\views.py:5568
 msgid "Vous n'avez pas accès à ce budget."
 msgstr ""
 
-#: .\core\views.py:5539
+#: .\core\views.py:5541
 msgid "Budget modifié avec succès."
 msgstr ""
 
-#: .\core\views.py:5571
+#: .\core\views.py:5573
 msgid "Budget supprimé."
 msgstr ""
 
@@ -3613,31 +3617,31 @@ msgstr ""
 msgid "Pièce jointe supprimée."
 msgstr ""
 
-#: .\core\views_leave.py:366
+#: .\core\views_leave.py:373
 msgid "Cette demande n'est plus en attente d'avis hiérarchique."
 msgstr ""
 
-#: .\core\views_leave.py:387
+#: .\core\views_leave.py:394
 msgid "Avis hiérarchique enregistré."
 msgstr ""
 
-#: .\core\views_leave.py:399
+#: .\core\views_leave.py:406
 msgid "Cette demande n'est pas au stade de la vérification RH."
 msgstr ""
 
-#: .\core\views_leave.py:420
+#: .\core\views_leave.py:427
 msgid "Vérification RH enregistrée."
 msgstr ""
 
-#: .\core\views_leave.py:432
+#: .\core\views_leave.py:439
 msgid "Cette demande n'est pas prête pour la décision finale."
 msgstr ""
 
-#: .\core\views_leave.py:458
+#: .\core\views_leave.py:465
 msgid "Décision finale enregistrée et notifiée."
 msgstr ""
 
-#: .\core\views_leave.py:475
+#: .\core\views_leave.py:482
 msgid "L'attestation n'est disponible que pour les demandes approuvées."
 msgstr ""
 
@@ -3711,11 +3715,11 @@ msgid ""
 "Une erreur inattendue s'est produite. L'équipe technique a été notifiée."
 msgstr ""
 
-#: .\dashboard_csig\settings.py:165 .\templates\base.html:186
+#: .\dashboard_csig\settings.py:204 .\templates\base.html:186
 msgid "Français"
 msgstr ""
 
-#: .\dashboard_csig\settings.py:166 .\templates\base.html:190
+#: .\dashboard_csig\settings.py:205 .\templates\base.html:190
 msgid "English"
 msgstr ""
 
@@ -4233,7 +4237,7 @@ msgid "Échéance"
 msgstr ""
 
 #: .\templates\core\dashboard.html:311 .\templates\core\dashboard.html:321
-msgid "Pas d\\"
+msgid "Pas d'échéance"
 msgstr ""
 
 #: .\templates\core\dashboard.html:333
@@ -4481,7 +4485,7 @@ msgid "Gérer les ressources humaines"
 msgstr ""
 
 #: .\templates\core\employee_form.html:11
-msgid "Informations de l\\"
+msgid "Informations de l'employé"
 msgstr ""
 
 #: .\templates\core\employee_form.html:65
@@ -4593,7 +4597,7 @@ msgid "Choisir un projet"
 msgstr ""
 
 #: .\templates\core\event_detail.html:403
-msgid "Toute l\\"
+msgid "Toute l'équipe"
 msgstr ""
 
 #: .\templates\core\event_detail.html:424
@@ -4702,7 +4706,7 @@ msgid "Statut actuel"
 msgstr ""
 
 #: .\templates\core\leaves\leave_detail.html:175
-msgid "Télécharger l\\"
+msgid "Télécharger l'attestation"
 msgstr ""
 
 #: .\templates\core\leaves\leave_detail.html:180
@@ -4881,7 +4885,9 @@ msgid ""
 msgstr ""
 
 #: .\templates\core\leaves\leave_form.html:350
-msgid "Brève note de passation : dossiers en cours, points d\\"
+msgid ""
+"Brève note de passation : dossiers en cours, points d'attention, contacts "
+"utiles."
 msgstr ""
 
 #: .\templates\core\leaves\leave_form.html:360
@@ -5240,7 +5246,7 @@ msgid "Terminées"
 msgstr ""
 
 #: .\templates\core\my_tasks.html:111
-msgid "Aucune tâche ne vous est assignée pour l\\"
+msgid "Aucune tâche ne vous est assignée pour l'instant."
 msgstr ""
 
 #: .\templates\core\my_tasks.html:125
@@ -6648,19 +6654,19 @@ msgstr ""
 
 #: .\templates\core\users\activate.html:6
 #: .\templates\registration\password_reset_confirm.html:6
-#: .\templates\registration\password_reset_confirm.html:65
+#: .\templates\registration\password_reset_confirm.html:66
 msgid "Lien invalide"
 msgstr ""
 
-#: .\templates\core\users\activate.html:80
+#: .\templates\core\users\activate.html:81
 msgid "Créer votre mot de passe"
 msgstr ""
 
-#: .\templates\core\users\activate.html:81
+#: .\templates\core\users\activate.html:82
 msgid "Lien d'activation invalide"
 msgstr ""
 
-#: .\templates\core\users\activate.html:91
+#: .\templates\core\users\activate.html:92
 #: .\templates\emails\account_activation.html:6
 #: .\templates\emails\account_invitation.html:4
 #: .\templates\emails\assignment.html:4
@@ -6670,149 +6676,150 @@ msgstr ""
 #: .\templates\emails\password_reset_email.html:4
 #: .\templates\emails\project_member_added.html:4
 #: .\templates\emails\task_completed.html:4
-#: .\templates\registration\password_reset_confirm.html:72
+#: .\templates\registration\password_reset_confirm.html:73
 msgid "Bonjour"
 msgstr ""
 
-#: .\templates\core\users\activate.html:92
+#: .\templates\core\users\activate.html:93
 msgid ""
 "choisissez un mot de passe sécurisé pour activer votre accès au tableau de "
 "bord."
 msgstr ""
 
-#: .\templates\core\users\activate.html:96
+#: .\templates\core\users\activate.html:97
 #: .\templates\emails\account_invitation.html:15
 #: .\templates\emails\password_reset_email.html:11
-#: .\templates\registration\password_reset_confirm.html:77
+#: .\templates\registration\password_reset_confirm.html:78
 msgid "Votre identifiant de connexion"
 msgstr ""
 
-#: .\templates\core\users\activate.html:102
+#: .\templates\core\users\activate.html:103
 #: .\templates\registration\password_change.html:18
-#: .\templates\registration\password_reset_confirm.html:82
+#: .\templates\registration\password_reset_confirm.html:83
 msgid "Votre mot de passe doit :"
 msgstr ""
 
-#: .\templates\core\users\activate.html:108
+#: .\templates\core\users\activate.html:109
 #: .\templates\registration\password_change.html:21
-#: .\templates\registration\password_reset_confirm.html:85
+#: .\templates\registration\password_reset_confirm.html:86
 msgid "Contenir au moins 8 caractères"
 msgstr ""
 
-#: .\templates\core\users\activate.html:115
+#: .\templates\core\users\activate.html:116
 #: .\templates\registration\password_change.html:25
-#: .\templates\registration\password_reset_confirm.html:89
+#: .\templates\registration\password_reset_confirm.html:90
 msgid "Contenir une majuscule et une minuscule"
 msgstr ""
 
-#: .\templates\core\users\activate.html:122
+#: .\templates\core\users\activate.html:123
 #: .\templates\registration\password_change.html:29
-#: .\templates\registration\password_reset_confirm.html:93
+#: .\templates\registration\password_reset_confirm.html:94
 msgid "Contenir au moins un chiffre"
 msgstr ""
 
-#: .\templates\core\users\activate.html:129
+#: .\templates\core\users\activate.html:130
 #: .\templates\registration\password_change.html:33
-#: .\templates\registration\password_reset_confirm.html:97
+#: .\templates\registration\password_reset_confirm.html:98
 msgid "Correspondre à la confirmation"
 msgstr ""
 
-#: .\templates\core\users\activate.html:138
+#: .\templates\core\users\activate.html:139
 #: .\templates\core\users\change_password.html:11
 #: .\templates\core\users\change_password.html:18
 #: .\templates\registration\password_change.html:12
 #: .\templates\registration\password_change.html:63
 #: .\templates\registration\password_reset_confirm.html:6
-#: .\templates\registration\password_reset_confirm.html:104
+#: .\templates\registration\password_reset_confirm.html:105
 msgid "Nouveau mot de passe"
 msgstr ""
 
-#: .\templates\core\users\activate.html:144
-#: .\templates\core\users\activate.html:167
+#: .\templates\core\users\activate.html:145
+#: .\templates\core\users\activate.html:168
 #: .\templates\core\users\change_password.html:23
 #: .\templates\core\users\change_password.html:35
 #: .\templates\registration\password_change.html:51
 #: .\templates\registration\password_change.html:72
 #: .\templates\registration\password_change.html:98
-#: .\templates\registration\password_reset_confirm.html:110
-#: .\templates\registration\password_reset_confirm.html:128
+#: .\templates\registration\password_reset_confirm.html:111
+#: .\templates\registration\password_reset_confirm.html:129
 msgid "Afficher/masquer"
 msgstr ""
 
-#: .\templates\core\users\activate.html:161
+#: .\templates\core\users\activate.html:162
 #: .\templates\core\users\change_password.html:30
-#: .\templates\registration\password_reset_confirm.html:122
+#: .\templates\registration\password_reset_confirm.html:123
 msgid "Confirmer le mot de passe"
 msgstr ""
 
-#: .\templates\core\users\activate.html:190
+#: .\templates\core\users\activate.html:191
 #: .\templates\emails\account_activation.html:11
 #: .\templates\emails\account_invitation.html:24
 msgid "Activer mon compte"
 msgstr ""
 
-#: .\templates\core\users\activate.html:202
-#: .\templates\registration\password_reset_confirm.html:155
+#: .\templates\core\users\activate.html:203
+#: .\templates\registration\password_reset_confirm.html:156
 msgid "Lien invalide ou expiré"
 msgstr ""
 
-#: .\templates\core\users\activate.html:203
+#: .\templates\core\users\activate.html:204
 msgid "Ce lien d'activation n'est plus valide."
 msgstr ""
 
-#: .\templates\core\users\activate.html:204
-#: .\templates\registration\password_reset_confirm.html:162
+#: .\templates\core\users\activate.html:205
+#: .\templates\registration\password_reset_confirm.html:163
 msgid ""
 "Il a peut-être <strong>déjà été utilisé</strong> ou il a <strong>expiré</"
 "strong> (validité : 3 jours)."
 msgstr ""
 
-#: .\templates\core\users\activate.html:208
+#: .\templates\core\users\activate.html:209
 msgid "Votre compte est peut-être déjà activé :"
 msgstr ""
 
-#: .\templates\core\users\activate.html:209
-#: .\templates\core\users\request_activation.html:139
+#: .\templates\core\users\activate.html:210
+#: .\templates\core\users\request_activation.html:140
 #: .\templates\registration\login.html:537
 msgid "Se connecter"
 msgstr ""
 
-#: .\templates\core\users\activate.html:212
+#: .\templates\core\users\activate.html:213
+#: .\templates\registration\password_reset_confirm.html:160
 msgid "Recevoir un nouveau lien d'activation"
 msgstr ""
 
-#: .\templates\core\users\activate.html:219
-#: .\templates\core\users\request_activation.html:145
-msgid "CSIG – Centre de Suivi et d\\"
-msgstr ""
-
-#: .\templates\core\users\activate.html:226
-#: .\templates\registration\password_change.html:131
-#: .\templates\registration\password_reset_confirm.html:181
-msgid "Très faible"
+#: .\templates\core\users\activate.html:220
+#: .\templates\core\users\request_activation.html:146
+msgid "CSIG – Centre de Suivi et d'Information de Gestion"
 msgstr ""
 
 #: .\templates\core\users\activate.html:227
-#: .\templates\registration\password_change.html:132
+#: .\templates\registration\password_change.html:131
 #: .\templates\registration\password_reset_confirm.html:182
-msgid "Faible"
+msgid "Très faible"
 msgstr ""
 
 #: .\templates\core\users\activate.html:228
-#: .\templates\registration\password_change.html:133
+#: .\templates\registration\password_change.html:132
 #: .\templates\registration\password_reset_confirm.html:183
-msgid "Moyen"
+msgid "Faible"
 msgstr ""
 
 #: .\templates\core\users\activate.html:229
-#: .\templates\registration\password_change.html:134
+#: .\templates\registration\password_change.html:133
 #: .\templates\registration\password_reset_confirm.html:184
-msgid "Fort"
+msgid "Moyen"
 msgstr ""
 
 #: .\templates\core\users\activate.html:230
-#: .\templates\registration\password_change.html:135
+#: .\templates\registration\password_change.html:134
 #: .\templates\registration\password_reset_confirm.html:185
+msgid "Fort"
+msgstr ""
+
+#: .\templates\core\users\activate.html:231
+#: .\templates\registration\password_change.html:135
+#: .\templates\registration\password_reset_confirm.html:186
 msgid "Très fort"
 msgstr ""
 
@@ -7120,63 +7127,63 @@ msgstr ""
 msgid "Nouveau lien d'activation"
 msgstr ""
 
-#: .\templates\core\users\request_activation.html:59
+#: .\templates\core\users\request_activation.html:60
 #: .\templates\registration\password_reset.html:6
-#: .\templates\registration\password_reset.html:42
+#: .\templates\registration\password_reset.html:43
 msgid "Email envoyé"
 msgstr ""
 
-#: .\templates\core\users\request_activation.html:59
+#: .\templates\core\users\request_activation.html:60
 msgid "Demander un nouveau lien"
 msgstr ""
 
-#: .\templates\core\users\request_activation.html:73
-#: .\templates\registration\password_reset.html:54
+#: .\templates\core\users\request_activation.html:74
+#: .\templates\registration\password_reset.html:55
 msgid "Vérifiez votre email"
 msgstr ""
 
-#: .\templates\core\users\request_activation.html:75
+#: .\templates\core\users\request_activation.html:76
 msgid ""
 "Si un compte en attente est associé à cette adresse, un <strong>nouveau lien "
 "d'activation</strong> vient d'être envoyé."
 msgstr ""
 
-#: .\templates\core\users\request_activation.html:77
+#: .\templates\core\users\request_activation.html:78
 msgid ""
 "Le lien sera valable <strong>3 jours</strong>. Pensez à vérifier vos spams."
 msgstr ""
 
-#: .\templates\core\users\request_activation.html:80
+#: .\templates\core\users\request_activation.html:81
 msgid ""
 "Si vous ne recevez rien dans quelques minutes, contactez votre "
 "administrateur pour qu'il renvoie l'invitation depuis le tableau de bord."
 msgstr ""
 
-#: .\templates\core\users\request_activation.html:84
-#: .\templates\registration\password_reset.html:62
+#: .\templates\core\users\request_activation.html:85
+#: .\templates\registration\password_reset.html:63
 msgid "Retour à la connexion"
 msgstr ""
 
-#: .\templates\core\users\request_activation.html:96
+#: .\templates\core\users\request_activation.html:97
 msgid ""
 "Si votre lien d'invitation a expiré ou a été perdu, saisissez l'adresse "
 "email associée à votre compte. Un nouveau lien vous sera envoyé."
 msgstr ""
 
-#: .\templates\core\users\request_activation.html:103
-#: .\templates\registration\password_reset.html:78
+#: .\templates\core\users\request_activation.html:104
+#: .\templates\registration\password_reset.html:79
 msgid "Adresse email du compte"
 msgstr ""
 
-#: .\templates\core\users\request_activation.html:124
+#: .\templates\core\users\request_activation.html:125
 msgid "Utilisez l'email avec lequel vous avez été invité(e)."
 msgstr ""
 
-#: .\templates\core\users\request_activation.html:134
+#: .\templates\core\users\request_activation.html:135
 msgid "Envoyer le lien d'activation"
 msgstr ""
 
-#: .\templates\core\users\request_activation.html:139
+#: .\templates\core\users\request_activation.html:140
 msgid "Vous avez déjà un compte ?"
 msgstr ""
 
@@ -7236,7 +7243,8 @@ msgid "Connectez-vous au tableau de bord CSIG pour consulter les détails."
 msgstr ""
 
 #: .\templates\emails\base_email.html:24
-#: .\templates\registration\password_reset_confirm.html:171
+#: .\templates\registration\password_reset.html:112
+#: .\templates\registration\password_reset_confirm.html:172
 msgid "Centre de Suivi et d'Information de Gestion"
 msgstr ""
 
@@ -7416,81 +7424,73 @@ msgid "Confirmer le nouveau mot de passe"
 msgstr ""
 
 #: .\templates\registration\password_reset.html:6
-#: .\templates\registration\password_reset.html:42
+#: .\templates\registration\password_reset.html:43
 msgid "Mot de passe oublié"
 msgstr ""
 
-#: .\templates\registration\password_reset.html:55
+#: .\templates\registration\password_reset.html:56
 msgid ""
 "Si un compte actif correspond à cette adresse, un <strong>lien de "
 "réinitialisation</strong> vient d'être envoyé."
 msgstr ""
 
-#: .\templates\registration\password_reset.html:56
+#: .\templates\registration\password_reset.html:57
 msgid ""
 "Le lien sera valable <strong>3 jours</strong>. Vérifiez aussi vos spams."
 msgstr ""
 
-#: .\templates\registration\password_reset.html:58
+#: .\templates\registration\password_reset.html:59
 msgid ""
 "Si vous ne recevez rien, votre adresse email est peut-être différente. "
 "Contactez votre administrateur si besoin."
 msgstr ""
 
-#: .\templates\registration\password_reset.html:72
+#: .\templates\registration\password_reset.html:73
 msgid ""
 "Saisissez l'adresse email de votre compte. Si elle existe, vous recevrez un "
 "lien pour choisir un nouveau mot de passe."
 msgstr ""
 
-#: .\templates\registration\password_reset.html:94
+#: .\templates\registration\password_reset.html:95
 msgid "Utilisez l'adresse associée à votre compte CSIG."
 msgstr ""
 
-#: .\templates\registration\password_reset.html:103
+#: .\templates\registration\password_reset.html:104
 msgid "Envoyer le lien de réinitialisation"
 msgstr ""
 
-#: .\templates\registration\password_reset.html:107
-#: .\templates\registration\password_reset_confirm.html:166
+#: .\templates\registration\password_reset.html:108
+#: .\templates\registration\password_reset_confirm.html:167
 msgid "Retour à la"
 msgstr ""
 
-#: .\templates\registration\password_reset.html:107
-#: .\templates\registration\password_reset_confirm.html:166
+#: .\templates\registration\password_reset.html:108
+#: .\templates\registration\password_reset_confirm.html:167
 msgid "connexion"
 msgstr ""
 
-#: .\templates\registration\password_reset.html:111
-msgid "Centre de Suivi et d\\"
-msgstr ""
-
-#: .\templates\registration\password_reset_confirm.html:65
+#: .\templates\registration\password_reset_confirm.html:66
 msgid "Choisir un nouveau mot de passe"
 msgstr ""
 
-#: .\templates\registration\password_reset_confirm.html:73
+#: .\templates\registration\password_reset_confirm.html:74
 msgid "choisissez un nouveau mot de passe sécurisé."
 msgstr ""
 
-#: .\templates\registration\password_reset_confirm.html:143
+#: .\templates\registration\password_reset_confirm.html:144
 msgid "Enregistrer le nouveau mot de passe"
 msgstr ""
 
-#: .\templates\registration\password_reset_confirm.html:157
+#: .\templates\registration\password_reset_confirm.html:158
 msgid ""
 "Ce compte n'a pas encore été activé. Utilisez le lien d'activation qui vous "
 "a été envoyé par email."
 msgstr ""
 
-#: .\templates\registration\password_reset_confirm.html:159
-msgid "Recevoir un nouveau lien d\\"
-msgstr ""
-
-#: .\templates\registration\password_reset_confirm.html:161
+#: .\templates\registration\password_reset_confirm.html:162
 msgid "Ce lien de réinitialisation n'est plus valide."
 msgstr ""
 
-#: .\templates\registration\password_reset_confirm.html:164
+#: .\templates\registration\password_reset_confirm.html:165
 msgid "Faire une nouvelle demande"
 msgstr ""

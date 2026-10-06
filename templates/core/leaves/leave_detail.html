@@ -172,7 +172,7 @@
                 {% if leave.status == 'approuvee' %}
                 <a href="{% url 'core:leave_pdf_download' leave.id %}" class="btn" style="background:white;color:#16a34a;font-weight:700;border:none;" target="_blank">
                     <i class="fa-solid fa-file-arrow-down" width="15" height="15"></i>
-                    {% trans 'Télécharger l\'attestation' %}
+                    {% trans "Télécharger l'attestation" %}
                 </a>
                 {% endif %}
                 {% if can_cancel %}

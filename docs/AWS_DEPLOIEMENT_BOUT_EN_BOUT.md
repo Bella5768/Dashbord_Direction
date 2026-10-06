@@ -792,7 +792,7 @@ aws elbv2 create-listener \
 ```bash
 aws elbv2 modify-target-group-attributes \
   --target-group-arn "$TG_ARN" \
-  --attributes Key=stickiness.enabled,Value=true Key=stickiness.lb_cookie.duration_seconds,Value=86400
+  --attributes Key=stickiness.enabled,Value=true Key=stickiness.type,Value=lb_cookie Key=stickiness.lb_cookie.duration_seconds,Value=86400
 ```
 
 Par défaut l'ALB gère HTTP/WS ; les WebSockets passent via le listener 443 avec

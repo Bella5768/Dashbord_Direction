@@ -32,3 +32,9 @@ data_export.json
 
 #ai
 .claude/
+
+# AWS (artefacts de travail, non versionnes)
+cf.json
+*.taskdef.json
+*.runtask.json
+redirect-80.json

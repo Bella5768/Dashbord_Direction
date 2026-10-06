@@ -4,6 +4,7 @@ Django settings for dashboard_csig project.
 
 from pathlib import Path
 import os
+import socket
 from django.utils.translation import gettext_lazy as _
 from urllib.parse import urlparse, parse_qsl
 
@@ -22,7 +23,30 @@ SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
 DEBUG = os.getenv('DJANGO_DEBUG', 'False').lower() in ('1', 'true', 'yes', 'on')
 
+def _local_addresses():
+    addresses = set()
+    try:
+        addresses.add(socket.gethostbyname(socket.gethostname()))
+    except OSError:
+        pass
+    try:
+        probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            probe.connect(('169.254.169.254', 80))
+            addresses.add(probe.getsockname()[0])
+        finally:
+            probe.close()
+    except OSError:
+        pass
+    return addresses
+
+
 ALLOWED_HOSTS = [h.strip() for h in os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()]
+
+# L'ALB envoie son health check avec Host=<IP privee de la tache>:<port>. Cette IP change a
+# chaque remplacement de tache, on ne peut donc pas la figer dans la task definition. Elle est
+# ajoutee au demarrage, le temps de vie de la tache.
+ALLOWED_HOSTS += [ip for ip in _local_addresses() if ip not in ALLOWED_HOSTS]
 
 # Permet l'affichage des previews de documents dans des iframes du même domaine
 X_FRAME_OPTIONS = 'SAMEORIGIN'
@@ -151,18 +175,25 @@ SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
 
 if not DEBUG:
-    # TLS et HSTS pilotés par variable : le certificat ACM n'est pas disponible
-    # lors du premier déploiement (le domaine n'est pas encore dans le compte),
-    # or SECURE_SSL_REDIRECT + les cookies "Secure" rendent le site inutilisable
-    # derrière un ALB en HTTP seul. Les défauts restent le mode sûr (1) ; on ne
-    # passe à 0 que pour la recette en HTTP, puis on revient à 1 dès que le
-    # certificat est en place sur l'ALB.
+    # TLS et HSTS pilotés par variable. Défauts = mode sûr (1), titres du domaine
+    # et du certificat ACM en place sur l'ALB. On ne passe à 0 que pour une
+    # recette temporaire derrière un ALB en HTTP seul : sans cela
+    # SECURE_SSL_REDIRECT renvoie une boucle de 301 et les cookies "Secure" ne
+    # sont jamais renvoyés par le navigateur, donc la connexion est impossible.
     _ssl_on = os.getenv('DJANGO_SECURE_SSL', '1').lower() in ('1', 'true', 'yes', 'on')
     _hsts_on = os.getenv('DJANGO_HSTS', '1').lower() in ('1', 'true', 'yes', 'on')
     SESSION_COOKIE_SECURE = _ssl_on
     CSRF_COOKIE_SECURE = _ssl_on
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_SSL_REDIRECT = _ssl_on
+    # Le healthcheck ALB attaque le conteneur en HTTP sur /healthz/ et n'envoie
+    # pas X-Forwarded-Proto : sans exemption, SecurityMiddleware le renverrait
+    # en 301 alors que le matcher de la target group exige 200, et la tâche ne
+    # deviendrait jamais healthy.
+    # Django 4.2 (django/middleware/security.py:22) applique un lstrip("/") sur
+    # le path AVANT de tester le pattern : il faut donc "^healthz/" et non
+    # "^/healthz/".
+    SECURE_REDIRECT_EXEMPT = [r'^healthz/']
     SECURE_HSTS_SECONDS = 31536000 if _hsts_on else 0
     SECURE_HSTS_INCLUDE_SUBDOMAINS = _hsts_on
     SECURE_HSTS_PRELOAD = _hsts_on
