@@ -76,6 +76,11 @@ def _task_gender_ctx(task_type):
 
 def _is_email_configured():
     """Vérifie qu'un backend d'envoi est configuré (SES, SendGrid ou SMTP)."""
+    backend = getattr(settings, 'EMAIL_BACKEND', '') or ''
+    # SES : les credentials peuvent venir du rôle de tâche ECS (chaîne boto3 par
+    # défaut), donc aucune clé statique n'est requise dans l'environnement.
+    if backend.endswith('SESBackend') or getattr(settings, 'AWS_SES_REGION', ''):
+        return True
     if getattr(settings, 'AWS_ACCESS_KEY_ID', '') and getattr(settings, 'AWS_SECRET_ACCESS_KEY', ''):
         return True
     host_user = getattr(settings, 'EMAIL_HOST_USER', '')
