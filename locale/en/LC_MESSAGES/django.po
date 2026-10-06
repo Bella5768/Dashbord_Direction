@@ -7294,7 +7294,7 @@ msgstr "Resend invitation to %(email)s?"
 
 #: .\templates\core\users\list.html:151 .\templates\core\users\list.html:154
 msgid "Renvoyer l'invitation"
-msgstr "Resend invitation to %s?"
+msgstr "Resend invitation"
 
 #: .\templates\core\users\list.html:152
 msgid "Renvoyer"
