@@ -15,3 +15,8 @@ node_modules/
 *.log
 db.sqlite3
 docs/
+cors.json
+bucket-policy.json
+task-definition.json
+import-legacy-scope.json
+import-legacy-scope.dryrun.json
