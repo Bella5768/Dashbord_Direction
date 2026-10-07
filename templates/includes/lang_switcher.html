@@ -1,0 +1,47 @@
+{% load i18n %}
+<style>
+  .lang-switcher {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 999px;
+    padding: 3px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, .08);
+    z-index: 50;
+    font-family: Arial, sans-serif;
+  }
+  .lang-switcher button {
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    background: none;
+    border: none;
+    border-radius: 999px;
+    padding: 5px 13px;
+    cursor: pointer;
+    transition: background .2s, color .2s;
+  }
+  .lang-switcher button.active {
+    background: #1e3a5f;
+    color: #ffffff;
+  }
+  .lang-switcher button:not(.active):hover {
+    background: #f3f4f6;
+    color: #1e3a5f;
+  }
+</style>
+{% get_current_language as CURRENT_LANGUAGE %}
+<form action="{% url 'set_language' %}" method="post" class="lang-switcher">
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+  {% for code, name in LANGUAGES %}
+  <button type="submit" name="language" value="{{ code }}"
+          class="{% if code == CURRENT_LANGUAGE %}active{% endif %}">{{ code|upper }}</button>
+  {% endfor %}
+</form>
