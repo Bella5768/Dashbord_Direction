@@ -141,10 +141,12 @@
         <option value="{{ dir.code }}" {% if current_direction == dir.code %}selected{% endif %}>{{ dir.code }} — {{ dir.name }}</option>
         {% endfor %}
     </select>
+    {% if can_create_project %}
     <a href="{% url 'core:project_create' %}" class="btn btn-primary" style="margin-left:auto;">
         <i class="fa-solid fa-circle-plus" width="16" height="16"></i>
         {% trans 'Nouveau projet' %}
     </a>
+    {% endif %}
 </form>
 <div id="filter-content" class="projects-grid">
     {% for project in projects %}

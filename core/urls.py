@@ -71,11 +71,11 @@ urlpatterns = [
     
     # Project CRUD
     path('projets/importer/', views.project_import, name='project_import'),
+    path('projets/nouveau/', views.project_create, name='project_create'),
     path('projets/<slug:project_id>/', views.project_detail, name='project_detail'),
     path('projets/<slug:project_id>/activites/export/', views.export_project_activities, name='export_project_activities'),
     path('projets/<slug:project_id>/besoins/nouveau/', views.project_need_create, name='project_need_create'),
     path('projets/<slug:project_id>/commentaires/nouveau/', views.project_comment_create, name='project_comment_create'),
-    path('projets/nouveau/', views.project_create, name='project_create'),
     path('projets/<slug:project_id>/modifier/', views.project_edit, name='project_edit'),
     path('projets/<slug:project_id>/supprimer/', views.project_delete, name='project_delete'),
     

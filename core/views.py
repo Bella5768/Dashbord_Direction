@@ -968,6 +968,7 @@ def projects(request):
         'current_status': status_filter,
         'current_direction': direction_filter,
         'search': search,
+        'can_create_project': request.user.profile.can_create_projects(),
     }
     return render(request, 'core/projects.html', context)
 
