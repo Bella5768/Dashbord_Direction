@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans 'Requête invalide' %}{% endblock %}
+{% block page_title %}{% trans 'Requête invalide' %}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width:560px;margin:40px auto;text-align:center;">
+  <div class="card-content" style="padding:48px 32px;">
+    <div style="font-size:56px;font-weight:800;color:#e5e7eb;line-height:1;">400</div>
+    <h3 class="card-title" style="margin:16px 0 8px;">{% trans 'Requête invalide' %}</h3>
+    <p class="text-gray-500" style="margin-bottom:24px;">
+      {% trans "La requête n'a pas pu être traitée. Vérifiez l'adresse saisie puis réessayez." %}
+    </p>
+    <a href="/" class="btn btn-primary">{% trans 'Retour au tableau de bord' %}</a>
+  </div>
+</div>
+{% endblock %}

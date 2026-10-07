@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans 'Erreur interne' %}{% endblock %}
+{% block page_title %}{% trans 'Erreur interne' %}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width:560px;margin:40px auto;text-align:center;">
+  <div class="card-content" style="padding:48px 32px;">
+    <div style="font-size:56px;font-weight:800;color:#e5e7eb;line-height:1;">500</div>
+    <h3 class="card-title" style="margin:16px 0 8px;">{% trans 'Erreur interne du serveur' %}</h3>
+    <p class="text-gray-500" style="margin-bottom:24px;">
+      {% trans "Une erreur est survenue de notre côté. L'incident a été enregistré, merci de réessayer plus tard." %}
+    </p>
+    <a href="/" class="btn btn-primary">{% trans 'Retour au tableau de bord' %}</a>
+  </div>
+</div>
+{% endblock %}
