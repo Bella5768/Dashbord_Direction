@@ -50,10 +50,14 @@ def log_project_activity(project, action, description, user, context=None):
 
 
 def _ensure_manager_in_team(project, user=None):
-    """S'assure que le responsable (manager_employee) fait partie de l'équipe projet."""
+    """S'assure que le responsable (manager_employee) fait partie de l'équipe projet.
+
+    Retourne (membre, resultat_email) ; resultat_email est un couple (ok, message)
+    quand le responsable a été prévenu, None quand il n'y a rien à notifier.
+    """
     manager = project.manager_employee
     if not manager:
-        return None
+        return (None, None)
 
     manager_role, __ = ProjectRole.objects.get_or_create(
         slug='responsable',
@@ -70,9 +74,11 @@ def _ensure_manager_in_team(project, user=None):
         defaults={'project_role': manager_role}
     )
 
+    role_changed = False
     if not created and member.project_role_id != manager_role.id:
         member.project_role = manager_role
         member.save(update_fields=['project_role'])
+        role_changed = True
 
     if created and user:
         log_project_activity(
@@ -82,7 +88,25 @@ def _ensure_manager_in_team(project, user=None):
             context={'name': manager.name},
         )
 
-    return member
+    # Le responsable doit être prévenu : à son entrée dans l'équipe, ou quand un
+    # membre déjà présent devient responsable (changement de rôle).
+    if not user or not (created or role_changed):
+        return (member, None)
+
+    from .notifications import notify_project_member_added
+    from .notifs import notify_membre_ajoute
+    notify_membre_ajoute(member, user)
+    return (member, notify_project_member_added(member, user))
+
+
+def _report_manager_notified(request, member, notified):
+    """Remonte à l'utilisateur le résultat de la notification du responsable."""
+    if notified is None:
+        return
+    if notified[0]:
+        messages.info(request, notified[1])
+    else:
+        messages.warning(request, notified[1])
 
 
 _AVATAR_COLORS = [
@@ -3659,7 +3683,7 @@ def project_create(request):
             project.save()
             form.save_m2m()
             # Le responsable choisi doit faire partie de l'équipe projet
-            _ensure_manager_in_team(project, request.user)
+            _report_manager_notified(request, *_ensure_manager_in_team(project, request.user))
             log_project_activity(project, 'creation', "Création du projet '%(name)s'", request.user, context={'name': project.name})
             messages.success(request, _("Projet créé avec succès."))
             return redirect('core:project_detail', project_id=project.slug)
@@ -3700,7 +3724,7 @@ def project_edit(request, project_id):
             form.save_m2m()
             # Si le responsable a changé, l'ajouter automatiquement à l'équipe
             if project.manager_employee_id != old_manager_id:
-                _ensure_manager_in_team(project, request.user)
+                _report_manager_notified(request, *_ensure_manager_in_team(project, request.user))
             log_project_activity(project, 'modification', "Modification des informations du projet", request.user, context=None)
             push_project_meta(project)
             messages.success(request, _("Projet modifié avec succès."))
