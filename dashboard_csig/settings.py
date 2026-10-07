@@ -118,7 +118,10 @@ if _redis_url:
     CHANNEL_LAYERS = {
         'default': {
             'BACKEND': 'channels_redis.core.RedisChannelLayer',
-            'CONFIG': {'hosts': [_redis_url]},
+            # socket_timeout=None : sans cela, redis-py >= 8 (socket_timeout=5 par
+            # défaut) coupe le BZPOPMIN bloquant de channels_redis (brpop_timeout=5)
+            # et lève TimeoutError -> le WebSocket se ferme en boucle.
+            'CONFIG': {'hosts': [{'address': _redis_url, 'socket_timeout': None}]},
         }
     }
 else:

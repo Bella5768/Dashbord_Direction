@@ -7,6 +7,10 @@ dj-database-url>=2.1.0
 phonenumbers>=9.0.0
 channels==4.0.0
 channels-redis==4.2.0
+# Épinglé : channels-redis ne borne que redis>=4.6, et redis-py 8.x passe le
+# socket_timeout par défaut à 5s, ce qui casse le BZPOPMIN bloquant du channel
+# layer (boucle de reconnexion WebSocket). La branche 5.x est la version testée.
+redis>=5.0,<6
 daphne==4.1.0
 polib>=1.2.0
 boto3>=1.34.0
