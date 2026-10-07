@@ -244,6 +244,33 @@ class UserProfile(UUIDModel):
                 return True
         return False
 
+    def read_scope(self, subject):
+        """Portée en liste d'objets pour un sujet donné.
+
+        'all'       → l'utilisateur a une permission de lecture SANS condition
+                      (il voit tout le sujet).
+        'direction' → sa permission est bornée à sa direction
+                      (condition same_direction).
+        'instance'  → sa permission est conditionnée à l'objet lui-même
+                      (owner / membre / manager) : rien ne peut être énuméré
+                      depuis la liste, il faut évaluer l'instance.
+        'none'      → aucune permission sur ce sujet.
+
+        Toutes les conditions réunies forment la portée effective : une règle
+        sans condition l'emporte sur une condition, et same_direction
+        l'emporte sur les conditions d'instance.
+        """
+        from .ability import Ability
+        ab = Ability(self.user)
+        conditions = ab.rule_conditions('read', subject) | ab.rule_conditions('manage', subject)
+        if not conditions:
+            return 'none'
+        if '' in conditions:
+            return 'all'
+        if 'same_direction' in conditions:
+            return 'direction'
+        return 'instance'
+
     # ------------------------------------------------------------------
     # Wrappers fonctionnels — délèguent à Ability
     # Conservés pour compatibilité avec les vues existantes
@@ -254,7 +281,10 @@ class UserProfile(UUIDModel):
         return self._has_permission('read', 'Budget') or self._has_permission('manage', 'Budget')
 
     def can_manage_budgets(self):
-        return self.can('manage', 'Budget')
+        # _has_permission plutôt que can() : can() évalue la condition (ex
+        # same_direction) SANS instance et renverrait False pour un directeur
+        # qui a bien 'manage Budget same_direction'.
+        return self._has_permission('manage', 'Budget')
 
     def can_view_all_budget_directions(self):
         from .ability import Ability
@@ -303,12 +333,28 @@ class UserProfile(UUIDModel):
     def can_approve_documents(self):
         return self.can('approve', 'Document')
 
+    def can_view_documents(self):
+        return self._has_permission('read', 'Document') or self._has_permission('manage', 'Document')
+
+    # Demandes
+    def can_view_requests(self):
+        """Peut consulter le module Demandes.
+
+        Le périmètre n'est pas une règle CASL : on voit les demandes de sa
+        direction, ou toutes pour l'admin / la direction générale. Sans
+        direction et sans être global, la liste serait vide — autant masquer
+        l'accès plutôt qu'afficher une page vide.
+        """
+        if self.is_directeur_general():
+            return True
+        return self.direction_id is not None
+
     # Projets — globaux
     def can_create_projects(self):
         return self.can('create', 'Project')
 
     def can_manage_projects(self):
-        return self.can('read', 'Project') or self.can('manage', 'Project')
+        return self._has_permission('read', 'Project') or self._has_permission('manage', 'Project')
 
     def can_view_all_projects(self):
         """Permission globale de voir tous les projets (sans condition de direction/appartenance)."""

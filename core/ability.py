@@ -38,6 +38,29 @@ class Ability:
         return self._rules
 
     # ------------------------------------------------------------------
+    # Portée d'un (action, subject) — pour le scoping des listes
+    # ------------------------------------------------------------------
+    def rule_conditions(self, action: str, subject: str) -> set:
+        """Conditions portant sur les règles (action, subject) du profil.
+
+        - {}                  : aucune permission
+        - {''}                : au moins une permission SANS condition (accès global)
+        - {'same_direction'}  : permission bornée à la direction de l'utilisateur
+        - {'is_owner', ...}    : permission conditionnée à l'instance (owner, membre…)
+        """
+        conds = set()
+        for rule in self.rules:
+            r_action   = rule['action']   if isinstance(rule, dict) else rule.action
+            r_subject  = rule['subject']  if isinstance(rule, dict) else rule.subject
+            r_condition = rule['condition'] if isinstance(rule, dict) else rule.condition
+            if r_action not in (action, 'manage'):
+                continue
+            if r_subject not in (subject, 'all'):
+                continue
+            conds.add(r_condition or '')
+        return conds
+
+    # ------------------------------------------------------------------
     # Vérification principale
     # ------------------------------------------------------------------
     def can(self, action: str, subject: str, instance=None) -> bool:

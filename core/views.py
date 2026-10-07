@@ -158,25 +158,17 @@ def _user_is_assignee(user, assigned_m2m):
 
 
 def get_accessible_projects_qs(user):
-    """Retourne le queryset de base des projets accessibles selon le rôle de l'utilisateur."""
+    """Retourne le queryset de base des projets accessibles selon le rôle de l'utilisateur.
+
+    Invariant : la liste vaut exactement ce que Ability.can_view_project(project)
+    autorise à ouvrir — sinon on affiche soit trop, soit pas ce qui est ouvrable.
+    """
     from django.db.models import Q
     profile = user.profile
     qs = Project.objects.select_related('direction')
-    if profile.is_directeur_general() or profile.is_admin():
-        return qs
-    # RBAC : permission globale de lecture sur tous les projets
-    if profile.can_view_all_projects():
-        return qs
-
-    # Permission conditionnelle (ex : same_direction) → scope à la direction
-    if profile.can('read', 'Project') or profile.can('manage', 'Project'):
-        if profile.direction_id:
-            return qs.filter(direction_id=profile.direction_id)
-        return qs.none()
-
     employee_id = getattr(profile, 'employee_id', None)
 
-    # External users: only see projects where they are a ProjectMember
+    # Les utilisateurs externes ne voient que les projets dont ils sont membres
     if employee_id:
         try:
             emp = profile.employee
@@ -186,13 +178,118 @@ def get_accessible_projects_qs(user):
             from .error_logging import ErrorLogger
             ErrorLogger.log_exception(e, context={'function': 'get_accessible_projects_qs'}, user=user)
 
-    # Sans lien employé, aucun accès par appartenance
+    # La portée dépend des règles du rôle, pas d'une évaluation à vide :
+    # 'read Project same_direction' (directeur) n'est VRAI qu'avec une instance,
+    # donc can('read', 'Project') renvoie False — il faut lire la condition.
+    scope = profile.read_scope('Project')
+
+    if scope == 'all':                     # admin / DG / règle sans condition
+        return qs
+
+    # Appartenance (manager / membre) : can_view_project() l'accorde quel que
+    # soit le rôle, donc elle s'ajoute à toute portée conditionnée.
+    if employee_id:
+        membership_q = Q(members__employee_id=employee_id) | Q(manager_employee_id=employee_id)
+    else:
+        membership_q = Q(pk__in=[])
+
+    if scope == 'direction':               # directeur : toute sa direction
+        if profile.direction_id:
+            return qs.filter(Q(direction_id=profile.direction_id) | membership_q).distinct()
+        return qs.filter(membership_q).distinct()
+
+    # 'instance' (membre/manager) ou 'none' (aucun droit de rôle) :
+    # rien d'autre que l'appartenance n'est listable.
     if not employee_id:
         return qs.none()
+    return qs.filter(membership_q).distinct()
 
-    member_q = Q(members__employee_id=employee_id)
-    manager_q = Q(manager_employee_id=employee_id)
-    return qs.filter(manager_q | member_q).distinct()
+
+def _apply_read_scope(qs, profile, subject, direction_lookup='direction_id'):
+    """Restreint un queryset à la portée de lecture du profil sur `subject`.
+
+    'all'       → rien à filtrer ; 'direction' → borné à la direction du profil ;
+    'instance'/'none' → rien n'est listable sans instance → queryset vide.
+    """
+    if profile is None:
+        return qs.none()
+    scope = profile.read_scope(subject)
+    if scope == 'all':
+        return qs
+    if scope == 'direction':
+        direction_id = getattr(profile, 'direction_id', None)
+        if direction_id:
+            return qs.filter(**{direction_lookup: direction_id})
+        return qs.none()
+    return qs.none()
+
+
+def _apply_budget_scope(qs, profile):
+    """Borné à la direction du profil, en tenant compte des budgets rattachés
+    à un projet de cette direction (direction null sur la ligne de budget)."""
+    if profile is None:
+        return qs.none()
+    scope = profile.read_scope('Budget')
+    if scope == 'all':
+        return qs
+    if scope == 'direction':
+        direction_id = getattr(profile, 'direction_id', None)
+        if not direction_id:
+            return qs.none()
+        return qs.filter(Q(direction_id=direction_id) | Q(project__direction_id=direction_id))
+    # Portée 'instance' ou 'none' : rien ne peut être listé depuis la page
+    # budget, qui affiche des lignes et non des instances évaluables.
+    return qs.none()
+
+
+def _can_open_document(profile, doc):
+    """Consultation d'un document global : exactement ce que la liste affiche.
+
+    L'ancien garde « direction + droit d'approbation » refusait l'ouverture à tout
+    rôle en lecture seule (ex. Chef de projet) et l'autorisait à l'inverse à qui
+    n'avait qu'une lecture limitée — la liste et l'ouverture divergeaient.
+    """
+    if profile is None:
+        return False
+    scope = profile.read_scope('Document')
+    if scope == 'all':
+        return True
+    if scope == 'direction':
+        return bool(profile.direction_id) and doc.direction_id == profile.direction_id
+    return False
+
+
+def _request_scope_qs(qs, profile, user=None):
+    """Périmètre des demandes : global pour l'admin / la direction générale,
+    sinon uniquement celles de la direction de l'utilisateur.
+
+    Choix de pertinence : on ne consulte et n'approuve pas les demandes d'une
+    autre direction — le périmètre de la liste et celui de l'approbation doivent
+    être identiques, sinon la liste affiche des éléments inopérables.
+    """
+    if profile is None:
+        return qs.none()
+    if (user is not None and user.is_superuser) or profile.is_admin() or profile.is_directeur_general():
+        return qs
+    direction_id = getattr(profile, 'direction_id', None)
+    if not direction_id:
+        return qs.none()
+    return qs.filter(direction_id=direction_id)
+
+
+def _request_decision_error(user, profile, req):
+    """Raison (ou None) pour laquelle `user` ne peut pas statuer sur `req`.
+
+    - séparation des tâches : jamais sur sa propre demande ;
+    - périmètre : sa direction, sauf admin / direction générale.
+    """
+    if req.created_by and req.created_by == (user.get_full_name() or user.username):
+        return _("Vous ne pouvez pas statuer sur votre propre demande.")
+    if user.is_superuser or profile.is_admin() or profile.is_directeur_general():
+        return None
+    if not profile.direction_id or req.direction_id != profile.direction_id:
+        return _("Vous ne pouvez statuer que sur les demandes de votre direction.")
+    return None
 
 
 # ── Helpers comptes utilisateurs ─────────────────────────────────────────────
@@ -554,8 +651,6 @@ def global_search(request):
     if query:
         from django.db.models import Q
         _profile = request.user.profile
-        _dir_id = getattr(_profile, 'direction_id', None)
-        _is_global = _profile.is_admin() or _profile.is_directeur_general()
 
         # Projets — scopés via RBAC
         _accessible = get_accessible_projects_qs(request.user)
@@ -569,34 +664,26 @@ def global_search(request):
                 Q(name__icontains=query) | Q(contact_person__icontains=query)
             )[:10]
 
-        # Employés — scopés à la direction pour les non-globaux
-        _emp_qs = Employee.objects.select_related('direction').filter(
+        # Employés — scopés sur le droit réel 'Employee'
+        _emp_qs = _apply_read_scope(
+            Employee.objects.select_related('direction'), _profile, 'Employee'
+        ).filter(
             Q(name__icontains=query) | Q(role__icontains=query) | Q(email__icontains=query)
         )
-        if not _is_global and _dir_id:
-            _emp_qs = _emp_qs.filter(direction_id=_dir_id)
-        elif not _is_global:
-            _emp_qs = _emp_qs.none()
         results['employees'] = _emp_qs[:10]
 
-        # Demandes — scopées à la direction
-        _req_qs = Request.objects.select_related('direction').filter(
+        # Demandes — périmètre « ma direction » (global admin/DG)
+        _req_qs = _request_scope_qs(
+            Request.objects.select_related('direction'), _profile, request.user
+        ).filter(
             Q(title__icontains=query) | Q(description__icontains=query)
         )
-        if not _is_global:
-            if _dir_id:
-                _req_qs = _req_qs.filter(direction_id=_dir_id)
-            else:
-                _req_qs = _req_qs.none()
         results['requests'] = _req_qs[:10]
 
-        # Documents — scopés à la direction
-        _doc_qs = Document.objects.select_related('direction').filter(Q(title__icontains=query))
-        if not _is_global:
-            if _dir_id:
-                _doc_qs = _doc_qs.filter(direction_id=_dir_id)
-            else:
-                _doc_qs = _doc_qs.none()
+        # Documents — scopés sur le droit réel 'Document'
+        _doc_qs = _apply_read_scope(
+            Document.objects.select_related('direction'), _profile, 'Document'
+        ).filter(Q(title__icontains=query))
         results['documents'] = _doc_qs[:10]
     
     total = sum(len(v) for v in results.values())
@@ -689,29 +776,19 @@ def _project_budget_totals(project_qs):
 
 def _dashboard_scope_qs(user, profile, accessible_projects):
     """Retourne les querysets de documents, demandes, partenaires, événements et employés
-    visibles depuis le dashboard selon le rôle/direction de l'utilisateur."""
+    visibles depuis le dashboard selon le rôle de l'utilisateur (permissions réelles,
+    pas la simple présence d'une direction)."""
     today = timezone.now().date()
-    direction_id = getattr(profile, 'direction_id', None)
-    is_global = profile and (profile.is_admin() or profile.is_directeur_general()) or user.is_superuser
 
-    if is_global:
-        docs_qs = Document.objects.exclude(status='signe')
-        reqs_qs = Request.objects.filter(status='en_attente')
-        partners_qs = Partner.objects.filter(status='actif') if profile.can_read_partners() else Partner.objects.none()
-        events_qs = Event.objects.filter(date__gte=today)
-        employees_qs = Employee.objects.all()
-    elif direction_id:
-        docs_qs = Document.objects.exclude(status='signe').filter(direction_id=direction_id)
-        reqs_qs = Request.objects.filter(status='en_attente', direction_id=direction_id) if (profile and profile.can_approve_requests()) else Request.objects.none()
-        partners_qs = Partner.objects.filter(status='actif') if (profile and profile.can_read_partners()) else Partner.objects.none()
-        events_qs = Event.objects.filter(date__gte=today, participants__id=direction_id)
-        employees_qs = Employee.objects.filter(direction_id=direction_id)
-    else:
-        docs_qs = Document.objects.none()
-        reqs_qs = Request.objects.none()
-        partners_qs = Partner.objects.none()
-        events_qs = Event.objects.none()
-        employees_qs = Employee.objects.none()
+    if profile is None:
+        return (Document.objects.none(), Request.objects.none(), Partner.objects.none(),
+                Event.objects.none(), Employee.objects.none())
+
+    docs_qs = _apply_read_scope(Document.objects.exclude(status='signe'), profile, 'Document')
+    reqs_qs = _request_scope_qs(Request.objects.filter(status='en_attente'), profile, user)
+    partners_qs = Partner.objects.filter(status='actif') if profile.can_read_partners() else Partner.objects.none()
+    events_qs = _apply_read_scope(Event.objects.filter(date__gte=today), profile, 'Event')
+    employees_qs = _apply_read_scope(Employee.objects.all(), profile, 'Employee')
 
     return docs_qs, reqs_qs, partners_qs, events_qs, employees_qs
 
@@ -833,7 +910,7 @@ def dashboard(request):
     role_context = {}
 
     _is_global_dash = user.is_superuser or (profile and (profile.is_admin() or profile.is_directeur_general()))
-    _is_director_dash = profile and profile.can_view_all_projects() and direction_id and not _is_global_dash
+    _is_director_dash = bool(profile) and profile.read_scope('Project') == 'direction' and direction_id and not _is_global_dash
 
     if _is_global_dash:
         role_context['dashboard_title'] = _("Vue d'ensemble de la CSIG")
@@ -896,6 +973,8 @@ def dashboard(request):
             'can_view_budgets': profile.can_view_budgets(),
             'can_read_partners': profile.can_read_partners(),
             'can_approve_requests': profile.can_approve_requests(),
+            'can_view_requests': profile.can_view_requests(),
+            'can_view_documents': profile.can_view_documents(),
             'can_give_final_approval': profile.can_give_final_approval(),
             'can_give_hr_check': profile.can_give_hr_check(),
             'can_view_reports': profile.can_view_reports(),
@@ -979,15 +1058,12 @@ def resources(request):
     tab = request.GET.get('tab', 'budget')
     
     # Budget data
-    can_view_budgets = request.user.profile.can_view_budgets()
-    can_manage_budgets = request.user.profile.can_manage_budgets()
-    can_view_all_budget_directions = request.user.profile.can_view_all_budget_directions()
+    profile = request.user.profile
+    can_view_budgets = profile.can_view_budgets()
+    can_manage_budgets = profile.can_manage_budgets()
+    can_view_all_budget_directions = profile.can_view_all_budget_directions()
 
-    budgets_qs = Budget.objects.select_related('direction', 'project')
-    if not can_view_budgets:
-        budgets_qs = budgets_qs.none()
-    elif not can_view_all_budget_directions:
-        budgets_qs = budgets_qs.filter(Q(project__isnull=False) | Q(direction=request.user.profile.direction))
+    budgets_qs = _apply_budget_scope(Budget.objects.select_related('direction', 'project'), profile)
 
     from .currencies import convert_currency, format_currency
     from types import SimpleNamespace
@@ -1026,15 +1102,8 @@ def resources(request):
     total_allocated = round(total_allocated)
     total_consumed = round(total_consumed)
     
-    # Employees data : scoped to direction for non-global users
-    employees = Employee.objects.select_related('direction').all()
-    profile = request.user.profile
-    _emp_is_global = request.user.is_superuser or profile.is_admin() or profile.is_directeur_general()
-    if not _emp_is_global and not profile.can_view_all_budget_directions():
-        if profile.direction_id:
-            employees = employees.filter(direction_id=profile.direction_id)
-        else:
-            employees = employees.none()
+    # Employees data : scopé sur la portée réelle du droit 'Employee'
+    employees = _apply_read_scope(Employee.objects.select_related('direction'), profile, 'Employee')
 
     # Stats globales calculées avant les filtres de recherche
     avg_workload = employees.aggregate(avg=Avg('workload'))['avg'] or 0
@@ -1086,7 +1155,7 @@ def resources(request):
 def documents(request):
     """Vue des documents"""
     profile = request.user.profile
-    if not profile.can_approve_documents() and not profile.direction_id:
+    if profile.read_scope('Document') == 'none':
         messages.error(request, _("Vous n'avez pas accès aux documents."))
         return redirect('core:dashboard')
 
@@ -1094,14 +1163,7 @@ def documents(request):
     type_filter = request.GET.get('type', 'all')
     search = request.GET.get('search', '')
 
-    direction_id = getattr(profile, 'direction_id', None)
-
-    if profile.is_directeur_general():
-        docs_qs = Document.objects.select_related('direction')
-    elif direction_id:
-        docs_qs = Document.objects.select_related('direction').filter(direction_id=direction_id)
-    else:
-        docs_qs = Document.objects.none()
+    docs_qs = _apply_read_scope(Document.objects.select_related('direction'), profile, 'Document')
 
     stats = docs_qs.aggregate(
         total=Count('id'),
@@ -1132,20 +1194,18 @@ def documents(request):
 @login_required
 def requests_view(request):
     """Vue des demandes"""
+    profile = request.user.profile
+    if not profile.can_view_requests():
+        messages.error(request, _("Vous n'avez pas accès aux demandes."))
+        return redirect('core:dashboard')
+
     status_filter = request.GET.get('status', 'all')
     direction_filter = request.GET.get('direction', 'all')
     search = request.GET.get('search', '')
 
-    profile = request.user.profile
-    direction_id = getattr(profile, 'direction_id', None)
-
-    # DG ou rôle avec can_approve_requests → accès global
-    if profile.is_directeur_general() or profile.can_approve_requests():
-        reqs_qs = Request.objects.select_related('direction')
-    elif direction_id:
-        reqs_qs = Request.objects.select_related('direction').filter(direction_id=direction_id)
-    else:
-        reqs_qs = Request.objects.none()
+    reqs_qs = _request_scope_qs(
+        Request.objects.select_related('direction'), profile, request.user
+    )
 
     stats = reqs_qs.aggregate(
         total=Count('id'),
@@ -1204,15 +1264,10 @@ def calendar(request):
     week_monday = nav_date - timedelta(days=nav_date.weekday())
     week_days = [week_monday + timedelta(days=i) for i in range(7)]
 
-    _cal_profile = request.user.profile
-    _cal_is_global = _cal_profile.is_admin() or _cal_profile.is_directeur_general()
-    _cal_dir_id = getattr(_cal_profile, 'direction_id', None)
-
-    _base_events = Event.objects.prefetch_related('participants').select_related('created_by')
-    if not _cal_is_global and _cal_dir_id:
-        _base_events = _base_events.filter(participants__id=_cal_dir_id)
-    elif not _cal_is_global:
-        _base_events = _base_events.none()
+    _base_events = _apply_read_scope(
+        Event.objects.prefetch_related('participants').select_related('created_by'),
+        request.user.profile, 'Event', direction_lookup='participants__id',
+    )
 
     # Filtres (direction, type, mes invitations)
     direction_filter = request.GET.get('direction') or None
@@ -1823,10 +1878,9 @@ def reports(request):
     budget_rate = round((total_consumed / total_budget * 100)) if total_budget > 0 else 0
     active_partners = Partner.objects.filter(status='actif').count()
     _profile = request.user.profile
-    if _profile.direction_id and not (_profile.is_admin() or _profile.is_directeur_general()):
-        pending_docs = Document.objects.filter(direction_id=_profile.direction_id).exclude(status='signe').count()
-    else:
-        pending_docs = Document.objects.exclude(status='signe').count()
+    pending_docs = _apply_read_scope(
+        Document.objects.select_related('direction'), _profile, 'Document'
+    ).exclude(status='signe').count()
 
     # Tous les projets accessibles pour le tableau
     all_projects = _scoped_projects.select_related('direction')
@@ -1871,11 +1925,10 @@ def reports(request):
     projects_en_cours = _scoped_projects.filter(status='en_cours').count()
     avg_progress = all_projects.aggregate(avg=Avg('progress'))['avg'] or 0
     
-    # Demandes en attente (scopées à la direction pour les non-DG)
-    if _profile.direction_id and not (_profile.is_admin() or _profile.is_directeur_general()):
-        pending_requests = Request.objects.filter(status='en_attente', direction_id=_profile.direction_id).count()
-    else:
-        pending_requests = Request.objects.filter(status='en_attente').count()
+    # Demandes en attente (même périmètre que la liste des demandes)
+    pending_requests = _request_scope_qs(
+        Request.objects.select_related('direction'), _profile, request.user
+    ).filter(status='en_attente').count()
 
     context = {
         'projects_by_direction': projects_by_direction,
@@ -1904,9 +1957,7 @@ def export_employees_pdf(request):
     if not _ep.is_directeur():
         messages.error(request, _("Accès réservé aux directeurs et administrateurs."))
         return redirect('core:resources')
-    employees = Employee.objects.select_related('direction').all()
-    if _ep.direction_id and not (_ep.is_admin() or _ep.is_directeur_general()):
-        employees = employees.filter(direction_id=_ep.direction_id)
+    employees = _apply_read_scope(Employee.objects.select_related('direction'), _ep, 'Employee')
     
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="employes_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf"'
@@ -2082,10 +2133,9 @@ def export_reports_pdf(request):
     budget_rate = round((total_consumed / total_budget * 100)) if total_budget > 0 else 0
     active_partners = Partner.objects.filter(status='actif').count()
     _exp_profile = request.user.profile
-    if _exp_profile.direction_id and not (_exp_profile.is_admin() or _exp_profile.is_directeur_general()):
-        pending_docs = Document.objects.filter(direction_id=_exp_profile.direction_id).exclude(status='signe').count()
-    else:
-        pending_docs = Document.objects.exclude(status='signe').count()
+    pending_docs = _apply_read_scope(
+        Document.objects.select_related('direction'), _exp_profile, 'Document'
+    ).exclude(status='signe').count()
     all_projects = _scoped.select_related('direction')
     
     # Créer le PDF
@@ -2248,13 +2298,9 @@ def partners(request):
     today = timezone.now().date()
     _profile = request.user.profile
     if _profile.can_read_events():
-        _is_global = request.user.is_superuser or _profile.is_admin() or _profile.is_directeur_general()
-        _dir_id = getattr(_profile, 'direction_id', None)
-        _events = Event.objects.all()
-        if not _is_global and _dir_id:
-            _events = _events.filter(participants__id=_dir_id)
-        elif not _is_global:
-            _events = Event.objects.none()
+        _events = _apply_read_scope(
+            Event.objects.all(), _profile, 'Event', direction_lookup='participants__id',
+        )
         upcoming_events = _events.filter(
             event_type='evenement',
             date__gte=today
@@ -5101,15 +5147,9 @@ def document_file_proxy(request, doc_id):
 
     doc = get_sluggable_or_404(Document, doc_id)
 
-    profile = request.user.profile
-    direction_id = getattr(profile, 'direction_id', None)
-    if not profile.is_directeur_general():
-        if not direction_id or doc.direction_id != direction_id:
-            from django.core.exceptions import PermissionDenied
-            raise PermissionDenied
-        if not profile.can_approve_documents():
-            from django.core.exceptions import PermissionDenied
-            raise PermissionDenied
+    if not _can_open_document(request.user.profile, doc):
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied
 
     if not doc.file:
         return HttpResponseRedirect('/')
@@ -5143,15 +5183,9 @@ def document_download(request, doc_id):
 
     doc = get_sluggable_or_404(Document, doc_id)
 
-    profile = request.user.profile
-    direction_id = getattr(profile, 'direction_id', None)
-    if not profile.is_directeur_general():
-        if not direction_id or doc.direction_id != direction_id:
-            from django.core.exceptions import PermissionDenied
-            raise PermissionDenied
-        if not profile.can_approve_documents():
-            from django.core.exceptions import PermissionDenied
-            raise PermissionDenied
+    if not _can_open_document(request.user.profile, doc):
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied
 
     if not doc.file:
         messages.error(request, _("Aucun fichier attaché à ce document."))
@@ -5169,15 +5203,9 @@ def document_preview(request, doc_id):
 
     doc = get_sluggable_or_404(Document, doc_id)
 
-    profile = request.user.profile
-    direction_id = getattr(profile, 'direction_id', None)
-    if not profile.is_directeur_general():
-        if not direction_id or doc.direction_id != direction_id:
-            messages.error(request, _("Vous n'avez pas accès à ce document."))
-            return redirect('core:documents')
-        if not profile.can_approve_documents():
-            messages.error(request, _("Vous n'avez pas accès à ce document."))
-            return redirect('core:documents')
+    if not _can_open_document(request.user.profile, doc):
+        messages.error(request, _("Vous n'avez pas accès à ce document."))
+        return redirect('core:documents')
 
     if not doc.file:
         messages.error(request, _("Aucun fichier attaché à ce document."))
@@ -5219,25 +5247,32 @@ def request_create(request):
     from .forms_project import RequestForm
 
     profile = request.user.profile
-    # L'utilisateur doit appartenir à une direction OU avoir la permission d'approuver les demandes
-    if not profile.direction_id and not profile.can_approve_requests():
-        messages.error(request, _("Vous devez appartenir à une direction pour soumettre une demande."))
+    # Cadrage par le processus : toute demande est rattachée à une direction.
+    if not profile.can_view_requests():
+        messages.error(request, _("Vous n'avez pas accès aux demandes."))
+        return redirect('core:dashboard')
+
+    # L'admin / la direction générale choisit la direction cible dans le
+    # formulaire ; les autres y sont rattachés et doivent avoir une fiche
+    # employé pour suivre leur demande.
+    is_global = request.user.is_superuser or profile.is_admin() or profile.is_directeur_general()
+    if not is_global and not profile.employee_id:
+        messages.error(request, _(
+            "Vous devez être rattaché(e) à un compte employé pour soumettre une demande."
+        ))
         return redirect('core:dashboard')
 
     if request.method == 'POST':
-        form = RequestForm(request.POST)
+        form = RequestForm(request.POST, user=request.user)
         if form.is_valid():
             req = form.save(commit=False)
             req.status = 'en_attente'
             req.created_by = request.user.get_full_name() or request.user.username
-            # Forcer la direction de l'utilisateur si non-admin
-            if not profile.can_approve_requests() and profile.direction_id:
-                req.direction_id = profile.direction_id
             req.save()
             messages.success(request, _("Demande créée avec succès."))
             return redirect('core:requests')
     else:
-        form = RequestForm()
+        form = RequestForm(user=request.user)
 
     return render(request, 'core/request_form.html', {'form': form, 'title': 'Nouvelle demande'})
 
@@ -5250,11 +5285,10 @@ def request_approve(request, req_id):
         return redirect('core:requests')
     
     req = get_sluggable_or_404(Request, req_id)
-    _ra_profile = request.user.profile
-    if not (_ra_profile.is_admin() or _ra_profile.is_directeur_general()):
-        if req.direction_id and req.direction_id != _ra_profile.direction_id:
-            messages.error(request, _("Vous ne pouvez approuver que les demandes de votre direction."))
-            return redirect('core:requests')
+    _err = _request_decision_error(request.user, request.user.profile, req)
+    if _err:
+        messages.error(request, _err)
+        return redirect('core:requests')
     req.status = 'approuve'
     req.approved_at = timezone.now().date()
     req.save()
@@ -5270,11 +5304,10 @@ def request_reject(request, req_id):
         return redirect('core:requests')
     
     req = get_sluggable_or_404(Request, req_id)
-    _rr_profile = request.user.profile
-    if not (_rr_profile.is_admin() or _rr_profile.is_directeur_general()):
-        if req.direction_id and req.direction_id != _rr_profile.direction_id:
-            messages.error(request, _("Vous ne pouvez rejeter que les demandes de votre direction."))
-            return redirect('core:requests')
+    _err = _request_decision_error(request.user, request.user.profile, req)
+    if _err:
+        messages.error(request, _err)
+        return redirect('core:requests')
     req.status = 'rejete'
     req.save()
     messages.success(request, _("Demande '{title}' rejetée.").format(title=req.title))
@@ -5582,14 +5615,11 @@ def budget_delete(request, budget_id):
 def api_budget_data(request):
     """API pour les données de budget"""
     can_view_budgets = request.user.profile.can_view_budgets()
-    can_view_all_budget_directions = request.user.profile.can_view_all_budget_directions()
 
     if not can_view_budgets:
         return JsonResponse({'error': 'Permission refusée'}, status=403)
 
-    budgets = Budget.objects.select_related('direction')
-    if not can_view_all_budget_directions:
-        budgets = budgets.filter(direction=request.user.profile.direction)
+    budgets = _apply_budget_scope(Budget.objects.select_related('direction'), request.user.profile)
 
     budgets = budgets.all()
     data = []

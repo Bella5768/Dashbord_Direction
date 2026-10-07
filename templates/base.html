@@ -85,7 +85,7 @@
                 </ul>
 
                 <!-- Groupe : Gestion -->
-                {% if user.profile.can_manage_budgets or user.profile.can_approve_requests or user.profile.is_directeur or user.profile.can_read_partners or user.profile.is_directeur_general or user.is_staff %}
+                {% if user.profile.can_manage_budgets or user.profile.can_view_requests or user.profile.is_directeur or user.profile.can_read_partners or user.profile.is_directeur_general or user.is_staff %}
                 <p class="sidebar-section-label">{% trans 'Gestion' %}</p>
                 <ul class="sidebar-group">
                     {% if user.profile.can_manage_budgets %}
@@ -95,14 +95,14 @@
                         </a>
                     </li>
                     {% endif %}
-                    {% if user.profile.can_approve_requests %}
+                    {% if user.profile.can_view_requests %}
                     <li>
                         <a href="{% url 'core:requests' %}" {% if request.resolver_match.url_name == 'requests' %}class="active"{% endif %}>
                             <i class="fa-solid fa-message"></i>{% trans 'Demandes' %}
                         </a>
                     </li>
                     {% endif %}
-                    {% if user.profile.can_approve_documents %}
+                    {% if user.profile.can_view_documents %}
                     <li>
                         <a href="{% url 'core:documents' %}" {% if request.resolver_match.url_name == 'documents' %}class="active"{% endif %}>
                             <i class="fa-solid fa-file-lines"></i>{% trans 'Documents' %}

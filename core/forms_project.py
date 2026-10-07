@@ -354,11 +354,40 @@ class RequestForm(forms.ModelForm):
         widgets = {
             'description': forms.Textarea(attrs={'rows': 3}),
         }
-    
-    def __init__(self, *args, **kwargs):
+
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
+
+        if user is None:
+            return
+
+        # Le demandeur est toujours l'utilisateur connecté : non modifiable.
+        # La valeur doit être posée sur le formulaire (prioritaire sur le champ) :
+        # model_to_dict() pré-initialise le champ à '' et un champ désactivé
+        # prend sa valeur dans self.initial, sinon la validation échoue.
+        self.fields['created_by'].disabled = True
+        if not self.initial.get('created_by'):
+            self.initial['created_by'] = user.get_full_name() or user.username
+        self.fields['created_by'].initial = self.initial['created_by']
+
+        profile = getattr(user, 'profile', None)
+        if profile is None:
+            return
+
+        # La demande est rattachée à la direction du demandeur ; les autres
+        # directions ne sont pas sélectionnables (admin / DG exceptés).
+        if profile.is_admin() or profile.is_directeur_general():
+            return
+        from .models import Direction
+        if profile.direction_id:
+            self.fields['direction'].queryset = Direction.objects.filter(id=profile.direction_id)
+            self.initial['direction'] = profile.direction_id
+        else:
+            self.fields['direction'].queryset = Direction.objects.none()
+        self.fields['direction'].disabled = True
+        self.fields['direction'].initial = self.initial.get('direction')
 
 
 class PartnerForm(forms.ModelForm):
