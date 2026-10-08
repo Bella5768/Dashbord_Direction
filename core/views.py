@@ -18,6 +18,8 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.pdfgen import canvas
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 from .models import Direction, Project, Document, Partner, Event, EventMember, Request, Employee, Budget, UserProfile, UserActivity, ProjectMember, Milestone, SubMilestone, ProjectNeed, ProjectComment, ProjectDocument, ProjectFolder, ProjectActivity, Role, ProjectRole, LeaveRequest, User
+from .currencies import convert_currency, convert_display, convert_sum, format_currency
+from .exchange import get_usd_gnf_rate
 from .notifs import push_section_refresh, push_project_meta, push_milestone_status
 
 
@@ -606,6 +608,7 @@ def profile(request):
         email      = request.POST.get('email', '').strip()
         phone      = request.POST.get('phone', '').strip()
         avatar     = request.POST.get('avatar', '').strip()
+        currency   = request.POST.get('currency', '').strip()
 
         if request.POST.get('remove_avatar'):
             prof.avatar = ''
@@ -617,6 +620,8 @@ def profile(request):
             errors['first_name'] = "Le prénom est requis."
         if not last_name:
             errors['last_name'] = "Le nom est requis."
+        if currency not in ('GNF', 'USD'):
+            errors['currency'] = "Devise invalide."
         if not email:
             errors['email'] = "L'adresse email est requise."
         elif email != user.email:
@@ -642,7 +647,8 @@ def profile(request):
             user.save(update_fields=['first_name', 'last_name', 'email'])
             prof.phone = normalized_phone
             prof.avatar = avatar
-            prof.save(update_fields=['phone', 'avatar', 'updated_at'])
+            prof.currency = currency
+            prof.save(update_fields=['phone', 'avatar', 'currency', 'updated_at'])
             UserActivity.objects.create(
                 user=user,
                 action='update',
@@ -721,7 +727,8 @@ def global_search(request):
 
 
 def _project_budget_data(project_qs):
-    """Calcule les données budget par projet pour un queryset de projets donné."""
+    """Calcule les données budget par projet pour un queryset de projets donné.
+    Tous les montants sont convertis en GNF avec le taux figé de chaque ligne."""
     budget_by_project = {}
     project_ids = set(project_qs.values_list('id', flat=True))
 
@@ -729,26 +736,19 @@ def _project_budget_data(project_qs):
     for p in project_qs.filter(Q(budget__gt=0) | Q(budget_consumed__gt=0)):
         budget_by_project[p.id] = {
             'name': p.name,
-            'allocated': float(p.budget or 0),
-            'consumed': float(p.budget_consumed or 0),
+            'allocated': convert_currency(float(p.budget or 0), p.currency, 'GNF', rate=p.rate_snapshot),
+            'consumed': convert_currency(float(p.budget_consumed or 0), p.currency, 'GNF', rate=p.rate_snapshot),
         }
 
     # Source 2 : lignes budgétaires rattachées à un projet (somme)
-    project_budget_rows = (
-        Budget.objects
-        .filter(project_id__in=project_ids)
-        .values('project_id', 'project__name')
-        .annotate(total_allocated=Sum('allocated'), total_consumed=Sum('consumed'))
-    )
-    for row in project_budget_rows:
-        pid = row['project_id']
-        entry = budget_by_project.setdefault(pid, {
-            'name': row['project__name'] or 'Projet sans nom',
+    for b in Budget.objects.filter(project_id__in=project_ids).select_related('project'):
+        entry = budget_by_project.setdefault(b.project_id, {
+            'name': b.project.name if b.project else 'Projet sans nom',
             'allocated': 0.0,
             'consumed': 0.0,
         })
-        entry['allocated'] += float(row['total_allocated'] or 0)
-        entry['consumed'] += float(row['total_consumed'] or 0)
+        entry['allocated'] += convert_currency(float(b.allocated or 0), b.currency, 'GNF', rate=b.rate_snapshot)
+        entry['consumed'] += convert_currency(float(b.consumed or 0), b.currency, 'GNF', rate=b.rate_snapshot)
 
     sorted_entries = sorted(budget_by_project.values(), key=lambda e: e['allocated'], reverse=True)[:10]
     budget_data = []
@@ -775,27 +775,24 @@ def _project_stats(project_qs):
 
 
 def _project_budget_totals(project_qs):
-    """Calcule budget total alloué / consommé pour un queryset de projets."""
+    """Totaux alloué/consommé convertis dans les deux devises (taux figé par ligne).
+
+    Retourne ({'GNF': (alloué, consommé), 'USD': (alloué, consommé)}, taux_de_consommation).
+    """
     project_ids = set(project_qs.values_list('id', flat=True))
-    budget_rows = Budget.objects.filter(project_id__in=project_ids).aggregate(
-        allocated=Sum('allocated'), consumed=Sum('consumed')
-    )
-    budget_table_allocated = budget_rows['allocated'] or 0
-    budget_table_consumed = budget_rows['consumed'] or 0
+    budget_rows = list(Budget.objects.filter(project_id__in=project_ids))
+    project_ids_with_budget_row = {b.project_id for b in budget_rows}
+    direct_rows = list(project_qs.exclude(id__in=project_ids_with_budget_row))
 
-    project_ids_with_budget_row = set(
-        Budget.objects.filter(project_id__in=project_ids).values_list('project_id', flat=True)
-    )
-    project_direct = project_qs.exclude(id__in=project_ids_with_budget_row).aggregate(
-        total_allocated=Sum('budget'), total_consumed=Sum('budget_consumed'),
-    )
-    project_direct_allocated = project_direct['total_allocated'] or 0
-    project_direct_consumed = project_direct['total_consumed'] or 0
+    totals = {}
+    for currency in ('GNF', 'USD'):
+        allocated = convert_sum(budget_rows, 'allocated', currency) + convert_sum(direct_rows, 'budget', currency)
+        consumed = convert_sum(budget_rows, 'consumed', currency) + convert_sum(direct_rows, 'budget_consumed', currency)
+        totals[currency] = (round(allocated), round(consumed))
 
-    total_budget = float(budget_table_allocated) + float(project_direct_allocated)
-    total_consumed = float(budget_table_consumed) + float(project_direct_consumed)
-    budget_percentage = round((total_consumed / total_budget * 100), 1) if total_budget > 0 else 0
-    return total_budget, total_consumed, budget_percentage
+    gnf_allocated, gnf_consumed = totals['GNF']
+    budget_percentage = round((gnf_consumed / gnf_allocated * 100), 1) if gnf_allocated > 0 else 0
+    return totals, budget_percentage
 
 
 def _dashboard_scope_qs(user, profile, accessible_projects):
@@ -916,7 +913,9 @@ def dashboard(request):
 
     accessible_projects = get_accessible_projects_qs(user)
     project_stats = _project_stats(accessible_projects)
-    total_budget, total_consumed, budget_percentage = _project_budget_totals(accessible_projects)
+    budget_totals, budget_percentage = _project_budget_totals(accessible_projects)
+    total_budget, total_consumed = budget_totals['GNF']
+    total_budget_usd, total_consumed_usd = budget_totals['USD']
     budget_data = _project_budget_data(accessible_projects)
 
     # Documents et demandes filtrés par scope accessible
@@ -1016,6 +1015,8 @@ def dashboard(request):
         'is_employee_view': role_slug not in ('admin', 'directeur_general', 'directeur') and not user.is_superuser,
         'total_budget': total_budget,
         'total_consumed': total_consumed,
+        'total_budget_usd': total_budget_usd,
+        'total_consumed_usd': total_consumed_usd,
         'budget_percentage': budget_percentage,
         'pending_documents': docs_qs.count(),
         'pending_requests': reqs_qs.count(),
@@ -1089,7 +1090,7 @@ def resources(request):
 
     budgets_qs = _apply_budget_scope(Budget.objects.select_related('direction', 'project'), profile)
 
-    from .currencies import convert_currency, format_currency
+    from .currencies import convert_currency
     from types import SimpleNamespace
 
     # 1) Budgets reels (table Budget)
@@ -1110,21 +1111,32 @@ def resources(request):
                 allocated=p.budget or 0,
                 consumed=p.budget_consumed or 0,
                 currency=p.currency or 'GNF',
+                rate_snapshot=p.rate_snapshot,
                 available=(p.budget or 0) - (p.budget_consumed or 0),
                 consumption_rate=round((float(p.budget_consumed) / float(p.budget)) * 100, 1) if p.budget and p.budget > 0 else 0,
             ))
 
-    # Conversion GNF + totaux
+    # Conversion GNF + USD (taux figé par ligne) et totaux
     total_allocated = 0
     total_consumed = 0
+    total_allocated_usd = 0.0
+    total_consumed_usd = 0.0
     for b in budgets:
-        b.allocated_gnf = round(convert_currency(float(b.allocated), b.currency, 'GNF'))
-        b.consumed_gnf = round(convert_currency(float(b.consumed), b.currency, 'GNF'))
+        _rate = getattr(b, 'rate_snapshot', None)
+        b.allocated_gnf = round(convert_currency(float(b.allocated), b.currency, 'GNF', rate=_rate))
+        b.consumed_gnf = round(convert_currency(float(b.consumed), b.currency, 'GNF', rate=_rate))
         b.available_gnf = b.allocated_gnf - b.consumed_gnf
+        b.allocated_usd = round(convert_currency(float(b.allocated), b.currency, 'USD', rate=_rate), 2)
+        b.consumed_usd = round(convert_currency(float(b.consumed), b.currency, 'USD', rate=_rate), 2)
+        b.available_usd = round(b.allocated_usd - b.consumed_usd, 2)
         total_allocated += b.allocated_gnf
         total_consumed += b.consumed_gnf
+        total_allocated_usd += b.allocated_usd
+        total_consumed_usd += b.consumed_usd
     total_allocated = round(total_allocated)
     total_consumed = round(total_consumed)
+    total_allocated_usd = round(total_allocated_usd, 2)
+    total_consumed_usd = round(total_consumed_usd, 2)
     
     # Employees data : scopé sur la portée réelle du droit 'Employee'
     employees = _apply_read_scope(Employee.objects.select_related('direction'), profile, 'Employee')
@@ -1158,6 +1170,9 @@ def resources(request):
         'total_allocated': total_allocated,
         'total_consumed': total_consumed,
         'total_available': total_allocated - total_consumed,
+        'total_allocated_usd': total_allocated_usd,
+        'total_consumed_usd': total_consumed_usd,
+        'total_available_usd': round(total_allocated_usd - total_consumed_usd, 2),
         'consumption_rate': round((float(total_consumed) / float(total_allocated) * 100), 1) if total_allocated > 0 else 0,
         'can_view_budgets': can_view_budgets,
         'can_manage_budgets': can_manage_budgets,
@@ -1886,19 +1901,15 @@ def reports(request):
     total_projects = proj_agg['total']
     projects_completed = proj_agg['termine']
     _accessible_proj_ids = set(_scoped_projects.values_list('id', flat=True))
-    budget_agg = Budget.objects.filter(
+    _budget_rows = list(Budget.objects.filter(
         Q(project_id__in=_accessible_proj_ids) | Q(direction__in=directions)
-    ).aggregate(alloc=Sum('allocated'), cons=Sum('consumed'))
-    _budget_table_alloc = float(budget_agg['alloc'] or 0)
-    _budget_table_cons  = float(budget_agg['cons']  or 0)
-    _project_ids_with_budget_row = set(
-        Budget.objects.filter(project_id__in=_accessible_proj_ids).values_list('project_id', flat=True)
-    )
-    _project_direct = _scoped_projects.exclude(id__in=_project_ids_with_budget_row).aggregate(
-        a=Sum('budget'), c=Sum('budget_consumed')
-    )
-    total_budget   = _budget_table_alloc + float(_project_direct['a'] or 0)
-    total_consumed = _budget_table_cons  + float(_project_direct['c'] or 0)
+    ))
+    _project_ids_with_budget_row = {b.project_id for b in _budget_rows if b.project_id}
+    _project_direct_rows = list(_scoped_projects.exclude(id__in=_project_ids_with_budget_row))
+    total_budget = convert_sum(_budget_rows, 'allocated', 'GNF') + convert_sum(_project_direct_rows, 'budget', 'GNF')
+    total_consumed = convert_sum(_budget_rows, 'consumed', 'GNF') + convert_sum(_project_direct_rows, 'budget_consumed', 'GNF')
+    total_budget_usd = convert_sum(_budget_rows, 'allocated', 'USD') + convert_sum(_project_direct_rows, 'budget', 'USD')
+    total_consumed_usd = convert_sum(_budget_rows, 'consumed', 'USD') + convert_sum(_project_direct_rows, 'budget_consumed', 'USD')
     budget_rate = round((total_consumed / total_budget * 100)) if total_budget > 0 else 0
     active_partners = Partner.objects.filter(status='actif').count()
     _profile = request.user.profile
@@ -1913,33 +1924,30 @@ def reports(request):
     budget_by_direction = []
     for direction in directions:
         # Source 1 : Budget rows linked directly to the direction
-        dir_budget_agg = direction.budgets.aggregate(a=Sum('allocated'), c=Sum('consumed'))
-        dir_alloc = float(dir_budget_agg['a'] or 0)
-        dir_cons  = float(dir_budget_agg['c'] or 0)
+        dir_rows = list(direction.budgets.all())
 
         # Source 2 : Budget rows linked to accessible projects in this direction
-        proj_budget_agg = Budget.objects.filter(
+        proj_rows = list(Budget.objects.filter(
             project_id__in=_accessible_proj_ids, project__direction=direction
-        ).aggregate(a=Sum('allocated'), c=Sum('consumed'))
-        dir_alloc += float(proj_budget_agg['a'] or 0)
-        dir_cons  += float(proj_budget_agg['c'] or 0)
+        ))
 
         # Source 3 : Project.budget for accessible projects not covered by a Budget row
-        covered_ids = set(
-            Budget.objects.filter(project_id__in=_accessible_proj_ids, project__direction=direction).values_list('project_id', flat=True)
-        )
-        proj_direct_agg = _scoped_projects.filter(direction=direction).exclude(
-            id__in=covered_ids
-        ).aggregate(a=Sum('budget'), c=Sum('budget_consumed'))
-        dir_alloc += float(proj_direct_agg['a'] or 0)
-        dir_cons  += float(proj_direct_agg['c'] or 0)
+        covered_ids = {b.project_id for b in proj_rows}
+        direct_rows = list(_scoped_projects.filter(direction=direction).exclude(id__in=covered_ids))
+
+        alloc_gnf = convert_sum(dir_rows, 'allocated', 'GNF') + convert_sum(proj_rows, 'allocated', 'GNF') + convert_sum(direct_rows, 'budget', 'GNF')
+        cons_gnf  = convert_sum(dir_rows, 'consumed', 'GNF') + convert_sum(proj_rows, 'consumed', 'GNF') + convert_sum(direct_rows, 'budget_consumed', 'GNF')
+        alloc_usd = convert_sum(dir_rows, 'allocated', 'USD') + convert_sum(proj_rows, 'allocated', 'USD') + convert_sum(direct_rows, 'budget', 'USD')
+        cons_usd  = convert_sum(dir_rows, 'consumed', 'USD') + convert_sum(proj_rows, 'consumed', 'USD') + convert_sum(direct_rows, 'budget_consumed', 'USD')
 
         budget_by_direction.append({
             'direction': direction.code,
             'name': direction.name,
-            'allocated': round(dir_alloc),
-            'consumed': round(dir_cons),
-            'rate': round((dir_cons / dir_alloc * 100)) if dir_alloc > 0 else 0,
+            'allocated': round(alloc_gnf),
+            'consumed': round(cons_gnf),
+            'allocated_usd': round(alloc_usd, 2),
+            'consumed_usd': round(cons_usd, 2),
+            'rate': round((cons_gnf / alloc_gnf * 100)) if alloc_gnf > 0 else 0,
         })
     
     # Performance par projet (scopé)
@@ -1966,6 +1974,8 @@ def reports(request):
         'all_projects': all_projects,
         'total_budget': total_budget,
         'total_consumed': total_consumed,
+        'total_budget_usd': round(total_budget_usd, 2),
+        'total_consumed_usd': round(total_consumed_usd, 2),
         'budget_by_direction': budget_by_direction,
         'projects_en_retard': projects_en_retard,
         'projects_en_cours': projects_en_cours,
@@ -2149,11 +2159,11 @@ def export_reports_pdf(request):
     total_projects = proj_agg['total']
     projects_completed = proj_agg['termine']
     _scoped_ids = set(_scoped.values_list('id', flat=True))
-    budget_agg = Budget.objects.filter(
+    _exp_budget_rows = list(Budget.objects.filter(
         Q(project_id__in=_scoped_ids) | Q(direction__in=directions)
-    ).aggregate(total=Sum('allocated'), consumed=Sum('consumed'))
-    total_budget = float(budget_agg['total'] or 0)
-    total_consumed = float(budget_agg['consumed'] or 0)
+    ))
+    total_budget = convert_sum(_exp_budget_rows, 'allocated', 'GNF')
+    total_consumed = convert_sum(_exp_budget_rows, 'consumed', 'GNF')
     budget_rate = round((total_consumed / total_budget * 100)) if total_budget > 0 else 0
     active_partners = Partner.objects.filter(status='actif').count()
     _exp_profile = request.user.profile
@@ -2274,8 +2284,8 @@ def export_reports_pdf(request):
             project.direction.code if project.direction else '-',
             project.get_status_display(),
             f"{project.progress}%",
-            f"{project.budget:,.0f} GNF",
-            f"{project.budget_consumed:,.0f} GNF",
+            format_currency(convert_currency(float(project.budget or 0), project.currency, 'GNF', rate=project.rate_snapshot), 'GNF'),
+            format_currency(convert_currency(float(project.budget_consumed or 0), project.currency, 'GNF', rate=project.rate_snapshot), 'GNF'),
             f"{project.budget_percentage}%"
         ])
     
@@ -3690,7 +3700,11 @@ def project_create(request):
     else:
         form = ProjectForm(user=request.user)
 
-    return render(request, 'core/project_form.html', {'form': form, 'title': 'Nouveau projet'})
+    return render(request, 'core/project_form.html', {
+        'form': form,
+        'title': 'Nouveau projet',
+        'form_rate': round(get_usd_gnf_rate()['rate'], 6),
+    })
 
 
 @login_required
@@ -3732,7 +3746,13 @@ def project_edit(request, project_id):
     else:
         form = ProjectForm(instance=project)
 
-    return render(request, 'core/project_form.html', {'form': form, 'project': project, 'title': f'Modifier {project.name}'})
+    _edit_rate = float(project.rate_snapshot) if project.rate_snapshot else get_usd_gnf_rate()['rate']
+    return render(request, 'core/project_form.html', {
+        'form': form,
+        'project': project,
+        'title': f'Modifier {project.name}',
+        'form_rate': round(_edit_rate, 6),
+    })
 
 
 @login_required

@@ -148,6 +148,19 @@
             <p style="font-size:12px;color:#6b7280;margin-top:4px;">{% trans 'Optionnel.' %}</p>
           </div>
 
+          <!-- Devise préférée -->
+          <div class="form-group" style="grid-column:1/-1;">
+            <label class="form-label" for="currency">{% trans 'Devise préférée' %}</label>
+            <select name="currency" id="currency" class="form-control">
+              <option value="GNF" {% if fd.currency|default:prof.currency == 'GNF' %}selected{% endif %}>GNF</option>
+              <option value="USD" {% if fd.currency|default:prof.currency == 'USD' %}selected{% endif %}>USD</option>
+            </select>
+            <p style="font-size:12px;color:#6b7280;margin-top:4px;">{% trans 'Valeur par défaut des formulaires de budget.' %}</p>
+            {% if errors.currency %}
+            <p style="font-size:12px;color:#dc2626;margin-top:4px;">{{ errors.currency }}</p>
+            {% endif %}
+          </div>
+
         </div>
 
         <!-- Champs lecture seule -->

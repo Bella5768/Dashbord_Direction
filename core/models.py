@@ -1,5 +1,6 @@
 import uuid
 from datetime import date as _date_value, timedelta
+from decimal import Decimal
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import gettext
@@ -9,6 +10,8 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.core.exceptions import ValidationError
 import calendar as _pycal
+from .currencies import CURRENCY_CHOICES, convert_display
+from .exchange import get_usd_gnf_rate
 
 
 def _add_months(base, n):
@@ -176,6 +179,7 @@ class UserProfile(UUIDModel):
     employee            = models.OneToOneField('Employee', on_delete=models.SET_NULL, null=True, blank=True, related_name='user_profile', verbose_name=_("Employé"))
     employee_identifier = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("ID Employé"))
     phone               = models.CharField(max_length=20, blank=True, verbose_name=_("Téléphone"))
+    currency            = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='GNF', verbose_name=_("Devise préférée"))
     avatar              = models.URLField(max_length=500, default='', blank=True, verbose_name=_("Photo"))
     is_active_profile   = models.BooleanField(default=True, verbose_name=_("Profil actif"))
     created_at          = models.DateTimeField(auto_now_add=True)
@@ -504,6 +508,8 @@ class Project(SluggableModel):
     budget = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name=_("Budget alloué"))
     budget_consumed = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name=_("Budget consommé"))
     currency = models.CharField(max_length=3, default='GNF', verbose_name=_("Devise"))
+    rate_snapshot = models.DecimalField(max_digits=20, decimal_places=6, null=True, blank=True, verbose_name=_("Taux figé (GNF pour 1 USD)"))
+    rate_date = models.DateTimeField(null=True, blank=True, verbose_name=_("Date du taux figé"))
     start_date = models.DateField(verbose_name=_("Date de début"))
     end_date = models.DateField(verbose_name=_("Date de fin"))
     original_start_date = models.DateField(null=True, blank=True, editable=False, verbose_name=_("Date de début originale"))
@@ -526,7 +532,36 @@ class Project(SluggableModel):
         if not self.pk:  # Si c'est une nouvelle création
             self.original_start_date = self.start_date
             self.original_end_date = self.end_date
+        self._refresh_rate_snapshot()
+        if kwargs.get('update_fields') is not None:
+            kwargs['update_fields'] = set(kwargs['update_fields']) | {'rate_snapshot', 'rate_date'}
         super().save(*args, **kwargs)
+
+    def _refresh_rate_snapshot(self):
+        """Fixe le taux GNF/USD à la saisie ; refigé uniquement si la devise change."""
+        need = self.rate_snapshot is None
+        if not need and self.pk:
+            db_currency = Project.objects.filter(pk=self.pk).values_list('currency', flat=True).first()
+            need = db_currency is not None and db_currency != self.currency
+        if need:
+            info = get_usd_gnf_rate()
+            self.rate_snapshot = Decimal(str(info['rate']))
+            self.rate_date = info['date']
+
+    @property
+    def equiv_currency(self):
+        """L'autre devise (GNF ↔ USD)."""
+        return 'USD' if self.currency == 'GNF' else 'GNF'
+
+    @property
+    def budget_equiv_display(self):
+        """Budget exprimé dans l'autre devise, au taux figé à la saisie."""
+        return convert_display(float(self.budget or 0), self.currency, self.equiv_currency, rate=self.rate_snapshot)
+
+    @property
+    def budget_consumed_equiv_display(self):
+        """Budget consommé exprimé dans l'autre devise, au taux figé à la saisie."""
+        return convert_display(float(self.budget_consumed or 0), self.currency, self.equiv_currency, rate=self.rate_snapshot)
 
     def clean(self):
         super().clean()
@@ -1334,27 +1369,63 @@ class Budget(UUIDModel):
     allocated = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name=_("Budget alloué"))
     consumed = models.DecimalField(max_digits=15, decimal_places=2, default=0, verbose_name=_("Budget consommé"))
     currency = models.CharField(max_length=3, default='GNF', verbose_name=_("Devise"))
-    
+    rate_snapshot = models.DecimalField(max_digits=20, decimal_places=6, null=True, blank=True, verbose_name=_("Taux figé (GNF pour 1 USD)"))
+    rate_date = models.DateTimeField(null=True, blank=True, verbose_name=_("Date du taux figé"))
+
     class Meta:
         verbose_name = _("Budget")
         verbose_name_plural = _("Budgets")
-    
+
+    def save(self, *args, **kwargs):
+        self._refresh_rate_snapshot()
+        if kwargs.get('update_fields') is not None:
+            kwargs['update_fields'] = set(kwargs['update_fields']) | {'rate_snapshot', 'rate_date'}
+        super().save(*args, **kwargs)
+
+    def _refresh_rate_snapshot(self):
+        """Fixe le taux GNF/USD à la saisie ; refigé uniquement si la devise change."""
+        need = self.rate_snapshot is None
+        if not need and self.pk:
+            db_currency = Budget.objects.filter(pk=self.pk).values_list('currency', flat=True).first()
+            need = db_currency is not None and db_currency != self.currency
+        if need:
+            info = get_usd_gnf_rate()
+            self.rate_snapshot = Decimal(str(info['rate']))
+            self.rate_date = info['date']
+
     def __str__(self):
         if self.project:
             return f"Budget {self.project.name}"
         if self.direction:
             return f"Budget {self.direction.code}"
         return "Budget sans affectation"
-    
+
     @property
     def available(self):
         return self.allocated - self.consumed
-    
+
     @property
     def consumption_rate(self):
         if self.allocated > 0:
             return round((float(self.consumed) / float(self.allocated)) * 100, 1)
         return 0
+
+    @property
+    def equiv_currency(self):
+        """L'autre devise (GNF ↔ USD)."""
+        return 'USD' if self.currency == 'GNF' else 'GNF'
+
+    @property
+    def allocated_equiv_display(self):
+        return convert_display(float(self.allocated or 0), self.currency, self.equiv_currency, rate=self.rate_snapshot)
+
+    @property
+    def consumed_equiv_display(self):
+        return convert_display(float(self.consumed or 0), self.currency, self.equiv_currency, rate=self.rate_snapshot)
+
+    @property
+    def available_equiv_display(self):
+        return convert_display(float(self.available or 0), self.currency, self.equiv_currency, rate=self.rate_snapshot)
 
 
 # =====================================================================

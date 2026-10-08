@@ -33,6 +33,16 @@ def number_format(value):
 
 
 @register.filter
+def currency_fmt(value, currency='GNF'):
+    """Formate un montant selon la devise : 8 655 000 GNF / 1 234,56 USD"""
+    from ..currencies import format_currency
+    try:
+        return format_currency(float(value), currency)
+    except (ValueError, TypeError):
+        return value
+
+
+@register.filter
 def split(value, separator=','):
     """Split a string by separator."""
     return value.split(separator)

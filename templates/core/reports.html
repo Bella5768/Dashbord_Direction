@@ -308,8 +308,10 @@
                 <!-- Budget -->
                 <div>
                     <p class="rpt-b-main">{{ project.budget|number_format }} {{ project.currency }}</p>
+                    {% if project.budget %}<p class="text-xs text-gray-400" style="text-align:right;margin:-2px 0 4px;">≈ {{ project.budget_equiv_display }}</p>{% endif %}
                     <p class="rpt-b-consumed {% if project.budget_percentage > 80 %}alert{% elif project.budget_percentage > 60 %}warn{% else %}ok{% endif %}">
                         {% trans 'Consommé' %} : {{ project.budget_consumed|number_format }} {{ project.currency }}
+                        {% if project.budget %}<span style="opacity:.8;">(≈ {{ project.budget_consumed_equiv_display }})</span>{% endif %}
                     </p>
                 </div>
                 <!-- % budget circle -->
@@ -337,14 +339,14 @@
             <div class="rpt-kpi-icon"><i class="fa-solid fa-wallet" width="18" height="18"></i></div>
             <div>
                 <p class="rpt-kpi-val" style="font-size:17px;">{{ total_budget|number_format }}</p>
-                <p class="rpt-kpi-lbl">{% trans 'Budget alloué (GNF)' %}</p>
+                <p class="rpt-kpi-lbl">{% trans 'Budget alloué (GNF)' %} · ≈ {{ total_budget_usd|currency_fmt:'USD' }}</p>
             </div>
         </div>
         <div class="rpt-kpi green">
             <div class="rpt-kpi-icon"><i class="fa-solid fa-arrow-trend-down" width="18" height="18"></i></div>
             <div>
                 <p class="rpt-kpi-val" style="font-size:17px;">{{ total_consumed|number_format }}</p>
-                <p class="rpt-kpi-lbl">{% trans 'Consommé (GNF)' %}</p>
+                <p class="rpt-kpi-lbl">{% trans 'Consommé (GNF)' %} · ≈ {{ total_consumed_usd|currency_fmt:'USD' }}</p>
             </div>
         </div>
         <div class="rpt-kpi {% if budget_rate > 80 %}red{% elif budget_rate > 60 %}amber{% else %}purple{% endif %}">
@@ -402,8 +404,8 @@
                                 <p class="font-medium">{{ item.direction }}</p>
                                 <p class="text-xs text-gray-500">{{ item.name }}</p>
                             </td>
-                            <td style="text-align:right; font-weight:500;">{{ item.allocated|number_format }} GNF</td>
-                            <td style="text-align:right; color:#16a34a;">{{ item.consumed|number_format }} GNF</td>
+                            <td style="text-align:right; font-weight:500;">{{ item.allocated|number_format }} GNF<br><span class="text-xs text-gray-400">≈ {{ item.allocated_usd|currency_fmt:'USD' }}</span></td>
+                            <td style="text-align:right; color:#16a34a;">{{ item.consumed|number_format }} GNF<br><span class="text-xs text-gray-400">≈ {{ item.consumed_usd|currency_fmt:'USD' }}</span></td>
                             <td style="text-align:center;">
                                 <span class="rpt-rate {% if item.rate > 80 %}alert{% elif item.rate > 60 %}warn{% else %}ok{% endif %}">{{ item.rate }}%</span>
                             </td>

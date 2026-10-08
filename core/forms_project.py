@@ -2,7 +2,7 @@ from django import forms
 from django.db.models import Max
 from django.utils.translation import gettext_lazy as _
 from .models import Project, Document, Request, Partner, Direction, Budget, Employee, Milestone, SubMilestone, ProjectFolder, ProjectDocument, ProjectMember, ProjectNeed, ProjectComment, ProjectRole, Role
-from .currencies import CURRENCY_CHOICES, convert_currency, format_currency
+from .currencies import CURRENCY_CHOICES, convert_display
 from .fields import IntlPhoneField
 from .validators import validate_safe_file
 
@@ -52,20 +52,28 @@ class ProjectForm(forms.ModelForm):
         self.fields['budget'].widget.attrs['placeholder'] = _('0')
         self.fields['budget_consumed'].widget.attrs['placeholder'] = _('0')
         
+        # Devise par defaut : preference du profil (creation uniquement)
+        if not (self.instance and self.instance.pk):
+            _cf_profile = getattr(user, 'profile', None) if user else None
+            if _cf_profile and _cf_profile.currency in ('GNF', 'USD'):
+                self.fields['currency'].initial = _cf_profile.currency
+
         # Si c'est une édition (projet existant), les dates ne sont pas obligatoires
         if self.instance and self.instance.pk:
             self.fields['start_date'].required = False
             self.fields['end_date'].required = False
         
-        # Ajouter des informations sur la conversion de devise
+        # Aide a la saisie : equivalent dans l'autre devise, au taux figé a la creation
         if self.instance and self.instance.pk and self.instance.currency:
-            current_currency = self.instance.currency
-            if current_currency != 'GNF':
-                gnf_equivalent = convert_currency(float(self.instance.budget), current_currency, 'GNF')
-                self.fields['budget'].help_text = _("Équivalent: %(amount)s") % {'amount': format_currency(gnf_equivalent, 'GNF')}
-                if self.instance.budget_consumed:
-                    consumed_gnf = convert_currency(float(self.instance.budget_consumed), current_currency, 'GNF')
-                    self.fields['budget_consumed'].help_text = _("Équivalent: %(amount)s") % {'amount': format_currency(consumed_gnf, 'GNF')}
+            _other = self.instance.equiv_currency
+            if self.instance.budget:
+                self.fields['budget'].help_text = _("Équivalent: %(amount)s") % {
+                    'amount': convert_display(float(self.instance.budget), self.instance.currency, _other, rate=self.instance.rate_snapshot)
+                }
+            if self.instance.budget_consumed:
+                self.fields['budget_consumed'].help_text = _("Équivalent: %(amount)s") % {
+                    'amount': convert_display(float(self.instance.budget_consumed), self.instance.currency, _other, rate=self.instance.rate_snapshot)
+                }
     
     def clean_budget(self):
         """Budget optionnel : valeur par defaut 0 si vide"""
@@ -441,6 +449,22 @@ class BudgetForm(forms.ModelForm):
         self.fields['direction'].required = False
         self.fields['direction'].empty_label = _("-- Aucune direction --")
         self.fields['currency'].widget.attrs['class'] = 'form-control select-searchable'
+        # Devise par defaut : preference du profil (creation uniquement)
+        if not (self.instance and self.instance.pk):
+            _bc_profile = getattr(user, 'profile', None) if user else None
+            if _bc_profile and _bc_profile.currency in ('GNF', 'USD'):
+                self.fields['currency'].initial = _bc_profile.currency
+        # Aide a la saisie : equivalent dans l'autre devise, au taux figé a la creation
+        if self.instance and self.instance.pk and self.instance.currency:
+            _other = self.instance.equiv_currency
+            if self.instance.allocated:
+                self.fields['allocated'].help_text = _("Équivalent: %(amount)s") % {
+                    'amount': convert_display(float(self.instance.allocated), self.instance.currency, _other, rate=self.instance.rate_snapshot)
+                }
+            if self.instance.consumed:
+                self.fields['consumed'].help_text = _("Équivalent: %(amount)s") % {
+                    'amount': convert_display(float(self.instance.consumed), self.instance.currency, _other, rate=self.instance.rate_snapshot)
+                }
         # Restreindre projets et direction pour les non-admin/non-DG
         if user is not None:
             _bf_profile = getattr(user, 'profile', None)

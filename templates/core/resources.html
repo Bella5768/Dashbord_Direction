@@ -26,21 +26,21 @@
         <div class="stat-box-icon"><i class="fa-solid fa-wallet" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ total_allocated|number_format }}</p>
-            <p class="stat-box-label">{% trans 'Budget total (GNF)' %}</p>
+            <p class="stat-box-label">{% trans 'Budget total (GNF)' %} · ≈ {{ total_allocated_usd|currency_fmt:'USD' }}</p>
         </div>
     </div>
     <div class="stat-box amber stat-box-static">
         <div class="stat-box-icon"><i class="fa-solid fa-arrow-trend-up" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ total_consumed|number_format }}</p>
-            <p class="stat-box-label">{% trans 'Consommé (GNF)' %}</p>
+            <p class="stat-box-label">{% trans 'Consommé (GNF)' %} · ≈ {{ total_consumed_usd|currency_fmt:'USD' }}</p>
         </div>
     </div>
     <div class="stat-box green stat-box-static">
         <div class="stat-box-icon"><i class="fa-solid fa-coins" width="20" height="20"></i></div>
         <div class="stat-box-body">
             <p class="stat-box-value">{{ total_available|number_format }}</p>
-            <p class="stat-box-label">{% trans 'Disponible (GNF)' %}</p>
+            <p class="stat-box-label">{% trans 'Disponible (GNF)' %} · ≈ {{ total_available_usd|currency_fmt:'USD' }}</p>
         </div>
     </div>
     <div class="stat-box blue stat-box-static">
@@ -126,16 +126,16 @@
                             </div>
                         </td>
                         <td style="text-align: right; font-weight: 500;">
-                            {{ budget.allocated|number_format }} {{ budget.currency }}
-                            {% if budget.currency != 'GNF' %}<br><span class="text-xs text-gray-400">≈ {{ budget.allocated_gnf|number_format }} GNF</span>{% endif %}
+                            {{ budget.allocated|currency_fmt:budget.currency }}
+                            <br><span class="text-xs text-gray-400">≈ {% if budget.currency == 'GNF' %}{{ budget.allocated_usd|currency_fmt:'USD' }}{% else %}{{ budget.allocated_gnf|number_format }} GNF{% endif %}</span>
                         </td>
                         <td style="text-align: right; color: #16a34a;">
-                            {{ budget.consumed|number_format }} {{ budget.currency }}
-                            {% if budget.currency != 'GNF' %}<br><span class="text-xs text-gray-400">≈ {{ budget.consumed_gnf|number_format }} GNF</span>{% endif %}
+                            {{ budget.consumed|currency_fmt:budget.currency }}
+                            <br><span class="text-xs text-gray-400">≈ {% if budget.currency == 'GNF' %}{{ budget.consumed_usd|currency_fmt:'USD' }}{% else %}{{ budget.consumed_gnf|number_format }} GNF{% endif %}</span>
                         </td>
                         <td style="text-align: right; color: #2563eb;">
-                            {{ budget.available|number_format }} {{ budget.currency }}
-                            {% if budget.currency != 'GNF' %}<br><span class="text-xs text-gray-400">≈ {{ budget.available_gnf|number_format }} GNF</span>{% endif %}
+                            {{ budget.available|currency_fmt:budget.currency }}
+                            <br><span class="text-xs text-gray-400">≈ {% if budget.currency == 'GNF' %}{{ budget.available_usd|currency_fmt:'USD' }}{% else %}{{ budget.available_gnf|number_format }} GNF{% endif %}</span>
                         </td>
                         <td style="text-align: center;">
                             <div class="flex items-center gap-2">

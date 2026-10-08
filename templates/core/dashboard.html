@@ -47,7 +47,7 @@
         <div>
           <p class="stat-card-label">{% trans 'Budget consommé' %}</p>
           <p class="stat-card-value">{{ budget_percentage }}%</p>
-          <p class="stat-card-subtitle">{{ total_consumed|number_format }} GNF</p>
+          <p class="stat-card-subtitle">{{ total_consumed|number_format }} GNF <span style="opacity:.75;">(≈ {{ total_consumed_usd|currency_fmt:'USD' }})</span></p>
         </div>
         <div class="stat-card-icon amber"><i class="fa-solid fa-credit-card"></i></div>
       </div>
@@ -82,7 +82,7 @@
         <div>
           <p class="stat-card-label">{% trans 'Budget consommé' %}</p>
           <p class="stat-card-value">{{ budget_percentage }}%</p>
-          <p class="stat-card-subtitle">{{ total_consumed|number_format }} GNF</p>
+          <p class="stat-card-subtitle">{{ total_consumed|number_format }} GNF <span style="opacity:.75;">(≈ {{ total_consumed_usd|currency_fmt:'USD' }})</span></p>
         </div>
         <div class="stat-card-icon amber"><i class="fa-solid fa-credit-card"></i></div>
       </div>
@@ -115,7 +115,7 @@
         <div>
           <p class="stat-card-label">{% trans 'Budget consommé' %}</p>
           <p class="stat-card-value">{{ budget_percentage }}%</p>
-          <p class="stat-card-subtitle">{{ total_consumed|number_format }} GNF</p>
+          <p class="stat-card-subtitle">{{ total_consumed|number_format }} GNF <span style="opacity:.75;">(≈ {{ total_consumed_usd|currency_fmt:'USD' }})</span></p>
         </div>
         <div class="stat-card-icon amber"><i class="fa-solid fa-credit-card"></i></div>
       </div>

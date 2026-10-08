@@ -1,368 +1,59 @@
-# Liste complète des devises du monde
 from django.utils.translation import gettext_lazy as _
+
 CURRENCY_CHOICES = [
-    # Afrique
-    ('GNF',  _('GNF - Franc Guinéen')),
-    ('XOF',  _('XOF - Franc CFA BCEAO')),
-    ('XAF',  _('XAF - Franc CFA BEAC')),
-    ('NGN',  _('NGN - Naira Nigérian')),
-    ('ZAR',  _('ZAR - Rand Sud-Africain')),
-    ('EGP',  _('EGP - Livre Égyptienne')),
-    ('MAD',  _('MAD - Dirham Marocain')),
-    ('TND',  _('TND - Dinar Tunisien')),
-    ('DZD',  _('DZD - Dinar Algérien')),
-    ('KES',  _('KES - Shilling Kényan')),
-    ('GHS',  _('GHS - Cedi Ghanéen')),
-    ('ETB',  _('ETB - Birr Éthiopien')),
-    ('TZS',  _('TZS - Shilling Tanzanien')),
-    ('UGX',  _('UGX - Shilling Ougandais')),
-    ('RWF',  _('RWF - Franc Rwandais')),
-    ('MUR',  _('MUR - Roupie Mauricienne')),
-    ('SLL',  _('SLL - Leone Sierra-Léonais')),
-    ('LRD',  _('LRD - Dollar Libérien')),
-    ('GMD',  _('GMD - Dalasi Gambien')),
-    ('CVE',  _('CVE - Escudo Cap-Verdien')),
-    ('MZN',  _('MZN - Metical Mozambicain')),
-    ('AOA',  _('AOA - Kwanza Angolais')),
-    ('ZMW',  _('ZMW - Kwacha Zambien')),
-    ('BWP',  _('BWP - Pula Botswanais')),
-    ('NAD',  _('NAD - Dollar Namibien')),
-    ('SZL',  _('SZL - Lilangeni Swazi')),
-    ('LSL',  _('LSL - Loti Lesothan')),
-    ('MWK',  _('MWK - Kwacha Malawite')),
-    ('ZWL',  _('ZWL - Dollar Zimbabwéen')),
-    ('SDG',  _('SDG - Livre Soudanaise')),
-    ('LYD',  _('LYD - Dinar Libyen')),
-    ('MRU',  _('MRU - Ouguiya Mauritanien')),
-    ('SCR',  _('SCR - Roupie Seychelloise')),
-    ('DJF',  _('DJF - Franc Djiboutien')),
-    ('KMF',  _('KMF - Franc Comorien')),
-    ('ERN',  _('ERN - Nakfa Érythréen')),
-    ('SOS',  _('SOS - Shilling Somalien')),
-    ('SSP',  _('SSP - Livre Sud-Soudanaise')),
-    ('STN',  _('STN - Dobra Santoméen')),
-    ('BIF',  _('BIF - Franc Burundais')),
-    ('CDF',  _('CDF - Franc Congolais')),
-    ('MGA',  _('MGA - Ariary Malgache')),
-    
-    # Amérique du Nord
-    ('USD',  _('USD - Dollar Américain')),
-    ('CAD',  _('CAD - Dollar Canadien')),
-    ('MXN',  _('MXN - Peso Mexicain')),
-    
-    # Amérique Centrale et Caraïbes
-    ('GTQ',  _('GTQ - Quetzal Guatémaltèque')),
-    ('HNL',  _('HNL - Lempira Hondurien')),
-    ('NIO',  _('NIO - Córdoba Nicaraguayen')),
-    ('CRC',  _('CRC - Colón Costaricain')),
-    ('PAB',  _('PAB - Balboa Panaméen')),
-    ('DOP',  _('DOP - Peso Dominicain')),
-    ('CUP',  _('CUP - Peso Cubain')),
-    ('JMD',  _('JMD - Dollar Jamaïcain')),
-    ('HTG',  _('HTG - Gourde Haïtienne')),
-    ('TTD',  _('TTD - Dollar Trinidadien')),
-    ('BBD',  _('BBD - Dollar Barbadien')),
-    ('BSD',  _('BSD - Dollar Bahaméen')),
-    ('BZD',  _('BZD - Dollar Bélizien')),
-    ('XCD',  _('XCD - Dollar des Caraïbes Orientales')),
-    ('AWG',  _('AWG - Florin Arubais')),
-    ('ANG',  _('ANG - Florin Antillais')),
-    ('KYD',  _('KYD - Dollar des Îles Caïmans')),
-    
-    # Amérique du Sud
-    ('BRL',  _('BRL - Réal Brésilien')),
-    ('ARS',  _('ARS - Peso Argentin')),
-    ('CLP',  _('CLP - Peso Chilien')),
-    ('COP',  _('COP - Peso Colombien')),
-    ('PEN',  _('PEN - Sol Péruvien')),
-    ('VES',  _('VES - Bolívar Vénézuélien')),
-    ('UYU',  _('UYU - Peso Uruguayen')),
-    ('PYG',  _('PYG - Guaraní Paraguayen')),
-    ('BOB',  _('BOB - Boliviano')),
-    ('GYD',  _('GYD - Dollar Guyanien')),
-    ('SRD',  _('SRD - Dollar Surinamais')),
-    ('FKP',  _('FKP - Livre des Malouines')),
-    
-    # Europe
-    ('EUR',  _('EUR - Euro')),
-    ('GBP',  _('GBP - Livre Sterling')),
-    ('CHF',  _('CHF - Franc Suisse')),
-    ('NOK',  _('NOK - Couronne Norvégienne')),
-    ('SEK',  _('SEK - Couronne Suédoise')),
-    ('DKK',  _('DKK - Couronne Danoise')),
-    ('PLN',  _('PLN - Zloty Polonais')),
-    ('CZK',  _('CZK - Couronne Tchèque')),
-    ('HUF',  _('HUF - Forint Hongrois')),
-    ('RON',  _('RON - Leu Roumain')),
-    ('BGN',  _('BGN - Lev Bulgare')),
-    ('HRK',  _('HRK - Kuna Croate')),
-    ('RSD',  _('RSD - Dinar Serbe')),
-    ('UAH',  _('UAH - Hryvnia Ukrainienne')),
-    ('RUB',  _('RUB - Rouble Russe')),
-    ('BYN',  _('BYN - Rouble Biélorusse')),
-    ('MDL',  _('MDL - Leu Moldave')),
-    ('ALL',  _('ALL - Lek Albanais')),
-    ('MKD',  _('MKD - Denar Macédonien')),
-    ('BAM',  _('BAM - Mark Convertible')),
-    ('ISK',  _('ISK - Couronne Islandaise')),
-    ('TRY',  _('TRY - Livre Turque')),
-    ('GEL',  _('GEL - Lari Géorgien')),
-    ('AMD',  _('AMD - Dram Arménien')),
-    ('AZN',  _('AZN - Manat Azerbaïdjanais')),
-    
-    # Moyen-Orient
-    ('AED',  _('AED - Dirham Émirats')),
-    ('SAR',  _('SAR - Riyal Saoudien')),
-    ('QAR',  _('QAR - Riyal Qatari')),
-    ('KWD',  _('KWD - Dinar Koweïtien')),
-    ('BHD',  _('BHD - Dinar Bahreïni')),
-    ('OMR',  _('OMR - Rial Omanais')),
-    ('JOD',  _('JOD - Dinar Jordanien')),
-    ('LBP',  _('LBP - Livre Libanaise')),
-    ('SYP',  _('SYP - Livre Syrienne')),
-    ('IQD',  _('IQD - Dinar Irakien')),
-    ('IRR',  _('IRR - Rial Iranien')),
-    ('YER',  _('YER - Rial Yéménite')),
-    ('ILS',  _('ILS - Shekel Israélien')),
-    
-    # Asie
-    ('CNY',  _('CNY - Yuan Chinois')),
-    ('JPY',  _('JPY - Yen Japonais')),
-    ('KRW',  _('KRW - Won Sud-Coréen')),
-    ('INR',  _('INR - Roupie Indienne')),
-    ('IDR',  _('IDR - Roupie Indonésienne')),
-    ('MYR',  _('MYR - Ringgit Malaisien')),
-    ('SGD',  _('SGD - Dollar Singapourien')),
-    ('THB',  _('THB - Baht Thaïlandais')),
-    ('VND',  _('VND - Dong Vietnamien')),
-    ('PHP',  _('PHP - Peso Philippin')),
-    ('PKR',  _('PKR - Roupie Pakistanaise')),
-    ('BDT',  _('BDT - Taka Bangladais')),
-    ('LKR',  _('LKR - Roupie Sri-Lankaise')),
-    ('NPR',  _('NPR - Roupie Népalaise')),
-    ('MMK',  _('MMK - Kyat Birman')),
-    ('KHR',  _('KHR - Riel Cambodgien')),
-    ('LAK',  _('LAK - Kip Laotien')),
-    ('MNT',  _('MNT - Tugrik Mongol')),
-    ('KZT',  _('KZT - Tenge Kazakh')),
-    ('UZS',  _('UZS - Sum Ouzbek')),
-    ('TJS',  _('TJS - Somoni Tadjik')),
-    ('KGS',  _('KGS - Som Kirghiz')),
-    ('TMT',  _('TMT - Manat Turkmène')),
-    ('AFN',  _('AFN - Afghani')),
-    ('HKD',  _('HKD - Dollar Hong-Kongais')),
-    ('TWD',  _('TWD - Dollar Taïwanais')),
-    ('MOP',  _('MOP - Pataca Macanaise')),
-    ('BND',  _('BND - Dollar Brunéien')),
-    ('KPW',  _('KPW - Won Nord-Coréen')),
-    ('BTN',  _('BTN - Ngultrum Bhoutanais')),
-    ('MVR',  _('MVR - Rufiyaa Maldivienne')),
-    
-    # Océanie
-    ('AUD',  _('AUD - Dollar Australien')),
-    ('NZD',  _('NZD - Dollar Néo-Zélandais')),
-    ('FJD',  _('FJD - Dollar Fidjien')),
-    ('PGK',  _('PGK - Kina Papou')),
-    ('SBD',  _('SBD - Dollar des Îles Salomon')),
-    ('VUV',  _('VUV - Vatu Vanuatais')),
-    ('WST',  _('WST - Tala Samoan')),
-    ('TOP', _("TOP - Pa'anga Tongan")),
-    ('XPF',  _('XPF - Franc CFP')),
+    ('GNF', _('GNF - Franc Guinéen')),
+    ('USD', _('USD - Dollar Américain')),
 ]
 
-# Taux de change par rapport à l'USD (taux approximatifs pour 2024)
-EXCHANGE_RATES = {
-    # Devises principales
-    'USD': 1.0,
-    'EUR': 0.92,
-    'GBP': 0.79,
-    'JPY': 149.50,
-    'CNY': 7.24,
-    'CAD': 1.36,
-    'AUD': 1.53,
-    'CHF': 0.88,
-    
-    # Afrique
-    'GNF': 8655.0,
-    'XOF': 606.0,
-    'XAF': 606.0,
-    'NGN': 772.0,
-    'ZAR': 18.85,
-    'EGP': 31.0,
-    'MAD': 10.05,
-    'TND': 3.12,
-    'DZD': 136.5,
-    'KES': 151.5,
-    'GHS': 12.15,
-    'ETB': 56.5,
-    'TZS': 2475.0,
-    'UGX': 3765.0,
-    'RWF': 1315.0,
-    'MUR': 45.5,
-    'SLL': 22775.0,
-    'LRD': 191.5,
-    'GMD': 64.5,
-    'CVE': 102.5,
-    'MZN': 64.05,
-    'AOA': 826.5,
-    'ZMW': 24.85,
-    'BWP': 13.55,
-    'NAD': 18.85,
-    'SZL': 18.85,
-    'LSL': 18.85,
-    'MWK': 1735.0,
-    'ZWL': 3619.0,
-    'SDG': 602.5,
-    'LYD': 4.86,
-    'MRU': 39.5,
-    'SCR': 45.5,
-    'DJF': 177.5,
-    'KMF': 453.0,
-    'ERN': 15.0,
-    'SOS': 570.0,
-    'SSP': 185.5,
-    'STN': 22.65,
-    'BIF': 2855.0,
-    'CDF': 2725.0,
-    'MGA': 4565.0,
-    
-    # Amérique
-    'MXN': 17.15,
-    'GTQ': 7.82,
-    'HNL': 24.65,
-    'NIO': 36.85,
-    'CRC': 543.5,
-    'PAB': 1.0,
-    'DOP': 56.85,
-    'CUP': 24.0,
-    'JMD': 155.5,
-    'HTG': 132.5,
-    'TTD': 6.75,
-    'BBD': 2.0,
-    'BSD': 1.0,
-    'BZD': 2.0,
-    'XCD': 2.7,
-    'AWG': 1.8,
-    'ANG': 1.79,
-    'KYD': 0.83,
-    'BRL': 4.95,
-    'ARS': 835.5,
-    'CLP': 915.5,
-    'COP': 3925.0,
-    'PEN': 3.75,
-    'VES': 3619250.0,
-    'UYU': 38.85,
-    'PYG': 7325.0,
-    'BOB': 6.95,
-    'GYD': 209.5,
-    'SRD': 34.65,
-    'FKP': 0.79,
-    
-    # Europe
-    'NOK': 10.65,
-    'SEK': 10.85,
-    'DKK': 6.85,
-    'PLN': 3.95,
-    'CZK': 22.85,
-    'HUF': 355.5,
-    'RON': 4.62,
-    'BGN': 1.8,
-    'HRK': 7.15,
-    'RSD': 107.5,
-    'UAH': 39.15,
-    'RUB': 89.5,
-    'BYN': 3.25,
-    'MDL': 17.85,
-    'ALL': 94.5,
-    'MKD': 56.5,
-    'BAM': 1.8,
-    'ISK': 137.5,
-    'TRY': 31.5,
-    'GEL': 2.75,
-    'AMD': 387.5,
-    'AZN': 1.7,
-    
-    # Moyen-Orient
-    'AED': 3.67,
-    'SAR': 3.75,
-    'QAR': 3.64,
-    'KWD': 0.31,
-    'BHD': 0.38,
-    'OMR': 0.38,
-    'JOD': 0.71,
-    'LBP': 89500.0,
-    'SYP': 12950.0,
-    'IQD': 1315.0,
-    'IRR': 42250.0,
-    'YER': 250.5,
-    'ILS': 3.65,
-    
-    # Asie
-    'KRW': 1315.0,
-    'INR': 83.15,
-    'IDR': 15650.0,
-    'MYR': 4.65,
-    'SGD': 1.34,
-    'THB': 35.85,
-    'VND': 24450.0,
-    'PHP': 56.5,
-    'PKR': 279.5,
-    'BDT': 117.0,
-    'LKR': 321.5,
-    'NPR': 132.5,
-    'MMK': 2095.0,
-    'KHR': 4105.0,
-    'LAK': 21550.0,
-    'MNT': 3475.0,
-    'KZT': 450.5,
-    'UZS': 12750.0,
-    'TJS': 10.95,
-    'KGS': 89.5,
-    'TMT': 3.5,
-    'AFN': 71.5,
-    'HKD': 7.82,
-    'TWD': 31.5,
-    'MOP': 8.07,
-    'BND': 1.34,
-    'KPW': 900.0,
-    'BTN': 83.15,
-    'MVR': 15.45,
-    
-    # Océanie
-    'NZD': 1.62,
-    'FJD': 2.23,
-    'PGK': 3.85,
-    'SBD': 8.55,
-    'VUV': 119.5,
-    'WST': 2.75,
-    'TOP': 2.45,
-    'XPF': 109.5,
-}
+# Repli quand aucun taux figé (rate_snapshot) n'est disponible sur l'enregistrement.
+# La valeur courante est portée par core.exchange.DEFAULT_USD_GNF_RATE (appel API live).
+FALLBACK_USD_GNF_RATE = 8788.75
 
-def convert_currency(amount, from_currency, to_currency):
-    """Convertit un montant d'une devise à une autre"""
-    if from_currency == to_currency:
-        return amount
-    
-    # Convertir d'abord en USD si nécessaire
-    if from_currency != 'USD':
-        amount_in_usd = amount / EXCHANGE_RATES.get(from_currency, 1.0)
-    else:
-        amount_in_usd = amount
-    
-    # Puis convertir vers la devise cible
-    if to_currency != 'USD':
-        converted_amount = amount_in_usd * EXCHANGE_RATES.get(to_currency, 1.0)
-    else:
-        converted_amount = amount_in_usd
-    
-    return round(converted_amount, 2)
+
+def _normalize(currency):
+    """Seules GNF et USD sont supportées ; toute autre valeur historique est traitée comme USD."""
+    return currency if currency in ('GNF', 'USD') else 'USD'
+
+
+def convert_currency(amount, from_currency, to_currency, rate=None):
+    """Convertit un montant entre GNF et USD (dans les deux sens).
+
+    rate : nombre de GNF pour 1 USD, figé à la saisie (rate_snapshot).
+    Sans rate, utilise le taux de repli.
+    """
+    src = _normalize(from_currency)
+    dst = _normalize(to_currency)
+    if src == dst:
+        return round(float(amount), 2)
+
+    gnf_per_usd = float(rate) if rate else FALLBACK_USD_GNF_RATE
+    amount_in_usd = float(amount) / gnf_per_usd if src == 'GNF' else float(amount)
+    converted = amount_in_usd * gnf_per_usd if dst == 'GNF' else amount_in_usd
+    return round(converted, 2)
+
 
 def format_currency(amount, currency):
-    """Formate un montant selon la devise"""
-    if currency in ['JPY', 'KRW', 'VND', 'CLP', 'COP', 'PYG', 'UGX', 'RWF', 'BIF', 'CDF', 'MGA', 'GNF', 'XOF', 'XAF']:
-        # Devises sans décimales
-        return f"{int(amount):,} {currency}"
-    else:
-        # Devises avec 2 décimales
-        return f"{amount:,.2f} {currency}"
+    """Formate un montant au format français : 8 655 000 GNF / 1 234,56 USD."""
+    value = float(amount)
+    if currency == 'GNF':
+        return f"{int(round(value)):,}".replace(',', ' ') + ' GNF'
+    whole, _, frac = f"{value:,.2f}".partition('.')
+    return f"{whole.replace(',', ' ')},{frac} {currency}"
+
+
+def convert_display(amount, from_currency, to_currency, rate=None):
+    """Convertit puis formate : l'affichage de l'équivalent dans l'autre devise."""
+    return format_currency(convert_currency(amount, from_currency, to_currency, rate=rate), to_currency)
+
+
+def convert_sum(queryset, field, to_currency, currency_attr='currency', rate_attr='rate_snapshot'):
+    """Somme d'un champ de queryset convertie dans to_currency, en appliquant le taux figé de chaque ligne."""
+    total = 0.0
+    for row in queryset:
+        total += convert_currency(
+            float(getattr(row, field) or 0),
+            getattr(row, currency_attr) or 'GNF',
+            to_currency,
+            rate=getattr(row, rate_attr, None),
+        )
+    return total

@@ -195,7 +195,7 @@
       <span class="pdetail-mi">
         <i class="fa-solid fa-circle-dollar-sign" ></i>
         <span class="pdetail-ml">{% trans 'Budget' %}</span>
-        <span class="pdetail-mv">{{ project.budget|number_format }} {{ project.currency }}</span>
+        <span class="pdetail-mv">{{ project.budget|number_format }} {{ project.currency }} <span style="font-size:11px;color:#6b7280;">(≈ {{ project.budget_equiv_display }})</span></span>
       </span>
       {% endif %}
     </div>
@@ -335,11 +335,11 @@
           <div style="display:flex;flex-direction:column;gap:5px;">
             <div style="display:flex;justify-content:space-between;font-size:11px;">
               <span style="display:flex;align-items:center;gap:4px;color:#6b7280;"><span style="width:8px;height:8px;border-radius:2px;background:{% if project.budget_percentage > 90 %}#ef4444{% elif project.budget_percentage > 70 %}#f59e0b{% else %}#3b82f6{% endif %};display:inline-block;"></span>{% trans "Consommé" %}</span>
-              <strong style="color:#374151;">{{ project.budget_consumed|number_format }} {{ project.currency }}</strong>
+              <strong style="color:#374151;">{{ project.budget_consumed|number_format }} {{ project.currency }} <span style="font-weight:400;color:#9ca3af;font-size:11px;">(≈ {{ project.budget_consumed_equiv_display }})</span></strong>
             </div>
             <div style="display:flex;justify-content:space-between;font-size:11px;">
               <span style="display:flex;align-items:center;gap:4px;color:#6b7280;"><span style="width:8px;height:8px;border-radius:2px;background:#e2e8f0;display:inline-block;"></span>{% trans "Alloué" %}</span>
-              <strong style="color:#374151;">{{ project.budget|number_format }} {{ project.currency }}</strong>
+              <strong style="color:#374151;">{{ project.budget|number_format }} {{ project.currency }} <span style="font-weight:400;color:#9ca3af;font-size:11px;">(≈ {{ project.budget_equiv_display }})</span></strong>
             </div>
           </div>
         </div>
