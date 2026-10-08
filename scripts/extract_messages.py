@@ -31,7 +31,10 @@ def extract_from_templates():
             for m in pat_btrans.finditer(src):
                 body = m.group(1)
                 parts = pat_plural.split(body, 1)
-                singular = re.sub(r'\{[{%].*?[}%]\}', '%s', parts[0]).strip()
+                # Aligné sur django.templatetags.i18n.BlockTranslateNode.render_token_list :
+                # {{ var }} devient %(var)s au runtime (et non %s).
+                singular = re.sub(r'\{\{\s*(\w+)\s*\}\}', r'%(\1)s', parts[0])
+                singular = re.sub(r'\{[{%].*?[}%]\}', '%s', singular).strip()
                 if singular:
                     strings.add(singular)
 
@@ -463,6 +466,11 @@ KNOWN_EN = {
     ' utilisateurs': ' users',
     ' membre': ' member',
     ' membres': ' members',
+    # Currency / rates
+    'Devise préférée': 'Preferred currency',
+    'Valeur par défaut des formulaires de budget.': 'Default value for budget forms.',
+    'Taux figé (GNF pour 1 USD)': 'Fixed rate (GNF per 1 USD)',
+    'Date du taux figé': 'Fixed rate date',
 }
 
 

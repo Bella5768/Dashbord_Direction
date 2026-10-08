@@ -267,12 +267,17 @@ TRANSLATIONS = {
     'Budget total (GNF)':               'Total budget (GNF)',
     'Consommation par projet':          'Consumption by project',
     'Consommé (GNF)':                   'Consumed (GNF)',
+    'Date du taux figé':                'Fixed rate date',
+    'Devise préférée':                  'Preferred currency',
     'Disponible (GNF)':                 'Available (GNF)',
     'Détail des budgets par projet':    'Budget details by project',
     'Projet / Direction':               'Project / Department',
     'Répartition du budget par projet': 'Budget breakdown by project',
     'Sans affectation':                 'Unassigned',
+    'Taux figé (GNF pour 1 USD)':       'Fixed rate (GNF per 1 USD)',
     'Total':                            'Total',
+    'Valeur par défaut des formulaires de budget.':
+                                        'Default value for budget forms.',
 
     # ── Partners ─────────────────────────────────────────────────────────
     'Partenaire créé avec succès.':     'Partner created successfully.',
@@ -354,6 +359,45 @@ TRANSLATIONS = {
     ' utilisateurs':                    ' users',
     ' membre':                          ' member',
     ' membres':                         ' members',
+
+    # ── Error pages (400/403/404/500) ────────────────────────────────────
+    'Accès refusé':                     'Access denied',
+    'Erreur interne':                   'Internal error',
+    'Erreur interne du serveur':        'Internal server error',
+    'Page introuvable':                 'Page not found',
+    'Requête invalide':                 'Invalid request',
+    'Retour au tableau de bord':        'Back to dashboard',
+    "La page demandée n'existe pas ou a été déplacée.":
+        'The requested page does not exist or has been moved.',
+    "La requête n'a pas pu être traitée. Vérifiez l'adresse saisie puis réessayez.":
+        'The request could not be processed. Check the address you entered and try again.',
+    "Une erreur est survenue de notre côté. L'incident a été enregistré, merci de réessayer plus tard.":
+        "An error occurred on our side. The incident has been logged, please try again later.",
+    "Vous n'avez pas les permissions nécessaires pour accéder à cette page.":
+        "You don't have the required permissions to access this page.",
+
+    # ── Requests / invitations ───────────────────────────────────────────
+    'Code unique :':                    'Unique code:',
+    "Renvoyer l'invitation à %s ?":     'Resend invitation to %s ?',
+    "Renvoyer l'invitation à %(email)s ?": 'Resend invitation to %(email)s ?',
+    'Supprimer « %(name)s » ?':         'Delete « %(name)s » ?',
+    'Vous devez être rattaché(e) à un compte employé pour soumettre une demande.':
+        'You must be linked to an employee account to submit a request.',
+    'Vous ne pouvez pas statuer sur votre propre demande.':
+        'You cannot decide on your own request.',
+    'Vous ne pouvez statuer que sur les demandes de votre direction.':
+        'You can only decide on requests from your department.',
+
+    # ── Singular %s forms (legacy extraction of blocktrans count) ────────
+    '%s besoin':                        '%s need',
+    '%s commentaire':                   '%s comment',
+    '%s document':                      '%s document',
+    '%s dossier':                       '%s folder',
+    '%s étape définie':                 '%s step defined',
+    '%s membre':                        '%s member',
+    '%s participant':                   '%s participant',
+    '%s projet au total':               '%s project in total',
+    '%s projet dans votre direction':   '%s project in your department',
 }
 
 def main():
@@ -366,6 +410,8 @@ def main():
     for fr, en in TRANSLATIONS.items():
         if fr in existing:
             entry = existing[fr]
+            if entry.msgid_plural:
+                continue
             if not entry.msgstr.strip():
                 entry.msgstr = en
                 updated += 1
@@ -379,11 +425,18 @@ def main():
     print(f'Saved: {PO}')
     print(f'Compiled: {MO}')
 
-    # Report remaining empty
+    # Report remaining empty (plural-aware: msgstr_plural forms count too)
     po2 = polib.pofile(PO, encoding='utf-8')
-    remaining = [e.msgid for e in po2 if not e.msgstr.strip()]
+    remaining = [e.msgid for e in po2
+                 if not e.obsolete and not e.msgid_plural and not e.msgstr.strip()]
+    remaining_plural = [e.msgid for e in po2
+                        if not e.obsolete and e.msgid_plural
+                        and not any(v.strip() for v in e.msgstr_plural.values())]
     print(f'\nStill untranslated: {len(remaining)}')
     for s in remaining:
+        print(' ', repr(s))
+    print(f'Still untranslated (plural entries): {len(remaining_plural)}')
+    for s in remaining_plural:
         print(' ', repr(s))
 
 if __name__ == '__main__':

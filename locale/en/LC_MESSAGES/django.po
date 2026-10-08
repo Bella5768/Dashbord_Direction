@@ -7728,3 +7728,201 @@ msgstr "Allocated budget cannot be negative."
 
 msgid "Le budget consommé ne peut pas être négatif."
 msgstr "Consumed budget cannot be negative."
+
+msgid "%s terminée"
+msgstr "%s completed"
+
+msgid "Membre de %s projet — les appartenances seront supprimées"
+msgstr "Member of %s project — memberships will be deleted"
+
+msgid "%s tâche"
+msgstr "%s task"
+
+msgid "Date du taux figé"
+msgstr "Fixed rate date"
+
+msgid "%s demande de congé liée — la suppression est bloquée"
+msgstr "%s leave request linked — deletion is blocked"
+
+msgid "Valeur par défaut des formulaires de budget."
+msgstr "Default value for budget forms."
+
+msgid "Taux figé (GNF pour 1 USD)"
+msgstr "Fixed rate (GNF per 1 USD)"
+
+msgid "Devise préférée"
+msgstr "Preferred currency"
+
+msgid "Chef de projet sur %s projet :"
+msgstr "Project manager for %s project:"
+
+msgid "<strong>%s</strong> utilisateur aura ces permissions."
+msgstr "<strong>%s</strong> user will have these permissions."
+
+msgid "%s projet au total"
+msgstr "%s project in total"
+
+msgid "Page introuvable"
+msgstr "Page not found"
+
+msgid "%s dossier"
+msgstr "%s folder"
+
+msgid "%s participant"
+msgstr "%s participant"
+
+msgid "permission"
+msgstr "permission"
+
+msgid ""
+"Une erreur est survenue de notre côté. L'incident a été enregistré, merci de"
+" réessayer plus tard."
+msgstr ""
+"An error occurred on our side. The incident has been logged, please try "
+"again later."
+
+msgid "%s commentaire"
+msgstr "%s comment"
+
+msgid "Fran\\u00e7ais"
+msgstr "French"
+
+msgid "Vous ne pouvez statuer que sur les demandes de votre direction."
+msgstr "You can only decide on requests from your department."
+
+msgid ""
+"Vous devez être rattaché(e) à un compte employé pour soumettre une demande."
+msgstr "You must be linked to an employee account to submit a request."
+
+msgid "%s étape définie"
+msgstr "%s step defined"
+
+msgid "%s besoin"
+msgstr "%s need"
+
+msgid "Requête invalide"
+msgstr "Invalid request"
+
+msgid "Accès refusé"
+msgstr "Access denied"
+
+msgid "utilisateur"
+msgstr "user"
+
+msgid "Retour au tableau de bord"
+msgstr "Back to dashboard"
+
+msgid "Erreur interne du serveur"
+msgstr "Internal server error"
+
+msgid "Erreur interne"
+msgstr "Internal error"
+
+msgid "membre"
+msgstr "member"
+
+msgid "La page demandée n'existe pas ou a été déplacée."
+msgstr "The requested page does not exist or has been moved."
+
+msgid "Vous n'avez pas les permissions nécessaires pour accéder à cette page."
+msgstr "You don't have the required permissions to access this page."
+
+msgid "%s utilisateur"
+msgstr "%s user"
+
+msgid "Supprimer « %s » ?"
+msgstr "Delete « %s »?"
+
+msgid ""
+"La requête n'a pas pu être traitée. Vérifiez l'adresse saisie puis "
+"réessayez."
+msgstr ""
+"The request could not be processed. Check the address you entered and try "
+"again."
+
+msgid "%s membre"
+msgstr "%s member"
+
+msgid "Vous ne pouvez pas statuer sur votre propre demande."
+msgstr "You cannot decide on your own request."
+
+msgid "Renvoyer l'invitation à %s ?"
+msgstr "Resend invitation to %s ?"
+
+msgid "Code unique :"
+msgstr "Unique code:"
+
+msgid "%s projet dans votre direction"
+msgstr "%s project in your department"
+
+msgid "%s document"
+msgstr "%s document"
+
+msgid "%s utilisateurs"
+msgstr "%s users"
+
+msgid "<strong>%s</strong> utilisateurs auront ces permissions."
+msgstr "<strong>%s</strong> users will have these permissions."
+
+msgid "all"
+msgstr "all"
+
+msgid "en_cours"
+msgstr "in_progress"
+
+msgid "manage"
+msgstr "manage"
+
+msgid "Comment"
+msgstr "Comment"
+
+msgid "Event"
+msgstr "Event"
+
+msgid "LeaveRequest"
+msgstr "LeaveRequest"
+
+msgid "Milestone"
+msgstr "Milestone"
+
+msgid "Partner"
+msgstr "Partner"
+
+msgid "Project"
+msgstr "Project"
+
+msgid "ProjectMember"
+msgstr "ProjectMember"
+
+msgid "Report"
+msgstr "Report"
+
+msgid "Request"
+msgstr "Request"
+
+msgid "User"
+msgstr "User"
+
+msgid "Détail des étapes de validation"
+msgstr "Validation steps details"
+
+msgid "Seul le Directeur Général peut supprimer un projet."
+msgstr "Only the General Director can delete a project."
+
+msgid "Fichier introuvable."
+msgstr "File not found."
+
+msgid "Toutes directions"
+msgstr "All departments"
+
+msgid "Cette section est réservée au Directeur Général."
+msgstr "This section is reserved for the General Director."
+
+msgid " permissions"
+msgstr " permissions"
+
+msgid " utilisateurs"
+msgstr " users"
+
+msgid " membres"
+msgstr " members"
