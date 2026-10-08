@@ -10,6 +10,8 @@ from django.views.i18n import JavaScriptCatalog
 from django.db import connection
 from django.db.utils import OperationalError
 
+from dashboard_csig.views_i18n import set_language
+
 def healthz(request):
     """Healthcheck pour l'ALB/ECS.
     Répond 200 + JSON si la base répond, 503 sinon (aucune écriture DB)."""
@@ -23,7 +25,7 @@ def healthz(request):
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('i18n/', include('django.conf.urls.i18n')),
+    path('i18n/setlang/', set_language, name='set_language'),
     path('jsi18n/', JavaScriptCatalog.as_view(), name='javascript-catalog'),
     path('healthz/', healthz, name='healthz'),
     path('', include('core.urls')),

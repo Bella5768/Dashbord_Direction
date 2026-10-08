@@ -8,8 +8,9 @@
     <p>{{ message }}</p>
 
     {% if action_link %}
+    {% trans 'Voir les détails' as default_action_text %}
     <p style="text-align: center;">
-        <a href="{{ action_link }}" class="button">{{ action_text|default:_("Voir les détails") }}</a>
+        <a href="{{ action_link }}" class="button">{{ action_text|default:default_action_text }}</a>
     </p>
     {% endif %}
 

@@ -3,7 +3,7 @@
 {% block content %}
 <p style="margin:0 0 10px;">{% trans 'Bonjour' %} <strong>{{ recipient_name }}</strong>,</p>
 <p style="margin:0 0 14px;color:#065f46;">{{ role_label }}</p>
-<p style="margin:0 0 14px;">{{ task_article_def }} {{ task_type }} <strong>« {{ task_name }} »</strong> est maintenant {{ task_pp_termine }}.</p>
+<p style="margin:0 0 14px;">{{ completed_intro }}</p>
 
 <table style="width:100%;border-collapse:collapse;margin:0 0 18px;font-size:14px;">
   <tr>
@@ -11,7 +11,7 @@
     <td style="padding:10px;border:1px solid #e5e7eb;background:white;">{{ project_name }}</td>
   </tr>
   <tr>
-    <td style="padding:10px;border:1px solid #e5e7eb;background:#ecfdf5;font-weight:bold;">{{ task_type|capfirst }}</td>
+    <td style="padding:10px;border:1px solid #e5e7eb;background:#ecfdf5;font-weight:bold;">{{ task_type_label|capfirst }}</td>
     <td style="padding:10px;border:1px solid #e5e7eb;background:#ecfdf5;color:#065f46;font-weight:bold;">{{ task_name }}</td>
   </tr>
   <tr>

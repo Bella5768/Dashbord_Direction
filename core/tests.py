@@ -22,16 +22,19 @@ prod échoue ici avec le même traceback qu'en production.
 
 import copy as _copy
 from datetime import timedelta
+from unittest import mock
 
 from django.contrib.auth import get_user_model
+from django.core import mail
 from django.core.cache import cache
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.test.utils import ContextList
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone, translation
 
 import django.test.client as _dj_client
 
+from . import notifications
 from .exchange import CACHE_KEY, DEFAULT_USD_GNF_RATE
 from .models import (
     Direction,
@@ -293,3 +296,82 @@ class RegressionSlugVideTests(SmokeBase):
         self._login(self.admin)
         resp = self._get_ok(reverse('core:project_detail', args=[self.project.slug]))
         self.assertEqual(resp.status_code, 200)
+
+
+class EmailLanguageTests(TestCase):
+    """Les emails sont rendus dans la langue du destinataire, pas de l'acteur."""
+
+    def _make_user(self, username, lang):
+        user = User.objects.create_user(username, password='x', email=f'{username}@example.com')
+        profile = user.profile
+        profile.language = lang
+        profile.save(update_fields=['language'])
+        return user
+
+    def test_password_reset_utilise_la_langue_du_destinataire(self):
+        with mock.patch('core.notifications._is_email_configured', return_value=True):
+            for lang in ('fr', 'en'):
+                with self.subTest(lang=lang):
+                    user = self._make_user(f'reset_{lang}', lang)
+                    mail.outbox.clear()
+                    ok, _msg = notifications.notify_password_reset(user, 'https://example.test/reset')
+                    self.assertTrue(ok)
+                    self.assertEqual(len(mail.outbox), 1)
+                    with translation.override(lang):
+                        expected_subject = translation.gettext(
+                            '[CSIG] Réinitialisation de votre mot de passe'
+                        )
+                    self.assertEqual(mail.outbox[0].subject, expected_subject)
+
+    def test_recipient_language_employe_lie(self):
+        user = self._make_user('emp_en', 'en')
+        employee = Employee.objects.create(name='Emp EN', role='Dev')
+        user.profile.employee = employee
+        user.profile.save(update_fields=['employee'])
+        self.assertEqual(notifications._recipient_language(employee=employee), 'en')
+
+    def test_recipient_language_email_only(self):
+        self._make_user('lookup_en', 'en')
+        self.assertEqual(
+            notifications._recipient_language(email='lookup_en@example.com'), 'en'
+        )
+
+    def test_task_type_est_traduit(self):
+        with translation.override('en'):
+            self.assertEqual(notifications._task_type_label('jalon'), 'milestone')
+        with translation.override('fr'):
+            self.assertEqual(notifications._task_type_label('jalon'), 'jalon')
+
+    def test_completed_subject_suit_la_langue(self):
+        with translation.override('en'):
+            self.assertEqual(
+                notifications._completed_subject('jalon', 'T1'),
+                '[CSIG] Milestone completed: T1',
+            )
+        with translation.override('fr'):
+            self.assertEqual(
+                notifications._completed_subject('jalon', 'T1'),
+                '[CSIG] Jalon terminé : T1',
+            )
+
+
+class LanguagePreferenceTests(SmokeBase):
+    """Le choix de langue de l'interface est persisté et fait foi par compte."""
+
+    def test_set_language_persiste_sur_le_profil(self):
+        self._login(self.employe_user)
+        resp = self.client.post(
+            reverse('set_language'),
+            {'language': 'en', 'next': reverse('core:dashboard')},
+        )
+        self.assertIn(resp.status_code, (200, 302))
+        self.employe_user.profile.refresh_from_db()
+        self.assertEqual(self.employe_user.profile.language, 'en')
+
+    def test_middleware_realigne_la_langue_sur_le_profil(self):
+        profile = self.employe_user.profile
+        profile.language = 'en'
+        profile.save(update_fields=['language'])
+        self._login(self.employe_user)
+        resp = self._get_ok(reverse('core:dashboard'))
+        self.assertEqual(resp.cookies.get('django_language').value, 'en')

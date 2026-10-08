@@ -1,5 +1,6 @@
 import logging
 import traceback
+from django.utils import translation
 from django.utils.translation import gettext as _
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.core.exceptions import ValidationError, PermissionDenied
@@ -35,6 +36,46 @@ class EnsureUserProfileMiddleware:
                     # Course : deux requêtes simultanées ont recréé le profil.
                     pass
         return self.get_response(request)
+
+
+class UserLanguageMiddleware:
+    """Aligne la langue de la requête sur la préférence du profil utilisateur.
+
+    Depuis Django 4.0, la langue est résolue depuis le cookie / Accept-Language.
+    Pour un utilisateur authentifié, ``UserProfile.language`` fait foi : on
+    l'active avant la vue (l'interface ET les emails rendus pendant la requête
+    en héritent) et on réaligne le cookie pour la cohérence.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        lang = None
+        user = getattr(request, 'user', None)
+        if user is not None and user.is_authenticated:
+            try:
+                lang = user.profile.language
+            except UserProfile.DoesNotExist:
+                lang = None
+
+        valid = {code for code, _name in settings.LANGUAGES}
+        if lang in valid and translation.get_language() != lang:
+            translation.activate(lang)
+            request.LANGUAGE_CODE = lang
+
+        response = self.get_response(request)
+
+        if lang in valid:
+            response.set_cookie(
+                settings.LANGUAGE_COOKIE_NAME,
+                lang,
+                max_age=settings.LANGUAGE_COOKIE_AGE,
+                path=settings.LANGUAGE_COOKIE_PATH,
+                domain=settings.LANGUAGE_COOKIE_DOMAIN,
+                samesite='Lax',
+            )
+        return response
 
 
 class ExceptionHandlingMiddleware:

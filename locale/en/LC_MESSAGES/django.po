@@ -7926,3 +7926,109 @@ msgstr " users"
 
 msgid " membres"
 msgstr " members"
+
+msgid "jalon"
+msgstr "milestone"
+
+msgid "Langue des emails"
+msgstr "Email language"
+
+msgid "Un nouveau jalon vous est attribué :"
+msgstr "A new milestone has been assigned to you:"
+
+msgid "Une nouvelle sous-étape vous est attribuée :"
+msgstr "A new sub-step has been assigned to you:"
+
+msgid "Une nouvelle tâche vous est attribuée :"
+msgstr "A new task has been assigned to you:"
+
+msgid "Une nouvelle %(type)s vous est attribuée :"
+msgstr "A new %(type)s has been assigned to you:"
+
+msgid "Un nouveau jalon a été attribué à %(name)s :"
+msgstr "A new milestone has been assigned to %(name)s:"
+
+msgid "Une nouvelle sous-étape a été attribuée à %(name)s :"
+msgstr "A new sub-step has been assigned to %(name)s:"
+
+msgid "Une nouvelle tâche a été attribuée à %(name)s :"
+msgstr "A new task has been assigned to %(name)s:"
+
+msgid "Une nouvelle %(type)s a été attribuée à %(name)s :"
+msgstr "A new %(type)s has been assigned to %(name)s:"
+
+msgid "Le jalon « %(name)s » est maintenant terminé."
+msgstr "Milestone “%(name)s” is now completed."
+
+msgid "La sous-étape « %(name)s » est maintenant terminée."
+msgstr "Sub-step “%(name)s” is now completed."
+
+msgid "La tâche « %(name)s » est maintenant terminée."
+msgstr "Task “%(name)s” is now completed."
+
+msgid "La %(type)s « %(name)s » est maintenant terminée."
+msgstr "The %(type)s “%(name)s” is now completed."
+
+msgid "Jalon terminé"
+msgstr "Milestone completed"
+
+msgid "Sous-étape terminée"
+msgstr "Sub-step completed"
+
+msgid "Tâche terminée"
+msgstr "Task completed"
+
+msgid "%(type)s terminée"
+msgstr "%(type)s completed"
+
+msgid "[CSIG] Jalon terminé : %(task)s"
+msgstr "[CSIG] Milestone completed: %(task)s"
+
+msgid "[CSIG] Sous-étape terminée : %(task)s"
+msgstr "[CSIG] Sub-step completed: %(task)s"
+
+msgid "[CSIG] Tâche terminée : %(task)s"
+msgstr "[CSIG] Task completed: %(task)s"
+
+msgid "[CSIG] %(type)s terminée : %(task)s"
+msgstr "[CSIG] %(type)s completed: %(task)s"
+
+msgid "Le jalon ci-dessous (responsable : %(name)s) n'est pas encore terminé."
+msgstr "The milestone below (owner: %(name)s) is not yet completed."
+
+msgid ""
+"La sous-étape ci-dessous (responsable : %(name)s) n'est pas encore terminée."
+msgstr "The sub-step below (owner: %(name)s) is not yet completed."
+
+msgid ""
+"La tâche ci-dessous (responsable : %(name)s) n'est pas encore terminée."
+msgstr "The task below (owner: %(name)s) is not yet completed."
+
+msgid ""
+"La %(type)s ci-dessous (responsable : %(name)s) n'est pas encore terminée."
+msgstr "The %(type)s below (owner: %(name)s) is not yet completed."
+
+msgid "En tant que responsable, vous devez traiter ce jalon impérativement :"
+msgstr "As the owner, you must handle this milestone as a priority:"
+
+msgid ""
+"En tant que responsable, vous devez traiter cette sous-étape impérativement "
+":"
+msgstr "As the owner, you must handle this sub-step as a priority:"
+
+msgid ""
+"En tant que responsable, vous devez traiter cette tâche impérativement :"
+msgstr "As the owner, you must handle this task as a priority:"
+
+msgid ""
+"En tant que responsable, vous devez traiter cette %(type)s impérativement :"
+msgstr "As the owner, you must handle this %(type)s as a priority:"
+
+msgid "[CSIG] Événement annulé : {title}"
+msgstr "[CSIG] Event cancelled: {title}"
+
+msgid "Événement annulé : {title}"
+msgstr "Event cancelled: {title}"
+
+msgid "L'événement « {title} » prévu le {date} a été annulé par {actor}."
+msgstr "The event “{title}” scheduled on {date} was cancelled by {actor}."

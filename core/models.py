@@ -1,6 +1,7 @@
 import uuid
 from datetime import date as _date_value, timedelta
 from decimal import Decimal
+from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import gettext
@@ -180,6 +181,7 @@ class UserProfile(UUIDModel):
     employee_identifier = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("ID Employé"))
     phone               = models.CharField(max_length=20, blank=True, verbose_name=_("Téléphone"))
     currency            = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='GNF', verbose_name=_("Devise préférée"))
+    language            = models.CharField(max_length=10, choices=settings.LANGUAGES, default='fr', verbose_name=_("Langue des emails"))
     avatar              = models.URLField(max_length=500, default='', blank=True, verbose_name=_("Photo"))
     is_active_profile   = models.BooleanField(default=True, verbose_name=_("Profil actif"))
     created_at          = models.DateTimeField(auto_now_add=True)
