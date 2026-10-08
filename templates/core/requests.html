@@ -113,11 +113,11 @@
 
             {% if req.status == 'en_attente' and user.profile.can_approve_requests %}
             <div class="flex gap-2">
-                <a href="{% url 'core:request_reject' req.slug %}" class="btn btn-danger btn-sm">
+                <a href="{% url 'core:request_reject' req.slug|default:req.pk %}" class="btn btn-danger btn-sm">
                     <i class="fa-solid fa-xmark" width="14" height="14"></i>
                     {% trans 'Rejeter' %}
                 </a>
-                <a href="{% url 'core:request_approve' req.slug %}" class="btn btn-primary btn-sm">
+                <a href="{% url 'core:request_approve' req.slug|default:req.pk %}" class="btn btn-primary btn-sm">
                     <i class="fa-solid fa-check" width="14" height="14"></i>
                     {% trans 'Approuver' %}
                 </a>

@@ -3,10 +3,38 @@ import traceback
 from django.utils.translation import gettext as _
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.core.exceptions import ValidationError, PermissionDenied
-from django.db import DatabaseError
+from django.db import DatabaseError, IntegrityError
 from django.conf import settings
 
+from core.models import UserProfile
+
 logger = logging.getLogger(__name__)
+
+
+class EnsureUserProfileMiddleware:
+    """Répare à la volée les utilisateurs dont le profil a été supprimé.
+
+    Le signal create_user_profile ne crée le profil qu'à la création de
+    l'utilisateur : une suppression manuelle (SQL/admin) laissait ~110 accès
+    `request.user.profile.*` lever RelatedObjectDoesNotExist → 500 sur la
+    majorité des pages. Le profil est recréé ici (défauts vides) avant la vue.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        user = request.user
+        if user.is_authenticated:
+            try:
+                user.profile
+            except UserProfile.DoesNotExist:
+                try:
+                    UserProfile.objects.get_or_create(user=user)
+                except IntegrityError:
+                    # Course : deux requêtes simultanées ont recréé le profil.
+                    pass
+        return self.get_response(request)
 
 
 class ExceptionHandlingMiddleware:

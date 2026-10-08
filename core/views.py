@@ -4383,7 +4383,7 @@ def my_tasks(request):
         entry = by_project[m.project_id]
         entry['project'] = m.project
         entry['_items'].append({
-            'id': m.id, 'type': 'jalon', 'name': m.name,
+            'id': m.id, 'slug': m.slug, 'type': 'jalon', 'name': m.name,
             'milestone_name': None, 'due_date': m.due_date,
             'completed': m.completed, 'completed_at': m.completed_at,
             'status': m.status, 'can_toggle': can_toggle,
@@ -4397,7 +4397,7 @@ def my_tasks(request):
         entry = by_project[p.id]
         entry['project'] = p
         entry['_items'].append({
-            'id': s.id, 'type': 'sous_etape', 'name': s.name,
+            'id': s.id, 'slug': s.slug, 'type': 'sous_etape', 'name': s.name,
             'milestone_name': s.milestone.name, 'due_date': s.due_date,
             'completed': s.completed, 'completed_at': s.completed_at,
             'status': None, 'can_toggle': True,

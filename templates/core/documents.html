@@ -83,7 +83,7 @@
                 </thead>
                 <tbody>
                     {% for doc in documents %}
-                    <tr data-href="{% url 'core:document_edit' doc.slug %}">
+                    <tr data-href="{% url 'core:document_edit' doc.slug|default:doc.pk %}">
                         <td>
                             <div class="flex items-center gap-3">
                                 <div class="document-icon {% if doc.status == 'a_signer' %}sign{% elif doc.status == 'a_valider' %}validate{% else %}signed{% endif %}">
@@ -124,25 +124,25 @@
                         <td>
                             <div class="flex items-center justify-center gap-1">
                                 {% if doc.file %}
-                                <a href="{% url 'core:document_preview' doc.slug %}" class="action-btn primary" title="{% trans 'Aperçu' %}">
+                                <a href="{% url 'core:document_preview' doc.slug|default:doc.pk %}" class="action-btn primary" title="{% trans 'Aperçu' %}">
                                     <i class="fa-solid fa-eye" width="15" height="15"></i>
                                 </a>
                                 {% endif %}
-                                <a href="{% url 'core:document_edit' doc.slug %}" class="action-btn primary" title="{% trans 'Modifier' %}">
+                                <a href="{% url 'core:document_edit' doc.slug|default:doc.pk %}" class="action-btn primary" title="{% trans 'Modifier' %}">
                                     <i class="fa-solid fa-pencil" width="15" height="15"></i>
                                 </a>
                                 {% if doc.status == 'a_valider' %}
-                                <a href="{% url 'core:document_validate' doc.slug %}" class="action-btn success" title="{% trans 'Valider' %}">
+                                <a href="{% url 'core:document_validate' doc.slug|default:doc.pk %}" class="action-btn success" title="{% trans 'Valider' %}">
                                     <i class="fa-solid fa-circle-check" width="15" height="15"></i>
                                 </a>
                                 {% endif %}
                                 {% if doc.status == 'a_signer' %}
-                                <a href="{% url 'core:document_sign' doc.slug %}" class="action-btn success" title="{% trans 'Signer' %}">
+                                <a href="{% url 'core:document_sign' doc.slug|default:doc.pk %}" class="action-btn success" title="{% trans 'Signer' %}">
                                     <i class="fa-solid fa-pen" width="15" height="15"></i>
                                 </a>
                                 {% endif %}
                                 <a href="#" class="action-btn danger" title="{% trans 'Supprimer' %}"
-                                   data-delete-url="{% url 'core:document_delete' doc.slug %}"
+                                   data-delete-url="{% url 'core:document_delete' doc.slug|default:doc.pk %}"
                                    data-delete-type="{% trans 'le document' %}"
                                    data-delete-name="{{ doc.title }}">
                                     <i class="fa-solid fa-trash-can" width="15" height="15"></i>

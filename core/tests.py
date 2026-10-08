@@ -1,0 +1,295 @@
+"""Smoke tests : aucune page GET de l'application ne doit renvoyer 500.
+
+Audit du 08/10 (incident prod /mes-taches/, NoReverseMatch 'milestone_toggle'
+avec argument ''). Trois classes de bugs, toutes corrigées par l'Étape A —
+ces tests sont les garde-fous de régression :
+
+1. my_tasks.html:180 reverse item.slug alors que la vue my_tasks construisait
+   ses items SANS la clé 'slug' → '' → NoReverseMatch → 500 dès qu'une tâche
+   assignée s'affichait. Fix : 'slug' ajouté au contexte de la vue.
+2. Slugs legacy vides/NULL : 0001_initial crée les colonnes slug sans
+   backfill ; tout {% url %} sur un .slug de modèle vide levait NoReverseMatch
+   (500). Fix : migration 0005 (backfill) + garde-fous `|default:<var>.pk`
+   dans tous les {% url %} sur .slug (get_sluggable_or_404 résout l'UUID).
+3. request.user.profile.* sans profil utilisateur : ~110 accès non protégés,
+   27 des 37 pages principales plantaient. Fix :
+   EnsureUserProfileMiddleware (recrée le profil manquant avant la vue).
+
+Chaque test vérifie status_code < 500 (302/403/404 acceptés). Les exceptions
+non gérées sont re-lancées par le test client : sans les fixes, la régression
+prod échoue ici avec le même traceback qu'en production.
+"""
+
+import copy as _copy
+from datetime import timedelta
+
+from django.contrib.auth import get_user_model
+from django.core.cache import cache
+from django.test import TestCase
+from django.test.utils import ContextList
+from django.urls import reverse
+from django.utils import timezone
+
+import django.test.client as _dj_client
+
+from .exchange import CACHE_KEY, DEFAULT_USD_GNF_RATE
+from .models import (
+    Direction,
+    Employee,
+    Milestone,
+    Project,
+    Role,
+    SubMilestone,
+    UserProfile,
+)
+
+User = get_user_model()
+
+
+def _store_rendered_templates_safe(store, signal, sender, template, context, **kwargs):
+    """store_rendered_templates() avec repli si copy(context) plante.
+
+    Environnement local : Python 3.14 + Django 4.2 (requirements.txt exige
+    Django>=5.1.5) — Context.__copy__ lève
+    AttributeError: 'super' object has no attribute 'dicts' sur Python 3.14.
+    Le rendu de la page a alors déjà réussi : seul l'instrumentation du test
+    client échoue. Le repli conserve la copie brute (nos assertions n'utilisent
+    pas resp.context). Sans effet dès que l'environnement respecte
+    requirements.txt.
+    """
+    store.setdefault('templates', []).append(template)
+    if 'context' not in store:
+        store['context'] = ContextList()
+    try:
+        store['context'].append(_copy.copy(context))
+    except Exception:
+        store['context'].append(context)
+
+
+_dj_client.store_rendered_templates = _store_rendered_templates_safe
+
+# Pages principales (GET, sans argument d'URL, sans mutation — logout et les
+# endpoints toggle/delete POST-exclants sont volontairement absents).
+MAIN_URLS = [
+    'dashboard', 'global_search', 'projects', 'resources', 'requests',
+    'calendar', 'documents', 'reports', 'partners', 'users_list',
+    'roles_list', 'project_roles_list', 'directions_list', 'leave_list',
+    'my_tasks', 'profile', 'password_change', 'password_reset_info',
+    'notifications_list', 'notifications_count', 'notifications_recent',
+    'project_create', 'project_import', 'event_create', 'document_create',
+    'employee_create', 'budget_create', 'request_create', 'partner_create',
+    'user_create', 'request_new_activation', 'role_create',
+    'project_role_create', 'direction_create', 'leave_create',
+    'api_budget', 'api_projects',
+]
+
+# Pages qui plantaient pour un utilisateur SANS profil AVANT
+# EnsureUserProfileMiddleware (inventaire runtime du 08/10 : 27 des 37).
+# test_pages_connues_en_crash_sans_profil doit toutes les passer en < 500 ;
+# si une régresse, elle réapparaît ici et disparaît de la liste principale.
+SANS_PROFIL_CRASH_URLS = {
+    'api_budget',
+    'api_projects',
+    'budget_create',
+    'calendar',
+    'dashboard',
+    'direction_create',
+    'directions_list',
+    'document_create',
+    'documents',
+    'event_create',
+    'my_tasks',
+    'partner_create',
+    'partners',
+    'profile',
+    'project_create',
+    'project_import',
+    'project_role_create',
+    'project_roles_list',
+    'projects',
+    'reports',
+    'request_create',
+    'requests',
+    'resources',
+    'role_create',
+    'roles_list',
+    'user_create',
+    'users_list',
+}
+
+
+class SmokeBase(TestCase):
+    """Fixtures partagées : 3 profils (admin, employé assigné, sans profil)
+    + un projet avec un jalon feuille et un jalon parent à sous-étape."""
+
+    @classmethod
+    def setUpTestData(cls):
+        # Taux figé en cache : aucune appelle réseau pendant les tests.
+        cache.set(
+            CACHE_KEY,
+            {
+                'rate': DEFAULT_USD_GNF_RATE,
+                'date': timezone.now(),
+                'source': 'live',
+                'fetched_at': timezone.now(),
+            },
+            None,
+        )
+
+        cls.direction = Direction.objects.create(name='Direction Smoke', code='SMK')
+
+        cls.admin = User.objects.create_user(
+            'admin_smoke', password='x', is_superuser=True, is_staff=True
+        )
+
+        cls.employe_user = User.objects.create_user('employe_smoke', password='x')
+        cls.employee = Employee.objects.create(
+            name='Employe Smoke', role='Developpeur', direction=cls.direction
+        )
+        employe_profile = cls.employe_user.profile
+        employe_profile.role = Role.objects.get(slug='employe')
+        employe_profile.direction = cls.direction
+        employe_profile.employee = cls.employee
+        employe_profile.save()
+
+        cls.sans_profil = User.objects.create_user('sans_profil_smoke', password='x')
+        cls.sans_profil.profile.delete()
+
+        today = timezone.now().date()
+        cls.project = Project.objects.create(
+            name='Projet Smoke',
+            status='en_cours',
+            start_date=today - timedelta(days=5),
+            end_date=today + timedelta(days=30),
+            manager='Manager Smoke',
+            direction=cls.direction,
+        )
+
+        # Jalon feuille (sans sous-étapes → can_toggle → branche toggle).
+        cls.leaf = Milestone.objects.create(
+            project=cls.project, name='Jalon feuille', due_date=today + timedelta(days=7)
+        )
+        cls.leaf.assigned_to.set([cls.employee])
+
+        # Jalon parent (avec sous-étape → jalon non toggleable, sous-étape oui).
+        cls.parent = Milestone.objects.create(
+            project=cls.project, name='Jalon parent', due_date=today + timedelta(days=10)
+        )
+        cls.parent.assigned_to.set([cls.employee])
+        cls.sub = SubMilestone.objects.create(
+            milestone=cls.parent, name='Sous-etape smoke', due_date=today + timedelta(days=5)
+        )
+        cls.sub.assigned_to.set([cls.employee])
+
+    def _login(self, user):
+        self.client.force_login(user)
+
+    def _get_ok(self, url):
+        resp = self.client.get(url)
+        self.assertLess(resp.status_code, 500, f'{url} -> {resp.status_code}')
+        return resp
+
+    def _main_urls(self, exclude=()):
+        return [n for n in MAIN_URLS if n not in exclude]
+
+    def _object_urls(self):
+        p, leaf, parent, sub = self.project, self.leaf, self.parent, self.sub
+        return [
+            reverse('core:project_detail', args=[p.slug]),
+            reverse('core:project_edit', args=[p.slug]),
+            reverse('core:project_need_create', args=[p.slug]),
+            reverse('core:project_comment_create', args=[p.slug]),
+            reverse('core:project_folder_create', args=[p.slug]),
+            reverse('core:milestone_create', args=[p.slug]),
+            reverse('core:milestone_detail', args=[leaf.slug]),
+            reverse('core:milestone_edit', args=[leaf.slug]),
+            reverse('core:milestone_detail', args=[parent.slug]),
+            reverse('core:sub_milestone_edit', args=[sub.slug]),
+        ]
+
+
+class SmokeAdminTests(SmokeBase):
+    """Admin (superuser, profil auto-créé, sans employé lié)."""
+
+    def test_main_urls_ne_renvoient_jamais_500(self):
+        self._login(self.admin)
+        for name in self._main_urls():
+            with self.subTest(url=name):
+                self._get_ok(reverse(f'core:{name}'))
+
+    def test_object_urls_ne_renvoient_jamais_500(self):
+        self._login(self.admin)
+        for url in self._object_urls():
+            with self.subTest(url=url):
+                self._get_ok(url)
+
+
+class SmokeEmployeTests(SmokeBase):
+    """Employé avec profil, employé lié et tâches assignées."""
+
+    def test_main_urls_ne_renvoient_jamais_500(self):
+        self._login(self.employe_user)
+        for name in self._main_urls():
+            with self.subTest(url=name):
+                self._get_ok(reverse(f'core:{name}'))
+
+    def test_object_urls_ne_renvoient_jamais_500(self):
+        self._login(self.employe_user)
+        for url in self._object_urls():
+            with self.subTest(url=url):
+                self._get_ok(url)
+
+    def test_my_tasks_affiche_liens_toggle(self):
+        """Régression prod : /mes-taches/ doit afficher les liens de toggle
+        des tâches assignées (jalon feuille + sous-étape). Sans le 'slug'
+        fourni par la vue, reverse(item.slug) échouait avec ('',)."""
+        self._login(self.employe_user)
+        resp = self._get_ok(reverse('core:my_tasks'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, reverse('core:milestone_toggle', args=[self.leaf.slug]))
+        self.assertContains(resp, reverse('core:sub_milestone_toggle', args=[self.sub.slug]))
+
+
+class SmokeSansProfilTests(SmokeBase):
+    """Utilisateur dont le profil a été supprimé : aucune page ne doit 500."""
+
+    def _login(self, user):
+        # force_login -> update_last_login -> user.save() -> signal
+        # save_user_profile : l'instance fixture garde le profil supprimé dans
+        # _state.fields_cache (.profile.delete() l'a mis en cache dans
+        # setUpTestData) → hasattr True → profile.save() réinsère la ligne.
+        # Suppression APRÈS le login, via queryset (aucune instance en cache).
+        super()._login(user)
+        UserProfile.objects.filter(user=user).delete()
+
+    def test_pages_sans_profil_ne_renvoient_jamais_500(self):
+        self._login(self.sans_profil)
+        self.assertFalse(
+            UserProfile.objects.filter(user=self.sans_profil).exists(),
+            'prerequis : le profil doit etre absent pendant les requetes',
+        )
+        for name in self._main_urls(exclude=SANS_PROFIL_CRASH_URLS):
+            with self.subTest(url=name):
+                self._get_ok(reverse(f'core:{name}'))
+
+    def test_pages_connues_en_crash_sans_profil(self):
+        """Les 27 pages qui plantaient sans profil (inventaire runtime du
+        08/10) : EnsureUserProfileMiddleware doit toutes les rendre < 500."""
+        self._login(self.sans_profil)
+        for name in sorted(SANS_PROFIL_CRASH_URLS):
+            with self.subTest(url=name):
+                self._get_ok(reverse(f'core:{name}'))
+
+
+class RegressionSlugVideTests(SmokeBase):
+    """Classe 2 : slug legacy vide/NULL sur un modèle → NoReverseMatch.
+
+    Même si la migration 0005 a backfillé la base, un slug vide réintroduit
+    (SQL direct) ne doit plus jamais faire planter le rendu : les {% url %}
+    sur .slug passent par |default:<var>.pk (résolu par get_sluggable_or_404)."""
+
+    def test_project_detail_avec_jalon_slug_vide_ne_doit_pas_500(self):
+        Milestone.objects.filter(pk=self.leaf.pk).update(slug='')
+        self._login(self.admin)
+        resp = self._get_ok(reverse('core:project_detail', args=[self.project.slug]))
+        self.assertEqual(resp.status_code, 200)

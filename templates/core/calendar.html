@@ -510,7 +510,7 @@
                 <!-- ── Vue liste du mois ── -->
                 <div class="cal-list">
                     {% for evt in month_events %}
-                    <a class="cal-list-item{% if evt.id in clashing_ids %} clashing{% endif %}" href="{% url 'core:event_detail' evt.slug %}{% if evt.is_occurrence %}?occ={{ evt.date|date:'Y-m-d' }}{% endif %}">
+                    <a class="cal-list-item{% if evt.id in clashing_ids %} clashing{% endif %}" href="{% url 'core:event_detail' evt.slug|default:evt.pk %}{% if evt.is_occurrence %}?occ={{ evt.date|date:'Y-m-d' }}{% endif %}">
                         <div class="cal-list-date {{ evt.event_type }}">
                             <span class="cal-list-month {{ evt.event_type }}">{{ evt.date|date:"M" }}</span>
                             <span class="cal-list-daynum {{ evt.event_type }}">{{ evt.date|date:"d" }}</span>
@@ -534,7 +534,7 @@
                         {% with st=my_rsvp|get_item:evt.id %}
                         {% if st %}
                         <div class="rsvp-inline">
-                            <form method="post" action="{% url 'core:event_rsvp' evt.slug %}" style="margin:0;">
+                            <form method="post" action="{% url 'core:event_rsvp' evt.slug|default:evt.pk %}" style="margin:0;">
                                 {% csrf_token %}
                                 <input type="hidden" name="status" value="accepte">
                                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
@@ -542,7 +542,7 @@
                                     <i class="fa-solid fa-check" width="11" height="11"></i>
                                 </button>
                             </form>
-                            <form method="post" action="{% url 'core:event_rsvp' evt.slug %}" style="margin:0;">
+                            <form method="post" action="{% url 'core:event_rsvp' evt.slug|default:evt.pk %}" style="margin:0;">
                                 {% csrf_token %}
                                 <input type="hidden" name="status" value="peut_etre">
                                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
@@ -550,7 +550,7 @@
                                     <i class="fa-solid fa-minus" width="11" height="11"></i>
                                 </button>
                             </form>
-                            <form method="post" action="{% url 'core:event_rsvp' evt.slug %}" style="margin:0;">
+                            <form method="post" action="{% url 'core:event_rsvp' evt.slug|default:evt.pk %}" style="margin:0;">
                                 {% csrf_token %}
                                 <input type="hidden" name="status" value="refuse">
                                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
@@ -590,7 +590,7 @@
                             {% for evt in day_events %}
                             <div class="week-event {{ evt.event_type }}{% if evt.id in clashing_ids %} clashing{% endif %}"
                                  style="top:{{ evt.top_pct }}%;height:{{ evt.height_pct }}%;">
-                                <a class="week-event-link" href="{% url 'core:event_detail' evt.slug %}{% if evt.is_occurrence %}?occ={{ evt.date|date:'Y-m-d' }}{% endif %}"
+                                <a class="week-event-link" href="{% url 'core:event_detail' evt.slug|default:evt.pk %}{% if evt.is_occurrence %}?occ={{ evt.date|date:'Y-m-d' }}{% endif %}"
                                    title="{{ evt.title }} · {{ evt.time|time:'H:i' }} · {{ evt.duration_display }}{% if evt.location %} · {{ evt.location }}{% endif %}">
                                     <span class="week-event-time">{{ evt.time|time:"H:i" }}</span>
                                     <span class="week-event-title">{{ evt.title }}{% if evt.is_recurring %} <i class="fa-solid fa-rotate cal-recur-icon" title="{% trans 'Récurrent' %}"></i>{% endif %}</span>
@@ -604,7 +604,7 @@
                                 {% with st=my_rsvp|get_item:evt.id %}
                                 {% if st %}
                                 <div class="rsvp-inline">
-                                    <form method="post" action="{% url 'core:event_rsvp' evt.slug %}" style="margin:0;">
+                                    <form method="post" action="{% url 'core:event_rsvp' evt.slug|default:evt.pk %}" style="margin:0;">
                                         {% csrf_token %}
                                         <input type="hidden" name="status" value="accepte">
                                         <input type="hidden" name="next" value="{{ request.get_full_path }}">
@@ -612,7 +612,7 @@
                                             <i class="fa-solid fa-check" width="10" height="10"></i>
                                         </button>
                                     </form>
-                                    <form method="post" action="{% url 'core:event_rsvp' evt.slug %}" style="margin:0;">
+                                    <form method="post" action="{% url 'core:event_rsvp' evt.slug|default:evt.pk %}" style="margin:0;">
                                         {% csrf_token %}
                                         <input type="hidden" name="status" value="peut_etre">
                                         <input type="hidden" name="next" value="{{ request.get_full_path }}">
@@ -620,7 +620,7 @@
                                             <i class="fa-solid fa-minus" width="10" height="10"></i>
                                         </button>
                                     </form>
-                                    <form method="post" action="{% url 'core:event_rsvp' evt.slug %}" style="margin:0;">
+                                    <form method="post" action="{% url 'core:event_rsvp' evt.slug|default:evt.pk %}" style="margin:0;">
                                         {% csrf_token %}
                                         <input type="hidden" name="status" value="refuse">
                                         <input type="hidden" name="next" value="{{ request.get_full_path }}">
@@ -671,7 +671,7 @@
                                 </div>
                                 <div class="calendar-day-events">
                                     {% for evt in day_events %}
-                                    <a href="{% url 'core:event_detail' evt.slug %}{% if evt.is_occurrence %}?occ={{ evt.date|date:'Y-m-d' }}{% endif %}"
+                                    <a href="{% url 'core:event_detail' evt.slug|default:evt.pk %}{% if evt.is_occurrence %}?occ={{ evt.date|date:'Y-m-d' }}{% endif %}"
                                        class="calendar-event-pill {{ evt.event_type }}{% if forloop.counter > 2 %} pill-more{% endif %}{% if evt.id in clashing_ids %} clashing{% endif %}"
                                        title="{{ evt.title }} · {{ evt.time|time:'H:i' }}{% if evt.location %} · {{ evt.location }}{% endif %}{% if evt.duration %} · {{ evt.duration_display }}{% endif %}">
                                         <span class="pill-time">{{ evt.time|time:'H:i' }}</span>
@@ -739,15 +739,15 @@
                             </div>
                         </div>
                         <div class="ev-item-actions">
-                            <a href="{% url 'core:event_detail' event.slug %}" class="action-btn primary" title="{% trans 'Voir' %}">
+                            <a href="{% url 'core:event_detail' event.slug|default:event.pk %}" class="action-btn primary" title="{% trans 'Voir' %}">
                                 <i class="fa-solid fa-eye" width="14" height="14"></i>
                             </a>
                             {% if can_manage %}
-                            <a href="{% url 'core:event_edit' event.slug %}" class="action-btn primary" title="{% trans 'Modifier' %}">
+                            <a href="{% url 'core:event_edit' event.slug|default:event.pk %}" class="action-btn primary" title="{% trans 'Modifier' %}">
                                 <i class="fa-solid fa-pencil" width="14" height="14"></i>
                             </a>
                             <a href="#" class="action-btn danger" title="{% trans 'Supprimer' %}"
-                               data-delete-url="{% url 'core:event_delete' event.slug %}"
+                               data-delete-url="{% url 'core:event_delete' event.slug|default:event.pk %}"
                                data-delete-type="{% trans "l'événement" %}"
                                data-delete-name="{{ event.title }}">
                                 <i class="fa-solid fa-trash-can" width="14" height="14"></i>

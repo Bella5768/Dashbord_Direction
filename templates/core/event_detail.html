@@ -184,19 +184,19 @@
             <i class="fa-solid fa-arrow-left" width="14" height="14"></i>
             {% trans 'Calendrier' %}
         </a>
-        <a href="{% url 'core:event_ics' event.slug %}" class="btn btn-outline" title="{% trans 'Exporter vers votre agenda (.ics)' %}">
+        <a href="{% url 'core:event_ics' event.slug|default:event.pk %}" class="btn btn-outline" title="{% trans 'Exporter vers votre agenda (.ics)' %}">
             <i class="fa-solid fa-download" width="14" height="14"></i>
             {% trans '.ics' %}
         </a>
         {% if can_edit %}
-        <a href="{% url 'core:event_edit' event.slug %}" class="btn btn-outline">
+        <a href="{% url 'core:event_edit' event.slug|default:event.pk %}" class="btn btn-outline">
             <i class="fa-solid fa-pencil" width="14" height="14"></i>
             {% trans 'Modifier' %}
         </a>
         {% endif %}
         {% if can_delete %}
         <a href="#" class="btn btn-danger"
-           data-delete-url="{% url 'core:event_delete' event.slug %}"
+           data-delete-url="{% url 'core:event_delete' event.slug|default:event.pk %}"
            data-delete-type="{% trans "l'événement" %}"
            data-delete-name="{{ event.title }}">
             <i class="fa-solid fa-trash-can" width="14" height="14"></i>
@@ -217,7 +217,7 @@
             {% if event.recurrence_end %}&nbsp;—&nbsp;{% trans "jusqu'au" %} {{ event.recurrence_end|date:"d M Y" }}{% endif %}
         </p>
         {% if can_edit %}
-        <form method="post" action="{% url 'core:event_detach' event.slug %}"
+        <form method="post" action="{% url 'core:event_detach' event.slug|default:event.pk %}"
               style="display:flex; gap:8px; align-items:center; margin-top:12px; flex-wrap:wrap;">
             {% csrf_token %}
             <input type="date" name="date" class="form-control" style="max-width:180px;"
@@ -355,7 +355,7 @@
                     </div>
 
                     <!-- Onglet Individuel -->
-                    <form method="post" action="{% url 'core:event_add_members' event.slug %}" class="add-pane active" id="pane-employee">
+                    <form method="post" action="{% url 'core:event_add_members' event.slug|default:event.pk %}" class="add-pane active" id="pane-employee">
                         {% csrf_token %}
                         <input type="hidden" name="add_type" value="employee">
                         <select name="employee_id" required>
@@ -373,7 +373,7 @@
                     </form>
 
                     <!-- Onglet Direction -->
-                    <form method="post" action="{% url 'core:event_add_members' event.slug %}" class="add-pane" id="pane-direction">
+                    <form method="post" action="{% url 'core:event_add_members' event.slug|default:event.pk %}" class="add-pane" id="pane-direction">
                         {% csrf_token %}
                         <input type="hidden" name="add_type" value="direction">
                         <select name="direction_id" required>
@@ -389,7 +389,7 @@
                     </form>
 
                     <!-- Onglet Projet -->
-                    <form method="post" action="{% url 'core:event_add_members' event.slug %}" class="add-pane" id="pane-project">
+                    <form method="post" action="{% url 'core:event_add_members' event.slug|default:event.pk %}" class="add-pane" id="pane-project">
                         {% csrf_token %}
                         <input type="hidden" name="add_type" value="project">
                         <select name="project_id" required>
@@ -419,7 +419,7 @@
                         </div>
                         <span class="rsvp-badge {{ m.status }}">{{ m.get_status_display }}</span>
                         {% if can_edit %}
-                        <form method="post" action="{% url 'core:event_remove_member' event.slug m.id %}" style="margin:0;">
+                        <form method="post" action="{% url 'core:event_remove_member' event.slug|default:event.pk m.id %}" style="margin:0;">
                             {% csrf_token %}
                             <button type="submit" class="btn-remove-member" title="{% trans 'Retirer' %}"
                                     onclick="return confirm('{% trans "Retirer ce participant ?" %}')">
@@ -504,7 +504,7 @@
                     <div id="rsvp-edit" style="margin-top:8px;">
                     {% endif %}
 
-                        <form method="post" action="{% url 'core:event_rsvp' event.slug %}" id="rsvp-form">
+                        <form method="post" action="{% url 'core:event_rsvp' event.slug|default:event.pk %}" id="rsvp-form">
                             {% csrf_token %}
                             <input type="hidden" name="status" id="rsvp-status-input" value="">
                             <div class="rsvp-buttons">
@@ -544,12 +544,12 @@
         {% if can_edit %}
         <div class="card">
             <div class="card-content" style="display:flex;flex-direction:column;gap:8px;">
-                <a href="{% url 'core:event_edit' event.slug %}" class="btn btn-primary" style="justify-content:center;">
+                <a href="{% url 'core:event_edit' event.slug|default:event.pk %}" class="btn btn-primary" style="justify-content:center;">
                     <i class="fa-solid fa-pencil" width="14" height="14"></i>
                     {% trans 'Modifier cet événement' %}
                 </a>
                 <a href="#" class="btn btn-outline" style="justify-content:center;color:#dc2626;border-color:#fca5a5;"
-                   data-delete-url="{% url 'core:event_delete' event.slug %}"
+                   data-delete-url="{% url 'core:event_delete' event.slug|default:event.pk %}"
                    data-delete-label="cet événement">
                     <i class="fa-solid fa-trash-can" width="14" height="14"></i>
                     {% trans 'Supprimer' %}
