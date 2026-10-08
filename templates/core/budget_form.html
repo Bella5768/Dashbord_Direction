@@ -19,7 +19,9 @@
                 <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
                 {{ field }}
                 {% if field.errors %}<p class="form-error">{{ field.errors.0 }}</p>{% endif %}
-                {% if field.help_text %}<span class="form-help">{{ field.help_text }}</span>{% endif %}
+                {% if field.help_text %}<span id="{{ field.auto_id }}-help" class="form-help">{{ field.help_text }}</span>{% endif %}
+                {% if field.name == 'allocated' %}<div id="allocated-conversion" class="form-help"></div>{% endif %}
+                {% if field.name == 'consumed' %}<div id="consumed-conversion" class="form-help"></div>{% endif %}
             </div>
             {% endfor %}
             
@@ -33,4 +35,57 @@
         </form>
     </div>
 </div>
+
+<style>
+#allocated-conversion, #consumed-conversion { display: none; margin-top: 4px; color: #16a34a; }
+#allocated-conversion.show, #consumed-conversion.show { display: inline-flex; align-items: center; gap: 4px; }
+</style>
+
+<script>
+var BUDGET_I18N = { equivalent: "{% trans 'Équivalent' %}" };
+// Taux GNF/USD figé à la création (passé par la vue ; à l'édition : rate_snapshot)
+const RATE_GNF_PER_USD = {{ form_rate|default:8788.75 }};
+
+function convertCurrency(amount, fromCurrency, toCurrency) {
+    if (fromCurrency === toCurrency) return amount;
+    const amountInGNF = fromCurrency === 'GNF' ? amount : amount * RATE_GNF_PER_USD;
+    return toCurrency === 'GNF' ? amountInGNF : amountInGNF / RATE_GNF_PER_USD;
+}
+
+function formatCurrency(amount, currency) {
+    if (currency === 'GNF') {
+        return `${Math.round(amount).toLocaleString('fr-FR')} GNF`;
+    }
+    return `${amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`;
+}
+
+function updateConversions() {
+    // L'aide serveur reflète la devise enregistrée : le JS la remplace.
+    ['id_allocated-help', 'id_consumed-help'].forEach(function (id) {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+    const currency = document.getElementById('id_currency').value;
+    const allocated = parseFloat(document.getElementById('id_allocated').value) || 0;
+    const consumed = parseFloat(document.getElementById('id_consumed').value) || 0;
+    const other = currency === 'GNF' ? 'USD' : 'GNF';
+
+    const allocEl = document.getElementById('allocated-conversion');
+    allocEl.innerHTML = allocated > 0
+        ? `<i class="fa-solid fa-arrows-up-down" width="12" height="12" style="display: inline-block; vertical-align: middle;" ></i> ${BUDGET_I18N.equivalent}: ${formatCurrency(convertCurrency(allocated, currency, other), other)}`
+        : '';
+    allocEl.classList.toggle('show', allocated > 0);
+
+    const consEl = document.getElementById('consumed-conversion');
+    consEl.innerHTML = consumed > 0
+        ? `<i class="fa-solid fa-arrows-up-down" width="12" height="12" style="display: inline-block; vertical-align: middle;" ></i> ${BUDGET_I18N.equivalent}: ${formatCurrency(convertCurrency(consumed, currency, other), other)}`
+        : '';
+    consEl.classList.toggle('show', consumed > 0);
+}
+
+document.getElementById('id_currency').addEventListener('change', updateConversions);
+document.getElementById('id_allocated').addEventListener('input', updateConversions);
+document.getElementById('id_consumed').addEventListener('input', updateConversions);
+document.addEventListener('DOMContentLoaded', updateConversions);
+</script>
 {% endblock %}

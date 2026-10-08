@@ -5586,7 +5586,10 @@ def budget_create(request):
     else:
         form = BudgetForm(user=request.user)
 
-    return render(request, 'core/budget_form.html', {'form': form, 'title': 'Nouveau budget'})
+    return render(request, 'core/budget_form.html', {
+        'form': form, 'title': 'Nouveau budget',
+        'form_rate': round(get_usd_gnf_rate()['rate'], 6),
+    })
 
 
 @login_required
@@ -5622,7 +5625,11 @@ def budget_edit(request, budget_id):
         form = BudgetForm(instance=budget, user=request.user)
 
     budget_label = budget.project.name if budget.project else (budget.direction.code if budget.direction else 'sans affectation')
-    return render(request, 'core/budget_form.html', {'form': form, 'budget': budget, 'title': f'Modifier budget {budget_label}'})
+    _be_rate = float(budget.rate_snapshot) if budget.rate_snapshot else get_usd_gnf_rate()['rate']
+    return render(request, 'core/budget_form.html', {
+        'form': form, 'budget': budget, 'title': f'Modifier budget {budget_label}',
+        'form_rate': round(_be_rate, 6),
+    })
 
 
 @login_required
