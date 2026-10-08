@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load static %}
 
 {% block title %}{{ title }}{% endblock %}
 {% block page_title %}{{ title }}{% endblock %}
@@ -263,7 +264,7 @@ textarea.form-control, .lf-section textarea { min-height: 100px; resize: vertica
         <div class="lf-alert"><i class="fa-solid fa-triangle-exclamation" width="16" height="16" style="vertical-align:middle;margin-right:4px;"></i>{{ form.non_field_errors }}</div>
     {% endif %}
 
-    <form method="post">
+    <form method="post" id="leaveForm">
         {% csrf_token %}
         <div class="lf-grid">
 
@@ -433,4 +434,70 @@ textarea.form-control, .lf-section textarea { min-height: 100px; resize: vertica
         </div>
     </form>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/form-validation.js' %}"></script>
+<script>
+(function () {
+  var form = document.getElementById('leaveForm');
+  if (!form) return;
+
+  var REQUIRES_DOC = ['maladie', 'maternite', 'formation'];
+  var DOC_COUNT = {{ leave.documents.count|default:0 }};
+
+  function countNewFiles() {
+    var raw = CSIGV.val('id_extra_documents_json');
+    if (!raw) return 0;
+    try {
+      var arr = JSON.parse(raw);
+      return arr.filter(function (f) { return f && f.url; }).length;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  var checks = [
+    function () {
+      var s = CSIGV.val('id_start_date');
+      var e = CSIGV.val('id_end_date');
+      if (s && e && CSIGV.compareDate(e, s) < 0) {
+        return {
+          el: document.getElementById('id_end_date'),
+          msg: "{% trans 'La date de fin doit être postérieure ou égale à la date de début.' %}"
+        };
+      }
+      return null;
+    },
+    function () {
+      var type = CSIGV.val('id_leave_type');
+      var start = CSIGV.val('id_start_date');
+      if (type === 'annuel' && start) {
+        var days = CSIGV.daysFrom(start);
+        if (days !== null && days < 15) {
+          return {
+            el: document.getElementById('id_start_date'),
+            msg: "{% trans 'Un congé annuel doit être demandé au moins 15 jours avant le départ.' %}"
+          };
+        }
+      }
+      return null;
+    },
+    function () {
+      var type = CSIGV.val('id_leave_type');
+      if (REQUIRES_DOC.indexOf(type) !== -1 && (DOC_COUNT + countNewFiles()) === 0) {
+        return {
+          el: document.getElementById('id_extra_documents_json'),
+          msg: "{% trans 'Une pièce justificative est requise pour ce type de congé.' %}",
+          cls: 'lf-error'
+        };
+      }
+      return null;
+    }
+  ];
+
+  CSIGV.wire(form, checks);
+  CSIGV.live(['id_leave_type', 'id_start_date', 'id_end_date'], checks);
+})();
+</script>
 {% endblock %}

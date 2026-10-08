@@ -1219,6 +1219,15 @@ a.stat-box.active.indigo { background: #eef2ff; box-shadow: 0 0 0 2px #6366f1, 0
     gap: 4px;
 }
 
+.csigv-invalid {
+    border-color: #dc2626 !important;
+}
+
+.csigv-invalid:focus {
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12) !important;
+    border-color: #dc2626 !important;
+}
+
 .form-help {
     font-size: 11px;
     color: #6b7280;

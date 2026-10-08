@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load static %}
 
 {% block title %}{{ title }}{% endblock %}
 {% block page_title %}{{ title }}{% endblock %}
@@ -11,7 +12,7 @@
         <h3 class="card-title">{% trans "Informations de l'employé" %}</h3>
     </div>
     <div class="card-content">
-        <form method="post">
+        <form method="post" id="mainForm">
             {% csrf_token %}
 
             <div class="form-group">
@@ -125,6 +126,42 @@
         chk.addEventListener('change', function () { toggle(this.checked); });
         toggle(chk.checked);
     }
+})();
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/form-validation.js' %}"></script>
+<script>
+(function () {
+  var form = document.getElementById('mainForm');
+  if (!form) return;
+
+  var checks = [
+    function () {
+      var external = CSIGV.checked('id_is_external');
+      if (external && !CSIGV.val('id_organization')) {
+        return {
+          el: document.getElementById('id_organization'),
+          msg: "{% trans "L'organisation est obligatoire pour une personne externe." %}"
+        };
+      }
+      return null;
+    },
+    function () {
+      var external = CSIGV.checked('id_is_external');
+      if (!external && !CSIGV.val('id_email')) {
+        return {
+          el: document.getElementById('id_email'),
+          msg: "{% trans "L'email est obligatoire pour un employé interne (nécessaire pour la création de compte)." %}"
+        };
+      }
+      return null;
+    }
+  ];
+
+  CSIGV.wire(form, checks);
+  CSIGV.live(['id_is_external', 'id_organization', 'id_email'], checks);
 })();
 </script>
 {% endblock %}

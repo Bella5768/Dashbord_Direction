@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load static %}
 
 {% block title %}{{ title }}{% endblock %}
 {% block page_title %}{{ title }}{% endblock %}
@@ -11,7 +12,7 @@
         <h3 class="card-title">{% trans 'Informations du partenaire' %}</h3>
     </div>
     <div class="card-content">
-        <form method="post">
+        <form method="post" id="mainForm">
             {% csrf_token %}
             
             <div class="form-group">
@@ -94,4 +95,30 @@
         </form>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/form-validation.js' %}"></script>
+<script>
+(function () {
+  var form = document.getElementById('mainForm');
+  if (!form) return;
+
+  var checks = [
+    function () {
+      var start = CSIGV.val('id_start_date');
+      if (start && CSIGV.compareDate(start, CSIGV.today()) > 0) {
+        return {
+          el: document.getElementById('id_start_date'),
+          msg: "{% trans 'La date de début de collaboration ne peut pas être dans le futur.' %}"
+        };
+      }
+      return null;
+    }
+  ];
+
+  CSIGV.wire(form, checks);
+  CSIGV.live(['id_start_date'], checks);
+})();
+</script>
 {% endblock %}

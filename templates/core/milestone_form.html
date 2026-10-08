@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load static %}
 
 {% block title %}{{ title }}{% endblock %}
 {% block page_title %}{{ title }}{% endblock %}
@@ -389,5 +390,30 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   mpSyncHiddenInputs();
 });
+</script>
+<script src="{% static 'js/form-validation.js' %}"></script>
+<script>
+(function () {
+  var form = document.getElementById('milestone-form');
+  if (!form) return;
+
+  var START = "{{ project.start_date|date:'Y-m-d'|default:'' }}";
+  var END = "{{ project.end_date|date:'Y-m-d'|default:'' }}";
+
+  var checks = [
+    function () {
+      var due = CSIGV.val('id_due_date');
+      if (START && END && due && (CSIGV.compareDate(due, START) < 0 || CSIGV.compareDate(due, END) > 0)) {
+        var msg = "{% trans 'La date du jalon doit être comprise entre %(start)s et %(end)s.' %}"
+          .replace('%(start)s', START).replace('%(end)s', END);
+        return { el: document.getElementById('id_due_date'), msg: msg };
+      }
+      return null;
+    }
+  ];
+
+  CSIGV.wire(form, checks);
+  CSIGV.live(['id_due_date'], checks);
+})();
 </script>
 {% endblock %}

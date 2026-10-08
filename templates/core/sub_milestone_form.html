@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load static %}
 
 {% block title %}{{ title }}{% endblock %}
 {% block page_title %}{{ title }}{% endblock %}
@@ -70,7 +71,7 @@
         <h3 class="card-title">{% trans 'Informations de la sous-étape' %}</h3>
       </div>
       <div class="card-content">
-        <form method="post">
+        <form method="post" id="mainForm">
           {% csrf_token %}
           <input type="hidden" name="order" value="{{ form.order.value|default:0 }}">
 
@@ -273,5 +274,41 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   mpSyncHiddenInputs();
 });
+</script>
+<script src="{% static 'js/form-validation.js' %}"></script>
+<script>
+(function () {
+  var form = document.getElementById('mainForm');
+  if (!form) return;
+
+  var MS_DUE = "{{ milestone.due_date|date:'Y-m-d'|default:'' }}";
+  var START = "{{ project.start_date|date:'Y-m-d'|default:'' }}";
+  var END = "{{ project.end_date|date:'Y-m-d'|default:'' }}";
+
+  var checks = [
+    function () {
+      var due = CSIGV.val('id_due_date');
+      if (!due) return null;
+      if (MS_DUE && CSIGV.compareDate(due, MS_DUE) > 0) {
+        return {
+          el: document.getElementById('id_due_date'),
+          msg: "{% trans 'La date de la sous-étape doit être antérieure ou égale à celle du jalon (%(date)s).' %}"
+            .replace('%(date)s', MS_DUE)
+        };
+      }
+      if (START && END && (CSIGV.compareDate(due, START) < 0 || CSIGV.compareDate(due, END) > 0)) {
+        return {
+          el: document.getElementById('id_due_date'),
+          msg: "{% trans 'La date de la sous-étape doit être comprise entre %(start)s et %(end)s.' %}"
+            .replace('%(start)s', START).replace('%(end)s', END)
+        };
+      }
+      return null;
+    }
+  ];
+
+  CSIGV.wire(form, checks);
+  CSIGV.live(['id_due_date'], checks);
+})();
 </script>
 {% endblock %}

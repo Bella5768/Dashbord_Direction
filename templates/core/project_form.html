@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load static %}
 
 {% block title %}{{ title }}{% endblock %}
 {% block page_title %}{{ title }}{% endblock %}
@@ -21,7 +22,7 @@
         <h3 class="card-title">{% trans 'Informations du projet' %}</h3>
     </div>
     <div class="card-content">
-        <form method="post">
+        <form method="post" id="mainForm">
             {% csrf_token %}
 
             <div class="form-group">
@@ -325,5 +326,47 @@ document.getElementById('id_budget_consumed').addEventListener('input', updateCo
 
 // Initialiser au chargement
 document.addEventListener('DOMContentLoaded', updateConversions);
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/form-validation.js' %}"></script>
+<script>
+(function () {
+  var form = document.getElementById('mainForm');
+  if (!form) return;
+
+  var MSG = {
+    endBeforeStart: "{% trans 'La date de fin doit être postérieure ou égale à la date de début.' %}",
+    budgetNegative: "{% trans 'Le budget alloué ne peut pas être négatif.' %}",
+    consumedNegative: "{% trans 'Le budget consommé ne peut pas être négatif.' %}"
+  };
+
+  var checks = [
+    function () {
+      var s = CSIGV.val('id_start_date');
+      var e = CSIGV.val('id_end_date');
+      if (s && e && CSIGV.compareDate(e, s) < 0) {
+        return { el: document.getElementById('id_end_date'), msg: MSG.endBeforeStart };
+      }
+      return null;
+    },
+    function () {
+      if (CSIGV.isNegative('id_budget')) {
+        return { el: document.getElementById('id_budget'), msg: MSG.budgetNegative };
+      }
+      return null;
+    },
+    function () {
+      if (CSIGV.isNegative('id_budget_consumed')) {
+        return { el: document.getElementById('id_budget_consumed'), msg: MSG.consumedNegative };
+      }
+      return null;
+    }
+  ];
+
+  CSIGV.wire(form, checks);
+  CSIGV.live(['id_start_date', 'id_end_date', 'id_budget', 'id_budget_consumed'], checks);
+})();
 </script>
 {% endblock %}

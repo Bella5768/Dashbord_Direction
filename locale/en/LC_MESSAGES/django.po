@@ -7722,3 +7722,9 @@ msgstr "This reset link is no longer valid."
 #: .\templates\registration\password_reset_confirm.html:165
 msgid "Faire une nouvelle demande"
 msgstr "Submit a new request"
+
+msgid "Le budget alloué ne peut pas être négatif."
+msgstr "Allocated budget cannot be negative."
+
+msgid "Le budget consommé ne peut pas être négatif."
+msgstr "Consumed budget cannot be negative."

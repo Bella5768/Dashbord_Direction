@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load static %}
 
 {% block title %}{{ title }}{% endblock %}
 {% block page_title %}{{ title }}{% endblock %}
@@ -11,7 +12,7 @@
         <h3 class="card-title">{% trans 'Informations du document' %}</h3>
     </div>
     <div class="card-content">
-        <form method="post">
+        <form method="post" id="mainForm">
             {% csrf_token %}
             
             <div class="form-group">
@@ -93,4 +94,32 @@
         </form>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/form-validation.js' %}"></script>
+<script>
+(function () {
+  var form = document.getElementById('mainForm');
+  if (!form) return;
+
+  var CREATED = "{% if document %}{{ document.created_at|date:'Y-m-d' }}{% endif %}" || CSIGV.today();
+
+  var checks = [
+    function () {
+      var due = CSIGV.val('id_due_date');
+      if (due && CSIGV.compareDate(due, CREATED) < 0) {
+        return {
+          el: document.getElementById('id_due_date'),
+          msg: "{% trans 'La date limite doit être postérieure ou égale à la date de création.' %}"
+        };
+      }
+      return null;
+    }
+  ];
+
+  CSIGV.wire(form, checks);
+  CSIGV.live(['id_due_date'], checks);
+})();
+</script>
 {% endblock %}
