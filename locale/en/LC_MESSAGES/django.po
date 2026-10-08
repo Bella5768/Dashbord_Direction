@@ -8032,3 +8032,36 @@ msgstr "Event cancelled: {title}"
 
 msgid "L'événement « {title} » prévu le {date} a été annulé par {actor}."
 msgstr "The event “{title}” scheduled on {date} was cancelled by {actor}."
+
+msgid "Aucune tâche assignée"
+msgstr "No assigned task"
+
+msgid "Sélectionnez la nature du membre à ajouter."
+msgstr "Select the nature of the member to add."
+
+msgid "Ajouter un membre à l’équipe"
+msgstr "Add a member to the team"
+
+msgid "Choisissez comment ajouter ce membre au projet."
+msgstr "Choose how to add this member to the project."
+
+msgid "Détermine les permissions du membre sur ce projet."
+msgstr "Determines the member permissions on this project."
+
+msgid "L'employé rattaché au projet ne peut pas être changé."
+msgstr "The employee linked to the project cannot be changed."
+
+msgid "Optionnel"
+msgstr "Optional"
+
+msgid "Modifier le rôle du membre"
+msgstr "Edit member role"
+
+msgid "Identité du membre"
+msgstr "Member identity"
+
+msgid "Compte de connexion"
+msgstr "Login account"
+
+msgid "Membre concerné"
+msgstr "Member concerned"

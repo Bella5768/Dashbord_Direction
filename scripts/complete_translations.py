@@ -434,6 +434,23 @@ TRANSLATIONS = {
     '[CSIG] Événement annulé : {title}': '[CSIG] Event cancelled: {title}',
     'Événement annulé : {title}':        'Event cancelled: {title}',
     "L'événement « {title} » prévu le {date} a été annulé par {actor}.": 'The event “{title}” scheduled on {date} was cancelled by {actor}.',
+
+    # ── Onglet Équipe : design des membres de projet ─────────────────────
+    'Ajouter un membre à l’équipe':     'Add a member to the team',
+    'Aucune tâche assignée':            'No assigned task',
+    'Choisissez comment ajouter ce membre au projet.':
+                                        'Choose how to add this member to the project.',
+    'Compte de connexion':              'Login account',
+    'Détermine les permissions du membre sur ce projet.':
+                                        'Determines the member permissions on this project.',
+    'Identité du membre':               'Member identity',
+    "L'employé rattaché au projet ne peut pas être changé.":
+                                        'The employee linked to the project cannot be changed.',
+    'Membre concerné':                  'Member concerned',
+    'Modifier le rôle du membre':       'Edit member role',
+    'Optionnel':                        'Optional',
+    'Sélectionnez la nature du membre à ajouter.':
+                                        'Select the nature of the member to add.',
 }
 
 def main():

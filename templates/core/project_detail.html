@@ -133,6 +133,25 @@
 .msub-date { font-size:11px; color:#6b7280; }
 .msub-date.overdue { color:#dc2626; font-weight:600; }
 .msub-acts { display:flex; gap:4px; flex-shrink:0; }
+
+/* ── Onglet Équipe : membres groupés par rôle ── */
+.pm-groups { display:flex; flex-direction:column; gap:24px; }
+.pm-group-head { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.pm-group-name { display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:var(--gray-700,#334155); }
+.pm-group-ico { width:24px; height:24px; border-radius:7px; display:inline-flex; align-items:center; justify-content:center; font-size:11px; background:var(--primary-50,#e8eef5); color:var(--primary-600,#234060); flex-shrink:0; }
+.pm-group-count { font-size:11px; font-weight:700; color:var(--gray-500,#64748b); background:var(--gray-100,#f1f5f9); border-radius:999px; padding:1px 9px; }
+.pm-group-line { flex:1; height:1px; background:var(--gray-100,#f1f5f9); }
+.pm-group-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+@media(max-width:1100px){ .pm-group-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:680px){ .pm-group-grid { grid-template-columns:1fr; } }
+.pm-card { border-left-color:var(--primary-500,#2a4a6f); cursor:default; gap:12px; padding:14px; }
+.pm-card:hover { transform:none; box-shadow:none; border-color:#e5e7eb; }
+.pm-card.ext { border-left-color:var(--amber-500,#f59e0b); }
+.pm-card .ec-avatar { width:42px; height:42px; font-size:15px; }
+.pm-email { margin:-4px 0 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.pm-progress { margin-top:2px; }
+.pm-progress .progress { height:6px; }
+.pm-task-empty { font-size:11px; color:var(--gray-400,#94a3b8); }
 </style>
 
 <!-- En-tête projet -->
@@ -849,7 +868,7 @@
 <!-- ==================== ONGLET ÉQUIPE ==================== -->
 <div class="pd-panel" id="panel-equipe" style="display:none;">
   <div class="card">
-    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
       <div>
         <h3 class="card-title">{% trans 'Équipe du projet' %}</h3>
         <p class="text-sm text-gray-500">{% with cnt=members|length %}{% blocktrans count count=cnt %}{{ count }} membre{% plural %}{{ count }} membres{% endblocktrans %}{% endwith %}</p>
@@ -862,52 +881,59 @@
       {% endif %}
     </div>
     <div class="card-content">
-      {% if members %}
-      <div class="grid grid-2" style="gap:12px;">
-        {% for member in members %}
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;">
-          <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
-            <div style="flex-shrink:0;width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#1e3a5f,#3b82f6);display:flex;align-items:center;justify-content:center;font-weight:700;color:white;font-size:16px;">
-              {{ member.employee.name.0|upper }}
-            </div>
-            <div style="min-width:0;">
-              <div style="display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                <span class="text-sm font-medium">{{ member.employee.name }}</span>
-                {% if member.employee.is_external %}<span style="font-size:10px;padding:1px 6px;border-radius:4px;background:var(--amber-100,#fef3c7);color:var(--amber-700,#b45309);font-weight:600;white-space:nowrap;flex-shrink:0;">{% trans 'Externe' %}</span>{% endif %}
-              </div>
-              <div class="text-xs text-gray-500">{{ member.employee.role }}{% if member.employee.organization %} · {{ member.employee.organization }}{% endif %}</div>
-              {% if member.employee.email %}
-              <div class="text-xs text-gray-400" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ member.employee.email }}</div>
-              {% endif %}
-              {% with stats=member_task_stats|get_item:member.employee_id %}
-              {% if stats %}
-              <div class="text-xs" style="margin-top:3px;color:#3b82f6;">
-                {{ stats.done }}/{{ stats.total }} {% blocktrans count count=stats.total %}tâche{% plural %}tâches{% endblocktrans %}
-                {% if stats.total > 0 %}
-                <span style="color:#94a3b8;">({{ stats.done|stringformat:"d" }}/{{ stats.total|stringformat:"d" }})</span>
+      {% if member_groups %}
+      <div class="pm-groups">
+        {% for group in member_groups %}
+        <div class="pm-group">
+          <div class="pm-group-head">
+            <span class="pm-group-name">
+              <span class="pm-group-ico"><i class="fa-solid {{ group.icon }}"></i></span>
+              {{ group.name }}
+            </span>
+            <span class="pm-group-count">{{ group.count }}</span>
+            <span class="pm-group-line"></span>
+          </div>
+          <div class="pm-group-grid">
+            {% for m in group.members %}
+            <div class="employee-card pm-card{% if m.is_external %} ext{% endif %}">
+              <div class="ec-header">
+                <div class="ec-avatar" style="background:{{ m.color }};color:#fff;overflow:hidden;">{% if m.avatar_url %}<img src="{{ m.avatar_url }}" alt="" style="width:100%;height:100%;object-fit:cover;">{% else %}{{ m.initials }}{% endif %}</div>
+                <div class="ec-info">
+                  <p class="ec-name">{{ m.name }}</p>
+                  <p class="ec-role">{{ m.job_role }}{% if m.organization %} · {{ m.organization }}{% endif %}</p>
+                  <div class="ec-badges">
+                    {% if m.is_external %}<span class="badge badge-warning" style="font-size:10px;">{% trans 'Externe' %}</span>{% endif %}
+                    {% if m.direction_code %}<span class="badge badge-secondary" style="font-size:10px;">{{ m.direction_code }}</span>{% endif %}
+                  </div>
+                </div>
+                {% if can_manage_members %}
+                <div class="ec-actions">
+                  <a href="{% url 'core:project_member_edit' m.id %}" class="action-btn primary" title="{% trans 'Modifier le rôle' %}">
+                    <i class="fa-solid fa-pencil" width="14" height="14" ></i>
+                  </a>
+                  <a href="#" class="action-btn danger" title="{% trans 'Retirer du projet' %}"
+                     data-delete-url="{% url 'core:project_member_delete' m.id %}"
+                     data-delete-type="{% trans 'le membre' %}"
+                     data-delete-name="{{ m.name }}">
+                    <i class="fa-solid fa-trash-can" width="14" height="14" ></i>
+                  </a>
+                </div>
                 {% endif %}
               </div>
+              {% if m.email %}<p class="pm-email text-xs text-gray-400">{{ m.email }}</p>{% endif %}
+              {% if m.task_total %}
+              <div class="pm-progress">
+                <div class="ec-workload-row">
+                  <span class="ec-workload-label">{% trans 'Tâches assignées' %}</span>
+                  <span class="ec-workload-pct {% if m.task_pct >= 100 %}low{% elif m.task_pct >= 50 %}medium{% else %}high{% endif %}">{{ m.task_done }}/{{ m.task_total }}</span>
+                </div>
+                <div class="progress"><div class="progress-bar {% if m.task_pct >= 100 %}green{% else %}blue{% endif %}" style="width:{{ m.task_pct }}%"></div></div>
+              </div>
+              {% else %}
+              <p class="pm-task-empty">{% trans 'Aucune tâche assignée' %}</p>
               {% endif %}
-              {% endwith %}
             </div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;margin-left:10px;">
-            <span class="badge {% if member.project_role.slug == 'responsable' %}badge-info{% elif member.project_role.slug == 'observateur' or member.project_role.slug == 'ressource_externe_observateur' %}badge-secondary{% else %}badge-success{% endif %}" style="font-size:11px;">
-              {{ member.project_role.name|default:"—" }}
-            </span>
-            {% if can_manage_members %}
-            <div class="flex gap-1">
-              <a href="{% url 'core:project_member_edit' member.id %}" class="action-btn" title="{% trans 'Modifier le rôle' %}">
-                <i class="fa-solid fa-pencil" width="13" height="13" ></i>
-              </a>
-              <a href="#" class="action-btn danger" title="{% trans 'Retirer du projet' %}"
-                 data-delete-url="{% url 'core:project_member_delete' member.id %}"
-                 data-delete-type="{% trans 'le membre' %}"
-                 data-delete-name="{{ member.employee.name }}">
-                <i class="fa-solid fa-trash-can" width="13" height="13" ></i>
-              </a>
-            </div>
-            {% endif %}
+            {% endfor %}
           </div>
         </div>
         {% endfor %}

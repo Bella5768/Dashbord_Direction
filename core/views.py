@@ -2975,26 +2975,80 @@ def project_detail(request, project_id):
                     s['done'] += 1
 
     # Build member cards for inline quick-assign (only project members)
+    # et regroupement de l'équipe par rôle projet (onglet Équipe).
+    _ROLE_PRIORITY = {
+        'responsable': 0,
+        'membre': 1,
+        'observateur': 2,
+        'ressource_externe_edit': 3,
+        'ressource_externe_observateur': 4,
+    }
+    _ROLE_ICONS = {
+        'responsable': 'fa-crown',
+        'membre': 'fa-user-check',
+        'observateur': 'fa-eye',
+        'ressource_externe_edit': 'fa-user-tie',
+        'ressource_externe_observateur': 'fa-user-tie',
+    }
     members_cards = []
-    for pm in project.members.select_related('employee', 'employee__direction').filter(employee__isnull=False):
+    member_groups_map = {}
+    for pm in project.members.select_related('employee', 'employee__direction', 'project_role').filter(employee__isnull=False):
         emp = pm.employee
         parts = emp.name.split()
         initials = parts[0][0].upper() if parts else '?'
         if len(parts) > 1:
             initials += parts[-1][0].upper()
         task_info = member_task_stats.get(emp.id, {'total': 0, 'done': 0})
+        task_total = task_info['total']
+        task_done = task_info['done']
+        task_pct = round(task_done * 100 / task_total) if task_total else 0
+        avatar_color = _AVATAR_COLORS[sum(ord(c) for c in emp.name) % len(_AVATAR_COLORS)]
         members_cards.append({
             'id': emp.id,
             'name': emp.name,
             'job_role': emp.role,
             'project_role': pm.project_role.name if pm.project_role else '—',
             'direction': emp.direction.code if emp.direction else '',
-            'task_count': task_info['total'],
-            'task_done': task_info['done'],
-            'task_remaining': task_info['total'] - task_info['done'],
+            'task_count': task_total,
+            'task_done': task_done,
+            'task_remaining': task_total - task_done,
             'initials': initials,
-            'color': _AVATAR_COLORS[sum(ord(c) for c in emp.name) % len(_AVATAR_COLORS)],
+            'color': avatar_color,
+            'is_external': emp.is_external,
         })
+
+        role = pm.project_role
+        role_key = role.slug if role else '__none__'
+        group = member_groups_map.setdefault(role_key, {
+            'slug': role_key,
+            'name': role.name if role else _('Sans rôle'),
+            'is_system': bool(role and role.is_system),
+            'icon': 'fa-user-slash' if role is None else _ROLE_ICONS.get(role.slug, 'fa-shield-halved'),
+            'priority': _ROLE_PRIORITY.get(role_key, 5),
+            'members': [],
+        })
+        group['members'].append({
+            'id': pm.id,
+            'employee': emp,
+            'name': emp.name,
+            'job_role': emp.role,
+            'organization': emp.organization,
+            'email': emp.email,
+            'is_external': emp.is_external,
+            'avatar_url': emp.avatar_url,
+            'direction_code': emp.direction.code if emp.direction else '',
+            'initials': initials,
+            'color': avatar_color,
+            'task_total': task_total,
+            'task_done': task_done,
+            'task_pct': task_pct,
+        })
+
+    member_groups = sorted(
+        member_groups_map.values(), key=lambda g: (g['priority'], g['name'].lower())
+    )
+    for group in member_groups:
+        group['count'] = len(group['members'])
 
     # Dashboard stats
     from datetime import date, timedelta
@@ -3040,6 +3094,7 @@ def project_detail(request, project_id):
         'user_employee': user_employee,
         'member_task_stats': member_task_stats,
         'members_cards': members_cards,
+        'member_groups': member_groups,
         'dashboard_stats': dashboard_stats,
         'overdue_milestones': overdue_milestones,
         'upcoming_milestones': upcoming_milestones,

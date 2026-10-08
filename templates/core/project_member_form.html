@@ -7,218 +7,272 @@
 
 {% block extra_css %}
 <style>
-.mt-card { max-width: 680px; }
+.mt-card { max-width: 780px; }
 
-/* Type selector */
-.mt-type-header { margin-bottom: 4px; }
-.mt-section-label { font-size:12px; font-weight:600; color:var(--gray-500); text-transform:uppercase; letter-spacing:.05em; margin-bottom:10px; }
-.mt-type-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:20px; }
-@media(max-width:600px){ .mt-type-grid { grid-template-columns:1fr; } }
-.mt-type-opt { position:relative; }
-.mt-type-opt input[type=radio] { position:absolute; opacity:0; width:0; height:0; }
-.mt-type-label { display:flex; flex-direction:column; align-items:center; gap:8px; padding:14px 10px; border-radius:var(--radius-sm); border:2px solid var(--gray-200); background:var(--gray-50); cursor:pointer; transition:all .15s; text-align:center; }
-.mt-type-label svg { color:var(--gray-400); }
-.mt-type-label .mt-type-title { font-size:13px; font-weight:600; color:var(--gray-700); }
-.mt-type-label .mt-type-sub { font-size:11px; color:var(--gray-400); }
-.mt-type-opt input:checked + .mt-type-label { border-color:var(--primary-500); background:var(--primary-50); }
-.mt-type-opt input:checked + .mt-type-label svg { color:var(--primary-600); }
-.mt-type-opt input:checked + .mt-type-label .mt-type-title { color:var(--primary-700); }
+/* ── Sections ── */
+.mt-sec { margin-bottom: 26px; }
+.mt-sec-head { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 14px; }
+.mt-sec-num { width: 24px; height: 24px; border-radius: 50%; background: var(--primary-500); color: #fff; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.mt-sec-title { font-size: 14px; font-weight: 700; color: var(--gray-800); margin: 0; }
+.mt-sec-hint { font-size: 12px; color: var(--gray-500); margin: 3px 0 0; }
 
-/* Panels */
-.mt-panel { background:var(--gray-50); border:1px solid var(--gray-200); border-radius:var(--radius-sm); padding:16px; margin-bottom:16px; }
-.mt-panel-ext { background:var(--amber-50,#fffbeb); border-color:var(--amber-200,#fde68a); }
-.mt-panel-int { background:var(--primary-50); border-color:var(--primary-100); }
-.mt-panel-title { font-size:13px; font-weight:600; margin-bottom:12px; display:flex; align-items:center; gap:6px; }
-.mt-panel-title.int { color:var(--primary-700); }
-.mt-panel-title.ext { color:var(--amber-700,#b45309); }
-.mt-panel-title svg { flex-shrink:0; }
-.mt-panel-icon-int { color:var(--primary-600); }
-.mt-panel-desc { font-size:12px; margin-bottom:12px; }
-.mt-panel-desc.int { color:var(--primary-600); }
-.mt-panel-desc.ext { color:var(--amber-700,#b45309); }
-.mt-panel-count { font-size:12px; color:var(--gray-500); }
+/* ── Sélecteur de type (mode ajout) ── */
+.mt-type-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+@media(max-width:600px){ .mt-type-grid { grid-template-columns: 1fr; } }
+.mt-type-opt { position: relative; }
+.mt-type-opt input[type=radio] { position: absolute; opacity: 0; width: 0; height: 0; }
+.mt-type-label { display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 16px 10px; border-radius: var(--radius); border: 2px solid var(--gray-200); background: var(--gray-50); cursor: pointer; transition: all .15s; text-align: center; height: 100%; }
+.mt-type-label i { color: var(--gray-400); font-size: 20px; transition: color .15s; }
+.mt-type-title { font-size: 13px; font-weight: 600; color: var(--gray-700); }
+.mt-type-sub { font-size: 11px; color: var(--gray-400); }
+.mt-type-opt input:checked + .mt-type-label { border-color: var(--primary-500); background: var(--primary-50); box-shadow: 0 0 0 3px var(--primary-100); }
+.mt-type-opt input:checked + .mt-type-label i { color: var(--primary-600); }
+.mt-type-opt input:checked + .mt-type-label .mt-type-title { color: var(--primary-700); }
+.mt-type-opt input:focus-visible + .mt-type-label { box-shadow: 0 0 0 3px var(--primary-100); }
 
-/* Form helpers */
-.fg-sm      { margin-bottom:12px; }
-.fg-grid-sm { gap:12px; }
-.fg-actions { border-top:1px solid var(--gray-100); padding-top:20px; }
+/* ── Panneaux de saisie ── */
+.mt-panel { background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 16px; }
+.mt-panel-ext { background: var(--amber-50); border-color: var(--amber-100); }
+.mt-panel-int { background: var(--primary-50); border-color: var(--primary-100); }
+.mt-panel-title { font-size: 13px; font-weight: 600; margin: 0 0 4px; display: flex; align-items: center; gap: 7px; color: var(--gray-700); }
+.mt-panel-title.int { color: var(--primary-700); }
+.mt-panel-title.ext { color: var(--amber-700); }
+.mt-panel-title i { flex-shrink: 0; }
+.mt-panel-desc { font-size: 12px; margin: 0 0 14px; color: var(--gray-500); }
+.mt-panel-desc.int { color: var(--primary-600); }
+.mt-panel-desc.ext { color: var(--amber-700); }
+.mt-panel-count { font-size: 12px; color: var(--gray-500); margin: 8px 0 0; display: flex; align-items: center; gap: 6px; }
 
-/* Permissions section */
-.mt-perm-section { background:var(--gray-50); border:1px solid var(--gray-200); border-radius:var(--radius-sm); padding:16px; margin-bottom:24px; }
-.mt-perm-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
-.mt-perm-title { font-size:13px; font-weight:600; color:var(--gray-700); margin:0; display:flex; align-items:center; gap:6px; }
-.mt-perm-title svg { flex-shrink:0; }
-.mt-perm-note { font-size:11px; font-weight:600; padding:2px 8px; border-radius:99px; }
-.mt-perm-note.preset { background:#dbeafe; color:#1e40af; }
-.mt-perm-note.custom  { background:#fef3c7; color:#92400e; }
+/* ── Carte employé (mode édition, lecture seule) ── */
+.mt-current { display: flex; align-items: center; gap: 14px; background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 14px 16px; }
+.mt-current-av { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 17px; color: #fff; flex-shrink: 0; overflow: hidden; }
+.mt-current-av img { width: 100%; height: 100%; object-fit: cover; }
+.mt-current-name { font-size: 15px; font-weight: 700; color: var(--gray-800); }
+.mt-current-role { font-size: 12px; color: var(--gray-500); }
+.mt-current-mail { font-size: 12px; color: var(--gray-400); }
 
-/* État coché (inclus dans le rôle) */
-.mt-perm-label { display:flex; align-items:center; gap:8px; padding:8px 10px; background:white; border:1px solid var(--gray-200); border-radius:6px; font-size:13px; transition:background .15s, border-color .15s; cursor:pointer; }
-.mt-perm-label.perm-on  { background:#f0fdf4; border-color:#bbf7d0; color:#15803d; }
-.mt-perm-label.perm-off { background:white;   border-color:var(--gray-200); color:var(--gray-400); }
-.mt-perm-label.perm-free { cursor:pointer; color:var(--gray-700); }
-.mt-perm-label input[type=checkbox] { accent-color:var(--primary-500); width:15px; height:15px; flex-shrink:0; }
-.mt-custom-hint { font-size:11px; color:#92400e; background:#fef3c7; border:1px solid #fde68a; border-radius:5px; padding:6px 10px; margin-top:10px; }
+/* ── Permissions ── */
+.mt-perm-hdr { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.mt-perm-title { font-size: 13px; font-weight: 600; color: var(--gray-700); margin: 0; display: flex; align-items: center; gap: 7px; }
+.mt-perm-note { font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+.mt-perm-note.preset { background: var(--primary-100); color: var(--primary-700); }
+.mt-perm-note.custom { background: var(--amber-100); color: var(--amber-700); }
+.mt-perm-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+@media(max-width:600px){ .mt-perm-grid { grid-template-columns: 1fr; } }
+.mt-perm-label { display: flex; align-items: center; gap: 9px; padding: 9px 11px; background: #fff; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 13px; transition: background .15s, border-color .15s, color .15s; cursor: pointer; }
+.mt-perm-label.perm-on { background: var(--green-50); border-color: var(--green-100); color: var(--green-700); }
+.mt-perm-label.perm-off { background: #fff; border-color: var(--gray-200); color: var(--gray-400); }
+.mt-perm-label.perm-free { cursor: pointer; color: var(--gray-700); }
+.mt-perm-label.perm-free:hover { border-color: var(--primary-500); background: var(--primary-50); }
+.mt-perm-label input[type=checkbox] { accent-color: var(--primary-600); width: 15px; height: 15px; flex-shrink: 0; }
+.mt-custom-hint { font-size: 11px; color: var(--amber-700); background: var(--amber-50); border: 1px solid var(--amber-100); border-radius: var(--radius-sm); padding: 7px 11px; margin-top: 10px; display: flex; align-items: center; gap: 7px; }
 
-/* Create account */
-.mt-create-account { background:var(--gray-50); border:1px solid var(--gray-200); border-radius:var(--radius-sm); padding:16px; margin-bottom:16px; }
-.mt-create-account-fields { margin-top:14px; display:flex; flex-direction:column; gap:12px; }
-.mt-alert-amber { background:#fffbeb; border:1px solid #fde68a; border-radius:6px; padding:10px 14px; font-size:12px; color:#92400e; margin-bottom:10px; display:flex; align-items:flex-start; gap:6px; }
-.mt-account-label { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:var(--gray-700); cursor:pointer; }
-.mt-account-chk { width:16px; height:16px; cursor:pointer; }
+/* ── Créer un compte ── */
+.mt-account { background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 16px; }
+.mt-account-label { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--gray-700); cursor: pointer; }
+.mt-account-chk { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary-600); }
+.mt-account-fields { margin-top: 16px; display: flex; flex-direction: column; gap: 14px; }
+.mt-alert { background: var(--amber-50); border: 1px solid var(--amber-100); border-radius: var(--radius-sm); padding: 11px 14px; font-size: 12px; color: var(--amber-700); margin-bottom: 12px; display: flex; align-items: flex-start; gap: 8px; }
+.mt-info { background: var(--primary-50); border: 1px solid var(--primary-100); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 12px; color: var(--primary-700); display: flex; gap: 10px; align-items: flex-start; }
 
-/* Badge helpers */
-.badge-sm { font-size:10px !important; padding:1px 6px !important; }
+/* ── Actions ── */
+.mt-actions { display: flex; gap: 12px; align-items: center; padding-top: 20px; border-top: 1px solid var(--gray-100); }
+.badge-sm { font-size: 10px; padding: 1px 6px; }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="card mt-card">
   <div class="card-header">
-    <h3 class="card-title">{% trans 'Informations du membre' %}</h3>
+    <div>
+      <h3 class="card-title">
+        {% if member %}{% trans 'Modifier le rôle du membre' %}{% else %}{% trans 'Ajouter un membre à l’équipe' %}{% endif %}
+      </h3>
+      <p class="text-sm text-gray-500">
+        {% if member %}{{ member.employee.name }}{% else %}{% trans 'Choisissez comment ajouter ce membre au projet.' %}{% endif %}
+      </p>
+    </div>
   </div>
   <div class="card-content">
     <form method="post" id="member-form">
       {% csrf_token %}
 
-      <!-- ===== SÉLECTEUR TYPE ===== -->
-      <div class="mt-type-header">
-        <p class="mt-section-label">{% trans 'Type de membre' %}</p>
+      {% if member %}
+      {# ===== MODE ÉDITION : employé figé ===== #}
+      <div class="mt-sec">
+        <div class="mt-sec-head">
+          <span class="mt-sec-num">1</span>
+          <div>
+            <p class="mt-sec-title">{% trans 'Membre concerné' %}</p>
+            <p class="mt-sec-hint">{% trans "L'employé rattaché au projet ne peut pas être changé." %}</p>
+          </div>
+        </div>
+        <div class="mt-current">
+          <div class="mt-current-av" style="background:#234060;">
+            {% if member.employee.avatar_url %}<img src="{{ member.employee.avatar_url }}" alt="">{% else %}{{ member.employee.name|first|upper }}{% endif %}
+          </div>
+          <div style="min-width:0;">
+            <div class="mt-current-name">{{ member.employee.name }}</div>
+            <div class="mt-current-role">{{ member.employee.role }}{% if member.employee.organization %} · {{ member.employee.organization }}{% endif %}</div>
+            {% if member.employee.email %}<div class="mt-current-mail">{{ member.employee.email }}</div>{% endif %}
+          </div>
+        </div>
+        {# employé posté en champ caché pour préserver la liaison du formulaire #}
+        <div style="display:none;">{{ form.employee }}</div>
+      </div>
+      {% else %}
+      {# ===== MODE AJOUT : sélecteur de type ===== #}
+      <div class="mt-sec">
+        <div class="mt-sec-head">
+          <span class="mt-sec-num">1</span>
+          <div>
+            <p class="mt-sec-title">{% trans 'Type de membre' %}</p>
+            <p class="mt-sec-hint">{% trans 'Sélectionnez la nature du membre à ajouter.' %}</p>
+          </div>
+        </div>
         <div class="mt-type-grid">
-
           <div class="mt-type-opt">
             <input type="radio" name="member_type" id="mt_existing" value="existing"
               {% if not member_type or member_type == 'existing' %}checked{% endif %}>
             <label for="mt_existing" class="mt-type-label">
-              <i class="fa-solid fa-users" width="22" height="22" ></i>
+              <i class="fa-solid fa-users"></i>
               <span class="mt-type-title">{% trans 'Employé existant' %}</span>
               <span class="mt-type-sub">{% trans 'Déjà dans le système' %}</span>
             </label>
           </div>
-
           <div class="mt-type-opt">
             <input type="radio" name="member_type" id="mt_internal" value="new_internal"
               {% if member_type == 'new_internal' %}checked{% endif %}>
             <label for="mt_internal" class="mt-type-label">
-              <i class="fa-solid fa-user-plus" width="22" height="22" ></i>
+              <i class="fa-solid fa-user-plus"></i>
               <span class="mt-type-title">{% trans 'Nouvel employé' %}</span>
               <span class="mt-type-sub">{% trans 'Créer une fiche interne' %}</span>
             </label>
           </div>
-
           <div class="mt-type-opt">
             <input type="radio" name="member_type" id="mt_external" value="new_external"
               {% if member_type == 'new_external' %}checked{% endif %}>
             <label for="mt_external" class="mt-type-label">
-              <i class="fa-solid fa-circle-play" width="22" height="22" ></i>
+              <i class="fa-solid fa-user-tie"></i>
               <span class="mt-type-title">{% trans 'Personne externe' %}</span>
               <span class="mt-type-sub">{% trans 'Consultant, partenaire…' %}</span>
             </label>
           </div>
-
         </div>
       </div>
 
-      <!-- ===== SECTION EMPLOYÉ EXISTANT ===== -->
-      <div id="panel_existing" class="mt-panel">
-        <p class="mt-panel-title">
-          <i class="fa-solid fa-magnifying-glass" width="15" height="15" ></i>
-          {% trans 'Sélectionner un employé existant' %}
-        </p>
-        <div class="form-group fg-sm">
-          {{ form.employee }}
-          {% if form.employee.errors %}<p class="form-error">{{ form.employee.errors.0 }}</p>{% endif %}
-        </div>
-        {% if available_employees_count is not None %}
-        <p class="mt-panel-count">{{ available_employees_count }} {% trans 'employé(s) disponible(s) pour ce projet' %}</p>
-        {% endif %}
-      </div>
-
-      <!-- ===== SECTION NOUVEL EMPLOYÉ INTERNE ===== -->
-      <div id="panel_internal" class="mt-panel mt-panel-int" style="display:none;">
-        <p class="mt-panel-title int">
-          <i class="fa-solid fa-building" width="15" height="15" ></i>
-          {% trans 'Créer un nouvel employé interne' %}
-          {% if project.direction %}<span class="badge badge-primary badge-sm" style="margin-left:6px;">{{ project.direction.code }}</span>{% endif %}
-        </p>
-        <p class="mt-panel-desc int">{% trans "L'employé sera rattaché à la direction du projet et stocké dans le système." %}</p>
-        <div class="form-group fg-sm">
-          <label class="form-label" for="int_name">{% trans 'Nom complet' %} <span class="required">*</span></label>
-          <input type="text" id="int_name" name="new_employee_name" class="form-control"
-                 value="{{ new_employee_name|default:'' }}" placeholder="{% trans 'Ex : Amadou Diallo' %}">
-        </div>
-        <div class="form-group fg-sm">
-          <label class="form-label" for="int_role">{% trans 'Poste / Fonction' %} <span class="required">*</span></label>
-          <input type="text" id="int_role" name="new_employee_role" class="form-control"
-                 value="{{ new_employee_role|default:'' }}" placeholder="{% trans 'Ex : Ingénieur, Analyste, Chef de division…' %}">
-        </div>
-        <div class="grid grid-2 fg-grid-sm">
-          <div class="form-group">
-            <label class="form-label" for="int_phone">{% trans 'Téléphone' %}</label>
-            <input type="tel" id="int_phone" name="new_employee_phone" class="form-control intl-tel-input"
-                   data-default-region="gn" value="{{ new_employee_phone|default:'' }}">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="int_email">{% trans 'Email' %}</label>
-            <input type="email" id="int_email" name="new_employee_email" class="form-control"
-                   value="{{ new_employee_email|default:'' }}" placeholder="nom@organisation.gn">
+      <div class="mt-sec">
+        <div class="mt-sec-head">
+          <span class="mt-sec-num">2</span>
+          <div>
+            <p class="mt-sec-title">{% trans 'Identité du membre' %}</p>
           </div>
         </div>
-      </div>
 
-      <!-- ===== SECTION PERSONNE EXTERNE ===== -->
-      <div id="panel_external" class="mt-panel mt-panel-ext" style="display:none;">
-        <p class="mt-panel-title ext">
-          <i class="fa-solid fa-circle-play" width="15" height="15" ></i>
-          {% trans 'Personne externe au projet' %}
-        </p>
-        <p class="mt-panel-desc ext">{% trans "Consultant, prestataire, partenaire — la fiche est créée et stockée avec le marqueur « Externe »." %}</p>
-        <div class="form-group fg-sm">
-          <label class="form-label" for="ext_name">{% trans 'Nom complet' %} <span class="required">*</span></label>
-          <input type="text" id="ext_name" name="new_employee_name" class="form-control"
-                 value="{{ new_employee_name|default:'' }}" placeholder="{% trans 'Ex : Marie Konaté' %}">
+        {# ----- Employé existant ----- #}
+        <div id="panel_existing" class="mt-panel">
+          <p class="mt-panel-title"><i class="fa-solid fa-magnifying-glass"></i>{% trans 'Sélectionner un employé existant' %}</p>
+          <div class="form-group" style="margin-bottom:0;">
+            {{ form.employee }}
+            {% if form.employee.errors %}<p class="form-error">{{ form.employee.errors.0 }}</p>{% endif %}
+          </div>
+          {% if available_employees_count is not None %}
+          <p class="mt-panel-count"><i class="fa-solid fa-circle-info"></i>{{ available_employees_count }} {% trans 'employé(s) disponible(s) pour ce projet' %}</p>
+          {% endif %}
         </div>
-        <div class="form-group fg-sm">
-          <label class="form-label" for="ext_org">{% trans 'Organisation / Entreprise' %}</label>
-          <input type="text" id="ext_org" name="new_employee_organization" class="form-control"
-                 value="{{ new_employee_organization|default:'' }}" placeholder="{% trans 'Ex : Cabinet XYZ, ONG Alpha…' %}">
-        </div>
-        <div class="form-group fg-sm">
-          <label class="form-label" for="ext_role">{% trans 'Poste / Fonction' %} <span class="required">*</span></label>
-          <input type="text" id="ext_role" name="new_employee_role" class="form-control"
-                 value="{{ new_employee_role|default:'' }}" placeholder="{% trans 'Ex : Consultant senior, Expert technique…' %}">
-        </div>
-        <div class="grid grid-2 fg-grid-sm">
+
+        {# ----- Nouvel employé interne ----- #}
+        <div id="panel_internal" class="mt-panel mt-panel-int" style="display:none;">
+          <p class="mt-panel-title int">
+            <i class="fa-solid fa-building"></i>
+            {% trans 'Créer un nouvel employé interne' %}
+            {% if project.direction %}<span class="badge badge-primary badge-sm" style="margin-left:6px;">{{ project.direction.code }}</span>{% endif %}
+          </p>
+          <p class="mt-panel-desc int">{% trans "L'employé sera rattaché à la direction du projet et stocké dans le système." %}</p>
           <div class="form-group">
-            <label class="form-label" for="ext_phone">{% trans 'Téléphone' %}</label>
-            <input type="tel" id="ext_phone" name="new_employee_phone" class="form-control intl-tel-input"
-                   data-default-region="gn" value="{{ new_employee_phone|default:'' }}">
+            <label class="form-label" for="int_name">{% trans 'Nom complet' %} <span class="required">*</span></label>
+            <input type="text" id="int_name" name="new_employee_name" class="form-control"
+                   value="{{ new_employee_name|default:'' }}" placeholder="{% trans 'Ex : Amadou Diallo' %}">
           </div>
           <div class="form-group">
-            <label class="form-label" for="ext_email">{% trans 'Email' %}</label>
-            <input type="email" id="ext_email" name="new_employee_email" class="form-control"
-                   value="{{ new_employee_email|default:'' }}" placeholder="nom@exemple.com">
+            <label class="form-label" for="int_role">{% trans 'Poste / Fonction' %} <span class="required">*</span></label>
+            <input type="text" id="int_role" name="new_employee_role" class="form-control"
+                   value="{{ new_employee_role|default:'' }}" placeholder="{% trans 'Ex : Ingénieur, Analyste, Chef de division…' %}">
+          </div>
+          <div class="grid grid-2" style="gap:12px;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="int_phone">{% trans 'Téléphone' %}</label>
+              <input type="tel" id="int_phone" name="new_employee_phone" class="form-control intl-tel-input"
+                     data-default-region="gn" value="{{ new_employee_phone|default:'' }}">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="int_email">{% trans 'Email' %}</label>
+              <input type="email" id="int_email" name="new_employee_email" class="form-control"
+                     value="{{ new_employee_email|default:'' }}" placeholder="nom@organisation.gn">
+            </div>
+          </div>
+        </div>
+
+        {# ----- Personne externe ----- #}
+        <div id="panel_external" class="mt-panel mt-panel-ext" style="display:none;">
+          <p class="mt-panel-title ext"><i class="fa-solid fa-user-tie"></i>{% trans 'Personne externe au projet' %}</p>
+          <p class="mt-panel-desc ext">{% trans "Consultant, prestataire, partenaire — la fiche est créée et stockée avec le marqueur « Externe »." %}</p>
+          <div class="form-group">
+            <label class="form-label" for="ext_name">{% trans 'Nom complet' %} <span class="required">*</span></label>
+            <input type="text" id="ext_name" name="new_employee_name" class="form-control"
+                   value="{{ new_employee_name|default:'' }}" placeholder="{% trans 'Ex : Marie Konaté' %}">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ext_org">{% trans 'Organisation / Entreprise' %} <span class="required">*</span></label>
+            <input type="text" id="ext_org" name="new_employee_organization" class="form-control"
+                   value="{{ new_employee_organization|default:'' }}" placeholder="{% trans 'Ex : Cabinet XYZ, ONG Alpha…' %}">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ext_role">{% trans 'Poste / Fonction' %} <span class="required">*</span></label>
+            <input type="text" id="ext_role" name="new_employee_role" class="form-control"
+                   value="{{ new_employee_role|default:'' }}" placeholder="{% trans 'Ex : Consultant senior, Expert technique…' %}">
+          </div>
+          <div class="grid grid-2" style="gap:12px;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="ext_phone">{% trans 'Téléphone' %}</label>
+              <input type="tel" id="ext_phone" name="new_employee_phone" class="form-control intl-tel-input"
+                     data-default-region="gn" value="{{ new_employee_phone|default:'' }}">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="ext_email">{% trans 'Email' %}</label>
+              <input type="email" id="ext_email" name="new_employee_email" class="form-control"
+                     value="{{ new_employee_email|default:'' }}" placeholder="nom@exemple.com">
+            </div>
           </div>
         </div>
       </div>
+      {% endif %}
 
-      <!-- ===== RÔLE DANS LE PROJET ===== -->
-      <div class="form-group">
-        <label class="form-label" for="id_project_role">{% trans 'Rôle dans le projet' %} <span class="required">*</span></label>
-        {{ form.project_role }}
-        {% if form.project_role.errors %}<p class="form-error">{{ form.project_role.errors.0 }}</p>{% endif %}
+      {# ===== RÔLE DANS LE PROJET ===== #}
+      <div class="mt-sec">
+        <div class="mt-sec-head">
+          <span class="mt-sec-num">{% if member %}2{% else %}3{% endif %}</span>
+          <div>
+            <p class="mt-sec-title">{% trans 'Rôle dans le projet' %}</p>
+            <p class="mt-sec-hint">{% trans 'Détermine les permissions du membre sur ce projet.' %}</p>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          {{ form.project_role }}
+          {% if form.project_role.errors %}<p class="form-error">{{ form.project_role.errors.0 }}</p>{% endif %}
+        </div>
       </div>
 
-      <!-- ===== PERMISSIONS ===== -->
-      <div id="permissions_section" class="mt-perm-section" style="display:none;">
+      {# ===== PERMISSIONS ===== #}
+      <div id="permissions_section" class="mt-sec" style="display:none;">
         <div class="mt-perm-hdr">
           <p class="mt-perm-title">
-            <i class="fa-solid fa-shield-halved" width="15" height="15" ></i>
+            <i class="fa-solid fa-shield-halved"></i>
             <span id="perm_section_title">{% trans 'Permissions du rôle' %}</span>
           </p>
           <span id="perm_preset_note" class="mt-perm-note preset"></span>
         </div>
-        <div class="grid grid-2" style="gap:8px;">
+        <div class="mt-perm-grid">
           <label id="lbl_can_manage_members_perm" class="mt-perm-label">
             <input type="checkbox" name="can_manage_members_perm">
             {% trans 'Gérer les membres' %}
@@ -245,15 +299,24 @@
           </label>
         </div>
         <p id="custom_perm_hint" class="mt-custom-hint" style="display:none;">
+          <i class="fa-solid fa-circle-info"></i>
           {% trans 'Rôle personnalisé — cochez les permissions souhaitées pour ce membre.' %}
         </p>
       </div>
 
-      <!-- ===== CRÉER UN COMPTE DE CONNEXION ===== -->
-      <div id="panel_create_account" class="mt-create-account" style="display:none;">
+      {% if not member %}
+      {# ===== CRÉER UN COMPTE DE CONNEXION ===== #}
+      <div id="panel_create_account" class="mt-sec mt-account" style="display:none;">
+        <div class="mt-perm-hdr">
+          <p class="mt-perm-title">
+            <i class="fa-solid fa-key"></i>
+            <span>{% trans 'Compte de connexion' %}</span>
+            <span class="badge badge-secondary badge-sm">{% trans 'Optionnel' %}</span>
+          </p>
+        </div>
 
-        <div id="alert_external_account" class="mt-alert-amber" style="display:none;">
-          <i class="fa-solid fa-triangle-exclamation" width="16" height="16" style="flex-shrink:0;margin-top:1px;" ></i>
+        <div id="alert_external_account" class="mt-alert" style="display:none;">
+          <i class="fa-solid fa-triangle-exclamation" style="flex-shrink:0;margin-top:1px;"></i>
           <span>{% trans "Cette personne externe doit avoir un compte pour consulter le projet." %}</span>
         </div>
 
@@ -262,12 +325,12 @@
           {% trans 'Créer un compte de connexion pour cette personne' %}
         </label>
 
-        <div id="create_user_fields" class="mt-create-account-fields" style="display:none;">
-          <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:#1e40af;display:flex;gap:10px;align-items:flex-start;">
-            <i class="fa-solid fa-envelope" width="16" height="16" style="flex-shrink:0;margin-top:1px;" ></i>
+        <div id="create_user_fields" class="mt-account-fields" style="display:none;">
+          <div class="mt-info">
+            <i class="fa-solid fa-envelope" style="flex-shrink:0;margin-top:1px;"></i>
             <span>{% trans "Le compte sera créé inactif. Un email d'invitation sera envoyé à la personne pour qu'elle définisse elle-même son mot de passe." %}</span>
           </div>
-          <div class="form-group">
+          <div class="form-group" style="margin-bottom:0;">
             <label class="form-label" for="new_user_role">{% trans 'Rôle système' %}</label>
             <select id="new_user_role" name="new_user_role" class="form-control">
               {% for val, lbl in role_choices %}
@@ -279,11 +342,12 @@
           </div>
         </div>
       </div>
+      {% endif %}
 
-      <div class="flex gap-3 fg-actions">
+      <div class="mt-actions">
         <button type="submit" class="btn btn-primary">
-          <i class="fa-solid fa-check" width="16" height="16" ></i>
-          {% trans 'Ajouter le membre' %}
+          <i class="fa-solid fa-check" width="16" height="16"></i>
+          {% if member %}{% trans 'Enregistrer' %}{% else %}{% trans 'Ajouter le membre' %}{% endif %}
         </button>
         <a href="{% url 'core:project_detail' project.slug|default:project.pk %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
       </div>
@@ -320,72 +384,63 @@ var MEMBER_I18N = {
 
   // Show/hide the create-account section depending on member_type
   function updateAccountSection(memberType) {
+    if (!panelCreateAccount) return;
     var showSection = (memberType === 'new_internal' || memberType === 'new_external');
     panelCreateAccount.style.display = showSection ? '' : 'none';
-
     if (!showSection) return;
 
-    // External: alert visible + checkbox checked by default (first time)
     if (memberType === 'new_external') {
-      alertExternal.style.display = '';
-      // Set default role to 'visiteur'
+      if (alertExternal) alertExternal.style.display = '';
       if (roleSelect) {
         for (var i = 0; i < roleSelect.options.length; i++) {
-          if (roleSelect.options[i].value === 'visiteur') {
-            roleSelect.selectedIndex = i;
-            break;
-          }
+          if (roleSelect.options[i].value === 'visiteur') { roleSelect.selectedIndex = i; break; }
         }
       }
-      // Auto-check the checkbox for externals if not already modified
-      if (!toggleCreateUser._userTouched) {
+      if (toggleCreateUser && !toggleCreateUser._userTouched) {
         toggleCreateUser.checked = true;
-        createUserFields.style.display = '';
+        if (createUserFields) createUserFields.style.display = '';
       }
     } else {
-      // Internal
-      alertExternal.style.display = 'none';
+      if (alertExternal) alertExternal.style.display = 'none';
       if (roleSelect) {
         for (var j = 0; j < roleSelect.options.length; j++) {
-          if (roleSelect.options[j].value === 'employe') {
-            roleSelect.selectedIndex = j;
-            break;
-          }
+          if (roleSelect.options[j].value === 'employe') { roleSelect.selectedIndex = j; break; }
         }
       }
-      if (!toggleCreateUser._userTouched) {
+      if (toggleCreateUser && !toggleCreateUser._userTouched) {
         toggleCreateUser.checked = false;
-        createUserFields.style.display = 'none';
+        if (createUserFields) createUserFields.style.display = 'none';
       }
     }
   }
 
   function switchPanel(val) {
     Object.keys(panels).forEach(function(k) {
-      panels[k].style.display = (k === val) ? '' : 'none';
+      if (panels[k]) panels[k].style.display = (k === val) ? '' : 'none';
     });
     updateAccountSection(val);
   }
 
   radios.forEach(function(r) {
     r.addEventListener('change', function() {
-      toggleCreateUser._userTouched = false;
+      if (toggleCreateUser) toggleCreateUser._userTouched = false;
       switchPanel(this.value);
     });
   });
 
-  // Toggle create-user fields
   if (toggleCreateUser) {
     toggleCreateUser._userTouched = false;
     toggleCreateUser.addEventListener('change', function() {
       this._userTouched = true;
-      createUserFields.style.display = this.checked ? '' : 'none';
+      if (createUserFields) createUserFields.style.display = this.checked ? '' : 'none';
     });
   }
 
   // Init
-  var checked = document.querySelector('input[name="member_type"]:checked');
-  if (checked) switchPanel(checked.value);
+  if (radios.length) {
+    var checked = document.querySelector('input[name="member_type"]:checked');
+    if (checked) switchPanel(checked.value);
+  }
 
   // ===== PERMISSIONS PAR RÔLE PROJET =====
   var PROJECT_ROLES_META = {{ project_roles_meta_json|safe }};
@@ -394,8 +449,8 @@ var MEMBER_I18N = {
   var permSection    = document.getElementById('permissions_section');
   var customHint     = document.getElementById('custom_perm_hint');
   var permPresetNote = document.getElementById('perm_preset_note');
+  var permSectionTitle = document.getElementById('perm_section_title');
 
-  // Correspondance nom de champ → clé dans PROJECT_ROLES_META
   var PERM_MAP = {
     'can_manage_members_perm': 'can_manage_members',
     'can_edit_project_perm':   'can_edit_project',
@@ -405,21 +460,16 @@ var MEMBER_I18N = {
     'can_add_comments_perm':   'can_add_comments',
   };
 
-  var permSectionTitle = document.getElementById('perm_section_title');
-
   function applyProjectRolePermissions(roleId) {
     var meta = PROJECT_ROLES_META[roleId];
-
     if (!roleId || !meta) {
-      permSection.style.display = 'none';
+      if (permSection) permSection.style.display = 'none';
       return;
     }
-
-    permSection.style.display = '';
+    if (permSection) permSection.style.display = '';
 
     var isSystem = meta.is_system;
 
-    // Titre + badge
     if (permSectionTitle) {
       permSectionTitle.textContent = isSystem
         ? MEMBER_I18N.roleGivesAccessTo
@@ -443,14 +493,12 @@ var MEMBER_I18N = {
         chk.disabled = true;
         if (lbl) {
           lbl.className = 'mt-perm-label ' + (hasPerm ? 'perm-on' : 'perm-off');
-          lbl.style.opacity = '';
           lbl.title = hasPerm ? MEMBER_I18N.includedInRole : MEMBER_I18N.notIncluded;
         }
       } else {
         chk.disabled = false;
         if (lbl) {
           lbl.className = 'mt-perm-label perm-free';
-          lbl.style.opacity = '';
           lbl.title = '';
         }
       }

@@ -41,6 +41,8 @@ from .models import (
     Employee,
     Milestone,
     Project,
+    ProjectMember,
+    ProjectRole,
     Role,
     SubMilestone,
     UserProfile,
@@ -375,3 +377,36 @@ class LanguagePreferenceTests(SmokeBase):
         self._login(self.employe_user)
         resp = self._get_ok(reverse('core:dashboard'))
         self.assertEqual(resp.cookies.get('django_language').value, 'en')
+
+
+class MemberGroupsTests(SmokeBase):
+    """Onglet Équipe : les membres sont regroupés par rôle projet."""
+
+    def test_equipe_regroupee_par_role(self):
+        responsable = ProjectRole.objects.get(slug='responsable')
+        ProjectMember.objects.create(
+            project=self.project, employee=self.employee, project_role=responsable
+        )
+        self._login(self.admin)
+        resp = self._get_ok(reverse('core:project_detail', args=[self.project.slug]))
+        self.assertContains(resp, 'pm-group-grid')
+        self.assertContains(resp, 'fa-crown')
+        self.assertContains(resp, responsable.name)
+        self.assertContains(resp, self.employee.name)
+
+
+class ProjectMemberFormTests(SmokeBase):
+    """Le formulaire membre (ajout et édition) se rend sans erreur."""
+
+    def test_formulaire_ajout_ne_500_pas(self):
+        self._login(self.admin)
+        self._get_ok(reverse('core:project_member_add', args=[self.project.slug]))
+
+    def test_formulaire_edition_ne_500_pas(self):
+        role = ProjectRole.objects.get(slug='membre')
+        pm = ProjectMember.objects.create(
+            project=self.project, employee=self.employee, project_role=role
+        )
+        self._login(self.admin)
+        resp = self._get_ok(reverse('core:project_member_edit', args=[pm.pk]))
+        self.assertContains(resp, self.employee.name)
