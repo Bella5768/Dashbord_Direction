@@ -236,7 +236,7 @@
                             <span class="topbar-user-name">{{ user.get_full_name|default:user.username }}</span>
                             {% trans "Utilisateur" as default_role %}<span class="topbar-user-role">{{ user.profile.role.name|default:default_role }}</span>
                         </div>
-                        <i class="fa-solid fa-chevron-down" class="topbar-user-chevron" width="14" height="14"></i>
+                        <i class="fa-solid fa-chevron-down topbar-user-chevron" width="14" height="14"></i>
                         <div class="topbar-user-menu" id="topbar-user-menu">
                             <div class="topbar-user-menu-header">
                                 <div class="topbar-avatar topbar-avatar-lg">
