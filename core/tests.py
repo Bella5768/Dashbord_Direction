@@ -39,10 +39,13 @@ from .exchange import CACHE_KEY, DEFAULT_USD_GNF_RATE
 from .models import (
     Direction,
     Employee,
+    Event,
     Milestone,
+    Permission,
     Project,
     ProjectMember,
     ProjectRole,
+    Request,
     Role,
     SubMilestone,
     UserProfile,
@@ -410,3 +413,88 @@ class ProjectMemberFormTests(SmokeBase):
         self._login(self.admin)
         resp = self._get_ok(reverse('core:project_member_edit', args=[pm.pk]))
         self.assertContains(resp, self.employee.name)
+
+
+class FilterDirectionScopeTests(SmokeBase):
+    """Les options du filtre « direction » s'adaptent à la portée réelle du
+    profil : une direction dont aucune ressource n'est visible n'apparaît plus
+    dans le menu, sinon le filtre propose des options qui mènent à du vide."""
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.autre_direction = Direction.objects.create(
+            name='Direction Ailleurs', code='AUT'
+        )
+        cls.employe_ailleurs = Employee.objects.create(
+            name='Employe Ailleurs', role='Analyste', direction=cls.autre_direction
+        )
+
+        # Rôle borné à la direction (ressources RH et demandes).
+        cls.perms_scope = [
+            Permission.objects.get_or_create(
+                action='read', subject='Employee', condition='same_direction'
+            )[0],
+            Permission.objects.get_or_create(
+                action='read', subject='Request', condition='same_direction'
+            )[0],
+        ]
+        cls.role_scoped = Role.objects.create(name='Directeur test', slug='directeur_test')
+        cls.role_scoped.permissions.set(cls.perms_scope)
+
+        cls.dir_scoped = User.objects.create_user('dir_scope_test', password='x')
+        cls.dir_scoped.profile.role = cls.role_scoped
+        cls.dir_scoped.profile.direction = cls.direction
+        cls.dir_scoped.profile.save()
+
+        # Rôle lecture calendrier globale (permet l'accès, le filtre direction
+        # ne liste que les directions qui participent à un événement visible).
+        cls.role_cal = Role.objects.create(name='Agenda test', slug='agenda_test')
+        cls.role_cal.permissions.add(
+            Permission.objects.get_or_create(action='read', subject='Event', condition='')[0]
+        )
+        cls.cal_user = User.objects.create_user('cal_scope_test', password='x')
+        cls.cal_user.profile.role = cls.role_cal
+        cls.cal_user.profile.direction = cls.direction
+        cls.cal_user.profile.save()
+
+    def test_ressources_filtre_direction_scope_direction(self):
+        """RH : un profil borné à sa direction ne voit que sa direction dans
+        le filtre (pas la direction dont les employés sont invisibles)."""
+        self._login(self.dir_scoped)
+        resp = self._get_ok(reverse('core:resources') + '?tab=rh')
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, self.direction.code)
+        self.assertNotContains(resp, self.autre_direction.code)
+
+    def test_requetes_filtre_direction_scope_direction(self):
+        """Demandes : le filtre ne propose que les directions dont une demande
+        est visible."""
+        Request.objects.create(
+            title='Besoin ailleurs', description='…',
+            direction=self.autre_direction, created_by='Autre',
+        )
+        Request.objects.create(
+            title='Besoin maison', description='…',
+            direction=self.direction, created_by='Maison',
+        )
+        self._login(self.dir_scoped)
+        resp = self._get_ok(reverse('core:requests'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, self.direction.code)
+        self.assertNotContains(resp, self.autre_direction.code)
+
+    def test_calendrier_filtre_direction_sans_evenement_invisible(self):
+        """Calendrier : une direction sans aucun événement visible est absente
+        du filtre, même pour un lecteur global."""
+        Event.objects.create(
+            title='Réunion maison', event_type='reunion',
+            date=timezone.now().date() + timedelta(days=7),
+            time=timezone.now().time(),
+        ).participants.add(self.direction)
+        self._login(self.cal_user)
+        resp = self._get_ok(reverse('core:calendar'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, self.direction.code)
+        self.assertNotContains(resp, self.autre_direction.code)

@@ -1139,17 +1139,18 @@ def resources(request):
     total_consumed_usd = round(total_consumed_usd, 2)
     
     # Employees data : scopé sur la portée réelle du droit 'Employee'
-    employees = _apply_read_scope(Employee.objects.select_related('direction'), profile, 'Employee')
+    employees_base = _apply_read_scope(Employee.objects.select_related('direction'), profile, 'Employee')
 
     # Stats globales calculées avant les filtres de recherche
-    avg_workload = employees.aggregate(avg=Avg('workload'))['avg'] or 0
-    overloaded = employees.filter(workload__gte=85).count()
-    employees_count = employees.count()
+    avg_workload = employees_base.aggregate(avg=Avg('workload'))['avg'] or 0
+    overloaded = employees_base.filter(workload__gte=85).count()
+    employees_count = employees_base.count()
 
     # Filtres de recherche RH (n'affectent que la liste, pas les stats)
     rh_search  = request.GET.get('search', '').strip()
     rh_dir     = request.GET.get('dir', '').strip()
     rh_workload = request.GET.get('workload', '').strip()
+    employees = employees_base
     if rh_search:
         employees = employees.filter(name__icontains=rh_search)
     if rh_dir:
@@ -1157,7 +1158,8 @@ def resources(request):
     if rh_workload == 'surcharge':
         employees = employees.filter(workload__gte=85)
 
-    directions = Direction.objects.all()
+    # Filtre direction : uniquement les directions dont des ressources sont visibles
+    directions = Direction.objects.filter(employees__in=employees_base).distinct().order_by('name')
     
     # Employees linked to a user account (for badge display in template)
     employees_with_profile = set(
@@ -1242,9 +1244,10 @@ def requests_view(request):
     direction_filter = request.GET.get('direction', 'all')
     search = request.GET.get('search', '')
 
-    reqs_qs = _request_scope_qs(
+    reqs_base = _request_scope_qs(
         Request.objects.select_related('direction'), profile, request.user
     )
+    reqs_qs = reqs_base
 
     stats = reqs_qs.aggregate(
         total=Count('id'),
@@ -1260,7 +1263,8 @@ def requests_view(request):
     if search:
         reqs_qs = reqs_qs.filter(title__icontains=search)
 
-    directions = Direction.objects.all()
+    # Filtre direction : uniquement les directions dont des demandes sont visibles
+    directions = Direction.objects.filter(requests__in=reqs_base).distinct().order_by('name')
     
     context = {
         'requests': reqs_qs,
@@ -1307,6 +1311,7 @@ def calendar(request):
         Event.objects.prefetch_related('participants').select_related('created_by'),
         request.user.profile, 'Event', direction_lookup='participants__id',
     )
+    _events_base = _base_events
 
     # Filtres (direction, type, mes invitations)
     direction_filter = request.GET.get('direction') or None
@@ -1414,7 +1419,7 @@ def calendar(request):
         'hours': range(7, 19),
         'clashing_ids': clashing_ids,
         'my_rsvp': my_rsvp,
-        'directions': Direction.objects.all(),
+        'directions': Direction.objects.filter(events__in=_events_base).distinct().order_by('name'),
         'current_direction': direction_filter,
         'current_type': type_filter,
         'mine_only': mine_only,
