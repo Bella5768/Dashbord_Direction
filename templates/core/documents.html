@@ -132,14 +132,26 @@
                                     <i class="fa-solid fa-pencil" width="15" height="15"></i>
                                 </a>
                                 {% if doc.status == 'a_valider' %}
-                                <a href="{% url 'core:document_validate' doc.slug|default:doc.pk %}" class="action-btn success" title="{% trans 'Valider' %}">
-                                    <i class="fa-solid fa-circle-check" width="15" height="15"></i>
-                                </a>
+                                <form method="post" action="{% url 'core:document_validate' doc.slug|default:doc.pk %}" style="display:inline;"
+                                      data-confirm="{% trans 'Valider ce document ?' %}"
+                                      data-confirm-title="{% trans 'Confirmation' %}"
+                                      data-confirm-label="{% trans 'Confirmer' %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="action-btn success" title="{% trans 'Valider' %}" style="background:none;border:none;padding:0;cursor:pointer;">
+                                        <i class="fa-solid fa-circle-check" width="15" height="15"></i>
+                                    </button>
+                                </form>
                                 {% endif %}
                                 {% if doc.status == 'a_signer' %}
-                                <a href="{% url 'core:document_sign' doc.slug|default:doc.pk %}" class="action-btn success" title="{% trans 'Signer' %}">
-                                    <i class="fa-solid fa-pen" width="15" height="15"></i>
-                                </a>
+                                <form method="post" action="{% url 'core:document_sign' doc.slug|default:doc.pk %}" style="display:inline;"
+                                      data-confirm="{% trans 'Signer ce document ?' %}"
+                                      data-confirm-title="{% trans 'Confirmation' %}"
+                                      data-confirm-label="{% trans 'Confirmer' %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="action-btn success" title="{% trans 'Signer' %}" style="background:none;border:none;padding:0;cursor:pointer;">
+                                        <i class="fa-solid fa-pen" width="15" height="15"></i>
+                                    </button>
+                                </form>
                                 {% endif %}
                                 <a href="#" class="action-btn danger" title="{% trans 'Supprimer' %}"
                                    data-delete-url="{% url 'core:document_delete' doc.slug|default:doc.pk %}"

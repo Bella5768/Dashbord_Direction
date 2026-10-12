@@ -194,11 +194,13 @@
           {% with is_mine=sub.assigned_to|is_user_employee:user_employee %}
           <div class="msub-row{% if sub.completed %} row-done{% elif is_mine %} row-mine{% endif %}">
             {% if can_edit or is_mine %}
-            <a href="{% url 'core:sub_milestone_toggle' sub.slug|default:sub.pk %}"
-               class="msub-check{% if sub.completed %} done{% endif %}"
-               title="{% if sub.completed %}{% trans 'Marquer non terminée' %}{% else %}{% trans 'Marquer terminée' %}{% endif %}">
-              {% if sub.completed %}<i class="fa-solid fa-check"></i>{% endif %}
-            </a>
+            <form method="post" action="{% url 'core:sub_milestone_toggle' sub.slug|default:sub.pk %}" style="display:contents;">
+              {% csrf_token %}
+              <button type="submit" class="msub-check{% if sub.completed %} done{% endif %}" style="cursor:pointer;"
+                 title="{% if sub.completed %}{% trans 'Marquer non terminée' %}{% else %}{% trans 'Marquer terminée' %}{% endif %}">
+                {% if sub.completed %}<i class="fa-solid fa-check"></i>{% endif %}
+              </button>
+            </form>
             {% else %}
             <span class="msub-check-ro {% if sub.completed %}done{% else %}pending{% endif %}">
               {% if sub.completed %}<i class="fa-solid fa-check"></i>{% endif %}

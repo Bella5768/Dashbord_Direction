@@ -26,7 +26,7 @@ def healthz(request):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('i18n/setlang/', set_language, name='set_language'),
-    path('jsi18n/', JavaScriptCatalog.as_view(), name='javascript-catalog'),
+    path('jsi18n/', JavaScriptCatalog.as_view(domain='django'), name='javascript-catalog'),
     path('healthz/', healthz, name='healthz'),
     path('', include('core.urls')),
 ]

@@ -681,11 +681,13 @@
 
               <!-- Case à cocher / numéro -->
               {% if sub_stats.total == 0 and can_add_milestones or sub_stats.total == 0 and is_my_milestone %}
-              <a href="{% url 'core:milestone_toggle' milestone.slug|default:milestone.pk %}"
-                 class="mrow-check{% if milestone.completed %} done{% endif %}"
-                 title="{% if milestone.completed %}{% trans 'Marquer non terminé' %}{% else %}{% trans 'Marquer terminé' %}{% endif %}">
-                {% if milestone.completed %}<i class="fa-solid fa-check"></i>{% endif %}
-              </a>
+              <form method="post" action="{% url 'core:milestone_toggle' milestone.slug|default:milestone.pk %}" style="display:contents;">
+                {% csrf_token %}
+                <button type="submit" class="mrow-check{% if milestone.completed %} done{% endif %}" style="cursor:pointer;"
+                   title="{% if milestone.completed %}{% trans 'Marquer non terminé' %}{% else %}{% trans 'Marquer terminé' %}{% endif %}">
+                  {% if milestone.completed %}<i class="fa-solid fa-check"></i>{% endif %}
+                </button>
+              </form>
               {% else %}
               <span class="mrow-check num{% if milestone.completed %} done{% endif %}">
                 {% if milestone.completed %}<i class="fa-solid fa-check"></i>{% else %}{{ forloop.counter }}{% endif %}
@@ -785,11 +787,13 @@
             <div class="msub-item{% if is_my_sub and not sub.completed %} mine{% endif %}" data-sid="{{ sub.id }}" data-mid="{{ milestone.id }}">
               <div class="msub-lhs">
                 {% if can_add_milestones or is_my_sub %}
-                <a href="{% url 'core:sub_milestone_toggle' sub.slug|default:sub.pk %}"
-                   class="msub-check{% if sub.completed %} done{% endif %}"
-                   title="{% if sub.completed %}{% trans 'Marquer non terminée' %}{% else %}{% trans 'Marquer terminée' %}{% endif %}">
-                  {% if sub.completed %}<i class="fa-solid fa-check"></i>{% endif %}
-                </a>
+                <form method="post" action="{% url 'core:sub_milestone_toggle' sub.slug|default:sub.pk %}" style="display:contents;">
+                  {% csrf_token %}
+                  <button type="submit" class="msub-check{% if sub.completed %} done{% endif %}" style="cursor:pointer;"
+                     title="{% if sub.completed %}{% trans 'Marquer non terminée' %}{% else %}{% trans 'Marquer terminée' %}{% endif %}">
+                    {% if sub.completed %}<i class="fa-solid fa-check"></i>{% endif %}
+                  </button>
+                </form>
                 {% else %}
                 <span class="msub-check-ro {% if sub.completed %}done{% else %}pending{% endif %}">
                   {% if sub.completed %}<i class="fa-solid fa-check"></i>{% endif %}

@@ -159,13 +159,19 @@
                                 {% endif %}
                                 {% if u != request.user %}
                                 {% if u.is_active or u.has_usable_password %}
-                                <a href="{% url 'core:user_toggle_status' u.id %}" class="action-btn {% if u.is_active %}danger{% else %}success{% endif %}" title="{% if u.is_active %}{% trans 'Désactiver' %}{% else %}{% trans 'Activer' %}{% endif %}">
-                                    {% if u.is_active %}
-                                    <i class="fa-solid fa-ban" ></i>
-                                    {% else %}
-                                    <i class="fa-solid fa-circle-check" ></i>
-                                    {% endif %}
-                                </a>
+                                <form method="post" action="{% url 'core:user_toggle_status' u.id %}" style="display:inline;"
+                                      data-confirm="{% if u.is_active %}{% trans 'Désactiver cet utilisateur ?' %}{% else %}{% trans 'Activer cet utilisateur ?' %}{% endif %}"
+                                      data-confirm-title="{% trans 'Confirmation' %}"
+                                      data-confirm-label="{% trans 'Confirmer' %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="action-btn {% if u.is_active %}danger{% else %}success{% endif %}" title="{% if u.is_active %}{% trans 'Désactiver' %}{% else %}{% trans 'Activer' %}{% endif %}" style="background:none;border:none;padding:0;cursor:pointer;">
+                                        {% if u.is_active %}
+                                        <i class="fa-solid fa-ban" ></i>
+                                        {% else %}
+                                        <i class="fa-solid fa-circle-check" ></i>
+                                        {% endif %}
+                                    </button>
+                                </form>
                                 {% endif %}
                                 <a href="{% url 'core:user_delete' u.id %}" class="action-btn danger" title="{% trans 'Supprimer' %}">
                                     <i class="fa-solid fa-trash-can" ></i>

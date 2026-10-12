@@ -404,7 +404,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function () {
       var due = CSIGV.val('id_due_date');
       if (START && END && due && (CSIGV.compareDate(due, START) < 0 || CSIGV.compareDate(due, END) > 0)) {
-        var msg = "{% trans 'La date du jalon doit être comprise entre %(start)s et %(end)s.' %}"
+        var msg = gettext('La date du jalon doit être comprise entre %(start)s et %(end)s.')
           .replace('%(start)s', START).replace('%(end)s', END);
         return { el: document.getElementById('id_due_date'), msg: msg };
       }

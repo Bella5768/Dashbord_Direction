@@ -292,6 +292,10 @@ class UserProfile(UUIDModel):
         # qui a bien 'manage Budget same_direction'.
         return self._has_permission('manage', 'Budget')
 
+    # Employés
+    def can_view_employees(self):
+        return self._has_permission('read', 'Employee') or self._has_permission('manage', 'Employee')
+
     def can_view_all_budget_directions(self):
         from .ability import Ability
         ab = Ability(self.user)

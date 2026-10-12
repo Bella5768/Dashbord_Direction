@@ -113,14 +113,26 @@
 
             {% if req.status == 'en_attente' and user.profile.can_approve_requests %}
             <div class="flex gap-2">
-                <a href="{% url 'core:request_reject' req.slug|default:req.pk %}" class="btn btn-danger btn-sm">
-                    <i class="fa-solid fa-xmark" width="14" height="14"></i>
-                    {% trans 'Rejeter' %}
-                </a>
-                <a href="{% url 'core:request_approve' req.slug|default:req.pk %}" class="btn btn-primary btn-sm">
-                    <i class="fa-solid fa-check" width="14" height="14"></i>
-                    {% trans 'Approuver' %}
-                </a>
+                <form method="post" action="{% url 'core:request_reject' req.slug|default:req.pk %}"
+                      data-confirm="{% trans 'Rejeter cette demande ?' %}"
+                      data-confirm-title="{% trans 'Confirmation' %}"
+                      data-confirm-label="{% trans 'Confirmer' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm">
+                        <i class="fa-solid fa-xmark" width="14" height="14"></i>
+                        {% trans 'Rejeter' %}
+                    </button>
+                </form>
+                <form method="post" action="{% url 'core:request_approve' req.slug|default:req.pk %}"
+                      data-confirm="{% trans 'Approuver cette demande ?' %}"
+                      data-confirm-title="{% trans 'Confirmation' %}"
+                      data-confirm-label="{% trans 'Confirmer' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="fa-solid fa-check" width="14" height="14"></i>
+                        {% trans 'Approuver' %}
+                    </button>
+                </form>
             </div>
             {% endif %}
         </div>

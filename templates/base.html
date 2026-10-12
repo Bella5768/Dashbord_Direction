@@ -85,10 +85,10 @@
                 </ul>
 
                 <!-- Groupe : Gestion -->
-                {% if user.profile.can_manage_budgets or user.profile.can_view_requests or user.profile.is_directeur or user.profile.can_read_partners or user.profile.is_directeur_general or user.is_staff %}
+                {% if user.profile.can_view_budgets or user.profile.can_view_employees or user.profile.can_view_requests or user.profile.is_directeur or user.profile.can_read_partners or user.profile.is_directeur_general or user.is_staff %}
                 <p class="sidebar-section-label">{% trans 'Gestion' %}</p>
                 <ul class="sidebar-group">
-                    {% if user.profile.can_manage_budgets %}
+                    {% if user.profile.can_view_budgets or user.profile.can_view_employees %}
                     <li>
                         <a href="{% url 'core:resources' %}" {% if request.resolver_match.url_name == 'resources' %}class="active"{% endif %}>
                             <i class="fa-solid fa-credit-card"></i>{% trans 'Ressources' %}

@@ -430,6 +430,7 @@ def _build_activation_link(request, user):
 
 
 from django.views.decorators.cache import never_cache
+from django.views.decorators.http import require_POST
 
 
 @never_cache
@@ -800,6 +801,88 @@ def _project_budget_totals(project_qs):
     return totals, budget_percentage
 
 
+def _scoped_budget_rows(profile, project_qs):
+    """Lignes budgétaires et budgets inline dans le périmètre réel du profil.
+
+    Périmètre identique à la page Ressources : toutes les lignes Budget visibles
+    (y compris les lignes de direction sans projet) + les budgets saisis
+    directement sur les projets accessibles non couverts par une ligne.
+    """
+    budget_rows = _apply_budget_scope(
+        Budget.objects.select_related('project', 'direction'), profile
+    )
+    covered = {b.project_id for b in budget_rows if b.project_id}
+    inline_projects = project_qs.exclude(id__in=covered).filter(
+        Q(budget__gt=0) | Q(budget_consumed__gt=0)
+    )
+    return budget_rows, inline_projects
+
+
+def _budget_totals_for_rows(budget_rows, inline_projects):
+    """Totaux alloué/consommé (GNF + USD) sur des lignes Budget + budgets inline."""
+    totals = {}
+    for currency in ('GNF', 'USD'):
+        allocated = convert_sum(budget_rows, 'allocated', currency) + convert_sum(inline_projects, 'budget', currency)
+        consumed = convert_sum(budget_rows, 'consumed', currency) + convert_sum(inline_projects, 'budget_consumed', currency)
+        totals[currency] = (round(allocated), round(consumed))
+    gnf_allocated, gnf_consumed = totals['GNF']
+    budget_percentage = round((gnf_consumed / gnf_allocated * 100), 1) if gnf_allocated > 0 else 0
+    return totals, budget_percentage
+
+
+def _budget_data_for_rows(budget_rows, inline_projects):
+    """Données du graphique « Budget par projet » à partir de lignes + inline.
+
+    Les lignes de direction sans projet sont agrégées par direction avec un
+    libellé explicite (« <direction> (budget direction) »).
+    """
+    budget_by_entry = {}
+
+    def _new_entry(name):
+        return {'name': name, 'allocated': 0.0, 'consumed': 0.0,
+                'allocated_usd': 0.0, 'consumed_usd': 0.0}
+
+    def _accumulate(key, name, allocated, consumed, currency, rate):
+        entry = budget_by_entry.setdefault(key, _new_entry(name))
+        entry['allocated'] += convert_currency(allocated, currency, 'GNF', rate=rate)
+        entry['consumed'] += convert_currency(consumed, currency, 'GNF', rate=rate)
+        entry['allocated_usd'] += convert_currency(allocated, currency, 'USD', rate=rate)
+        entry['consumed_usd'] += convert_currency(consumed, currency, 'USD', rate=rate)
+
+    for b in budget_rows:
+        if b.project_id:
+            _accumulate(('project', b.project_id),
+                        b.project.name if b.project else 'Projet sans nom',
+                        float(b.allocated or 0), float(b.consumed or 0),
+                        b.currency, b.rate_snapshot)
+        else:
+            dname = b.direction.name if b.direction else 'Direction'
+            _accumulate(('direction', b.direction_id),
+                        '{0} (budget direction)'.format(dname),
+                        float(b.allocated or 0), float(b.consumed or 0),
+                        b.currency, b.rate_snapshot)
+
+    for p in inline_projects:
+        _accumulate(('project', p.id), p.name,
+                    float(p.budget or 0), float(p.budget_consumed or 0),
+                    p.currency, p.rate_snapshot)
+
+    sorted_entries = sorted(budget_by_entry.values(), key=lambda e: e['allocated'], reverse=True)[:10]
+    budget_data = []
+    for entry in sorted_entries:
+        name = entry['name']
+        budget_data.append({
+            'direction': name[:30] + ('…' if len(name) > 30 else ''),
+            'name': name,
+            'color': '#3b82f6',
+            'allocated': round(entry['allocated']),
+            'consumed': round(entry['consumed']),
+            'allocated_usd': round(entry['allocated_usd'], 2),
+            'consumed_usd': round(entry['consumed_usd'], 2),
+        })
+    return budget_data
+
+
 def _dashboard_scope_qs(user, profile, accessible_projects):
     """Retourne les querysets de documents, demandes, partenaires, événements et employés
     visibles depuis le dashboard selon le rôle de l'utilisateur (permissions réelles,
@@ -918,10 +1001,15 @@ def dashboard(request):
 
     accessible_projects = get_accessible_projects_qs(user)
     project_stats = _project_stats(accessible_projects)
-    budget_totals, budget_percentage = _project_budget_totals(accessible_projects)
+    if profile and profile.can_view_budgets():
+        budget_rows, inline_projects = _scoped_budget_rows(profile, accessible_projects)
+        budget_totals, budget_percentage = _budget_totals_for_rows(budget_rows, inline_projects)
+        budget_data = _budget_data_for_rows(budget_rows, inline_projects)
+    else:
+        budget_totals, budget_percentage = _project_budget_totals(accessible_projects)
+        budget_data = _project_budget_data(accessible_projects)
     total_budget, total_consumed = budget_totals['GNF']
     total_budget_usd, total_consumed_usd = budget_totals['USD']
-    budget_data = _project_budget_data(accessible_projects)
 
     # Documents et demandes filtrés par scope accessible
     docs_qs, reqs_qs, partners_qs, events_qs, employees_qs = _dashboard_scope_qs(
@@ -948,10 +1036,11 @@ def dashboard(request):
         role_context['dashboard_title'] = _("Vue de votre direction")
         role_context['show_global_kpis'] = False
         role_context['direction'] = profile.direction if profile else None
-        if employees_qs.exists():
-            avg_workload = employees_qs.aggregate(avg=Avg('workload'))['avg'] or 0
+        direction_employees = Employee.objects.filter(direction_id=direction_id)
+        if direction_employees.exists():
+            avg_workload = direction_employees.aggregate(avg=Avg('workload'))['avg'] or 0
             role_context['avg_workload'] = round(avg_workload, 1)
-            role_context['direction_employees_count'] = employees_qs.count()
+            role_context['direction_employees_count'] = direction_employees.count()
 
     else:
         # Employé / chef de projet
@@ -2746,6 +2835,7 @@ def user_delete(request, user_id):
 
 
 @login_required
+@require_POST
 def user_toggle_status(request, user_id):
     """Activer/Désactiver un utilisateur"""
     User = get_user_model()
@@ -4228,6 +4318,7 @@ def sub_milestone_quick_assign(request, sub_milestone_id):
 
 
 @login_required
+@require_POST
 def sub_milestone_toggle(request, sub_milestone_id):
     """Basculer le statut complété d'une sous-étape.
     Autorisé : utilisateurs avec can_add_project_milestones OU le responsable assigné."""
@@ -4281,6 +4372,7 @@ def sub_milestone_toggle(request, sub_milestone_id):
 
 
 @login_required
+@require_POST
 def milestone_toggle(request, milestone_id):
     """Basculer le statut complété d'un jalon (sans sous-étapes).
     Autorisé : utilisateurs avec can_add_project_milestones OU le responsable assigné."""
@@ -5222,6 +5314,7 @@ def document_delete(request, doc_id):
 
 
 @login_required
+@require_POST
 def document_sign(request, doc_id):
     """Signer un document"""
     if not request.user.profile.can_approve_documents():
@@ -5237,6 +5330,7 @@ def document_sign(request, doc_id):
 
 
 @login_required
+@require_POST
 def document_validate(request, doc_id):
     """Valider un document"""
     if not request.user.profile.can_approve_documents():
@@ -5389,6 +5483,7 @@ def request_create(request):
 
 
 @login_required
+@require_POST
 def request_approve(request, req_id):
     """Approuver une demande"""
     if not request.user.profile.has_approve_requests_permission():
@@ -5408,6 +5503,7 @@ def request_approve(request, req_id):
 
 
 @login_required
+@require_POST
 def request_reject(request, req_id):
     """Rejeter une demande"""
     if not request.user.profile.has_approve_requests_permission():

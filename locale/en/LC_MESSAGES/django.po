@@ -4827,9 +4827,7 @@ msgstr "Download the certificate"
 
 #: .\templates\core\leaves\leave_detail.html:180
 msgid "Cette action est irréversible. La demande sera annulée définitivement."
-msgstr ""
-"This action is irreversible. The request will be permanently cancelled.This "
-"action is irreversible. The request will be permanently cancelled."
+msgstr "This action is irreversible. The request will be permanently cancelled."
 
 #: .\templates\core\leaves\leave_detail.html:181
 msgid "Annuler la demande"
@@ -5976,9 +5974,7 @@ msgstr "Project information"
 
 #: .\templates\core\project_form.html:80
 msgid "Le montant sera automatiquement converti selon le taux de change"
-msgstr ""
-"The amount will be automatically converted according to the exchange rateThe"
-" amount will be automatically converted according to the exchange rate"
+msgstr "The amount will be automatically converted according to the exchange rate"
 
 #: .\templates\core\project_form.html:110
 msgid "Créer le projet"
@@ -6705,10 +6701,7 @@ msgstr "ex: external-project-manager"
 
 #: .\templates\core\roles\role_form.html:39
 msgid "Lettres minuscules, chiffres et tirets. Non modifiable après création."
-msgstr ""
-"Lowercase letters, numbers and hyphens. Cannot be changed after "
-"creation.Lowercase letters, numbers and hyphens. Cannot be changed after "
-"creation."
+msgstr "Lowercase letters, numbers and hyphens. Cannot be changed after creation."
 
 #: .\templates\core\roles\role_form.html:46
 msgid "Décrivez le rôle et son périmètre..."
@@ -8077,3 +8070,47 @@ msgstr "Allocated vs Consumed — Your projects"
 
 msgid "Alloué vs Consommé — Top 10"
 msgstr "Allocated vs Consumed — Top 10"
+
+# Chaînes JS (JavaScriptCatalog domaine 'django')
+msgid " Md GNF"
+msgstr " B GNF"
+
+msgid " M GNF"
+msgstr " M GNF"
+
+msgid " GNF"
+msgstr " GNF"
+
+msgid "Export PDF en cours..."
+msgstr "PDF export in progress..."
+
+msgid "Export Excel en cours..."
+msgstr "Excel export in progress..."
+
+msgid "Rechercher une devise..."
+msgstr "Search for a currency..."
+
+msgid "Aucun résultat trouvé"
+msgstr "No results found"
+
+msgid "Vous n'avez pas accès aux demandes."
+msgstr "You do not have access to requests."
+
+# Confirmations converties en POST (audit sécurité)
+msgid "Désactiver cet utilisateur ?"
+msgstr "Deactivate this user?"
+
+msgid "Activer cet utilisateur ?"
+msgstr "Activate this user?"
+
+msgid "Valider ce document ?"
+msgstr "Validate this document?"
+
+msgid "Signer ce document ?"
+msgstr "Sign this document?"
+
+msgid "Rejeter cette demande ?"
+msgstr "Reject this request?"
+
+msgid "Approuver cette demande ?"
+msgstr "Approve this request?"
