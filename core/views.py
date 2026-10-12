@@ -3962,7 +3962,8 @@ def milestone_edit(request, milestone_id):
         form = MilestoneForm(project=project, instance=milestone)
 
     project_members, other_employees = _get_project_member_cards(project)
-    initial_assignee_ids = list(old_assigned_ids)
+    import json
+    initial_assignee_ids = json.dumps([str(i) for i in old_assigned_ids])
     return render(request, 'core/milestone_form.html', {
         'form': form, 'project': project, 'milestone': milestone,
         'title': f'Modifier {milestone.name}',
@@ -4095,7 +4096,8 @@ def sub_milestone_edit(request, sub_milestone_id):
         form = SubMilestoneForm(milestone=milestone, instance=sub_milestone)
 
     project_members, other_employees = _get_project_member_cards(project)
-    initial_assignee_ids = list(old_assigned_ids)
+    import json
+    initial_assignee_ids = json.dumps([str(i) for i in old_assigned_ids])
     return render(request, 'core/sub_milestone_form.html', {
         'form': form, 'milestone': milestone, 'project': project,
         'sub_milestone': sub_milestone, 'title': f'Modifier "{sub_milestone.name}"',

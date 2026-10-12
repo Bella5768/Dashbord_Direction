@@ -1485,12 +1485,12 @@ var DETAIL_I18N = {
 <!-- ==================== JALONS VUES DYNAMIQUES ==================== -->
 {% if milestones %}
 <script id="milestones-json" type="application/json">
-[{% for m in milestones %}{"id":{{m.id}},"name":"{{m.name|escapejs}}","status":"{{m.status}}","progress":{{m.progress}},"due_date":"{{m.due_date|date:'Y-m-d'|default:''}}","completed":{% if m.completed %}true{% else %}false{% endif %},"order":{{m.order}},"assigned":"{% for emp in m.assigned_to.all %}{{emp.name|escapejs}}{% if not forloop.last %}, {% endif %}{% endfor %}"}{% if not forloop.last %},{% endif %}{% endfor %}]
+[{% for m in milestones %}{"id":"{{m.id}}","name":"{{m.name|escapejs}}","status":"{{m.status}}","progress":{{m.progress}},"due_date":"{{m.due_date|date:'Y-m-d'|default:''}}","completed":{% if m.completed %}true{% else %}false{% endif %},"order":{{m.order}},"assigned":"{% for emp in m.assigned_to.all %}{{emp.name|escapejs}}{% if not forloop.last %}, {% endif %}{% endfor %}"}{% if not forloop.last %},{% endif %}{% endfor %}]
 </script>
 <script>
 // ── Données jalons ──────────────────────────────────────────────────────────
 var MILESTONES_DATA = [{% for m in milestones %}{
-  id:{{m.id}},
+  id:"{{m.id}}",
   name:"{{m.name|escapejs}}",
   status:"{{m.status}}",
   progress:{{m.progress}},

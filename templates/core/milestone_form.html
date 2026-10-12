@@ -340,7 +340,7 @@ document.querySelectorAll('.sp-pill').forEach(function(pill) {
 })();
 
 // Multi-member picker
-var mpSelected = new Set({{ initial_assignee_ids|default:"[]" }}.map(String));
+var mpSelected = new Set({{ initial_assignee_ids|default:"[]"|safe }}.map(String));
 
 function mpSyncHiddenInputs() {
   document.querySelectorAll('input[name="assigned_to"]').forEach(function(el) { el.remove(); });

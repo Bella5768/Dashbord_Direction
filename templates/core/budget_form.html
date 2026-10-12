@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load l10n %}
 
 {% block title %}{{ title }}{% endblock %}
 {% block page_title %}{{ title }}{% endblock %}
@@ -44,7 +45,7 @@
 <script>
 var BUDGET_I18N = { equivalent: "{% trans 'Équivalent' %}" };
 // Taux GNF/USD figé à la création (passé par la vue ; à l'édition : rate_snapshot)
-const RATE_GNF_PER_USD = {{ form_rate|default:8788.75 }};
+const RATE_GNF_PER_USD = {{ form_rate|default:8788.75|unlocalize }};
 
 function convertCurrency(amount, fromCurrency, toCurrency) {
     if (fromCurrency === toCurrency) return amount;
