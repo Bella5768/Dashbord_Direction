@@ -1031,6 +1031,7 @@ def dashboard(request):
     if _is_global_dash:
         role_context['dashboard_title'] = _("Vue d'ensemble de la CSIG")
         role_context['show_global_kpis'] = True
+        role_context['all_employees_count'] = employees_qs.count()
 
     elif _is_director_dash:
         role_context['dashboard_title'] = _("Vue de votre direction")
@@ -1088,6 +1089,7 @@ def dashboard(request):
     if profile:
         rbac_context.update({
             'can_view_budgets': profile.can_view_budgets(),
+            'can_view_employees': profile.can_view_employees(),
             'can_read_partners': profile.can_read_partners(),
             'can_approve_requests': profile.can_approve_requests(),
             'can_view_requests': profile.can_view_requests(),
@@ -1174,11 +1176,24 @@ def projects(request):
 @login_required
 def resources(request):
     """Vue des ressources (budget et RH)"""
-    tab = request.GET.get('tab', 'budget')
-    
-    # Budget data
+    from django.core.exceptions import PermissionDenied
     profile = request.user.profile
     can_view_budgets = profile.can_view_budgets()
+    can_view_employees = profile.can_view_employees()
+
+    # Accès : au moins un des deux modules (Budget ou RH) doit être visible.
+    if not can_view_budgets and not can_view_employees:
+        raise PermissionDenied
+
+    # Onglet par défaut : Budget si le droit existe, sinon RH.
+    tab = request.GET.get('tab') or ('budget' if can_view_budgets else 'rh')
+    # Un onglet demandé hors droits est rabattu sur l'onglet autorisé.
+    if tab == 'budget' and not can_view_budgets:
+        tab = 'rh'
+    if tab == 'rh' and not can_view_employees:
+        tab = 'budget'
+
+    # Budget data
     can_manage_budgets = profile.can_manage_budgets()
     can_view_all_budget_directions = profile.can_view_all_budget_directions()
 

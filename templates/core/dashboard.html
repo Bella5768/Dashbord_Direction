@@ -12,7 +12,7 @@
 <!-- ── KPI Cards ─────────────────────────────────────────────────────────── -->
 <div class="stats-row">
   {% if is_employee_view %}
-    <div class="stat-card stat-card-blue">
+    <a class="stat-card stat-card-blue stat-card-link" href="{% url 'core:projects' %}">
       <div class="stat-card-header">
         <div>
           <p class="stat-card-label">{% trans 'Mes projets' %}</p>
@@ -21,8 +21,8 @@
         </div>
         <div class="stat-card-icon blue"><i class="fa-solid fa-folder"></i></div>
       </div>
-    </div>
-    <div class="stat-card stat-card-amber">
+    </a>
+    <a class="stat-card stat-card-amber stat-card-link" href="{% url 'core:my_tasks' %}">
       <div class="stat-card-header">
         <div>
           <p class="stat-card-label">{% trans 'Mes tâches' %}</p>
@@ -31,7 +31,7 @@
         </div>
         <div class="stat-card-icon amber"><i class="fa-solid fa-list-check"></i></div>
       </div>
-    </div>
+    </a>
     <a class="stat-card stat-card-green stat-card-link" href="{% url 'core:leave_list' %}">
       <div class="stat-card-header">
         <div>
@@ -119,6 +119,18 @@
           <p class="stat-card-subtitle"><span data-money data-gnf="{{ total_consumed|unlocalize }}" data-usd="{{ total_consumed_usd|unlocalize }}">{{ total_consumed|number_format }} GNF</span> <span style="opacity:.75;">(≈ {{ total_consumed_usd|currency_fmt:'USD' }})</span></p>
         </div>
         <div class="stat-card-icon amber"><i class="fa-solid fa-credit-card"></i></div>
+      </div>
+    </a>
+    {% endif %}
+    {% if can_view_employees %}
+    <a class="stat-card stat-card-green stat-card-link" href="{% url 'core:resources' %}?tab=rh">
+      <div class="stat-card-header">
+        <div>
+          <p class="stat-card-label">{% trans 'Employés' %}</p>
+          <p class="stat-card-value">{{ all_employees_count|default:0 }}</p>
+          <p class="stat-card-subtitle">{% trans 'Collaborateurs de la CSIG' %}</p>
+        </div>
+        <div class="stat-card-icon green"><i class="fa-solid fa-users"></i></div>
       </div>
     </a>
     {% endif %}

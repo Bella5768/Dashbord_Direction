@@ -4214,6 +4214,10 @@ msgstr[1] "%(n)s projects in your department"
 msgid "Collaborateurs dans votre direction"
 msgstr "Team members in your department"
 
+#: .\templates\core\dashboard.html:124
+msgid "Collaborateurs de la CSIG"
+msgstr "CSIG team members"
+
 #: .\templates\core\dashboard.html:107 .\templates\core\dashboard.html:216
 #, python-format
 msgid "%(n)s projet au total"
