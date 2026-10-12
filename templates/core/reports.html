@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
 {% load i18n %}
+{% load l10n %}
 
 {% block title %}{% trans 'Rapports' %}{% endblock %}
 {% block page_title %}{% trans 'Rapports et Analyses' %}{% endblock %}
@@ -338,15 +339,15 @@
         <div class="rpt-kpi blue">
             <div class="rpt-kpi-icon"><i class="fa-solid fa-wallet" width="18" height="18"></i></div>
             <div>
-                <p class="rpt-kpi-val" style="font-size:17px;">{{ total_budget|number_format }}</p>
-                <p class="rpt-kpi-lbl">{% trans 'Budget alloué (GNF)' %} · ≈ {{ total_budget_usd|currency_fmt:'USD' }}</p>
+                <p class="rpt-kpi-val" style="font-size:17px;"><span data-money data-gnf="{{ total_budget|unlocalize }}" data-usd="{{ total_budget_usd|unlocalize }}">{{ total_budget|number_format }}</span></p>
+                <p class="rpt-kpi-lbl">{% trans 'Budget alloué' %}</p>
             </div>
         </div>
         <div class="rpt-kpi green">
             <div class="rpt-kpi-icon"><i class="fa-solid fa-arrow-trend-down" width="18" height="18"></i></div>
             <div>
-                <p class="rpt-kpi-val" style="font-size:17px;">{{ total_consumed|number_format }}</p>
-                <p class="rpt-kpi-lbl">{% trans 'Consommé (GNF)' %} · ≈ {{ total_consumed_usd|currency_fmt:'USD' }}</p>
+                <p class="rpt-kpi-val" style="font-size:17px;"><span data-money data-gnf="{{ total_consumed|unlocalize }}" data-usd="{{ total_consumed_usd|unlocalize }}">{{ total_consumed|number_format }}</span></p>
+                <p class="rpt-kpi-lbl">{% trans 'Consommé' %}</p>
             </div>
         </div>
         <div class="rpt-kpi {% if budget_rate > 80 %}red{% elif budget_rate > 60 %}amber{% else %}purple{% endif %}">
@@ -362,6 +363,7 @@
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title">{% trans 'Budget par direction' %}</h3>
+                <div data-currency-switch></div>
             </div>
             <div class="card-content">
                 <div class="chart-container">
@@ -404,8 +406,8 @@
                                 <p class="font-medium">{{ item.direction }}</p>
                                 <p class="text-xs text-gray-500">{{ item.name }}</p>
                             </td>
-                            <td style="text-align:right; font-weight:500;">{{ item.allocated|number_format }} GNF<br><span class="text-xs text-gray-400">≈ {{ item.allocated_usd|currency_fmt:'USD' }}</span></td>
-                            <td style="text-align:right; color:#16a34a;">{{ item.consumed|number_format }} GNF<br><span class="text-xs text-gray-400">≈ {{ item.consumed_usd|currency_fmt:'USD' }}</span></td>
+                            <td style="text-align:right; font-weight:500;"><span data-money data-gnf="{{ item.allocated|unlocalize }}" data-usd="{{ item.allocated_usd|unlocalize }}">{{ item.allocated|number_format }}</span></td>
+                            <td style="text-align:right; color:#16a34a;"><span data-money data-gnf="{{ item.consumed|unlocalize }}" data-usd="{{ item.consumed_usd|unlocalize }}">{{ item.consumed|number_format }}</span></td>
                             <td style="text-align:center;">
                                 <span class="rpt-rate {% if item.rate > 80 %}alert{% elif item.rate > 60 %}warn{% else %}ok{% endif %}">{{ item.rate }}%</span>
                             </td>
@@ -573,26 +575,47 @@ function initBudgetCharts() {
     if (budgetChartsInit) return;
     budgetChartsInit = true;
 
-    const fmtY = v => v >= 1e9 ? (v/1e9).toFixed(1)+' Mrd' : v >= 1e6 ? (v/1e6).toFixed(1)+' M' : v >= 1e3 ? (v/1e3).toFixed(0)+' K' : v;
+    const _bbd_labels   = [{% for item in budget_by_direction %}'{{ item.direction|escapejs }}'{% if not forloop.last %},{% endif %}{% endfor %}];
+    const _bbd_gnfAlloc = [{% for item in budget_by_direction %}{{ item.allocated|unlocalize }}{% if not forloop.last %},{% endif %}{% endfor %}];
+    const _bbd_gnfCons  = [{% for item in budget_by_direction %}{{ item.consumed|unlocalize }}{% if not forloop.last %},{% endif %}{% endfor %}];
+    const _bbd_usdAlloc = [{% for item in budget_by_direction %}{{ item.allocated_usd|unlocalize }}{% if not forloop.last %},{% endif %}{% endfor %}];
+    const _bbd_usdCons  = [{% for item in budget_by_direction %}{{ item.consumed_usd|unlocalize }}{% if not forloop.last %},{% endif %}{% endfor %}];
+    const _bbdIsUsd = () => CSIGMoney.currency === 'USD';
 
-    new Chart(document.getElementById('budgetByDirectionChart'), {
+    const _bbdAllocLabel = '{% trans "Alloué" %}';
+    const _bbdConsLabel  = '{% trans "Consommé" %}';
+
+    const budgetDirChart = new Chart(document.getElementById('budgetByDirectionChart'), {
         type: 'bar',
         data: {
-            labels: [{% for item in budget_by_direction %}'{{ item.direction|escapejs }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+            labels: _bbd_labels,
             datasets: [
-                {
-                    label: '{% trans "Alloué" %}',
-                    data: [{% for item in budget_by_direction %}{{ item.allocated }}{% if not forloop.last %},{% endif %}{% endfor %}],
-                    backgroundColor: '#3b82f6', borderRadius: 4,
-                },
-                {
-                    label: '{% trans "Consommé" %}',
-                    data: [{% for item in budget_by_direction %}{{ item.consumed }}{% if not forloop.last %},{% endif %}{% endfor %}],
-                    backgroundColor: '#10b981', borderRadius: 4,
-                }
+                { label: _bbdAllocLabel, data: _bbdIsUsd() ? _bbd_usdAlloc : _bbd_gnfAlloc, backgroundColor: '#3b82f6', borderRadius: 4 },
+                { label: _bbdConsLabel,  data: _bbdIsUsd() ? _bbd_usdCons  : _bbd_gnfCons,  backgroundColor: '#10b981', borderRadius: 4 }
             ]
         },
-        options: { ...CHART_OPTS, scales: { x: { grid: { display: false } }, y: { ticks: { callback: fmtY } } } }
+        options: {
+            ...CHART_OPTS,
+            plugins: {
+                ...CHART_OPTS.plugins,
+                tooltip: { callbacks: { label: ctx => ctx.dataset.label + ' : ' + CSIGMoney.compact(ctx.parsed.y) } }
+            },
+            scales: {
+                x: { grid: { display: false } },
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: '{% trans "Montant" %} (' + CSIGMoney.currency + ')', font: { size: 11 } },
+                    ticks: { callback: v => CSIGMoney.compactNumber(v) }
+                }
+            }
+        }
+    });
+
+    CSIGMoney.onChange(function () {
+        budgetDirChart.data.datasets[0].data = _bbdIsUsd() ? _bbd_usdAlloc : _bbd_gnfAlloc;
+        budgetDirChart.data.datasets[1].data = _bbdIsUsd() ? _bbd_usdCons  : _bbd_gnfCons;
+        budgetDirChart.options.scales.y.title.text = '{% trans "Montant" %} (' + CSIGMoney.currency + ')';
+        budgetDirChart.update();
     });
 
     new Chart(document.getElementById('budgetConsumptionChart'), {
@@ -600,7 +623,7 @@ function initBudgetCharts() {
         data: {
             labels: [{% for item in budget_by_direction %}'{{ item.direction|escapejs }}'{% if not forloop.last %},{% endif %}{% endfor %}],
             datasets: [{
-                data: [{% for item in budget_by_direction %}{{ item.rate }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                data: [{% for item in budget_by_direction %}{{ item.rate|unlocalize }}{% if not forloop.last %},{% endif %}{% endfor %}],
                 backgroundColor: CHART_COLORS, borderWidth: 0, hoverOffset: 4,
             }]
         },

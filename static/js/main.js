@@ -9,6 +9,147 @@ function getUserLocale() {
     return document.documentElement.lang || 'fr';
 }
 
+// ── Devise & unités (GNF <-> USD) ─────────────────────────────────────────
+// Un switch global « devise » par page pilote tous les montants budget.
+// Unités compactes adaptées à la langue : FR (K, M, Md, Bi) / EN (K, M, B, T).
+window.CSIGMoney = (function () {
+    var STORAGE_KEY = 'csig_currency';
+    var UNIT = {
+        fr: { k: 'K', m: 'M', b: 'Md', t: 'Bi' },
+        en: { k: 'K', m: 'M', b: 'B',  t: 'T'  }
+    };
+    var SUPPORTED = ['GNF', 'USD'];
+
+    function lang() {
+        return ((document.documentElement.lang || 'fr').slice(0, 2).toLowerCase()) === 'en' ? 'en' : 'fr';
+    }
+    function units() { return UNIT[lang()] || UNIT.fr; }
+    function norm(c) { return SUPPORTED.indexOf(c) >= 0 ? c : 'GNF'; }
+    function preferred() {
+        if (window.CSIG_PREFS && window.CSIG_PREFS.currency) return norm(window.CSIG_PREFS.currency);
+        return 'GNF';
+    }
+
+    var _cur = null;
+    function currency() {
+        if (_cur) return _cur;
+        var stored = null;
+        try { stored = localStorage.getItem(STORAGE_KEY); } catch (e) {}
+        _cur = norm(stored || preferred());
+        return _cur;
+    }
+
+    function num(value, digits) {
+        return (Number(value) || 0).toLocaleString(lang(), {
+            minimumFractionDigits: digits, maximumFractionDigits: digits
+        });
+    }
+    function scale(abs) {
+        var u = units();
+        if (abs >= 1e12) return [1e12, u.t];
+        if (abs >= 1e9)  return [1e9,  u.b];
+        if (abs >= 1e6)  return [1e6,  u.m];
+        if (abs >= 1e3)  return [1e3,  u.k];
+        return [1, ''];
+    }
+    function decimalsFor(f) { return f >= 1e9 ? 2 : (f >= 1e6 ? 1 : 0); }
+
+    // « 4,25 Md » (sans devise) — pour les axes de graphes.
+    function compactNumber(value) {
+        var v = Number(value) || 0;
+        var abs = Math.abs(v);
+        var s = scale(abs);
+        var text = num(abs / s[0], s[0] === 1 ? 0 : decimalsFor(s[0]));
+        return (v < 0 ? '-' : '') + text + (s[1] ? ' ' + s[1] : '');
+    }
+    // « 4,25 Md GNF » — pour les tooltips et libellés.
+    function compact(value, cur) {
+        return compactNumber(value) + ' ' + norm(cur || currency());
+    }
+    // « 4 250 000 000 GNF » — montant complet.
+    function full(value, cur) {
+        return num(value, 0) + ' ' + norm(cur || currency());
+    }
+    function format(value, opts) {
+        opts = opts || {};
+        return opts.full ? full(value, opts.currency) : compact(value, opts.currency);
+    }
+
+    // Rend tous les [data-money] selon la devise courante.
+    function apply(root) {
+        root = root || document;
+        var nodes = root.querySelectorAll('[data-money]');
+        for (var i = 0; i < nodes.length; i++) {
+            var el = nodes[i];
+            var gnf = parseFloat(el.getAttribute('data-gnf'));
+            var usd = parseFloat(el.getAttribute('data-usd'));
+            var value = currency() === 'USD' ? usd : gnf;
+            if (isNaN(value)) value = 0;
+            el.textContent = el.getAttribute('data-money') === 'full'
+                ? full(value) : compact(value);
+        }
+    }
+
+    function onChange(fn) {
+        if (typeof fn === 'function') window.addEventListener('csig:curexchange', fn);
+    }
+
+    function set(c) {
+        c = norm(c);
+        if (c === currency()) { apply(); return; }
+        _cur = c;
+        try { localStorage.setItem(STORAGE_KEY, c); } catch (e) {}
+        document.querySelectorAll('[data-currency-switch] .cur-switch-btn').forEach(function (b) {
+            b.classList.toggle('active', b.getAttribute('data-cur') === c);
+        });
+        apply();
+        var detail = { currency: c };
+        var ev;
+        try { ev = new CustomEvent('csig:curexchange', { detail: detail }); }
+        catch (e) { ev = document.createEvent('CustomEvent'); ev.initCustomEvent('csig:curexchange', false, false, detail); }
+        window.dispatchEvent(ev);
+    }
+
+    // Construit les boutons du switch dans chaque [data-currency-switch].
+    function mount(root) {
+        root = root || document;
+        var holders = root.querySelectorAll('[data-currency-switch]');
+        for (var i = 0; i < holders.length; i++) {
+            (function (holder) {
+                if (holder.getAttribute('data-mounted') === '1') return;
+                holder.setAttribute('data-mounted', '1');
+                holder.classList.add('cur-switch');
+                SUPPORTED.forEach(function (c) {
+                    var b = document.createElement('button');
+                    b.type = 'button';
+                    b.className = 'cur-switch-btn' + (c === currency() ? ' active' : '');
+                    b.setAttribute('data-cur', c);
+                    b.textContent = c;
+                    b.addEventListener('click', function () { set(c); });
+                    holder.appendChild(b);
+                });
+            })(holders[i]);
+        }
+    }
+
+    return {
+        get currency() { return currency(); },
+        set: set,
+        onChange: onChange,
+        compact: compact,
+        compactNumber: compactNumber,
+        full: full,
+        format: format,
+        apply: apply,
+        mount: mount
+    };
+})();
+
+document.addEventListener('DOMContentLoaded', function () {
+    window.CSIGMoney.mount();
+    window.CSIGMoney.apply();
+});
+
 function initializeApp() {
     // Add active class to current nav item
     highlightActiveNav();

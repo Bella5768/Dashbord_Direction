@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
 {% load i18n %}
+{% load l10n %}
 
 {% block title %}{% trans 'Ressources' %}{% endblock %}
 {% block page_title %}{% trans 'Suivi des Ressources' %}{% endblock %}
@@ -20,27 +21,30 @@
 </div>
 
 {% if tab == 'budget' %}
+<div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+    <div data-currency-switch></div>
+</div>
 <!-- Budget Stats -->
 <div class="stats-row">
     <div class="stat-box stat-box-static">
         <div class="stat-box-icon"><i class="fa-solid fa-wallet" width="20" height="20"></i></div>
         <div class="stat-box-body">
-            <p class="stat-box-value">{{ total_allocated|number_format }}</p>
-            <p class="stat-box-label">{% trans 'Budget total (GNF)' %} · ≈ {{ total_allocated_usd|currency_fmt:'USD' }}</p>
+            <p class="stat-box-value"><span data-money data-gnf="{{ total_allocated|unlocalize }}" data-usd="{{ total_allocated_usd|unlocalize }}">{{ total_allocated|number_format }}</span></p>
+            <p class="stat-box-label">{% trans 'Budget total' %}</p>
         </div>
     </div>
     <div class="stat-box amber stat-box-static">
         <div class="stat-box-icon"><i class="fa-solid fa-arrow-trend-up" width="20" height="20"></i></div>
         <div class="stat-box-body">
-            <p class="stat-box-value">{{ total_consumed|number_format }}</p>
-            <p class="stat-box-label">{% trans 'Consommé (GNF)' %} · ≈ {{ total_consumed_usd|currency_fmt:'USD' }}</p>
+            <p class="stat-box-value"><span data-money data-gnf="{{ total_consumed|unlocalize }}" data-usd="{{ total_consumed_usd|unlocalize }}">{{ total_consumed|number_format }}</span></p>
+            <p class="stat-box-label">{% trans 'Consommé' %}</p>
         </div>
     </div>
     <div class="stat-box green stat-box-static">
         <div class="stat-box-icon"><i class="fa-solid fa-coins" width="20" height="20"></i></div>
         <div class="stat-box-body">
-            <p class="stat-box-value">{{ total_available|number_format }}</p>
-            <p class="stat-box-label">{% trans 'Disponible (GNF)' %} · ≈ {{ total_available_usd|currency_fmt:'USD' }}</p>
+            <p class="stat-box-value"><span data-money data-gnf="{{ total_available|unlocalize }}" data-usd="{{ total_available_usd|unlocalize }}">{{ total_available|number_format }}</span></p>
+            <p class="stat-box-label">{% trans 'Disponible' %}</p>
         </div>
     </div>
     <div class="stat-box blue stat-box-static">
@@ -126,16 +130,13 @@
                             </div>
                         </td>
                         <td style="text-align: right; font-weight: 500;">
-                            {{ budget.allocated|currency_fmt:budget.currency }}
-                            <br><span class="text-xs text-gray-400">≈ {% if budget.currency == 'GNF' %}{{ budget.allocated_usd|currency_fmt:'USD' }}{% else %}{{ budget.allocated_gnf|number_format }} GNF{% endif %}</span>
+                            <span data-money data-gnf="{{ budget.allocated_gnf|unlocalize }}" data-usd="{{ budget.allocated_usd|unlocalize }}">{{ budget.allocated_gnf|number_format }}</span>
                         </td>
                         <td style="text-align: right; color: #16a34a;">
-                            {{ budget.consumed|currency_fmt:budget.currency }}
-                            <br><span class="text-xs text-gray-400">≈ {% if budget.currency == 'GNF' %}{{ budget.consumed_usd|currency_fmt:'USD' }}{% else %}{{ budget.consumed_gnf|number_format }} GNF{% endif %}</span>
+                            <span data-money data-gnf="{{ budget.consumed_gnf|unlocalize }}" data-usd="{{ budget.consumed_usd|unlocalize }}">{{ budget.consumed_gnf|number_format }}</span>
                         </td>
                         <td style="text-align: right; color: #2563eb;">
-                            {{ budget.available|currency_fmt:budget.currency }}
-                            <br><span class="text-xs text-gray-400">≈ {% if budget.currency == 'GNF' %}{{ budget.available_usd|currency_fmt:'USD' }}{% else %}{{ budget.available_gnf|number_format }} GNF{% endif %}</span>
+                            <span data-money data-gnf="{{ budget.available_gnf|unlocalize }}" data-usd="{{ budget.available_usd|unlocalize }}">{{ budget.available_gnf|number_format }}</span>
                         </td>
                         <td style="text-align: center;">
                             <div class="flex items-center gap-2">
@@ -314,15 +315,17 @@
 // Pie Chart
 const _PIE_PALETTE = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ec4899','#ef4444','#06b6d4','#64748b','#f97316','#84cc16'];
 const _pieLabels = [{% for b in budgets %}'{% if b.project %}{{ b.project.name|escapejs }}{% elif b.direction %}{{ b.direction.code|escapejs }}{% else %}{% trans "Sans affectation" %}{% endif %}'{% if not forloop.last %}, {% endif %}{% endfor %}];
-const _pieData   = [{% for b in budgets %}{{ b.allocated_gnf }}{% if not forloop.last %}, {% endif %}{% endfor %}];
+const _pieDataGnf = [{% for b in budgets %}{{ b.allocated_gnf|unlocalize }}{% if not forloop.last %}, {% endif %}{% endfor %}];
+const _pieDataUsd = [{% for b in budgets %}{{ b.allocated_usd|unlocalize }}{% if not forloop.last %}, {% endif %}{% endfor %}];
 const _pieBg     = _pieLabels.map((_, i) => _PIE_PALETTE[i % _PIE_PALETTE.length]);
 const pieCtx = document.getElementById('budgetPieChart').getContext('2d');
-new Chart(pieCtx, {
+const _isUsd = () => CSIGMoney.currency === 'USD';
+const pieChart = new Chart(pieCtx, {
     type: 'doughnut',
     data: {
         labels: _pieLabels,
         datasets: [{
-            data: _pieData,
+            data: _isUsd() ? _pieDataUsd : _pieDataGnf,
             backgroundColor: _pieBg,
             borderWidth: 0,
         }]
@@ -333,9 +336,14 @@ new Chart(pieCtx, {
         plugins: {
             legend: {
                 position: 'right',
-            }
+            },
+            tooltip: { callbacks: { label: ctx => ctx.label + ' : ' + CSIGMoney.compact(ctx.parsed) } }
         }
     }
+});
+CSIGMoney.onChange(function () {
+    pieChart.data.datasets[0].data = _isUsd() ? _pieDataUsd : _pieDataGnf;
+    pieChart.update();
 });
 
 // Consumption Chart
@@ -346,7 +354,7 @@ new Chart(consumptionCtx, {
         labels: _pieLabels,
         datasets: [{
             label: '{% trans "Taux de consommation" %} (%)',
-            data: [{% for b in budgets %}{{ b.consumption_rate }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+            data: [{% for b in budgets %}{{ b.consumption_rate|unlocalize }}{% if not forloop.last %}, {% endif %}{% endfor %}],
             backgroundColor: _pieBg,
             borderRadius: 4,
         }]

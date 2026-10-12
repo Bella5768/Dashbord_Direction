@@ -313,6 +313,9 @@
     </div>
 
     <script src="{% url 'javascript-catalog' %}"></script>
+    <script>
+    window.CSIG_PREFS = { currency: "{{ user.profile.currency|default:'GNF' }}" };
+    </script>
     <script src="{% static 'js/main.js' %}"></script>
     <script src="{% static 'vendor/chartjs/chart.umd.min.js' %}"></script>
     <script>

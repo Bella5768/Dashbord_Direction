@@ -2706,3 +2706,41 @@ a.calendar-event-pill:hover { opacity: .82; filter: brightness(.95); }
 
 /* Widget invitation RSVP */
 .rsvp-widget-title i         { color: #2563eb; }
+
+/* =====================================================================
+   SWITCH DEVISE GNF / USD (graphes + montants budget)
+   ===================================================================== */
+.cur-switch {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px;
+    gap: 2px;
+    background: var(--gray-100);
+    border: 1px solid var(--gray-200);
+    border-radius: 999px;
+}
+
+.cur-switch-btn {
+    border: none;
+    background: transparent;
+    color: var(--gray-600);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 4px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    line-height: 1.2;
+    transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+.cur-switch-btn:hover { color: var(--gray-800); }
+
+.cur-switch-btn.active {
+    background: #fff;
+    color: var(--primary-700);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.card-header .cur-switch { flex-shrink: 0; }
+

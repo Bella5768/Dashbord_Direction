@@ -8065,3 +8065,15 @@ msgstr "Login account"
 
 msgid "Membre concerné"
 msgstr "Member concerned"
+
+msgid "Montant"
+msgstr "Amount"
+
+msgid "Budget total"
+msgstr "Total budget"
+
+msgid "Alloué vs Consommé — Vos projets"
+msgstr "Allocated vs Consumed — Your projects"
+
+msgid "Alloué vs Consommé — Top 10"
+msgstr "Allocated vs Consumed — Top 10"

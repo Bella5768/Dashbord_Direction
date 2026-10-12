@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
 {% load i18n %}
+{% load l10n %}
 
 {% block title %}{% trans 'Tableau de bord' %}{% endblock %}
 {% block page_title %}{% trans 'Tableau de bord' %}{% endblock %}
@@ -47,7 +48,7 @@
         <div>
           <p class="stat-card-label">{% trans 'Budget consommé' %}</p>
           <p class="stat-card-value">{{ budget_percentage }}%</p>
-          <p class="stat-card-subtitle">{{ total_consumed|number_format }} GNF <span style="opacity:.75;">(≈ {{ total_consumed_usd|currency_fmt:'USD' }})</span></p>
+          <p class="stat-card-subtitle"><span data-money data-gnf="{{ total_consumed|unlocalize }}" data-usd="{{ total_consumed_usd|unlocalize }}">{{ total_consumed|number_format }} GNF</span> <span style="opacity:.75;">(≈ {{ total_consumed_usd|currency_fmt:'USD' }})</span></p>
         </div>
         <div class="stat-card-icon amber"><i class="fa-solid fa-credit-card"></i></div>
       </div>
@@ -82,7 +83,7 @@
         <div>
           <p class="stat-card-label">{% trans 'Budget consommé' %}</p>
           <p class="stat-card-value">{{ budget_percentage }}%</p>
-          <p class="stat-card-subtitle">{{ total_consumed|number_format }} GNF <span style="opacity:.75;">(≈ {{ total_consumed_usd|currency_fmt:'USD' }})</span></p>
+          <p class="stat-card-subtitle"><span data-money data-gnf="{{ total_consumed|unlocalize }}" data-usd="{{ total_consumed_usd|unlocalize }}">{{ total_consumed|number_format }} GNF</span> <span style="opacity:.75;">(≈ {{ total_consumed_usd|currency_fmt:'USD' }})</span></p>
         </div>
         <div class="stat-card-icon amber"><i class="fa-solid fa-credit-card"></i></div>
       </div>
@@ -115,7 +116,7 @@
         <div>
           <p class="stat-card-label">{% trans 'Budget consommé' %}</p>
           <p class="stat-card-value">{{ budget_percentage }}%</p>
-          <p class="stat-card-subtitle">{{ total_consumed|number_format }} GNF <span style="opacity:.75;">(≈ {{ total_consumed_usd|currency_fmt:'USD' }})</span></p>
+          <p class="stat-card-subtitle"><span data-money data-gnf="{{ total_consumed|unlocalize }}" data-usd="{{ total_consumed_usd|unlocalize }}">{{ total_consumed|number_format }} GNF</span> <span style="opacity:.75;">(≈ {{ total_consumed_usd|currency_fmt:'USD' }})</span></p>
         </div>
         <div class="stat-card-icon amber"><i class="fa-solid fa-credit-card"></i></div>
       </div>
@@ -144,9 +145,12 @@
   <div class="card-header">
     <div>
       <h3 class="card-title">{% trans 'Budget par projet' %}</h3>
-      <span class="card-subtitle" style="font-size:12px;color:#6b7280;">{% if is_employee_view %}{% trans 'Alloué vs Consommé — Vos projets (en millions GNF)' %}{% else %}{% trans 'Alloué vs Consommé — Top 10 (en millions GNF)' %}{% endif %}</span>
+      <span class="card-subtitle" style="font-size:12px;color:#6b7280;">{% if is_employee_view %}{% trans 'Alloué vs Consommé — Vos projets' %}{% else %}{% trans 'Alloué vs Consommé — Top 10' %}{% endif %}</span>
     </div>
-    <a href="{% url 'core:resources' %}" class="card-link">{% trans 'Voir détail' %} →</a>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div data-currency-switch></div>
+      <a href="{% url 'core:resources' %}" class="card-link">{% trans 'Voir détail' %} →</a>
+    </div>
   </div>
   <div class="card-content">
     <div class="chart-container" style="position:relative;height:260px;">
@@ -466,8 +470,7 @@ var DASH_I18N = {
   inProgress:  "{% trans 'En cours' %}",
   completed:   "{% trans 'Terminés' %}",
   planned:     "{% trans 'Planifiés' %}",
-  millionsGNF: "{% trans 'Millions GNF' %}",
-  mGNF:        "M GNF",
+  amountAxis:  "{% trans 'Montant' %}",
 };
 (function () {
   const budgetData = JSON.parse(document.getElementById('budget-data-json').textContent || '[]');
@@ -481,13 +484,14 @@ var DASH_I18N = {
     budgetCanvas.style.display = 'none';
     budgetEmpty.style.display  = 'flex';
   } else {
-    new Chart(budgetCanvas.getContext('2d'), {
+    const field = f => budgetData.map(d => CSIGMoney.currency === 'USD' ? d[f + '_usd'] : d[f]);
+    const budgetChart = new Chart(budgetCanvas.getContext('2d'), {
       type: 'bar',
       data: {
         labels: budgetData.map(d => d.direction),
         datasets: [
-          {label:DASH_I18N.allocated, data: budgetData.map(d => d.allocated), backgroundColor:'#3b82f6', borderRadius:5, borderSkipped:false},
-          {label:DASH_I18N.consumed,  data: budgetData.map(d => d.consumed),  backgroundColor:'#10b981', borderRadius:5, borderSkipped:false},
+          {label:DASH_I18N.allocated, data: field('allocated'), backgroundColor:'#3b82f6', borderRadius:5, borderSkipped:false},
+          {label:DASH_I18N.consumed,  data: field('consumed'),  backgroundColor:'#10b981', borderRadius:5, borderSkipped:false},
         ]
       },
       options: {
@@ -497,10 +501,7 @@ var DASH_I18N = {
           legend: {position:'top', labels:{boxWidth:12, font:{size:12}}},
           tooltip: {
             callbacks: {
-              label: ctx => {
-                const v = (ctx.parsed.y || 0).toLocaleString('fr-FR', {maximumFractionDigits:2});
-                return ctx.dataset.label + ' : ' + v + ' ' + DASH_I18N.mGNF;
-              }
+              label: ctx => ctx.dataset.label + ' : ' + CSIGMoney.compact(ctx.parsed.y)
             }
           }
         },
@@ -508,11 +509,18 @@ var DASH_I18N = {
           x: {grid:{display:false}},
           y: {
             beginAtZero: true,
-            title: {display:true, text:DASH_I18N.millionsGNF, font:{size:11}},
-            ticks: {callback: v => v + ' M'}
+            title: {display:true, text:DASH_I18N.amountAxis + ' (' + CSIGMoney.currency + ')', font:{size:11}},
+            ticks: {callback: v => CSIGMoney.compactNumber(v)}
           }
         }
       }
+    });
+
+    CSIGMoney.onChange(function () {
+      budgetChart.data.datasets[0].data = field('allocated');
+      budgetChart.data.datasets[1].data = field('consumed');
+      budgetChart.options.scales.y.title.text = DASH_I18N.amountAxis + ' (' + CSIGMoney.currency + ')';
+      budgetChart.update();
     });
   }
 

@@ -728,27 +728,30 @@ def global_search(request):
 
 def _project_budget_data(project_qs):
     """Calcule les données budget par projet pour un queryset de projets donné.
-    Tous les montants sont convertis en GNF avec le taux figé de chaque ligne."""
+    Montants en GNF et USD (taux figé de chaque ligne)."""
     budget_by_project = {}
     project_ids = set(project_qs.values_list('id', flat=True))
 
+    def _new_entry(name):
+        return {'name': name, 'allocated': 0.0, 'consumed': 0.0,
+                'allocated_usd': 0.0, 'consumed_usd': 0.0}
+
+    def _accumulate(entry, allocated, consumed, currency, rate):
+        entry['allocated'] += convert_currency(allocated, currency, 'GNF', rate=rate)
+        entry['consumed'] += convert_currency(consumed, currency, 'GNF', rate=rate)
+        entry['allocated_usd'] += convert_currency(allocated, currency, 'USD', rate=rate)
+        entry['consumed_usd'] += convert_currency(consumed, currency, 'USD', rate=rate)
+
     # Source 1 : champ budget directement sur le projet
     for p in project_qs.filter(Q(budget__gt=0) | Q(budget_consumed__gt=0)):
-        budget_by_project[p.id] = {
-            'name': p.name,
-            'allocated': convert_currency(float(p.budget or 0), p.currency, 'GNF', rate=p.rate_snapshot),
-            'consumed': convert_currency(float(p.budget_consumed or 0), p.currency, 'GNF', rate=p.rate_snapshot),
-        }
+        entry = budget_by_project.setdefault(p.id, _new_entry(p.name))
+        _accumulate(entry, float(p.budget or 0), float(p.budget_consumed or 0), p.currency, p.rate_snapshot)
 
     # Source 2 : lignes budgétaires rattachées à un projet (somme)
     for b in Budget.objects.filter(project_id__in=project_ids).select_related('project'):
-        entry = budget_by_project.setdefault(b.project_id, {
-            'name': b.project.name if b.project else 'Projet sans nom',
-            'allocated': 0.0,
-            'consumed': 0.0,
-        })
-        entry['allocated'] += convert_currency(float(b.allocated or 0), b.currency, 'GNF', rate=b.rate_snapshot)
-        entry['consumed'] += convert_currency(float(b.consumed or 0), b.currency, 'GNF', rate=b.rate_snapshot)
+        name = b.project.name if b.project else 'Projet sans nom'
+        entry = budget_by_project.setdefault(b.project_id, _new_entry(name))
+        _accumulate(entry, float(b.allocated or 0), float(b.consumed or 0), b.currency, b.rate_snapshot)
 
     sorted_entries = sorted(budget_by_project.values(), key=lambda e: e['allocated'], reverse=True)[:10]
     budget_data = []
@@ -758,8 +761,10 @@ def _project_budget_data(project_qs):
             'direction': name[:30] + ('…' if len(name) > 30 else ''),
             'name': name,
             'color': '#3b82f6',
-            'allocated': entry['allocated'] / 1000000,
-            'consumed': entry['consumed'] / 1000000,
+            'allocated': round(entry['allocated']),
+            'consumed': round(entry['consumed']),
+            'allocated_usd': round(entry['allocated_usd'], 2),
+            'consumed_usd': round(entry['consumed_usd'], 2),
         })
     return budget_data
 
