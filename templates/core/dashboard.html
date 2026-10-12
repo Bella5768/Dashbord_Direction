@@ -67,7 +67,7 @@
     </a>
     {% endif %}
   {% elif is_director %}
-    <div class="stat-card stat-card-blue">
+    <a class="stat-card stat-card-blue stat-card-link" href="{% url 'core:projects' %}">
       <div class="stat-card-header">
         <div>
           <p class="stat-card-label">{% trans 'Projets en cours' %}</p>
@@ -76,9 +76,9 @@
         </div>
         <div class="stat-card-icon blue"><i class="fa-solid fa-folder"></i></div>
       </div>
-    </div>
+    </a>
     {% if can_view_budgets %}
-    <div class="stat-card stat-card-amber">
+    <a class="stat-card stat-card-amber stat-card-link" href="{% url 'core:resources' %}">
       <div class="stat-card-header">
         <div>
           <p class="stat-card-label">{% trans 'Budget consommé' %}</p>
@@ -87,9 +87,9 @@
         </div>
         <div class="stat-card-icon amber"><i class="fa-solid fa-credit-card"></i></div>
       </div>
-    </div>
+    </a>
     {% endif %}
-    <div class="stat-card stat-card-green">
+    <a class="stat-card stat-card-green stat-card-link" href="{% url 'core:resources' %}?tab=rh{% if user.profile.direction_id %}&dir={{ user.profile.direction_id }}{% endif %}">
       <div class="stat-card-header">
         <div>
           <p class="stat-card-label">{% trans 'Employés' %}</p>
@@ -98,7 +98,7 @@
         </div>
         <div class="stat-card-icon green"><i class="fa-solid fa-users"></i></div>
       </div>
-    </div>
+    </a>
   {% else %}
     <a class="stat-card stat-card-blue stat-card-link" href="{% url 'core:projects' %}">
       <div class="stat-card-header">
