@@ -212,7 +212,7 @@
             <span data-proj-pct style="font-size:12px;font-weight:600;color:#374151;white-space:nowrap;">{{ project.progress }}%</span>
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;font-size:11px;color:#64748b;flex-wrap:wrap;gap:4px;">
-            <span>{% trans 'Fin' %} : {{ project.end_date|date:"d/m/Y" }}</span>
+            <span>{% trans 'Fin' %} : {% if project.end_date %}{{ project.end_date|date:"d/m/Y" }}{% else %}{% trans 'Non définie' %}{% endif %}</span>
             <span>{% trans 'Budget consommé' %} : {{ project.budget_percentage }}%</span>
           </div>
         </a>

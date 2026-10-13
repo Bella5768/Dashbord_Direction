@@ -63,10 +63,9 @@ class ProjectForm(forms.ModelForm):
             if _cf_profile and _cf_profile.currency in ('GNF', 'USD'):
                 self.fields['currency'].initial = _cf_profile.currency
 
-        # Si c'est une édition (projet existant), les dates ne sont pas obligatoires
-        if is_edit:
-            self.fields['start_date'].required = False
-            self.fields['end_date'].required = False
+        # Les dates peuvent être inconnues à la création comme à l'édition.
+        self.fields['start_date'].required = False
+        self.fields['end_date'].required = False
         
         # Aide a la saisie : equivalent dans l'autre devise, au taux figé a la creation
         if is_edit and self.instance.currency:

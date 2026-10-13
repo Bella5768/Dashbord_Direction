@@ -820,14 +820,6 @@ msgstr "Supporting documents (JSON)"
 msgid "La date de fin doit être postérieure ou égale à la date de début."
 msgstr "The end date must be after or equal to the start date."
 
-#: .\templates\core\project_form.html
-msgid "La date de début est requise."
-msgstr "The start date is required."
-
-#: .\templates\core\project_form.html
-msgid "La date de fin est requise."
-msgstr "The end date is required."
-
 #: .\core\forms_leave.py:99 .\core\models.py:1433
 msgid "Un congé annuel doit être demandé au moins 15 jours avant le départ."
 msgstr "Annual leave must be requested at least 15 days before departure."

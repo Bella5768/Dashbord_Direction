@@ -609,15 +609,12 @@ class ProjectFormBudgetNegativeTests(SmokeBase):
 
 
 class ProjectFormDateRequiredTests(SmokeBase):
-    """À la création, les dates début/fin sont obligatoires côté serveur.
+    """Les dates début/fin d'un projet peuvent être inconnues à la création
+    (colonnes NULL autorisées depuis la migration dédiée).
 
-    Projet: les modèles ont une clé UUID (default=uuid4), donc self.instance.pk
-    est renseigné dès qu'un objet neuf est instancié. Tester `pk` pour détecter
-    l'édition est faux (« édition » = instance déjà persistée, `_state.adding`).
-    Sans ce fix, end_date peut rester vide à la création et save() lève une
-    IntegrityError NOT NULL → 500. En édition, les dates restent optionnelles
-    et la valeur existante est conservée si on la laisse vide.
-    """
+    Le formulaire accepte donc un projet sans dates, en création comme en
+    édition ; lorsqu'une date est laissée vide à l'édition, la valeur existante
+    est conservée."""
 
     def _post_data(self, **overrides):
         today = timezone.now().date()
@@ -636,24 +633,35 @@ class ProjectFormDateRequiredTests(SmokeBase):
         data.update(overrides)
         return data
 
-    def test_form_dates_requises_a_la_creation(self):
+    def test_dates_optionnelles_a_la_creation(self):
         from .forms_project import ProjectForm
-        form = ProjectForm(data=self._post_data(end_date=''), user=self.admin)
-        self.assertFalse(form.is_valid())
-        self.assertIn('end_date', form.errors)
-        form2 = ProjectForm(data=self._post_data(start_date=''), user=self.admin)
-        self.assertFalse(form2.is_valid())
-        self.assertIn('start_date', form2.errors)
+        form = ProjectForm(data=self._post_data(start_date='', end_date=''), user=self.admin)
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertIsNone(form.cleaned_data['start_date'])
+        self.assertIsNone(form.cleaned_data['end_date'])
 
-    def test_creation_sans_date_de_fin_plus_de_500(self):
+    def test_creation_sans_dates_cree_un_projet(self):
         self._login(self.admin)
         before = Project.objects.count()
         resp = self.client.post(
             reverse('core:project_create'),
-            self._post_data(end_date=''),
+            self._post_data(start_date='', end_date=''),
         )
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(Project.objects.count(), before)
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(Project.objects.count(), before + 1)
+        created = Project.objects.latest('created_at')
+        self.assertIsNone(created.end_date)
+
+    def test_creation_avec_date_de_fin_seule(self):
+        self._login(self.admin)
+        resp = self.client.post(
+            reverse('core:project_create'),
+            self._post_data(start_date=''),
+        )
+        self.assertEqual(resp.status_code, 302)
+        created = Project.objects.latest('created_at')
+        self.assertIsNone(created.start_date)
+        self.assertIsNotNone(created.end_date)
 
     def test_edition_dates_optionnelles_conserve_lexistant(self):
         self._login(self.admin)
