@@ -13,8 +13,12 @@ import re
 
 logger = logging.getLogger(__name__)
 
-LOGO_CID = 'csig_logo'
-LOGO_PATH = os.path.join(settings.BASE_DIR, 'static', 'logocsig.jpg')
+# En-tête et pied officiels du papier en-tête CSIG, découpés du gabarit
+# (assets/templates/letterhead-portrait.jpg) et joints en images inline (CID).
+HEADER_CID = 'csig_header'
+FOOTER_CID = 'csig_footer'
+HEADER_PATH = os.path.join(settings.BASE_DIR, 'assets', 'templates', 'email-header.jpg')
+FOOTER_PATH = os.path.join(settings.BASE_DIR, 'assets', 'templates', 'email-footer.jpg')
 
 
 def _build_from():
@@ -23,21 +27,32 @@ def _build_from():
     return formataddr((sender_name, sender_email)), sender_email
 
 
-def _attach_logo(email):
-    """Attache le logo CSIG en image inline (CID) si disponible."""
-    if not os.path.isfile(LOGO_PATH):
-        return False
-    try:
-        with open(LOGO_PATH, 'rb') as f:
-            img = MIMEImage(f.read(), _subtype='jpeg')
-        img.add_header('Content-ID', f'<{LOGO_CID}>')
-        img.add_header('Content-Disposition', 'inline', filename='logocsig.jpg')
-        email.attach(img)
+def _attach_inline_images(email):
+    """Attache l'en-tête et le pied officiels CSIG en images inline (CID).
+
+    Le corps HTML (``emails/base_email.html``) les référence via
+    ``cid:csig_header`` et ``cid:csig_footer``. Les parties liées (``related``)
+    évitent que les clients mail ne les affichent comme pièces jointes.
+    """
+    attached = False
+    for cid, path, filename in (
+        (HEADER_CID, HEADER_PATH, 'email-header.jpg'),
+        (FOOTER_CID, FOOTER_PATH, 'email-footer.jpg'),
+    ):
+        if not os.path.isfile(path):
+            continue
+        try:
+            with open(path, 'rb') as f:
+                img = MIMEImage(f.read(), _subtype='jpeg')
+            img.add_header('Content-ID', f'<{cid}>')
+            img.add_header('Content-Disposition', 'inline', filename=filename)
+            email.attach(img)
+            attached = True
+        except Exception as e:
+            logger.warning(f"Impossible d'attacher {filename} : {e}")
+    if attached:
         email.mixed_subtype = 'related'
-        return True
-    except Exception as e:
-        logger.warning(f"Impossible d'attacher le logo CSIG : {e}")
-        return False
+    return attached
 
 
 def _send(subject, text_content, html_content, recipient, attachment=None, attachment_filename=None):
@@ -49,7 +64,7 @@ def _send(subject, text_content, html_content, recipient, attachment=None, attac
     }
     email = EmailMultiAlternatives(subject, text_content, from_header, [recipient], headers=headers)
     email.attach_alternative(html_content, 'text/html')
-    _attach_logo(email)
+    _attach_inline_images(email)
     if attachment and attachment_filename:
         email.attach(attachment_filename, attachment, 'application/pdf')
     email.send()

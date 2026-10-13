@@ -30,6 +30,9 @@ RAPPORT_*.md
 # Export de données (généré par migrate_to_neon.py)
 data_export.json
 
+# Exemplaires d'exports générés pour contrôle visuel (tests papier en-tête)
+export_tests/
+
 #ai
 .claude/
 

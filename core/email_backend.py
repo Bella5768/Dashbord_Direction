@@ -6,8 +6,8 @@
   la machine (invalide, avec virgule, sans domaine…). Ce backend force un FQDN
   fixe pour la commande EHLO, indépendamment du réseau ou du WiFi utilisé.
 - ``SESBackend``: backend utilisant l'API Amazon SES (send_raw_email).
-  Gère le HTML, les images inline CID (logo) et les pièces jointes (PDF)
-  tels quels, car le message MIME complet de Django est envoyé.
+  Gère le HTML, les images inline CID (en-tête/pied officiels CSIG) et les
+  pièces jointes (PDF) tels quels, car le message MIME complet de Django est envoyé.
 """
 
 import logging

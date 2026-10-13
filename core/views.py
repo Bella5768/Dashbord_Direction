@@ -21,6 +21,7 @@ from .models import Direction, Project, Document, Partner, Event, EventMember, R
 from .currencies import convert_currency, convert_display, convert_sum, format_currency
 from .exchange import get_usd_gnf_rate
 from .notifs import push_section_refresh, push_project_meta, push_milestone_status
+from . import letterhead
 
 
 def get_sluggable_or_404(model_or_qs, slug_or_pk, **filters):
@@ -2098,6 +2099,27 @@ def reports(request):
     return render(request, 'core/reports.html', context)
 
 
+def _letterhead_export_doc(response, export_type):
+    """Crée un SimpleDocTemplate avec le papier en-tête officiel CSIG.
+
+    Retourne (doc, onpage, available) :
+    - doc : le SimpleDocTemplate cadré sur les marges du gabarit ;
+    - onpage : callback à passer à doc.build pour dessiner le fond sur chaque page ;
+    - available : largeur utile (points) entre marges, pour dimensionner les tableaux.
+    """
+    orientation = letterhead.orientation_for(export_type)
+    size = letterhead.page_size(orientation)
+    m = letterhead.margins(orientation)
+    doc = SimpleDocTemplate(
+        response, pagesize=size,
+        leftMargin=m['left'], rightMargin=m['right'],
+        topMargin=m['top'], bottomMargin=m['bottom'],
+    )
+    onpage = letterhead.letterhead_onpage(orientation)
+    available = size[0] - m['left'] - m['right']
+    return doc, onpage, available
+
+
 @login_required
 def export_employees_pdf(request):
     """Exporter la liste des employés en PDF"""
@@ -2110,7 +2132,7 @@ def export_employees_pdf(request):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="employes_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf"'
     
-    doc = SimpleDocTemplate(response, pagesize=A4, rightMargin=40, leftMargin=40, topMargin=50, bottomMargin=30)
+    doc, onpage, available = _letterhead_export_doc(response, 'employees')
     styles = getSampleStyleSheet()
     story = []
     
@@ -2120,7 +2142,7 @@ def export_employees_pdf(request):
         fontSize=22,
         spaceAfter=20,
         alignment=TA_CENTER,
-        textColor=colors.darkblue
+        textColor=colors.HexColor(letterhead.NAVY)
     )
     
     subtitle_style = ParagraphStyle(
@@ -2137,7 +2159,7 @@ def export_employees_pdf(request):
         fontSize=14,
         spaceAfter=10,
         spaceBefore=15,
-        textColor=colors.darkblue
+        textColor=colors.HexColor(letterhead.NAVY)
     )
     
     # En-tête
@@ -2173,11 +2195,11 @@ def export_employees_pdf(request):
             Paragraph(f'{emp.workload}%', cell_style),
         ])
     
-    col_widths = [1.4*inch, 0.8*inch, 1.3*inch, 1.0*inch, 1.6*inch, 0.6*inch]
+    col_widths = letterhead.fit_col_widths([1.4*inch, 0.8*inch, 1.3*inch, 1.0*inch, 1.6*inch, 0.6*inch], available)
     emp_table = Table(table_data, colWidths=col_widths, repeatRows=1)
     
     table_style = [
-        ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor(letterhead.NAVY)),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
         ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
@@ -2219,9 +2241,9 @@ def export_employees_pdf(request):
                 Paragraph(f'{avg_wl}%', cell_style),
             ])
     
-    dir_table = Table(dir_data, colWidths=[3*inch, 1.2*inch, 1.5*inch], repeatRows=1)
+    dir_table = Table(dir_data, colWidths=letterhead.fit_col_widths([3*inch, 1.2*inch, 1.5*inch], available), repeatRows=1)
     dir_table_style = [
-        ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor(letterhead.NAVY)),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
@@ -2237,7 +2259,7 @@ def export_employees_pdf(request):
     dir_table.setStyle(TableStyle(dir_table_style))
     story.append(dir_table)
     
-    doc.build(story)
+    doc.build(story, onFirstPage=onpage, onLaterPages=onpage)
     return response
 
 
@@ -2290,7 +2312,7 @@ def export_reports_pdf(request):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="rapports_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf"'
     
-    doc = SimpleDocTemplate(response, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=18)
+    doc, onpage, available = _letterhead_export_doc(response, 'reports')
     styles = getSampleStyleSheet()
     story = []
     
@@ -2301,7 +2323,7 @@ def export_reports_pdf(request):
         fontSize=24,
         spaceAfter=30,
         alignment=TA_CENTER,
-        textColor=colors.darkblue
+        textColor=colors.HexColor(letterhead.NAVY)
     )
     
     # Style pour les sous-titres
@@ -2311,7 +2333,7 @@ def export_reports_pdf(request):
         fontSize=16,
         spaceAfter=12,
         spaceBefore=20,
-        textColor=colors.darkblue
+        textColor=colors.HexColor(letterhead.NAVY)
     )
     
     # En-tête
@@ -2331,9 +2353,9 @@ def export_reports_pdf(request):
         ['Documents en attente', str(pending_docs)],
     ]
     
-    kpi_table = Table(kpi_data, colWidths=[3*inch, 1.5*inch])
+    kpi_table = Table(kpi_data, colWidths=letterhead.fit_col_widths([3*inch, 1.5*inch], available))
     kpi_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor(letterhead.NAVY)),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
@@ -2352,9 +2374,9 @@ def export_reports_pdf(request):
     for item in projects_by_direction:
         direction_data.append([item['direction'], str(item['en_cours']), str(item['termine'])])
     
-    direction_table = Table(direction_data, colWidths=[2*inch, 1.5*inch, 1.5*inch])
+    direction_table = Table(direction_data, colWidths=letterhead.fit_col_widths([2*inch, 1.5*inch, 1.5*inch], available))
     direction_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor(letterhead.NAVY)),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
@@ -2373,9 +2395,9 @@ def export_reports_pdf(request):
     for item in projects_by_status:
         status_data.append([item['name'], str(item['value'])])
     
-    status_table = Table(status_data, colWidths=[2.5*inch, 1.5*inch])
+    status_table = Table(status_data, colWidths=letterhead.fit_col_widths([2.5*inch, 1.5*inch], available))
     status_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor(letterhead.NAVY)),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
@@ -2403,9 +2425,9 @@ def export_reports_pdf(request):
             f"{project.budget_percentage}%"
         ])
     
-    projects_table = Table(projects_data, colWidths=[2*inch, 1*inch, 1*inch, 0.8*inch, 1*inch, 1*inch, 0.8*inch])
+    projects_table = Table(projects_data, colWidths=letterhead.fit_col_widths([2*inch, 1*inch, 1*inch, 0.8*inch, 1*inch, 1*inch, 0.8*inch], available))
     projects_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor(letterhead.NAVY)),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
@@ -2419,7 +2441,7 @@ def export_reports_pdf(request):
     story.append(projects_table)
     
     # Construire le PDF
-    doc.build(story)
+    doc.build(story, onFirstPage=onpage, onLaterPages=onpage)
     
     return response
 
@@ -3235,7 +3257,7 @@ def export_project_activities(request, project_id):
         f"attachment; filename=\"{_pdf_name}\"; filename*=UTF-8''{quote(_pdf_name)}"
     )
     
-    doc = SimpleDocTemplate(response, pagesize=A4, topMargin=50, bottomMargin=50)
+    doc, onpage, available = _letterhead_export_doc(response, 'project_activities')
     styles = getSampleStyleSheet()
     
     # Style personnalisé pour le titre
@@ -3276,7 +3298,7 @@ def export_project_activities(request, project_id):
                 activity.description[:50] + '...' if len(activity.description) > 50 else activity.description
             ])
         
-        table = Table(data, colWidths=[80, 90, 100, 200])
+        table = Table(data, colWidths=letterhead.fit_col_widths([80, 90, 100, 200], available))
         table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#3b82f6')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
@@ -3295,7 +3317,7 @@ def export_project_activities(request, project_id):
     else:
         elements.append(Paragraph("Aucune activité enregistrée pour ce projet.", styles['Normal']))
     
-    doc.build(elements)
+    doc.build(elements, onFirstPage=onpage, onLaterPages=onpage)
     return response
 
 

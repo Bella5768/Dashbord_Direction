@@ -1,27 +1,29 @@
-"""Generation du PDF officiel d'attestation de conge - une seule page A4 institutionnelle."""
+"""Generation du PDF officiel d'attestation de conge - une seule page A4 institutionnelle.
+
+Le fond de page (bandeau bleu + pied de page officiels) provient du papier en-tête
+CSIG via le module ``core.letterhead``. L'ancien en-tête/pied maison a été supprimé
+pour éviter tout doublon avec les logos du gabarit.
+"""
 import hashlib
-import os
 from datetime import datetime
 from io import BytesIO
 
-from django.conf import settings
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.units import mm
 from reportlab.lib import colors
+from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
-from reportlab.lib.utils import ImageReader
 from reportlab.graphics.barcode.qr import QrCodeWidget
 from reportlab.graphics.shapes import Drawing
 from reportlab.graphics import renderPDF
 from django.utils.translation import gettext as _, ngettext
 
+from . import letterhead
+
 
 # --- Constantes design ------------------------------------------------------
-PAGE_W, PAGE_H = A4
-MARGIN_X = 18 * mm
-NAVY = colors.HexColor('#0b2545')
+MARGIN_X = letterhead.margins('portrait')['left']  # 25 mm (aligné sur le gabarit)
+NAVY = colors.HexColor(letterhead.NAVY)            # #003366
 NAVY_DARK = colors.HexColor('#06182f')
-GOLD = colors.HexColor('#c9a227')
+GOLD = colors.HexColor(letterhead.GOLD)            # #c9a227
 GREEN = colors.HexColor('#16a34a')
 RED = colors.HexColor('#dc2626')
 GREY_TEXT = colors.HexColor('#1f2937')
@@ -29,7 +31,8 @@ GREY_LIGHT = colors.HexColor('#6b7280')
 GREY_BG = colors.HexColor('#f3f4f6')
 GREY_BORDER = colors.HexColor('#d1d5db')
 
-LOGO_PATH = os.path.join(settings.BASE_DIR, 'static', 'logocsig.jpg')
+# Valeurs par défaut (portrait) ; réaffectées par generate_leave_approval_pdf.
+PAGE_W, PAGE_H = letterhead.page_size('portrait')
 
 
 # --- Code unique ------------------------------------------------------------
@@ -54,47 +57,6 @@ def generate_unique_code(leave):
 
 
 # --- Helpers ----------------------------------------------------------------
-def _draw_state_header(c):
-    """Bandeau du haut : Republique de Guinee + CSIG."""
-    # Bandeau navy
-    c.setFillColor(NAVY)
-    c.rect(0, PAGE_H - 32 * mm, PAGE_W, 32 * mm, fill=1, stroke=0)
-    # Liseret or
-    c.setFillColor(GOLD)
-    c.rect(0, PAGE_H - 33 * mm, PAGE_W, 1 * mm, fill=1, stroke=0)
-
-    # Logo a gauche
-    if os.path.isfile(LOGO_PATH):
-        try:
-            c.drawImage(
-                ImageReader(LOGO_PATH),
-                MARGIN_X, PAGE_H - 28 * mm,
-                width=22 * mm, height=22 * mm,
-                preserveAspectRatio=True, mask='auto',
-            )
-        except Exception:
-            pass
-
-    # Republique au centre / droite
-    c.setFillColor(colors.white)
-    c.setFont('Helvetica-Bold', 11)
-    c.drawString(MARGIN_X + 28 * mm, PAGE_H - 11 * mm, _("REPUBLIQUE DE GUINEE"))
-    c.setFont('Helvetica-Oblique', 8)
-    c.drawString(MARGIN_X + 28 * mm, PAGE_H - 15 * mm, _("Travail - Justice - Solidarite"))
-
-    c.setFont('Helvetica-Bold', 12)
-    c.drawString(MARGIN_X + 28 * mm, PAGE_H - 21 * mm,
-                 _("CITE DES SCIENCES ET DE L'INNOVATION DE GUINEE"))
-    c.setFont('Helvetica', 8)
-    c.setFillColor(colors.HexColor('#cbd5e1'))
-    c.drawString(MARGIN_X + 28 * mm, PAGE_H - 25 * mm,
-                 _("Direction Generale - Centre de Suivi et d'Information de Gestion"))
-
-    # Reference a droite
-    c.setFillColor(colors.white)
-    c.setFont('Helvetica', 8)
-
-
 def _draw_title_band(c, leave):
     """Bande titre du document."""
     y = PAGE_H - 45 * mm
@@ -429,7 +391,7 @@ def _draw_qr_code(c, leave):
     code = generate_unique_code(leave)
     qr_size = 22 * mm
     qr_x = MARGIN_X
-    qr_y = 14 * mm  # juste au-dessus du bandeau navy
+    qr_y = (letterhead.footer_mm(ORIENTATION) + 4) * mm  # au-dessus du pied officiel
 
     qr = QrCodeWidget(code, barLevel='M')
     bounds = qr.getBounds()
@@ -454,28 +416,6 @@ def _draw_qr_code(c, leave):
                  _("de ce document aupres de la Direction Generale CSIG."))
 
 
-def _draw_footer(c, leave):
-    """Pied de page institutionnel."""
-    # Liseret or en bas
-    c.setFillColor(GOLD)
-    c.rect(0, 12 * mm, PAGE_W, 0.6 * mm, fill=1, stroke=0)
-    c.setFillColor(NAVY)
-    c.rect(0, 0, PAGE_W, 12 * mm, fill=1, stroke=0)
-
-    c.setFillColor(colors.white)
-    c.setFont('Helvetica-Bold', 8)
-    c.drawString(MARGIN_X, 7 * mm, _("Cite des Sciences et de l'Innovation de Guinee (CSIG)"))
-    c.setFont('Helvetica', 7.5)
-    c.setFillColor(colors.HexColor('#cbd5e1'))
-    c.drawString(MARGIN_X, 3.5 * mm,
-                 _("Document officiel genere par le systeme de gestion des conges - CSIG Dashboard"))
-
-    c.setFillColor(colors.white)
-    c.setFont('Helvetica-Oblique', 7.5)
-    c.drawRightString(PAGE_W - MARGIN_X, 5 * mm,
-                      _("Page 1/1  -  {code}").format(code=generate_unique_code(leave)))
-
-
 def _draw_watermark(c, leave):
     """Watermark diagonal en arriere plan."""
     c.saveState()
@@ -489,30 +429,42 @@ def _draw_watermark(c, leave):
 
 
 # --- API publique -----------------------------------------------------------
-def generate_leave_approval_pdf(leave, output_path=None):
-    """Genere le PDF officiel d'attestation de conge sur une seule page A4."""
+ORIENTATION = letterhead.orientation_for('leave_attestation')
+
+
+def generate_leave_approval_pdf(leave, output_path=None, orientation=None):
+    """Genere le PDF officiel d'attestation de conge sur une seule page A4.
+
+    ``orientation`` vaut par defaut l'orientation configuree pour ce type d'export.
+    """
+    global PAGE_W, PAGE_H, MARGIN_X, ORIENTATION
+    ORIENTATION = orientation or letterhead.orientation_for('leave_attestation')
+    PAGE_W, PAGE_H = letterhead.page_size(ORIENTATION)
+    MARGIN_X = letterhead.margins(ORIENTATION)['left']
+
     if output_path is None:
         buffer = BytesIO()
-        c = canvas.Canvas(buffer, pagesize=A4)
+        c = canvas.Canvas(buffer, pagesize=(PAGE_W, PAGE_H))
     else:
-        c = canvas.Canvas(output_path, pagesize=A4)
+        c = canvas.Canvas(output_path, pagesize=(PAGE_W, PAGE_H))
 
     c.setTitle(_("Attestation de conge - {name} - {id}").format(name=leave.employee.name, id=leave.id))
     c.setAuthor(_("CSIG - Direction Generale"))
     c.setSubject(_("Attestation officielle de conge"))
 
+    # Fond officiel (bandeau + pied du gabarit), derriere le texte
+    letterhead.draw_letterhead(c, ORIENTATION)
+
     # Watermark en fond
     _draw_watermark(c, leave)
 
-    # Composition
-    _draw_state_header(c)
+    # Composition (sans en-tete/pied maison : evite le doublon avec le gabarit)
     _draw_title_band(c, leave)
     _draw_info_box(c, leave)
     _draw_motif(c, leave)
     table_bottom_y = _draw_workflow(c, leave)
     _draw_decision_stamp(c, leave, table_bottom_y)
     _draw_qr_code(c, leave)
-    _draw_footer(c, leave)
 
     c.showPage()
     c.save()
