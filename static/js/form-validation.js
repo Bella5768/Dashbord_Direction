@@ -95,10 +95,13 @@
   };
 
   /* Validation du formulaire au submit.
-     checks : tableau de fonctions -> { el, msg, cls } | null */
-  CSIGV.wire = function (form, checks) {
+     checks : tableau de fonctions -> { el, msg, cls } | null
+     opts.skip : fonction(event) -> true pour laisser passer la soumission
+                 (ex. bouton d'action secondaire comme la suppression d'avatar). */
+  CSIGV.wire = function (form, checks, opts) {
     if (!form) return;
     form.addEventListener('submit', function (e) {
+      if (opts && typeof opts.skip === 'function' && opts.skip(e)) return;
       CSIGV.clearErrors(form);
       var valid = true;
       checks.forEach(function (check) {

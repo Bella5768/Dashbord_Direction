@@ -562,3 +562,252 @@ class ReportsDirecteurScopeTests(SmokeBase):
         self.assertTrue(resp.content.startswith(b'%PDF'))
         # Le contenu du PDF ne doit pas nommer un projet d'une autre direction.
         self.assertNotIn(b'Projet Beta Rapport', resp.content)
+
+
+class ProjectFormBudgetNegativeTests(SmokeBase):
+    """Le budget d'un projet ne peut pas être négatif (alignement client/serveur).
+
+    project_form.html refuse une valeur négative côté client ; ce test vérifie
+    que ProjectForm.clean_budget / clean_budget_consumed appliquent la même règle
+    côté serveur (et gardent 0 lorsque le champ est vide)."""
+
+    def _form_data(self, **overrides):
+        today = timezone.now().date()
+        data = {
+            'name': 'Projet Budget Test',
+            'direction': self.direction.pk,
+            'status': 'en_cours',
+            'priority': 'moyenne',
+            'currency': 'GNF',
+            'start_date': (today - timedelta(days=1)).isoformat(),
+            'end_date': (today + timedelta(days=10)).isoformat(),
+            'manager_employee': self.employee.pk,
+            'budget': '1000',
+            'budget_consumed': '500',
+        }
+        data.update(overrides)
+        return data
+
+    def test_budget_negatif_rejete(self):
+        from .forms_project import ProjectForm
+        form = ProjectForm(data=self._form_data(budget='-1'), user=self.admin)
+        self.assertFalse(form.is_valid())
+        self.assertIn('budget', form.errors)
+
+    def test_budget_consomme_negatif_rejete(self):
+        from .forms_project import ProjectForm
+        form = ProjectForm(data=self._form_data(budget_consumed='-1'), user=self.admin)
+        self.assertFalse(form.is_valid())
+        self.assertIn('budget_consumed', form.errors)
+
+    def test_budget_vide_devient_zero(self):
+        from .forms_project import ProjectForm
+        form = ProjectForm(data=self._form_data(budget='', budget_consumed=''), user=self.admin)
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data['budget'], 0)
+        self.assertEqual(form.cleaned_data['budget_consumed'], 0)
+
+
+class ProjectFormDateRequiredTests(SmokeBase):
+    """À la création, les dates début/fin sont obligatoires côté serveur.
+
+    Projet: les modèles ont une clé UUID (default=uuid4), donc self.instance.pk
+    est renseigné dès qu'un objet neuf est instancié. Tester `pk` pour détecter
+    l'édition est faux (« édition » = instance déjà persistée, `_state.adding`).
+    Sans ce fix, end_date peut rester vide à la création et save() lève une
+    IntegrityError NOT NULL → 500. En édition, les dates restent optionnelles
+    et la valeur existante est conservée si on la laisse vide.
+    """
+
+    def _post_data(self, **overrides):
+        today = timezone.now().date()
+        data = {
+            'name': 'Projet sans date de fin',
+            'direction': self.direction.pk,
+            'status': 'en_cours',
+            'priority': 'moyenne',
+            'currency': 'GNF',
+            'start_date': (today - timedelta(days=1)).isoformat(),
+            'end_date': (today + timedelta(days=10)).isoformat(),
+            'manager_employee': self.employee.pk,
+            'budget': '0',
+            'budget_consumed': '0',
+        }
+        data.update(overrides)
+        return data
+
+    def test_form_dates_requises_a_la_creation(self):
+        from .forms_project import ProjectForm
+        form = ProjectForm(data=self._post_data(end_date=''), user=self.admin)
+        self.assertFalse(form.is_valid())
+        self.assertIn('end_date', form.errors)
+        form2 = ProjectForm(data=self._post_data(start_date=''), user=self.admin)
+        self.assertFalse(form2.is_valid())
+        self.assertIn('start_date', form2.errors)
+
+    def test_creation_sans_date_de_fin_plus_de_500(self):
+        self._login(self.admin)
+        before = Project.objects.count()
+        resp = self.client.post(
+            reverse('core:project_create'),
+            self._post_data(end_date=''),
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(Project.objects.count(), before)
+
+    def test_edition_dates_optionnelles_conserve_lexistant(self):
+        self._login(self.admin)
+        before = (self.project.start_date, self.project.end_date)
+        resp = self.client.post(
+            reverse('core:project_edit', args=[self.project.slug]),
+            self._post_data(name=self.project.name, start_date='', end_date=''),
+        )
+        self.assertEqual(resp.status_code, 302)
+        self.project.refresh_from_db()
+        self.assertEqual((self.project.start_date, self.project.end_date), before)
+
+
+class ValidationCrashGuardsTests(SmokeBase):
+    """Aucune erreur de validation ne doit produire un 500 (audit validation).
+
+    Même racine que ProjectFormDateRequiredTests : les clés UUID (default=uuid4)
+    rendent self.instance.pk toujours vrai. Toute logique création/édition qui
+    teste `pk` au lieu de `_state.adding` fait passer une soumission invalide
+    puis save() lève IntegrityError (NOT NULL ou unique_together) → 500 au lieu
+    d'un re-rendu du formulaire avec les erreurs.
+    """
+
+    def test_membre_sans_employe_retourne_formulaire(self):
+        self._login(self.admin)
+        before = ProjectMember.objects.count()
+        resp = self.client.post(
+            reverse('core:project_member_add', args=[self.project.slug]),
+            {'employee': '', 'project_role': ''},
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(ProjectMember.objects.count(), before)
+
+    def test_membre_duplique_retourne_formulaire(self):
+        role = ProjectRole.objects.get(slug='membre')
+        ProjectMember.objects.create(project=self.project, employee=self.employee, project_role=role)
+        self._login(self.admin)
+        before = ProjectMember.objects.count()
+        resp = self.client.post(
+            reverse('core:project_member_add', args=[self.project.slug]),
+            {'employee': self.employee.pk, 'project_role': role.pk},
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(ProjectMember.objects.count(), before)
+
+    def test_membre_valide_se_creer(self):
+        role = ProjectRole.objects.get(slug='membre')
+        self._login(self.admin)
+        resp = self.client.post(
+            reverse('core:project_member_add', args=[self.project.slug]),
+            {'employee': self.employee.pk, 'project_role': role.pk},
+        )
+        self.assertEqual(resp.status_code, 302)
+        self.assertTrue(ProjectMember.objects.filter(project=self.project, employee=self.employee).exists())
+
+    def test_milestone_ordre_auto_incremente_a_la_creation(self):
+        from .forms_project import MilestoneForm
+        form = MilestoneForm(project=self.project)
+        self.assertEqual(form.fields['order'].initial, self.leaf.order + 1)
+
+    def test_leave_prefill_employe_direction_a_la_creation(self):
+        from .forms_leave import LeaveRequestForm
+        form = LeaveRequestForm(user=self.employe_user)
+        self.assertEqual(form.initial.get('employee'), self.employee.pk)
+        self.assertEqual(form.initial.get('direction'), self.direction.pk)
+
+
+class ValidationCrashGuardsHttpTests(SmokeBase):
+    """Aucune donnée invalide envoyée par un client ne doit produire un 500 :
+    formulaire invalide → re-rendu/erreur propre, jamais IntegrityError ou
+    ValidationError non maîtrisée (audit validation views)."""
+
+    def _milestone_post(self, **overrides):
+        data = {
+            'name': 'Jalon invariant',
+            'due_date': (timezone.now().date() + timedelta(days=6)).isoformat(),
+            'need': '',
+            'status': 'en_cours',
+            'manual_progress': '',
+            'completed': '',
+            'order': '1',
+        }
+        data.update(overrides)
+        return data
+
+    def test_membre_edit_sans_employe_conserve_existant(self):
+        role = ProjectRole.objects.get(slug='membre')
+        member = ProjectMember.objects.create(
+            project=self.project, employee=self.employee, project_role=role
+        )
+        self._login(self.admin)
+        before = member.employee_id
+        resp = self.client.post(
+            reverse('core:project_member_edit', args=[member.pk]),
+            {'employee': '', 'project_role': role.pk},
+        )
+        self.assertEqual(resp.status_code, 302)
+        member.refresh_from_db()
+        self.assertEqual(member.employee_id, before)
+
+    def test_direction_delete_protegee_retourne_404_ou_message(self):
+        from .models import LeaveRequest
+        LeaveRequest.objects.create(
+            employee=self.employee, direction=self.direction, leave_type='annuel',
+            start_date=timezone.now().date() + timedelta(days=20),
+            end_date=timezone.now().date() + timedelta(days=24),
+            reason='Audit',
+        )
+        self._login(self.admin)
+        resp = self.client.post(reverse('core:direction_delete', args=[self.direction.slug]))
+        self.assertEqual(resp.status_code, 302)
+        self.assertTrue(Direction.objects.filter(pk=self.direction.pk).exists())
+
+    def test_activation_avec_deux_comptes_same_email_pas_de_500(self):
+        User.objects.create_user('inactif_a', email=self.employee.email, is_active=False)
+        User.objects.create_user('inactif_b', email=self.employee.email, is_active=False)
+        resp = self.client.post(reverse('core:request_new_activation'), {'email': self.employee.email})
+        self.assertEqual(resp.status_code, 200)
+
+    def test_milestone_assigned_to_invalide_pas_de_500(self):
+        self._login(self.admin)
+        before = Milestone.objects.count()
+        resp = self.client.post(
+            reverse('core:milestone_create', args=[self.project.slug]),
+            self._milestone_post(assigned_to=['pas-un-uuid', 'non-plus']),
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(Milestone.objects.count(), before)
+
+    def test_milestone_edit_assigned_to_invalide_pas_de_500(self):
+        self._login(self.admin)
+        resp = self.client.post(
+            reverse('core:milestone_edit', args=[self.leaf.slug]),
+            self._milestone_post(name=self.leaf.name, assigned_to=['invalide']),
+        )
+        self.assertEqual(resp.status_code, 200)
+
+    def test_import_json_malforme_pas_de_500(self):
+        self._login(self.admin)
+        resp = self.client.post(
+            reverse('core:project_import'),
+            {'step': 'import_json', 'json_text': '{"pas": "une liste"}', 'direction_id': ''},
+        )
+        self.assertEqual(resp.status_code, 200)
+
+    def test_import_json_direction_id_invalide_pas_de_500(self):
+        self._login(self.admin)
+        resp = self.client.post(
+            reverse('core:project_import'),
+            {'step': 'import_json', 'json_text': '[]', 'direction_id': 'abc'},
+        )
+        self.assertLess(resp.status_code, 500)
+
+    def test_slug_non_uuid_retourne_404(self):
+        self._login(self.admin)
+        resp = self.client.get(reverse('core:project_detail', args=['zzz-pas-un-uuid']))
+        self.assertEqual(resp.status_code, 404)

@@ -25,6 +25,11 @@ class ProjectForm(forms.ModelForm):
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
+        # « Édition » = instance déjà persistée. On ne peut pas tester
+        # self.instance.pk : les modèles ont une clé UUID (default=uuid4),
+        # donc pk est renseigné dès la création d'un objet neuf. Seul
+        # _state.adding distingue un nouvel objet d'un objet existant.
+        is_edit = not self.instance._state.adding
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
         self.fields['currency'].widget.attrs['class'] = 'form-control select-searchable'
@@ -53,18 +58,18 @@ class ProjectForm(forms.ModelForm):
         self.fields['budget_consumed'].widget.attrs['placeholder'] = _('0')
         
         # Devise par defaut : preference du profil (creation uniquement)
-        if not (self.instance and self.instance.pk):
+        if not is_edit:
             _cf_profile = getattr(user, 'profile', None) if user else None
             if _cf_profile and _cf_profile.currency in ('GNF', 'USD'):
                 self.fields['currency'].initial = _cf_profile.currency
 
         # Si c'est une édition (projet existant), les dates ne sont pas obligatoires
-        if self.instance and self.instance.pk:
+        if is_edit:
             self.fields['start_date'].required = False
             self.fields['end_date'].required = False
         
         # Aide a la saisie : equivalent dans l'autre devise, au taux figé a la creation
-        if self.instance and self.instance.pk and self.instance.currency:
+        if is_edit and self.instance.currency:
             _other = self.instance.equiv_currency
             if self.instance.budget:
                 self.fields['budget'].help_text = _("Équivalent: %(amount)s") % {
@@ -76,26 +81,34 @@ class ProjectForm(forms.ModelForm):
                 }
     
     def clean_budget(self):
-        """Budget optionnel : valeur par defaut 0 si vide"""
+        """Budget optionnel : valeur par defaut 0 si vide, jamais négatif."""
         value = self.cleaned_data.get('budget')
-        return value if value is not None else 0
+        if value is None:
+            return 0
+        if value < 0:
+            raise forms.ValidationError(_("Le budget alloué ne peut pas être négatif."))
+        return value
 
     def clean_budget_consumed(self):
-        """Budget consomme optionnel : valeur par defaut 0 si vide"""
+        """Budget consomme optionnel : valeur par defaut 0 si vide, jamais négatif."""
         value = self.cleaned_data.get('budget_consumed')
-        return value if value is not None else 0
+        if value is None:
+            return 0
+        if value < 0:
+            raise forms.ValidationError(_("Le budget consommé ne peut pas être négatif."))
+        return value
 
     def clean_start_date(self):
         """Si pas de date fournie en édition, garder l'existante"""
         date = self.cleaned_data.get('start_date')
-        if not date and self.instance and self.instance.pk:
+        if not date and not self.instance._state.adding:
             return self.instance.start_date
         return date
     
     def clean_end_date(self):
         """Si pas de date fournie en édition, garder l'existante"""
         date = self.cleaned_data.get('end_date')
-        if not date and self.instance and self.instance.pk:
+        if not date and not self.instance._state.adding:
             return self.instance.end_date
         return date
 
@@ -160,7 +173,7 @@ class MilestoneForm(forms.ModelForm):
         self.fields['manual_progress'].help_text = _("Utilisé uniquement si le jalon n'a pas de sous-étapes")
         if project:
             # Auto-incrémenter l'ordre si nouveau jalon
-            if not self.instance.pk:
+            if self.instance._state.adding:
                 max_order = project.milestones.aggregate(Max('order'))['order__max']
                 self.fields['order'].initial = (max_order or 0) + 1
 
@@ -199,7 +212,7 @@ class SubMilestoneForm(forms.ModelForm):
                 field.widget.attrs['class'] = 'form-control'
         if milestone:
             # Auto-incrémenter l'ordre si nouvelle sous-étape
-            if not self.instance.pk:
+            if self.instance._state.adding:
                 max_order = milestone.sub_milestones.aggregate(Max('order'))['order__max']
                 self.fields['order'].initial = (max_order or 0) + 1
 
@@ -241,7 +254,7 @@ class ProjectFolderForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.project = project
         # Filter parent folders to only show folders from the same project
-        if self.instance and self.instance.pk:
+        if not self.instance._state.adding:
             self.fields['parent'].queryset = ProjectFolder.objects.filter(project=project).exclude(pk=self.instance.pk)
         else:
             self.fields['parent'].queryset = ProjectFolder.objects.filter(project=project)
@@ -281,7 +294,10 @@ class ProjectMemberForm(forms.ModelForm):
     def __init__(self, project, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.project = project
-        self._is_edit = bool(self.instance and self.instance.pk)
+        # Détection édition via _state.adding, pas via pk (clé UUID renseignée
+        # dès la création) : sinon employee devient optionnel à l'ajout et un
+        # membre peut être créé sans employé → IntegrityError NOT NULL → 500.
+        self._is_edit = not self.instance._state.adding
         # Employee obligatoire à la création, optionnel en édition (déjà fixé)
         self.fields['employee'].required = not self._is_edit
         self.fields['project_role'].required = False
@@ -319,9 +335,28 @@ class ProjectMemberForm(forms.ModelForm):
 
     def clean_employee(self):
         employee = self.cleaned_data.get('employee')
-        if not self._is_edit and not employee:
-            raise forms.ValidationError(_("Veuillez sélectionner un employé."))
+        if not employee:
+            # Édition : conserver l'employé existant si le champ est laissé vide.
+            # La colonne employee est NOT NULL — un None lèverait IntegrityError
+            # (500) au save, d'autant que le champ est volontairement non requis
+            # en édition pour pouvoir changer uniquement le rôle.
+            if not self.instance._state.adding:
+                employee = self.instance.employee
+            if not employee:
+                raise forms.ValidationError(_("Veuillez sélectionner un employé."))
         return employee
+
+    def clean(self):
+        cleaned = super().clean()
+        employee = cleaned.get('employee')
+        project = self.project
+        if employee and project:
+            qs = ProjectMember.objects.filter(project=project, employee=employee)
+            if self._is_edit:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                self.add_error('employee', _("Cet employé est déjà membre de ce projet."))
+        return cleaned
 
 
 class ProjectNeedForm(forms.ModelForm):
@@ -450,12 +485,12 @@ class BudgetForm(forms.ModelForm):
         self.fields['direction'].empty_label = _("-- Aucune direction --")
         self.fields['currency'].widget.attrs['class'] = 'form-control select-searchable'
         # Devise par defaut : preference du profil (creation uniquement)
-        if not (self.instance and self.instance.pk):
+        if self.instance._state.adding:
             _bc_profile = getattr(user, 'profile', None) if user else None
             if _bc_profile and _bc_profile.currency in ('GNF', 'USD'):
                 self.fields['currency'].initial = _bc_profile.currency
         # Aide a la saisie : equivalent dans l'autre devise, au taux figé a la creation
-        if self.instance and self.instance.pk and self.instance.currency:
+        if not self.instance._state.adding and self.instance.currency:
             _other = self.instance.equiv_currency
             if self.instance.allocated:
                 self.fields['allocated'].help_text = _("Équivalent: %(amount)s") % {

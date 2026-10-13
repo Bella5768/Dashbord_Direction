@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load static %}
 
 {% block title %}{% trans 'Mon profil' %}{% endblock %}
 {% block page_title %}{% trans 'Mon profil' %}{% endblock %}
@@ -60,7 +61,7 @@
       <h3 class="card-title">{% trans 'Informations personnelles' %}</h3>
     </div>
     <div class="card-content">
-      <form method="post" novalidate>
+      <form method="post" id="profileForm" novalidate>
         {% csrf_token %}
 
         <!-- Avatar upload -->
@@ -229,5 +230,50 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }, 500);
 });
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/form-validation.js' %}"></script>
+<script>
+(function () {
+  var form = document.getElementById('profileForm');
+  if (!form) return;
+
+  var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  var checks = [
+    function () {
+      if (!CSIGV.val('first_name')) {
+        return { el: document.getElementById('first_name'), msg: "{% trans 'Le prénom est requis.' %}" };
+      }
+      return null;
+    },
+    function () {
+      if (!CSIGV.val('last_name')) {
+        return { el: document.getElementById('last_name'), msg: "{% trans 'Le nom est requis.' %}" };
+      }
+      return null;
+    },
+    function () {
+      var em = CSIGV.val('email');
+      if (!em) {
+        return { el: document.getElementById('email'), msg: "{% trans 'Veuillez saisir votre adresse email.' %}" };
+      }
+      if (!EMAIL_RE.test(em)) {
+        return { el: document.getElementById('email'), msg: "{% trans 'Adresse email invalide.' %}" };
+      }
+      return null;
+    }
+  ];
+
+  /* La suppression d'avatar est un bouton submit : ne pas la bloquer. */
+  CSIGV.wire(form, checks, {
+    skip: function (e) {
+      return !!(e.submitter && e.submitter.name === 'remove_avatar');
+    }
+  });
+  CSIGV.live(['first_name', 'last_name', 'email'], checks);
+})();
 </script>
 {% endblock %}

@@ -820,6 +820,14 @@ msgstr "Supporting documents (JSON)"
 msgid "La date de fin doit être postérieure ou égale à la date de début."
 msgstr "The end date must be after or equal to the start date."
 
+#: .\templates\core\project_form.html
+msgid "La date de début est requise."
+msgstr "The start date is required."
+
+#: .\templates\core\project_form.html
+msgid "La date de fin est requise."
+msgstr "The end date is required."
+
 #: .\core\forms_leave.py:99 .\core\models.py:1433
 msgid "Un congé annuel doit être demandé au moins 15 jours avant le départ."
 msgstr "Annual leave must be requested at least 15 days before departure."
@@ -941,6 +949,18 @@ msgstr "Search for an employee..."
 #: .\core\forms_project.py:315
 msgid "Veuillez sélectionner un employé."
 msgstr "Please select an employee."
+
+#: .\core\forms_project.py:342
+msgid "Cet employé est déjà membre de ce projet."
+msgstr "This employee is already a member of this project."
+
+#: .\core\views.py:2604
+msgid "Impossible de supprimer cette direction : des demandes de congé y sont rattachées."
+msgstr "Cannot delete this direction: leave requests are attached to it."
+
+#: .\core\views.py:3496
+msgid "le JSON doit être une liste de projets."
+msgstr "the JSON must be a list of projects."
 
 #: .\core\forms_project.py:388 .\core\models.py:992
 msgid "La date de début de collaboration ne peut pas être dans le futur."
@@ -5552,6 +5572,18 @@ msgstr "Optional."
 #: .\templates\core\profile.html:180 .\templates\core\users\form.html:156
 msgid "Enregistrer les modifications"
 msgstr "Save changes"
+
+#: .\templates\core\profile.html:234
+msgid "Le prénom est requis."
+msgstr "First name is required."
+
+#: .\templates\core\profile.html:234
+msgid "Le nom est requis."
+msgstr "Last name is required."
+
+#: .\templates\core\profile.html:234
+msgid "Adresse email invalide."
+msgstr "Invalid email address."
 
 # Project detail page
 #: .\templates\core\project_detail.html:7

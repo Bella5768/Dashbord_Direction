@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load static %}
 
 {% block title %}{{ title }}{% endblock %}
 {% block page_title %}{{ title }}{% endblock %}
@@ -63,7 +64,7 @@
         </div>
         {% endif %}
 
-        <form method="post">
+        <form method="post" id="eventForm">
             {% csrf_token %}
 
             <div class="form-group">
@@ -160,7 +161,45 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'js/form-validation.js' %}"></script>
 <script>
+/* ── Validation côté client (mirroir de EventForm.clean_*) ── */
+(function() {
+    var form = document.getElementById('eventForm');
+    if (!form) return;
+
+    var ORIG_DATE = "{% if event %}{{ event.date|date:'Y-m-d' }}{% endif %}";
+
+    var checks = [
+        function () {
+            var d = CSIGV.val('id_date');
+            if (d && CSIGV.compareDate(d, CSIGV.today()) < 0 && d !== ORIG_DATE) {
+                return { el: document.getElementById('id_date'),
+                         msg: "{% trans 'La date ne peut pas être dans le passé.' %}" };
+            }
+            return null;
+        },
+        function () {
+            var v = CSIGV.val('id_duration');
+            if (v === '') return null;
+            var n = Number(v);
+            if (isNaN(n)) return null;
+            if (n < 5) {
+                return { el: document.getElementById('id_duration'),
+                         msg: "{% trans 'La durée minimale est de 5 minutes.' %}" };
+            }
+            if (n > 1440) {
+                return { el: document.getElementById('id_duration'),
+                         msg: "{% trans 'La durée maximale est de 24h (1440 min).' %}" };
+            }
+            return null;
+        }
+    ];
+
+    CSIGV.wire(form, checks);
+    CSIGV.live(['id_date', 'id_duration'], checks);
+})();
+
 /* ── Direction picker ── */
 (function() {
     var sel = document.getElementById('id_participants');

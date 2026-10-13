@@ -2,8 +2,8 @@ from django.utils.translation import gettext as _
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.http import JsonResponse, HttpResponse
-from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Sum, Count, Avg, Q, Case, When, IntegerField
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.db.models import Sum, Count, Avg, Q, Case, When, IntegerField, ProtectedError
 from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
@@ -35,8 +35,39 @@ def get_sluggable_or_404(model_or_qs, slug_or_pk, **filters):
     qs = model_or_qs.objects.all() if hasattr(model_or_qs, '_meta') else model_or_qs
     obj = qs.filter(slug=value, **filters).first()
     if obj is None:
-        obj = get_object_or_404(qs, pk=value, **filters)
+        try:
+            obj = get_object_or_404(qs, pk=value, **filters)
+        except ValidationError:
+            # pk attendu en UUID : une chaîne non-UUID lèverait ValidationError
+            # au lieu d'un 404 (les clés sont des UUID sur ce projet).
+            from django.http import Http404
+            raise Http404
     return obj
+
+
+def _resolve_employee_ids(raw_ids):
+    """Résout une liste brute d'identifiants POST en employés réels.
+
+    Un identifiant non-UUID passait filter(pk__in=...) → ValidationError → 500,
+    alors qu'une donnée invalide envoyée par le client doit juste être ignorée."""
+    ids = [v for v in (raw_ids or []) if v]
+    if not ids:
+        return []
+    try:
+        return list(Employee.objects.filter(pk__in=ids))
+    except ValidationError:
+        return []
+
+
+def _safe_direction(direction_id):
+    """Résout un identifiant de direction envoyé par le client (peut être
+    invalide) sans jamais lever de 500 (UUID attendu)."""
+    if not direction_id:
+        return None
+    try:
+        return Direction.objects.filter(pk=direction_id).first()
+    except ValidationError:
+        return None
 
 
 def log_project_activity(project, action, description, user, context=None):
@@ -2601,7 +2632,11 @@ def direction_delete(request, direction_id):
     direction = get_sluggable_or_404(Direction, direction_id)
     
     if request.method == 'POST':
-        direction.delete()
+        try:
+            direction.delete()
+        except ProtectedError:
+            messages.error(request, _("Impossible de supprimer cette direction : des demandes de congé y sont rattachées."))
+            return redirect('core:directions_list')
         messages.success(request, _("Direction supprimée."))
         return redirect('core:directions_list')
     
@@ -2984,10 +3019,10 @@ def request_new_activation(request):
         if not email:
             form_error = _("Veuillez saisir votre adresse email.")
         else:
-            try:
-                user = DjangoUser.objects.get(email__iexact=email, is_active=False)
-            except DjangoUser.DoesNotExist:
-                user = None
+            # Un slug d'url ne doit jamais produire de 500 : plusieurs comptes
+            # inactifs peuvent partager le même email (email n'est pas unique),
+            # et .first() évite MultipleObjectsReturned.
+            user = DjangoUser.objects.filter(email__iexact=email, is_active=False).first()
 
             # Envoyer seulement si le compte est réellement en attente
             if user is not None and not user.has_usable_password():
@@ -3421,7 +3456,7 @@ def project_import(request):
             import json as _json
             json_text = _json.dumps(projects_data, ensure_ascii=False, indent=2)
 
-            direction_obj = Direction.objects.filter(pk=direction_id).first() if direction_id else None
+            direction_obj = _safe_direction(direction_id)
             return render(request, 'core/project_import.html', {
                 'step': 'json_preview',
                 'json_text': json_text,
@@ -3436,13 +3471,13 @@ def project_import(request):
             import json as _json
             json_text    = request.POST.get('json_text', '')
             direction_id = request.POST.get('direction_id', '')
-            direction    = Direction.objects.filter(pk=direction_id).first() if direction_id else None
+            direction    = _safe_direction(direction_id)
 
             try:
                 projects_data = _json.loads(json_text)
             except _json.JSONDecodeError as e:
                 messages.error(request, _("JSON invalide : %(error)s") % {'error': e})
-                direction_obj = Direction.objects.filter(pk=direction_id).first() if direction_id else None
+                direction_obj = _safe_direction(direction_id)
                 return render(request, 'core/project_import.html', {
                     'step': 'json_preview',
                     'json_text': json_text,
@@ -3452,94 +3487,126 @@ def project_import(request):
                     'count': 0,
                 })
 
+            if not isinstance(projects_data, list):
+                messages.error(request,
+                    _("Erreur de lecture : %(error)s") % {
+                        'error': _("le JSON doit être une liste de projets."),
+                    })
+                return render(request, 'core/project_import.html', {
+                    'step': 'json_preview',
+                    'json_text': json_text,
+                    'direction': direction,
+                    'direction_id': direction_id,
+                    'directions': directions,
+                    'count': 0,
+                })
+
             existing_lower = {n.lower() for n in Project.objects.values_list('name', flat=True)}
             created_count = skipped_count = 0
 
-            for item in projects_data:
-                name = str(item.get('name', '')).strip()
-                if not name:
-                    continue
-                if name.lower() in existing_lower:
-                    skipped_count += 1
-                    continue
-
-                # Dates
-                try:
-                    start_date = datetime.strptime(item.get('start_date', ''), '%Y-%m-%d').date()
-                except (ValueError, TypeError):
-                    start_date = today
-                try:
-                    end_date = datetime.strptime(item.get('end_date', ''), '%Y-%m-%d').date()
-                    if end_date <= start_date:
-                        raise ValueError
-                except (ValueError, TypeError):
-                    end_date = _date(start_date.year + 1, start_date.month, start_date.day)
-
-                VALID_PRIORITIES = {'basse', 'moyenne', 'haute'}
-                priority = item.get('priority', 'moyenne')
-                if priority not in VALID_PRIORITIES:
-                    priority = 'moyenne'
-
-                VALID_STATUSES = {'planifie', 'en_cours', 'suspendu', 'termine'}
-                status = item.get('status', 'planifie')
-                if status not in VALID_STATUSES:
-                    status = 'planifie'
-
-                project = Project.objects.create(
-                    name=name,
-                    manager=str(item.get('manager', ''))[:100],
-                    description=item.get('description', ''),
-                    priority=priority,
-                    status=status,
-                    direction=direction,
-                    start_date=start_date,
-                    end_date=end_date,
-                )
-                existing_lower.add(name.lower())
-
-                # Jalons
-                for order, ms in enumerate(item.get('milestones', []), start=1):
-                    ms_name = str(ms.get('name', '')).strip()
-                    if not ms_name:
+            try:
+                for item in projects_data:
+                    if not isinstance(item, dict):
                         continue
+                    name = str(item.get('name', '')).strip()
+                    if not name:
+                        continue
+                    if name.lower() in existing_lower:
+                        skipped_count += 1
+                        continue
+
+                    # Dates
                     try:
-                        ms_due = datetime.strptime(ms.get('due_date', ''), '%Y-%m-%d').date()
-                        if ms_due < start_date or ms_due > end_date:
-                            ms_due = end_date
+                        start_date = datetime.strptime(item.get('start_date', ''), '%Y-%m-%d').date()
                     except (ValueError, TypeError):
-                        ms_due = end_date
+                        start_date = today
+                    try:
+                        end_date = datetime.strptime(item.get('end_date', ''), '%Y-%m-%d').date()
+                        if end_date <= start_date:
+                            raise ValueError
+                    except (ValueError, TypeError):
+                        end_date = _date(start_date.year + 1, start_date.month, start_date.day)
 
-                    VALID_MS_STATUSES = {'a_faire', 'en_cours', 'bloque', 'en_revision', 'termine'}
-                    ms_status = ms.get('status', 'a_faire')
-                    if ms_status not in VALID_MS_STATUSES:
-                        ms_status = 'a_faire'
-                    ms_completed = ms_status == 'termine'
+                    VALID_PRIORITIES = {'basse', 'moyenne', 'haute'}
+                    priority = item.get('priority', 'moyenne')
+                    if priority not in VALID_PRIORITIES:
+                        priority = 'moyenne'
 
-                    milestone = Milestone.objects.create(
-                        project=project,
-                        name=ms_name,
-                        due_date=ms_due,
-                        status=ms_status,
-                        completed=ms_completed,
-                        order=order,
+                    VALID_STATUSES = {'planifie', 'en_cours', 'suspendu', 'termine'}
+                    status = item.get('status', 'planifie')
+                    if status not in VALID_STATUSES:
+                        status = 'planifie'
+
+                    project = Project.objects.create(
+                        name=name,
+                        manager=str(item.get('manager', ''))[:100],
+                        description=item.get('description', ''),
+                        priority=priority,
+                        status=status,
+                        direction=direction,
+                        start_date=start_date,
+                        end_date=end_date,
                     )
-                    # Sous-étapes
-                    for sub_order, sub_name in enumerate(ms.get('sub_milestones', []), start=1):
-                        sub_name = str(sub_name).strip()
-                        if sub_name:
-                            SubMilestone.objects.create(
-                                milestone=milestone,
-                                name=sub_name,
-                                order=sub_order,
-                            )
+                    existing_lower.add(name.lower())
 
-                log_project_activity(
-                    project, 'creation',
-                    "Import JSON : création du projet '%(name)s'",
-                    request.user,
-                    context={'name': project.name},
-                )
-                created_count += 1
+                    # Jalons
+                    milestones = item.get('milestones') if isinstance(item.get('milestones'), list) else []
+                    for order, ms in enumerate(milestones, start=1):
+                        if not isinstance(ms, dict):
+                            continue
+                        ms_name = str(ms.get('name', '')).strip()
+                        if not ms_name:
+                            continue
+                        try:
+                            ms_due = datetime.strptime(ms.get('due_date', ''), '%Y-%m-%d').date()
+                            if ms_due < start_date or ms_due > end_date:
+                                ms_due = end_date
+                        except (ValueError, TypeError):
+                            ms_due = end_date
+
+                        VALID_MS_STATUSES = {'a_faire', 'en_cours', 'bloque', 'en_revision', 'termine'}
+                        ms_status = ms.get('status', 'a_faire')
+                        if ms_status not in VALID_MS_STATUSES:
+                            ms_status = 'a_faire'
+                        ms_completed = ms_status == 'termine'
+
+                        milestone = Milestone.objects.create(
+                            project=project,
+                            name=ms_name,
+                            due_date=ms_due,
+                            status=ms_status,
+                            completed=ms_completed,
+                            order=order,
+                        )
+                        # Sous-étapes
+                        sub_milestones = ms.get('sub_milestones') if isinstance(ms.get('sub_milestones'), list) else []
+                        for sub_order, sub_name in enumerate(sub_milestones, start=1):
+                            sub_name = str(sub_name).strip()
+                            if sub_name:
+                                SubMilestone.objects.create(
+                                    milestone=milestone,
+                                    name=sub_name,
+                                    order=sub_order,
+                                )
+
+                    log_project_activity(
+                        project, 'creation',
+                        "Import JSON : création du projet '%(name)s'",
+                        request.user,
+                        context={'name': project.name},
+                    )
+                    created_count += 1
+            except Exception as exc:
+                messages.error(request,
+                    _("Erreur de lecture : %(error)s") % {'error': exc})
+                return render(request, 'core/project_import.html', {
+                    'step': 'json_preview',
+                    'json_text': json_text,
+                    'direction': direction,
+                    'direction_id': direction_id,
+                    'directions': directions,
+                    'count': 0,
+                })
 
             if created_count:
                 messages.success(request,
@@ -4018,8 +4085,7 @@ def milestone_create(request, project_id):
             milestone = form.save(commit=False)
             milestone.project = project
             milestone.save()
-            assigned_ids = request.POST.getlist('assigned_to')
-            assigned_emps = list(Employee.objects.filter(pk__in=assigned_ids)) if assigned_ids else []
+            assigned_emps = _resolve_employee_ids(request.POST.getlist('assigned_to'))
             if assigned_emps:
                 milestone.assigned_to.set(assigned_emps)
                 milestone.assigned_by = request.user
@@ -4066,8 +4132,7 @@ def milestone_edit(request, milestone_id):
         if form.is_valid():
             milestone = form.save(commit=False)
             milestone.save()
-            assigned_ids = request.POST.getlist('assigned_to')
-            assigned_emps = list(Employee.objects.filter(pk__in=assigned_ids)) if assigned_ids else []
+            assigned_emps = _resolve_employee_ids(request.POST.getlist('assigned_to'))
             milestone.assigned_to.set(assigned_emps)
             new_assigned_ids = {emp.id for emp in assigned_emps}
             newly_added_ids = new_assigned_ids - old_assigned_ids
@@ -4149,8 +4214,7 @@ def sub_milestone_create(request, milestone_id):
             sub_milestone = form.save(commit=False)
             sub_milestone.milestone = milestone
             sub_milestone.save()
-            assigned_ids = request.POST.getlist('assigned_to')
-            assigned_emps = list(Employee.objects.filter(pk__in=assigned_ids)) if assigned_ids else []
+            assigned_emps = _resolve_employee_ids(request.POST.getlist('assigned_to'))
             if assigned_emps:
                 sub_milestone.assigned_to.set(assigned_emps)
                 sub_milestone.assigned_by = request.user
@@ -4200,8 +4264,7 @@ def sub_milestone_edit(request, sub_milestone_id):
         if form.is_valid():
             sub_milestone = form.save(commit=False)
             sub_milestone.save()
-            assigned_ids = request.POST.getlist('assigned_to')
-            assigned_emps = list(Employee.objects.filter(pk__in=assigned_ids)) if assigned_ids else []
+            assigned_emps = _resolve_employee_ids(request.POST.getlist('assigned_to'))
             sub_milestone.assigned_to.set(assigned_emps)
             new_assigned_ids = {emp.id for emp in assigned_emps}
             newly_added_ids = new_assigned_ids - old_assigned_ids
@@ -4285,7 +4348,7 @@ def milestone_quick_assign(request, milestone_id):
     if emp_id:
         try:
             emp = Employee.objects.get(pk=emp_id)
-        except Employee.DoesNotExist:
+        except (Employee.DoesNotExist, ValidationError):
             return JsonResponse({'ok': False, 'error': 'Employé introuvable'}, status=400)
         if milestone.assigned_to.filter(pk=emp_id).exists():
             milestone.assigned_to.remove(emp)
@@ -4327,7 +4390,7 @@ def sub_milestone_quick_assign(request, sub_milestone_id):
     if emp_id:
         try:
             emp = Employee.objects.get(pk=emp_id)
-        except Employee.DoesNotExist:
+        except (Employee.DoesNotExist, ValidationError):
             return JsonResponse({'ok': False, 'error': 'Employé introuvable'}, status=400)
         if sub.assigned_to.filter(pk=emp_id).exists():
             sub.assigned_to.remove(emp)
@@ -5066,7 +5129,10 @@ def project_member_add(request, project_id):
             project_role_obj = None
             if project_role_id:
                 from .models import ProjectRole
-                project_role_obj = ProjectRole.objects.filter(pk=project_role_id).first()
+                try:
+                    project_role_obj = ProjectRole.objects.filter(pk=project_role_id).first()
+                except ValidationError:
+                    project_role_obj = None
 
             errors = []
             # Validation/normalisation du téléphone

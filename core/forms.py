@@ -155,7 +155,12 @@ class UserUpdateForm(forms.ModelForm):
         user = super().save(commit=False)
         if commit:
             user.save()
-            profile = user.profile
+            # Un profil absent (suppression manuelle) ne doit pas faire crasher
+            # la sauvegarde : on le recrée pour rester cohérent avec le signal
+            # post_save qui garantit normalement un profil par compte.
+            profile = UserProfile.objects.filter(user=user).first()
+            if profile is None:
+                profile = UserProfile(user=user)
             profile.role = self.cleaned_data.get('role')
             profile.direction = self.cleaned_data.get('direction')
             profile.employee = self.cleaned_data.get('employee')

@@ -58,7 +58,7 @@ class LeaveRequestForm(forms.ModelForm):
                     if profile.direction_id:
                         self.fields['direction'].queryset = Direction.objects.filter(id=profile.direction_id)
 
-                if not self.instance.pk:
+                if self.instance._state.adding:
                     if profile.employee_id and not self.initial.get('employee'):
                         self.initial['employee'] = profile.employee_id
                     if profile.direction_id and not self.initial.get('direction'):
