@@ -14,7 +14,7 @@ from reportlab.lib.pagesizes import letter, A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, KeepTogether
 from reportlab.pdfgen import canvas
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 from .models import Direction, Project, Document, Partner, Event, EventMember, Request, Employee, Budget, UserProfile, UserActivity, ProjectMember, Milestone, SubMilestone, ProjectNeed, ProjectComment, ProjectDocument, ProjectFolder, ProjectActivity, Role, ProjectRole, LeaveRequest, User
@@ -2226,7 +2226,7 @@ def export_employees_pdf(request):
             Paragraph(f'{emp.workload}%', cell_style),
         ])
     
-    col_widths = letterhead.fit_col_widths([1.4*inch, 0.8*inch, 1.3*inch, 1.0*inch, 1.6*inch, 0.6*inch], available)
+    col_widths = letterhead.fit_col_widths([2.3*inch, 1.2*inch, 1.7*inch, 1.1*inch, 2.6*inch, 0.7*inch], available)
     emp_table = Table(table_data, colWidths=col_widths, repeatRows=1)
     
     table_style = [
@@ -2272,7 +2272,7 @@ def export_employees_pdf(request):
                 Paragraph(f'{avg_wl}%', cell_style),
             ])
     
-    dir_table = Table(dir_data, colWidths=letterhead.fit_col_widths([3*inch, 1.2*inch, 1.5*inch], available), repeatRows=1)
+    dir_table = Table(dir_data, colWidths=letterhead.fit_col_widths([5.4*inch, 1.4*inch, 1.9*inch], available), repeatRows=1)
     dir_table_style = [
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor(letterhead.NAVY)),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
@@ -2346,6 +2346,19 @@ def export_reports_pdf(request):
     doc, onpage, available = _letterhead_export_doc(response, 'reports')
     styles = getSampleStyleSheet()
     story = []
+
+    # Styles de cellules partagés (wrap + design system CSIG)
+    cell_text = ParagraphStyle(
+        'ReportCell', parent=styles['Normal'], fontSize=8.5, leading=11,
+        textColor=colors.HexColor('#1e293b'),
+    )
+    cell_text_sm = ParagraphStyle(
+        'ReportCellSm', parent=cell_text, fontSize=8, leading=10,
+    )
+    header_cell = ParagraphStyle(
+        'ReportHead', parent=styles['Normal'], fontSize=9, leading=11,
+        textColor=colors.whitesmoke, fontName='Helvetica-Bold',
+    )
     
     # Style personnalisé pour le titre
     title_style = ParagraphStyle(
@@ -2369,108 +2382,148 @@ def export_reports_pdf(request):
     
     # En-tête
     story.append(Paragraph("RAPPORT D'ACTIVITÉS", title_style))
-    story.append(Paragraph(f"Généré le {datetime.now().strftime('%d/%m/%Y à %H:%M')}", styles['Normal']))
-    story.append(Spacer(1, 20))
+    story.append(Paragraph(
+        f"Généré le {datetime.now().strftime('%d/%m/%Y à %H:%M')}",
+        ParagraphStyle('ReportSub', parent=styles['Normal'], fontSize=10,
+                       alignment=TA_CENTER, textColor=colors.grey, spaceAfter=20),
+    ))
     
     # Section KPIs
-    story.append(Paragraph("INDICATEURS CLÉS", heading_style))
-    
     kpi_data = [
-        ['Indicateur', 'Valeur'],
-        ['Projets totaux', str(total_projects)],
-        ['Projets terminés', str(projects_completed)],
-        ['Budget consommé', f'{budget_rate}%'],
-        ['Partenaires actifs', str(active_partners)],
-        ['Documents en attente', str(pending_docs)],
+        [Paragraph('<b>Indicateur</b>', header_cell), Paragraph('<b>Valeur</b>', header_cell)],
+        [Paragraph('Projets totaux', cell_text), Paragraph(str(total_projects), cell_text)],
+        [Paragraph('Projets terminés', cell_text), Paragraph(str(projects_completed), cell_text)],
+        [Paragraph('Budget consommé', cell_text), Paragraph(f'{budget_rate}%', cell_text)],
+        [Paragraph('Partenaires actifs', cell_text), Paragraph(str(active_partners), cell_text)],
+        [Paragraph('Documents en attente', cell_text), Paragraph(str(pending_docs), cell_text)],
     ]
     
     kpi_table = Table(kpi_data, colWidths=letterhead.fit_col_widths([3*inch, 1.5*inch], available))
     kpi_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor(letterhead.NAVY)),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, 0), 12),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ('ALIGN', (1, 1), (1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+        ('TOPPADDING', (0, 0), (-1, 0), 10),
+        ('TOPPADDING', (0, 1), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.Color(0.95, 0.95, 0.97)]),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
     ]))
-    story.append(kpi_table)
+    story.append(KeepTogether([
+        Paragraph("INDICATEURS CLÉS", heading_style),
+        kpi_table,
+    ]))
     story.append(Spacer(1, 20))
     
     # Section Projets par direction
-    story.append(Paragraph("PROJETS PAR DIRECTION", heading_style))
-    
-    direction_data = [['Direction', 'En cours', 'Terminés']]
+    direction_data = [[
+        Paragraph('<b>Direction</b>', header_cell),
+        Paragraph('<b>En cours</b>', header_cell),
+        Paragraph('<b>Terminés</b>', header_cell),
+    ]]
     for item in projects_by_direction:
-        direction_data.append([item['direction'], str(item['en_cours']), str(item['termine'])])
+        direction_data.append([
+            Paragraph(item['direction'], cell_text),
+            Paragraph(str(item['en_cours']), cell_text),
+            Paragraph(str(item['termine']), cell_text),
+        ])
     
-    direction_table = Table(direction_data, colWidths=letterhead.fit_col_widths([2*inch, 1.5*inch, 1.5*inch], available))
+    direction_table = Table(direction_data, colWidths=letterhead.fit_col_widths([2.4*inch, 1.3*inch, 1.3*inch], available))
     direction_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor(letterhead.NAVY)),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, 0), 12),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ('ALIGN', (1, 1), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+        ('TOPPADDING', (0, 0), (-1, 0), 10),
+        ('TOPPADDING', (0, 1), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.Color(0.95, 0.95, 0.97)]),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
     ]))
-    story.append(direction_table)
+    story.append(KeepTogether([
+        Paragraph("PROJETS PAR DIRECTION", heading_style),
+        direction_table,
+    ]))
     story.append(Spacer(1, 20))
     
     # Section Projets par statut
-    story.append(Paragraph("RÉPARTITION DES PROJETS PAR STATUT", heading_style))
-    
-    status_data = [['Statut', 'Nombre']]
+    status_data = [[
+        Paragraph('<b>Statut</b>', header_cell),
+        Paragraph('<b>Nombre</b>', header_cell),
+    ]]
     for item in projects_by_status:
-        status_data.append([item['name'], str(item['value'])])
+        status_data.append([Paragraph(item['name'], cell_text), Paragraph(str(item['value']), cell_text)])
     
     status_table = Table(status_data, colWidths=letterhead.fit_col_widths([2.5*inch, 1.5*inch], available))
     status_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor(letterhead.NAVY)),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, 0), 12),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ('ALIGN', (1, 1), (1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+        ('TOPPADDING', (0, 0), (-1, 0), 10),
+        ('TOPPADDING', (0, 1), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.Color(0.95, 0.95, 0.97)]),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
     ]))
-    story.append(status_table)
+    story.append(KeepTogether([
+        Paragraph("RÉPARTITION DES PROJETS PAR STATUT", heading_style),
+        status_table,
+    ]))
     story.append(Spacer(1, 20))
     
     # Section détaillée des projets
-    story.append(PageBreak())
-    story.append(Paragraph("DÉTAIL DES PROJETS", heading_style))
-    
-    projects_data = [['Projet', 'Direction', 'Statut', 'Progression', 'Budget', 'Consommé', 'Taux']]
+    projects_data = [[
+        Paragraph('<b>Projet</b>', header_cell),
+        Paragraph('<b>Direction</b>', header_cell),
+        Paragraph('<b>Statut</b>', header_cell),
+        Paragraph('<b>Progression</b>', header_cell),
+        Paragraph('<b>Budget</b>', header_cell),
+        Paragraph('<b>Consommé</b>', header_cell),
+        Paragraph('<b>Taux</b>', header_cell),
+    ]]
+    name_cell = ParagraphStyle('ReportName', parent=cell_text_sm, fontName='Helvetica-Bold', textColor=colors.HexColor(letterhead.NAVY))
     for project in all_projects:
         projects_data.append([
-            project.name,
-            project.direction.code if project.direction else '-',
-            project.get_status_display(),
-            f"{project.progress}%",
-            format_currency(convert_currency(float(project.budget or 0), project.currency, 'GNF', rate=project.rate_snapshot), 'GNF'),
-            format_currency(convert_currency(float(project.budget_consumed or 0), project.currency, 'GNF', rate=project.rate_snapshot), 'GNF'),
-            f"{project.budget_percentage}%"
+            Paragraph(project.name, name_cell),
+            Paragraph(project.direction.code if project.direction else '-', cell_text_sm),
+            Paragraph(project.get_status_display(), cell_text_sm),
+            Paragraph(f"{project.progress}%", cell_text_sm),
+            Paragraph(format_currency(convert_currency(float(project.budget or 0), project.currency, 'GNF', rate=project.rate_snapshot), 'GNF'), cell_text_sm),
+            Paragraph(format_currency(convert_currency(float(project.budget_consumed or 0), project.currency, 'GNF', rate=project.rate_snapshot), 'GNF'), cell_text_sm),
+            Paragraph(f"{project.budget_percentage}%", cell_text_sm),
         ])
-    
-    projects_table = Table(projects_data, colWidths=letterhead.fit_col_widths([2*inch, 1*inch, 1*inch, 0.8*inch, 1*inch, 1*inch, 0.8*inch], available))
+
+    projects_table = Table(projects_data, colWidths=letterhead.fit_col_widths([2.0*inch, 0.8*inch, 0.9*inch, 0.8*inch, 1.0*inch, 1.0*inch, 0.7*inch], available), repeatRows=1)
     projects_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor(letterhead.NAVY)),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, 0), 8),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
-        ('FONTSIZE', (0, 1), (-1, -1), 7),
-        ('ALIGN', (0, 1), (0, -1), 'LEFT'),  # Aligner les noms de projets à gauche
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('ALIGN', (2, 1), (-1, -1), 'CENTER'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+        ('TOPPADDING', (0, 0), (-1, 0), 10),
+        ('TOPPADDING', (0, 1), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 5),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.Color(0.95, 0.95, 0.97)]),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
     ]))
-    story.append(projects_table)
-    
+    story.append(KeepTogether([
+        Paragraph("DÉTAIL DES PROJETS", heading_style),
+        projects_table,
+    ]))
+
     # Construire le PDF
     doc.build(story, onFirstPage=onpage, onLaterPages=onpage)
     
@@ -3299,9 +3352,10 @@ def export_project_activities(request, project_id):
     title_style = ParagraphStyle(
         'CustomTitle',
         parent=styles['Heading1'],
-        fontSize=16,
+        fontSize=18,
         alignment=TA_CENTER,
-        spaceAfter=20
+        spaceAfter=12,
+        textColor=colors.HexColor(letterhead.NAVY),
     )
     
     subtitle_style = ParagraphStyle(
@@ -3310,43 +3364,57 @@ def export_project_activities(request, project_id):
         fontSize=10,
         alignment=TA_CENTER,
         textColor=colors.grey,
-        spaceAfter=30
+        spaceAfter=6,
+    )
+    
+    cell_style = ParagraphStyle(
+        'ActCell', parent=styles['Normal'], fontSize=8.5, leading=11,
+        textColor=colors.HexColor('#1e293b'),
+    )
+    header_cell_style = ParagraphStyle(
+        'ActHead', parent=styles['Normal'], fontSize=9, leading=11,
+        textColor=colors.whitesmoke, fontName='Helvetica-Bold',
     )
     
     elements = []
     
     # Titre
-    elements.append(Paragraph(f"Journal d'activité", title_style))
+    elements.append(Paragraph("JOURNAL D'ACTIVITÉ", title_style))
     elements.append(Paragraph(f"Projet : {project.name}", subtitle_style))
     elements.append(Paragraph(f"Exporté le {timezone.now().strftime('%d/%m/%Y à %H:%M')}", subtitle_style))
-    elements.append(Spacer(1, 20))
     
     if activities:
         # Tableau des activités
-        data = [['Date', 'Utilisateur', 'Action', 'Description']]
+        data = [[
+            Paragraph('<b>Date</b>', header_cell_style),
+            Paragraph('<b>Utilisateur</b>', header_cell_style),
+            Paragraph('<b>Action</b>', header_cell_style),
+            Paragraph('<b>Description</b>', header_cell_style),
+        ]]
         
         for activity in activities:
             data.append([
-                activity.created_at.strftime('%d/%m/%Y %H:%M'),
-                activity.user,
-                activity.get_action_display(),
-                activity.description[:50] + '...' if len(activity.description) > 50 else activity.description
+                Paragraph(activity.created_at.strftime('%d/%m/%Y %H:%M'), cell_style),
+                Paragraph(str(activity.user or '-'), cell_style),
+                Paragraph(activity.get_action_display(), cell_style),
+                Paragraph(activity.description or '', cell_style),
             ])
         
-        table = Table(data, colWidths=letterhead.fit_col_widths([80, 90, 100, 200], available))
+        table = Table(data, colWidths=letterhead.fit_col_widths([1.3*inch, 1.4*inch, 1.5*inch, 4.0*inch], available), repeatRows=1)
         table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#3b82f6')),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor(letterhead.NAVY)),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, 0), 10),
-            ('FONTSIZE', (0, 1), (-1, -1), 8),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('FONTSIZE', (0, 1), (-1, -1), 8.5),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+            ('TOPPADDING', (0, 0), (-1, 0), 10),
             ('TOPPADDING', (0, 1), (-1, -1), 6),
             ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f1f5f9')]),
             ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8fafc')]),
         ]))
         elements.append(table)
     else:
