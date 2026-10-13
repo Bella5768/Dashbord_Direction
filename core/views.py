@@ -2226,7 +2226,7 @@ def export_employees_pdf(request):
             Paragraph(f'{emp.workload}%', cell_style),
         ])
     
-    col_widths = letterhead.fit_col_widths([2.3*inch, 1.2*inch, 1.7*inch, 1.1*inch, 2.6*inch, 0.7*inch], available)
+    col_widths = letterhead.fit_col_widths([1.9*inch, 1.0*inch, 1.9*inch, 1.5*inch, 2.5*inch, 0.85*inch], available)
     emp_table = Table(table_data, colWidths=col_widths, repeatRows=1)
     
     table_style = [
@@ -2272,7 +2272,7 @@ def export_employees_pdf(request):
                 Paragraph(f'{avg_wl}%', cell_style),
             ])
     
-    dir_table = Table(dir_data, colWidths=letterhead.fit_col_widths([5.4*inch, 1.4*inch, 1.9*inch], available), repeatRows=1)
+    dir_table = Table(dir_data, colWidths=letterhead.fit_col_widths([5.6*inch, 1.0*inch, 1.5*inch], available), repeatRows=1)
     dir_table_style = [
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor(letterhead.NAVY)),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
@@ -2398,7 +2398,7 @@ def export_reports_pdf(request):
         [Paragraph('Documents en attente', cell_text), Paragraph(str(pending_docs), cell_text)],
     ]
     
-    kpi_table = Table(kpi_data, colWidths=letterhead.fit_col_widths([3*inch, 1.5*inch], available))
+    kpi_table = Table(kpi_data, colWidths=letterhead.fit_col_widths([2.7*inch, 1.5*inch], available))
     kpi_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor(letterhead.NAVY)),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
@@ -2432,7 +2432,7 @@ def export_reports_pdf(request):
             Paragraph(str(item['termine']), cell_text),
         ])
     
-    direction_table = Table(direction_data, colWidths=letterhead.fit_col_widths([2.4*inch, 1.3*inch, 1.3*inch], available))
+    direction_table = Table(direction_data, colWidths=letterhead.fit_col_widths([2.5*inch, 1.3*inch, 1.3*inch], available))
     direction_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor(letterhead.NAVY)),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
@@ -2461,7 +2461,7 @@ def export_reports_pdf(request):
     for item in projects_by_status:
         status_data.append([Paragraph(item['name'], cell_text), Paragraph(str(item['value']), cell_text)])
     
-    status_table = Table(status_data, colWidths=letterhead.fit_col_widths([2.5*inch, 1.5*inch], available))
+    status_table = Table(status_data, colWidths=letterhead.fit_col_widths([2.6*inch, 1.6*inch], available))
     status_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor(letterhead.NAVY)),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
@@ -2504,7 +2504,7 @@ def export_reports_pdf(request):
             Paragraph(f"{project.budget_percentage}%", cell_text_sm),
         ])
 
-    projects_table = Table(projects_data, colWidths=letterhead.fit_col_widths([2.0*inch, 0.8*inch, 0.9*inch, 0.8*inch, 1.0*inch, 1.0*inch, 0.7*inch], available), repeatRows=1)
+    projects_table = Table(projects_data, colWidths=letterhead.fit_col_widths([1.5*inch, 1.0*inch, 0.8*inch, 1.1*inch, 0.9*inch, 0.9*inch, 0.55*inch], available), repeatRows=1)
     projects_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor(letterhead.NAVY)),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
@@ -3400,7 +3400,7 @@ def export_project_activities(request, project_id):
                 Paragraph(activity.description or '', cell_style),
             ])
         
-        table = Table(data, colWidths=letterhead.fit_col_widths([1.3*inch, 1.4*inch, 1.5*inch, 4.0*inch], available), repeatRows=1)
+        table = Table(data, colWidths=letterhead.fit_col_widths([1.35*inch, 1.8*inch, 1.6*inch, 4.0*inch], available), repeatRows=1)
         table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor(letterhead.NAVY)),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
