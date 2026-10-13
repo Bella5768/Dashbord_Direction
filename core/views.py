@@ -5114,6 +5114,8 @@ def project_document_preview(request, doc_id):
         preview_type = 'pdf'
     elif mime_type in ('application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/vnd.ms-powerpoint.presentation.macroEnabled.12'):
         preview_type = 'ppt'
+    elif mime_type in ('application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel.sheet.macroEnabled.12', 'text/csv'):
+        preview_type = 'xls'
     else:
         preview_type = 'unsupported'
 
@@ -5604,6 +5606,8 @@ def document_preview(request, doc_id):
         preview_type = 'pdf'
     elif mime_type in ('application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/vnd.ms-powerpoint.presentation.macroEnabled.12'):
         preview_type = 'ppt'
+    elif mime_type in ('application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel.sheet.macroEnabled.12', 'text/csv'):
+        preview_type = 'xls'
     else:
         preview_type = 'unsupported'
 
