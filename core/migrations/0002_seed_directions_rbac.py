@@ -114,6 +114,7 @@ PERMISSIONS = [
     ('manage', 'Event',        '', 'Créer des événements'),
     # --- Rapports ---
     ('read',   'Report',       '', 'Voir les rapports'),
+    ('read',   'Report',       'same_direction',     'Voir les rapports de sa direction'),
     # --- Directions ---
     ('manage', 'Direction',    '', 'Gérer les directions'),
     # --- Rôles ---
@@ -221,7 +222,7 @@ ROLES = [
             ('approve','Request',       ''),
             ('read',   'Event',         ''),
             ('manage', 'Event',         ''),
-            ('read',   'Report',        ''),
+            ('read',   'Report',        'same_direction'),
             ('export', 'Employee',      ''),
             ('export', 'Project',       ''),
         ],

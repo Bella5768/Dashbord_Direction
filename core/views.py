@@ -2266,7 +2266,7 @@ def export_employees_pdf(request):
 @login_required
 def export_reports_pdf(request):
     """Exporter les rapports en PDF"""
-    if not request.user.profile.can('export', 'Report'):
+    if not request.user.profile.can_view_reports():
         messages.error(request, _("Vous n'avez pas la permission d'exporter les rapports."))
         return redirect('core:reports')
 

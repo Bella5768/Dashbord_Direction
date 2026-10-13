@@ -54,7 +54,7 @@ SYNC_DIRECTEUR_PERMISSIONS = [
     ('approve', 'Request',       ''),
     ('read',    'Event',         ''),
     ('manage',  'Event',         ''),
-    ('read',    'Report',        ''),
+    ('read',    'Report',        'same_direction'),
     ('export',  'Employee',      ''),
     ('export',  'Project',       ''),
 ]
@@ -158,6 +158,7 @@ _DESCRIPTIONS = {
     ('read', 'Event', ''): 'Voir le calendrier',
     ('manage', 'Event', ''): 'Créer des événements',
     ('read', 'Report', ''): 'Voir les rapports',
+    ('read', 'Report', 'same_direction'): 'Voir les rapports de sa direction',
     ('export', 'Employee', ''): 'Exporter les employés (PDF)',
     ('export', 'Project', ''): 'Exporter les activités projet',
     ('read', 'Project', ''): 'Voir tous les projets',

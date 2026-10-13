@@ -330,7 +330,14 @@ class UserProfile(UUIDModel):
 
     # Rapports
     def can_view_reports(self):
-        return self.can('read', 'Report')
+        """Peut consulter le module Rapports.
+
+        On lit la permission avec ou sans condition (``_has_permission``) :
+        le directeur a une règle ``read Report same_direction`` qui, évaluée
+        sans instance, renvoie False — ce qui masquerait le module alors que
+        l'accès est bien accordé (le contenu reste scopé par ailleurs).
+        """
+        return self._has_permission('read', 'Report') or self._has_permission('manage', 'Report')
 
     # Partenaires
     def can_manage_partners(self):

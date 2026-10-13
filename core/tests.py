@@ -498,3 +498,67 @@ class FilterDirectionScopeTests(SmokeBase):
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, self.direction.code)
         self.assertNotContains(resp, self.autre_direction.code)
+
+
+class ReportsDirecteurScopeTests(SmokeBase):
+    """Le directeur accède aux Rapports, bornés à sa direction (export compris).
+
+    Régression : la permission ``read Report`` du directeur est ``same_direction``
+    (jamais globale). ``can_view_reports()`` doit malgré tout accorder le module
+    (règle conditionnelle évaluée sans instance → False) et l'export, tandis que
+    la page et le PDF ne présentent que la direction du directeur."""
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.dir_a = Direction.objects.create(name='Direction Rapport A', code='RPA')
+        cls.dir_b = Direction.objects.create(name='Direction Rapport B', code='RPB')
+
+        today = timezone.now().date()
+        cls.proj_a = Project.objects.create(
+            name='Projet Alpha Rapport', status='en_cours',
+            start_date=today - timedelta(days=5), end_date=today + timedelta(days=30),
+            manager='Manager Alpha', direction=cls.dir_a,
+        )
+        cls.proj_b = Project.objects.create(
+            name='Projet Beta Rapport', status='en_cours',
+            start_date=today - timedelta(days=5), end_date=today + timedelta(days=30),
+            manager='Manager Beta', direction=cls.dir_b,
+        )
+
+        cls.directeur_a = cls._make_directeur('directeur_rapport_a', cls.dir_a)
+        cls.directeur_b = cls._make_directeur('directeur_rapport_b', cls.dir_b)
+
+    @classmethod
+    def _make_directeur(cls, username, direction):
+        user = User.objects.create_user(username, password='x')
+        profile = user.profile
+        profile.role = Role.objects.get(slug='directeur')
+        profile.direction = direction
+        profile.save()
+        return user
+
+    def test_permission_report_du_directeur_est_bornee_direction(self):
+        prof = self.directeur_a.profile
+        self.assertEqual(prof.read_scope('Report'), 'direction')
+        self.assertFalse(prof.can_view_all_projects())
+        self.assertTrue(prof.can_view_reports())
+
+    def test_page_reports_ne_montre_que_sa_direction(self):
+        self._login(self.directeur_a)
+        resp = self._get_ok(reverse('core:reports'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, self.dir_a.code)
+        self.assertNotContains(resp, self.dir_b.code)
+        self.assertContains(resp, self.proj_a.name)
+        self.assertNotContains(resp, self.proj_b.name)
+
+    def test_export_reports_accessible_et_borne(self):
+        self._login(self.directeur_a)
+        resp = self.client.get(reverse('core:export_reports_pdf'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp['Content-Type'], 'application/pdf')
+        self.assertTrue(resp.content.startswith(b'%PDF'))
+        # Le contenu du PDF ne doit pas nommer un projet d'une autre direction.
+        self.assertNotIn(b'Projet Beta Rapport', resp.content)
