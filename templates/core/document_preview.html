@@ -28,42 +28,19 @@
       <div style="padding:24px;text-align:center;background:#f8fafc;">
         <img src="{{ file_url }}" alt="{{ document.title }}" style="max-width:100%;max-height:80vh;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.08);">
       </div>
-    {% elif preview_type == 'ppt' %}
+    {% elif preview_type == 'ppt' or preview_type == 'xls' %}
       <div style="padding:24px;text-align:center;background:#f8fafc;height:80vh;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-        <i class="fa-solid fa-file-powerpoint" style="font-size:64px;color:#d97706;margin-bottom:16px;"></i>
-        <h3 class="card-title" style="margin-bottom:8px;">{% trans 'Aperçu PowerPoint' %}</h3>
+        <i class="fa-solid {% if preview_type == 'ppt' %}fa-file-powerpoint{% else %}fa-file-excel{% endif %}" style="font-size:64px;color:{% if preview_type == 'ppt' %}#d97706{% else %}#16a34a{% endif %};margin-bottom:16px;"></i>
+        <h3 class="card-title" style="margin-bottom:8px;">
+          {% if preview_type == 'ppt' %}{% trans 'Aperçu PowerPoint' %}{% else %}{% trans 'Aperçu Excel/CSV' %}{% endif %}
+        </h3>
         <p class="text-gray-500" style="margin-bottom:20px;max-width:480px;">
-          {% trans "L'aperçu intégré des fichiers .ppt/.pptx n'est pas pris en charge. Vous pouvez le télécharger pour l'afficher." %}
+          {% trans "Ce format de fichier ne peut pas être prévisualisé directement. Téléchargez-le pour l'afficher." %}
         </p>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <a href="{{ download_url }}" class="btn btn-primary">
-            <i class="fa-solid fa-download" width="16" height="16" style="margin-right:6px;"></i>
-            {% trans 'Télécharger le fichier' %}
-          </a>
-          <a href="{{ file_url }}" target="_blank" rel="noopener" class="btn btn-outline">
-            <i class="fa-solid fa-arrow-up-right-from-square" width="16" height="16" style="margin-right:6px;"></i>
-            {% trans 'Ouvrir dans un nouvel onglet' %}
-          </a>
-        </div>
-      </div>
-    {% elif preview_type == 'xls' %}
-      <div style="padding:24px;text-align:center;background:#f8fafc;height:80vh;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-        <i class="fa-solid fa-file-excel" style="font-size:64px;color:#16a34a;margin-bottom:16px;"></i>
-        <h3 class="card-title" style="margin-bottom:8px;">{% trans 'Aperçu Excel/CSV' %}</h3>
-        <p class="text-gray-500" style="margin-bottom:20px;max-width:480px;">
-          {% trans "L'aperçu intégré des fichiers Excel/CSV n'est pas pris en charge. Vous pouvez le télécharger pour l'afficher." %}
-        </p>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <a href="{{ download_url }}" class="btn btn-primary">
-            <i class="fa-solid fa-download" width="16" height="16" style="margin-right:6px;"></i>
-            {% trans 'Télécharger le fichier' %}
-          </a>
-          <a href="{{ file_url }}" target="_blank" rel="noopener" class="btn btn-outline">
-            <i class="fa-solid fa-arrow-up-right-from-square" width="16" height="16" style="margin-right:6px;"></i>
-            {% trans 'Ouvrir dans un nouvel onglet' %}
-          </a>
-        </div>
-      </div>
+        <a href="{{ download_url }}" class="btn btn-primary">
+          <i class="fa-solid fa-download" width="16" height="16" style="margin-right:6px;"></i>
+          {% trans 'Télécharger le fichier' %}
+        </a>
       </div>
     {% else %}
       <div style="padding:48px 24px;text-align:center;">
