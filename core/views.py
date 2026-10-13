@@ -5112,6 +5112,8 @@ def project_document_preview(request, doc_id):
         preview_type = 'image'
     elif mime_type == 'application/pdf':
         preview_type = 'pdf'
+    elif mime_type in ('application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/vnd.ms-powerpoint.presentation.macroEnabled.12'):
+        preview_type = 'ppt'
     else:
         preview_type = 'unsupported'
 
@@ -5600,6 +5602,8 @@ def document_preview(request, doc_id):
         preview_type = 'image'
     elif mime_type == 'application/pdf':
         preview_type = 'pdf'
+    elif mime_type in ('application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/vnd.ms-powerpoint.presentation.macroEnabled.12'):
+        preview_type = 'ppt'
     else:
         preview_type = 'unsupported'
 
