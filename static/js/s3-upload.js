@@ -150,7 +150,7 @@
                 wrapper.classList.remove('is-uploading');
                 wrapper.classList.remove('has-file');
                 if (nameEl) nameEl.textContent = '';
-                alert('Erreur: ' + err.message);
+                    if (window.showToast) showToast(err.message, 'error'); else alert('Erreur: ' + err.message);
             });
         }
 
@@ -246,7 +246,7 @@
                     renderChips();
                 }).catch(function (err) {
                     progress.remove();
-                    alert('Erreur: ' + err.message);
+                if (window.showToast) showToast(err.message, 'error'); else alert('Erreur: ' + err.message);
                 });
             });
         }
@@ -284,7 +284,7 @@
             form.addEventListener('submit', function (e) {
                 if (form.querySelectorAll('.file-drop.is-uploading').length > 0) {
                     e.preventDefault();
-                    alert('Veuillez attendre la fin de l\'upload avant de soumettre.');
+                    if (window.showToast) showToast("Veuillez attendre la fin de l'upload avant de soumettre.", 'warning'); else alert('Veuillez attendre la fin de l\'upload avant de soumettre.');
                 }
             });
         });

@@ -222,7 +222,7 @@ function formatJson() {
   try {
     ta.value = JSON.stringify(JSON.parse(ta.value), null, 2);
   } catch(e) {
-    alert('JSON invalide : ' + e.message);
+    if (window.showToast) showToast('JSON invalide : ' + e.message, 'error'); else alert('JSON invalide : ' + e.message);
   }
 }
 </script>

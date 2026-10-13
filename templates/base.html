@@ -299,10 +299,16 @@
                 {% endif %}
                 {% endfor %}
             </div>
-            <script>
-                function dismissToast(el){el.classList.add('hiding');setTimeout(function(){el.remove()},300)}
-                setTimeout(function(){document.querySelectorAll('#django-toasts .toast').forEach(function(t){dismissToast(t)})},5000);
-            </script>
+  <script>
+    document.querySelectorAll('#django-toasts .toast').forEach(function(t){
+      var btn = t.querySelector('.toast-close');
+      if (btn && !btn.onclick) btn.addEventListener('click', function(){ dismissToast(t); });
+      if (!t._auto){
+        t._auto = true;
+        setTimeout(function(){ if (t.parentNode) dismissToast(t); }, 5000);
+      }
+    });
+  </script>
             {% endif %}
 
             <!-- Page Content -->
@@ -365,6 +371,31 @@
       noMatch:        "{% trans 'Le nom ne correspond pas exactement.' %}",
       phoneInvalid:   "{% trans "Le numéro de téléphone n'est pas valide." %}"
     };
+    </script>
+    <script>
+    function dismissToast(el){el.classList.add('hiding');setTimeout(function(){el.remove()},300)}
+    function showToast(msg, type){
+      type = type || 'info';
+      var container = document.getElementById('django-toasts');
+      if (!container){
+        container = document.createElement('div');
+        container.className = 'toast-container';
+        container.id = 'django-toasts';
+        var main = document.querySelector('main');
+        if (main){ main.prepend(container); } else { document.body.appendChild(container); }
+      }
+      var iconMap = {success:'fa-circle-check', error:'fa-circle-xmark', warning:'fa-triangle-exclamation', info:'fa-circle-info'};
+      var t = document.createElement('div');
+      t.className = 'toast toast-' + (type === 'error' ? 'error' : (type === 'success' ? 'success' : (type === 'warning' ? 'warning' : 'info')));
+      t.setAttribute('role','alert');
+      t.innerHTML = '<div class="toast-icon"><i class="fa-solid ' + iconMap[type] + '"></i></div><span class="toast-body"></span><button class="toast-close">×</button>';
+      t.querySelector('.toast-body').textContent = msg;
+      t.querySelector('.toast-close').addEventListener('click', function(){ dismissToast(t); });
+      container.appendChild(t);
+      setTimeout(function(){ if (t.parentNode) dismissToast(t); }, 5000);
+    }
+    window.dismissToast = dismissToast;
+    window.showToast = showToast;
     </script>
     <script>
     (function(){
@@ -761,7 +792,7 @@
                 if(typeof found.iti.isValidNumber === 'function' && !found.iti.isValidNumber()){
                   e.preventDefault();
                   var errorMsg = telInput.getAttribute('data-invalid-msg') || CSIG_I18N.phoneInvalid;
-                  alert(errorMsg);
+                  if (window.showToast) { window.showToast(errorMsg, 'error'); } else { alert(errorMsg); }
                   telInput.focus();
                   return;
                 }
