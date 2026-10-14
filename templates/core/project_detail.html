@@ -1364,25 +1364,27 @@ var DETAIL_I18N = {
       {% trans 'Aucun responsable' %}
     </div>
     <p class="qa-section" id="qa-section-label">{% trans 'Membres du projet' %}</p>
-    <div class="qa-grid" id="qa-cards">
-      {% for m in members_cards %}
-      <div class="qa-card" data-id="{{ m.id }}" data-search="{{ m.name|lower }} {{ m.direction|lower }}" onclick="qaPickMember('{{ m.id }}')">
-        <div class="qa-card-top">
-          <div class="qa-av" style="background:{{ m.color }};">{{ m.initials }}</div>
-          <div class="qa-info">
-            <div class="qa-name">{{ m.name }}</div>
-            <div class="qa-sub">{{ m.direction }}</div>
+      <div class="qa-grid" id="qa-cards">
+        {% for m in members_cards %}
+        <div class="employee-card qa-card" data-id="{{ m.id }}" data-search="{{ m.name|lower }} {{ m.direction|lower }}" onclick="qaPickMember('{{ m.id }}')" style="gap:10px;padding:12px;cursor:pointer;">
+          <div class="ec-header">
+            <div class="ec-avatar" style="background:{{ m.color }};overflow:hidden;">
+              {% if m.avatar_url %}<img src="{{ m.avatar_url }}" alt="{{ m.name }}" style="width:100%;height:100%;object-fit:cover;">{% else %}{{ m.initials }}{% endif %}
+            </div>
+            <div class="ec-info">
+              <p class="ec-name">{{ m.name }}</p>
+              <p class="ec-role">{{ m.direction }}</p>
+              <div class="ec-badges">
+                {% if m.is_external %}<span class="badge badge-warning" style="font-size:10px;">{% trans 'Externe' %}</span>{% endif %}
+                {% if m.project_role %}<span class="badge badge-secondary" style="font-size:10px;">{{ m.project_role }}</span>{% endif %}
+                <span class="badge {% if m.task_count >= 3 %}badge-warning{% else %}badge-secondary{% endif %}" style="font-size:10px;">{{ m.task_count }} {% trans 'tâche(s)' %}</span>
+              </div>
+            </div>
+            <div class="qa-chk"><i class="fa-solid fa-check"></i></div>
           </div>
-          <div class="qa-chk"><i class="fa-solid fa-check"></i></div>
         </div>
-        <div class="qa-badges">
-          {% if m.is_external %}<span class="qa-b" style="background:var(--amber-100,#fef3c7);color:var(--amber-700,#b45309);">{% trans 'Externe' %}</span>{% endif %}
-          {% if m.project_role %}<span class="qa-b qa-b-role">{{ m.project_role }}</span>{% endif %}
-          <span class="qa-b {% if m.task_count >= 3 %}qa-b-busy{% else %}qa-b-t{% endif %}">{{ m.task_count }} tâche{% if m.task_count != 1 %}s{% endif %}</span>
-        </div>
+        {% endfor %}
       </div>
-      {% endfor %}
-    </div>
     <div class="qa-status" id="qa-status"></div>
   </div>
 </div>
