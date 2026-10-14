@@ -716,7 +716,7 @@
                   <button class="qa-trigger" data-qa-type="milestone" data-qa-id="{{ milestone.id }}"
                           data-qa-emp-ids="{% for emp in milestone.assigned_to.all %}{{ emp.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
                           onclick="event.stopPropagation();qaOpen('milestone','{{ milestone.id }}',this.closest('[data-milestone-row]'),'{{ milestone.name|escapejs }}')">
-                    <i class="fa-solid fa-user" width="10" height="10" ></i>
+                    <i class="fa-solid fa-user-plus" width="10" height="10" ></i>
                     {% trans 'Assigner' %}
                   </button>
                   {% endif %}
@@ -811,7 +811,7 @@
                 <button class="qa-trigger" data-qa-type="sub_milestone" data-qa-id="{{ sub.id }}"
                         data-qa-emp-ids="{% for emp in sub.assigned_to.all %}{{ emp.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
                         onclick="event.stopPropagation();qaOpen('sub_milestone','{{ sub.id }}',this.closest('[data-milestone-row]'),'{{ sub.name|escapejs }}')">
-                  <i class="fa-solid fa-user" width="10" height="10" ></i>
+                  <i class="fa-solid fa-user-plus" width="10" height="10" ></i>
                   {% trans 'Assigner' %}
                 </button>
                 {% endif %}
