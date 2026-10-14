@@ -236,18 +236,26 @@ a {
     font-size: 18px;
     font-weight: 600;
     margin: 0;
-    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    white-space: normal;
+    line-height: 1.25;
 }
 
 .header-title p {
     font-size: 13px;
     color: var(--gray-500);
     margin: 2px 0 0;
-    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    white-space: normal;
+    line-height: 1.35;
 }
 
 .header-actions {
