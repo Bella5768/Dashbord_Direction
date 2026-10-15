@@ -124,7 +124,7 @@ class DocumentForm(forms.ModelForm):
     """Formulaire pour les documents"""
     class Meta:
         model = Document
-        fields = ['title', 'doc_type', 'priority', 'direction', 'due_date', 'created_by', 'file']
+        fields = ['title', 'doc_type', 'status', 'priority', 'direction', 'due_date', 'created_by', 'file']
         widgets = {
             'due_date': forms.DateInput(attrs={'type': 'date'}),
             'file': forms.HiddenInput(),

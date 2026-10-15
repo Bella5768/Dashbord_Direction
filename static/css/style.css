@@ -2334,6 +2334,13 @@ a.calendar-event-pill:hover { opacity: .82; filter: brightness(.95); }
 }
 .req-meta { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 
+/* ── Document cards ── */
+.doc-card { cursor: pointer; }
+.doc-card .document-icon { flex-shrink: 0; }
+.doc-card.status-a_signer  { border-left-color: #ef4444; }
+.doc-card.status-a_valider { border-left-color: #f59e0b; }
+.doc-card.status-signe     { border-left-color: #22c55e; }
+
 
 /* Responsive */
 @media (max-width: 1200px) {

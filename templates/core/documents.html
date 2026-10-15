@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block title %}{% trans 'Documents' %}{% endblock %}
-{% block pageftitle %}{% trans 'Suivi Documentaire' %}{% endblock %}
+{% block page_title %}{% trans 'Suivi Documentaire' %}{% endblock %}
 {% block page_subtitle %}{% trans 'Gestion des documents à signer et valider' %}{% endblock %}
 
 {% block content %}
@@ -65,115 +65,107 @@
     </a>
 </form>
 
-<!-- Documents Table -->
-<div class="card">
-    <div class="card-content" style="padding: 0;">
-        <div id="filter-content" class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>{% trans 'Document' %}</th>
-                        <th>{% trans 'Type' %}</th>
-                        <th>{% trans 'Direction' %}</th>
-                        <th>{% trans 'Priorité' %}</th>
-                        <th>{% trans 'Échéance' %}</th>
-                        <th>{% trans 'Statut' %}</th>
-                        <th style="text-align: center;">{% trans 'Actions' %}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for doc in documents %}
-                    <tr data-href="{% url 'core:document_edit' doc.slug|default:doc.pk %}">
-                        <td>
-                            <div class="flex items-center gap-3">
-                                <div class="document-icon {% if doc.status == 'a_signer' %}sign{% elif doc.status == 'a_valider' %}validate{% else %}signed{% endif %}">
-                                    <i class="fa-solid fa-file-lines" width="18" height="18"></i>
-                                </div>
-                                <div>
-                                    <p class="font-medium">{{ doc.title }}</p>
-                                    <p class="text-xs text-gray-500">{% trans 'Par' %} {{ doc.created_by }}</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <span class="badge {% if doc.docftype == 'contrat' %}badge-purple{% elif doc.docftype == 'budget' %}badge-info{% elif doc.docftype == 'rapport' %}badge-success{% else %}badge-secondary{% endif %}">
-                                {{ doc.get_docftype_display }}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="badge badge-secondary">{{ doc.direction.code }}</span>
-                        </td>
-                        <td>
-                            <span class="badge {% if doc.priority == 'haute' %}badge-danger{% elif doc.priority == 'moyenne' %}badge-warning{% else %}badge-secondary{% endif %}">
-                                {{ doc.get_priority_display }}
-                            </span>
-                        </td>
-                        <td>
-                            {% if doc.due_date %}
-                            <span class="flex items-center gap-1 {% if doc.due_date < today and doc.status != 'signe' %}text-red-600{% else %}text-gray-500{% endif %}" style="font-size:13px;">
-                                <i class="fa-solid fa-calendar" width="13" height="13"></i>
-                                {{ doc.due_date|date:"d/m/Y" }}
-                            </span>
-                            {% else %}<span class="text-gray-300">—</span>{% endif %}
-                        </td>
-                        <td>
-                            <span class="badge {% if doc.status == 'a_signer' %}badge-danger{% elif doc.status == 'a_valider' %}badge-warning{% else %}badge-success{% endif %}">
-                                {{ doc.get_status_display }}
-                            </span>
-                        </td>
-                        <td>
-                            <div class="flex items-center justify-center gap-1">
-                                {% if doc.file %}
-                                <a href="{% url 'core:document_preview' doc.slug|default:doc.pk %}" class="action-btn primary" title="{% trans 'Aperçu' %}">
-                                    <i class="fa-solid fa-eye" width="15" height="15"></i>
-                                </a>
-                                {% endif %}
-                                <a href="{% url 'core:document_edit' doc.slug|default:doc.pk %}" class="action-btn primary" title="{% trans 'Modifier' %}">
-                                    <i class="fa-solid fa-pencil" width="15" height="15"></i>
-                                </a>
-                                {% if doc.status == 'a_valider' %}
-                                <form method="post" action="{% url 'core:document_validate' doc.slug|default:doc.pk %}" style="display:inline;"
-                                      data-confirm="{% trans 'Valider ce document ?' %}"
-                                      data-confirm-title="{% trans 'Confirmation' %}"
-                                      data-confirm-label="{% trans 'Confirmer' %}">
-                                    {% csrf_token %}
-                                    <button type="submit" class="action-btn success" title="{% trans 'Valider' %}" style="background:none;border:none;padding:0;cursor:pointer;">
-                                        <i class="fa-solid fa-circle-check" width="15" height="15"></i>
-                                    </button>
-                                </form>
-                                {% endif %}
-                                {% if doc.status == 'a_signer' %}
-                                <form method="post" action="{% url 'core:document_sign' doc.slug|default:doc.pk %}" style="display:inline;"
-                                      data-confirm="{% trans 'Signer ce document ?' %}"
-                                      data-confirm-title="{% trans 'Confirmation' %}"
-                                      data-confirm-label="{% trans 'Confirmer' %}">
-                                    {% csrf_token %}
-                                    <button type="submit" class="action-btn success" title="{% trans 'Signer' %}" style="background:none;border:none;padding:0;cursor:pointer;">
-                                        <i class="fa-solid fa-pen" width="15" height="15"></i>
-                                    </button>
-                                </form>
-                                {% endif %}
-                                <a href="#" class="action-btn danger" title="{% trans 'Supprimer' %}"
-                                   data-delete-url="{% url 'core:document_delete' doc.slug|default:doc.pk %}"
-                                   data-delete-type="{% trans 'le document' %}"
-                                   data-delete-name="{{ doc.title }}">
-                                    <i class="fa-solid fa-trash-can" width="15" height="15"></i>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="7" style="text-align:center; padding:48px;">
-                            <i class="fa-solid fa-file-lines" width="40" height="40" style="color:#d1d5db; margin-bottom:12px;"></i>
-                            <p class="text-gray-500">{% trans 'Aucun document trouvé' %}</p>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+<!-- Documents List -->
+<div id="filter-content" class="item-list">
+    {% for doc in documents %}
+    <div class="req-card doc-card status-{{ doc.status }}" data-href="{% url 'core:document_edit' doc.slug|default:doc.pk %}">
+
+        <div class="req-card-top">
+            <div class="document-icon {% if doc.status == 'a_signer' %}sign{% elif doc.status == 'a_valider' %}validate{% else %}signed{% endif %}">
+                {% if doc.status == 'a_signer' %}
+                <i class="fa-solid fa-pen" width="18" height="18"></i>
+                {% elif doc.status == 'a_valider' %}
+                <i class="fa-solid fa-clock" width="18" height="18"></i>
+                {% else %}
+                <i class="fa-solid fa-file-circle-check" width="18" height="18"></i>
+                {% endif %}
+            </div>
+
+            <div class="req-body">
+                <div class="req-badges">
+                    <span class="badge {% if doc.doc_type == 'contrat' %}badge-purple{% elif doc.doc_type == 'budget' %}badge-info{% elif doc.doc_type == 'rapport' %}badge-success{% else %}badge-secondary{% endif %}">
+                        {{ doc.get_doc_type_display }}
+                    </span>
+                    <span class="badge badge-secondary">{{ doc.direction.code }}</span>
+                    <span class="badge {% if doc.priority == 'haute' %}badge-danger{% elif doc.priority == 'moyenne' %}badge-warning{% else %}badge-secondary{% endif %}">
+                        {{ doc.get_priority_display }}
+                    </span>
+                </div>
+                <p class="req-title">{{ doc.title }}</p>
+                <p class="req-desc">{% trans 'Par' %} {{ doc.created_by }}</p>
+            </div>
+
+            <span class="badge {% if doc.status == 'a_signer' %}badge-danger{% elif doc.status == 'a_valider' %}badge-warning{% else %}badge-success{% endif %}" style="flex-shrink:0;">
+                {{ doc.get_status_display }}
+            </span>
+        </div>
+
+        <div class="req-card-foot">
+            <div class="req-meta">
+                {% if doc.due_date %}
+                <span class="flex items-center gap-1 {% if doc.due_date < today and doc.status != 'signe' %}text-red-600{% endif %}">
+                    <i class="fa-solid fa-calendar" width="12" height="12"></i>
+                    {% trans 'Échéance' %} : {{ doc.due_date|date:"d/m/Y" }}
+                </span>
+                {% else %}
+                <span class="text-gray-400">{% trans 'Sans échéance' %}</span>
+                {% endif %}
+            </div>
+
+            <div class="flex items-center gap-2">
+                {% if doc.file %}
+                <a href="{% url 'core:document_preview' doc.slug|default:doc.pk %}" class="action-btn primary" title="{% trans 'Aperçu' %}">
+                    <i class="fa-solid fa-eye" width="15" height="15"></i>
+                </a>
+                {% endif %}
+                {% if doc.file %}
+                <a href="{% url 'core:document_download' doc.slug|default:doc.pk %}" class="action-btn primary" title="{% trans 'Télécharger' %}">
+                    <i class="fa-solid fa-download" width="15" height="15"></i>
+                </a>
+                {% endif %}
+                <a href="{% url 'core:document_edit' doc.slug|default:doc.pk %}" class="action-btn primary" title="{% trans 'Modifier' %}">
+                    <i class="fa-solid fa-pencil" width="15" height="15"></i>
+                </a>
+                {% if doc.status == 'a_valider' %}
+                <form method="post" action="{% url 'core:document_validate' doc.slug|default:doc.pk %}" style="display:inline;"
+                      data-confirm="{% trans 'Valider ce document ?' %}"
+                      data-confirm-title="{% trans 'Confirmation' %}"
+                      data-confirm-label="{% trans 'Confirmer' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="action-btn success" title="{% trans 'Valider' %}">
+                        <i class="fa-solid fa-circle-check" width="15" height="15"></i>
+                    </button>
+                </form>
+                {% endif %}
+                {% if doc.status == 'a_signer' %}
+                <form method="post" action="{% url 'core:document_sign' doc.slug|default:doc.pk %}" style="display:inline;"
+                      data-confirm="{% trans 'Signer ce document ?' %}"
+                      data-confirm-title="{% trans 'Confirmation' %}"
+                      data-confirm-label="{% trans 'Confirmer' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="action-btn success" title="{% trans 'Signer' %}">
+                        <i class="fa-solid fa-pen" width="15" height="15"></i>
+                    </button>
+                </form>
+                {% endif %}
+                <a href="#" class="action-btn danger" title="{% trans 'Supprimer' %}"
+                   data-delete-url="{% url 'core:document_delete' doc.slug|default:doc.pk %}"
+                   data-delete-type="{% trans 'le document' %}"
+                   data-delete-name="{{ doc.title }}">
+                    <i class="fa-solid fa-trash-can" width="15" height="15"></i>
+                </a>
+            </div>
+        </div>
+
+    </div>
+    {% empty %}
+    <div class="card">
+        <div class="card-content" style="text-align:center; padding:48px;">
+            <i class="fa-solid fa-file-lines" width="40" height="40" style="color:#d1d5db; margin-bottom:12px;"></i>
+            <p class="text-gray-500">{% trans 'Aucun document trouvé' %}</p>
         </div>
     </div>
+    {% endfor %}
 </div>
 {% endblock %}
 
@@ -214,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (newContent) contentEl.innerHTML = newContent.innerHTML;
                 contentEl.style.opacity = '1';
                 statsRow.style.opacity = '1';
-                bindRowClicks();
+                bindCardClicks();
             })
             .catch(function() { window.location.href = newUrl; });
     }
@@ -239,15 +231,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.addEventListener('popstate', fetchAndSwap);
 
-    function bindRowClicks() {
-        document.querySelectorAll('tr[data-href]').forEach(function(tr) {
-            tr.addEventListener('click', function(e) {
-                if (e.target.closest('a, button, input, select, textarea')) return;
-                window.location.href = tr.dataset.href;
+    function bindCardClicks() {
+        document.querySelectorAll('.req-card[data-href]').forEach(function(card) {
+            card.addEventListener('click', function(e) {
+                if (e.target.closest('a, button, input, select, textarea, form')) return;
+                window.location.href = card.dataset.href;
             });
         });
     }
-    bindRowClicks();
+    bindCardClicks();
 });
 </script>
 {% endblock %}
