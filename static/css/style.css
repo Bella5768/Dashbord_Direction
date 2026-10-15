@@ -2689,8 +2689,8 @@ a.calendar-event-pill:hover { opacity: .82; filter: brightness(.95); }
 .banner-step i,
 .tl-deadline i           { color: #2563eb; }
 
-/* Feature list page login */
-.feature-item i          { color: #2563eb; }
+/* Feature list page login — panneau branding sombre : icônes en clair */
+.feature-item i          { color: rgba(255, 255, 255, 0.85); }
 
 /* Tâches complétées */
 .mt-done-at i,
