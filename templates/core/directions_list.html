@@ -7,14 +7,14 @@
 
 {% block content %}
 
-<div style="background:linear-gradient(135deg,#1c3550 0%,#2a4a6f 60%,#3b82f6 100%);color:white;border-radius:14px;padding:24px 30px;margin-bottom:24px;position:relative;overflow:hidden;">
+<div style="background:linear-gradient(135deg,var(--primary-700) 0%,var(--primary-500) 60%,#3b82f6 100%);color:white;border-radius:var(--radius-md);padding:24px 30px;margin-bottom:24px;position:relative;overflow:hidden;">
     <div style="position:absolute;right:-40px;top:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(255,255,255,.15),transparent 70%);border-radius:50%;pointer-events:none;"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;position:relative;z-index:1;">
         <div>
             <h2 style="margin:0;font-size:20px;font-weight:700;">{% trans 'Gestion des Directions' %}</h2>
             <p style="margin:6px 0 0;opacity:.85;font-size:13px;">{% trans "Structure organisationnelle et répartition des ressources par direction." %}</p>
         </div>
-        <a href="{% url 'core:direction_create' %}" class="btn" style="background:white;color:#1c3550;font-weight:700;border:none;box-shadow:0 4px 12px rgba(0,0,0,.15);">
+        <a href="{% url 'core:direction_create' %}" class="btn btn-primary">
             <i class="fa-solid fa-circle-plus" width="16" height="16"></i>
             {% trans 'Nouvelle direction' %}
         </a>

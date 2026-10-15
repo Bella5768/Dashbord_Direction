@@ -28,12 +28,12 @@
       </div>
 
       <div style="flex:1;min-width:0;">
-        <h2 style="margin:0 0 4px;font-size:20px;font-weight:700;color:#111827;">
+        <h2 style="margin:0 0 4px;font-size:20px;font-weight:700;color:var(--gray-900);">
           {{ u.get_full_name|default:u.username }}
         </h2>
-        <p style="margin:0 0 8px;font-size:13px;color:#6b7280;">
+        <p style="margin:0 0 8px;font-size:13px;color:var(--gray-500);">
           @{{ u.username }}
-          {% if prof.role %}&nbsp;·&nbsp;<span style="font-weight:600;color:#1e3a5f;">{{ prof.role.name }}</span>{% endif %}
+          {% if prof.role %}&nbsp;·&nbsp;<span style="font-weight:600;color:var(--primary-600);">{{ prof.role.name }}</span>{% endif %}
           {% if prof.direction %}&nbsp;·&nbsp;{{ prof.direction.name }}{% endif %}
         </p>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -42,13 +42,12 @@
             {% if u.is_active %}{% trans 'Compte actif' %}{% else %}{% trans 'Compte inactif' %}{% endif %}
           </span>
           {% if u.last_login %}
-          <span style="font-size:12px;color:#9ca3af;">{% trans 'Dernière connexion' %} : {{ u.last_login|date:"d/m/Y à H:i" }}</span>
+          <span style="font-size:12px;color:var(--gray-400);">{% trans 'Dernière connexion' %} : {{ u.last_login|date:"d/m/Y à H:i" }}</span>
           {% endif %}
         </div>
       </div>
 
-      <a href="{% url 'core:password_change' %}"
-         style="display:inline-flex;align-items:center;gap:7px;padding:9px 16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-weight:600;color:#374151;text-decoration:none;white-space:nowrap;">
+      <a href="{% url 'core:password_change' %}" class="btn btn-outline">
         <i class="fa-solid fa-key" width="15" height="15"></i>
         {% trans 'Changer le mot de passe' %}
       </a>
@@ -68,11 +67,11 @@
         <div class="form-group" style="margin-bottom:20px;">
           <label class="form-label">{% trans 'Photo de profil' %}</label>
           <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-            <div id="avatar-preview" style="width:64px;height:64px;border-radius:50%;overflow:hidden;background:#f3f4f6;border:2px dashed #d1d5db;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <div id="avatar-preview" style="width:64px;height:64px;border-radius:50%;overflow:hidden;background:var(--gray-100);border:2px dashed var(--gray-300);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
               {% if prof.avatar %}
               <img src="{{ prof.avatar }}" alt="" style="width:100%;height:100%;object-fit:cover;">
               {% else %}
-              <i class="fa-solid fa-camera" style="color:#9ca3af;font-size:20px;"></i>
+              <i class="fa-solid fa-camera" style="color:var(--gray-400);font-size:20px;"></i>
               {% endif %}
             </div>
             <div style="flex:1;min-width:0;">

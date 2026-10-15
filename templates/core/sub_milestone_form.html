@@ -14,27 +14,27 @@
 @media (max-width:860px) { .mf-wrap { flex-direction:column; } .mf-aside { flex:none; width:100%; } }
 
 /* Member picker */
-.mp-search-wrap { position:relative; margin-bottom:10px; }
-.mp-search-wrap svg { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--gray-400); pointer-events:none; }
+.mp-search-wrap { position:relative; margin-bottom:12px; }
+.mp-search-wrap i { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--gray-400); pointer-events:none; }
 .mp-search-wrap input { padding-left:36px; }
-.mp-none { display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:var(--radius-sm); border:1.5px solid var(--gray-200); background:var(--gray-50); cursor:pointer; font-size:13px; color:var(--gray-500); transition:all .15s; margin-bottom:12px; }
+.mp-none { display:flex; align-items:center; gap:8px; padding:10px 14px; border-radius:var(--radius); border:1.5px solid var(--gray-200); background:var(--gray-50); cursor:pointer; font-size:13px; color:var(--gray-500); transition:all .15s; margin-bottom:14px; }
 .mp-none:hover    { border-color:var(--gray-400); color:var(--gray-700); }
 .mp-none.mp-active { border-color:var(--gray-400); background:var(--gray-100); color:var(--gray-700); }
-.mp-section-label { font-size:11px; font-weight:600; color:var(--gray-400); text-transform:uppercase; letter-spacing:.05em; margin:12px 0 8px; }
-.mp-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+.mp-section-label { font-size:11px; font-weight:600; color:var(--gray-400); text-transform:uppercase; letter-spacing:.05em; margin:14px 0 10px; }
+.mp-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
 @media (max-width:480px) { .mp-grid { grid-template-columns:1fr; } }
-.mp-card { padding:10px; border-radius:var(--radius-sm); border:1.5px solid var(--gray-200); background:var(--gray-50); cursor:pointer; transition:all .15s; }
-.mp-card:hover    { border-color:var(--primary-200); background:var(--primary-50); }
-.mp-card.mp-active { border-color:var(--primary-500); background:var(--primary-50); }
+.mp-card { padding:14px; border-radius:var(--radius); border:1.5px solid var(--gray-200); border-left:4px solid var(--primary-500); background:#fff; cursor:pointer; transition:all .15s; position:relative; }
+.mp-card:hover    { border-color:var(--primary-200); border-left-color:var(--primary-600); box-shadow:0 4px 16px rgba(0,0,0,.06); }
+.mp-card.mp-active { border-color:var(--primary-500); border-left-color:var(--primary-600); box-shadow:0 0 0 3px var(--primary-100); }
 .mp-card.mp-dim   { opacity:.55; }
-.mp-card-row { display:flex; align-items:center; gap:8px; }
-.mp-av   { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#fff; flex-shrink:0; }
-.mp-info { flex:1; min-width:0; }
-.mp-name { font-size:12px; font-weight:600; color:var(--gray-800); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.mp-dir  { font-size:11px; color:var(--gray-500); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.mp-chk  { width:16px; height:16px; border-radius:50%; border:1.5px solid var(--gray-300); background:white; display:flex; align-items:center; justify-content:center; font-size:9px; color:white; flex-shrink:0; transition:all .15s; }
+.mp-card .ec-avatar { width:42px; height:42px; font-size:15px; }
+.mp-card .ec-name { font-size:13px; font-weight:700; color:#111827; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mp-card .ec-role { font-size:12px; color:#6b7280; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mp-card-head { display:flex; align-items:center; gap:12px; }
+.mp-card-head .ec-info { flex:1; min-width:0; }
+.mp-chk  { width:20px; height:20px; border-radius:50%; border:2px solid var(--gray-300); background:white; display:flex; align-items:center; justify-content:center; font-size:10px; color:white; flex-shrink:0; transition:all .15s; }
 .mp-card.mp-active .mp-chk { background:var(--primary-600); border-color:var(--primary-600); }
-.mp-badges { display:flex; gap:4px; flex-wrap:wrap; margin-top:6px; }
+.mp-badges { display:flex; gap:4px; flex-wrap:wrap; margin-top:8px; }
 
 /* Form helpers */
 .fg-sublabel  { font-weight:400; color:var(--gray-400); font-size:12px; }
@@ -162,11 +162,11 @@
           {% for m in project_members %}
           <div class="mp-card" data-id="{{ m.id }}" data-search="{{ m.name|lower }} {{ m.direction|lower }}"
                onclick="mpToggle('{{ m.id }}', this)">
-            <div class="mp-card-row">
-              <div class="mp-av" style="background:{{ m.color }};">{{ m.initials }}</div>
-              <div class="mp-info">
-                <div class="mp-name">{{ m.name }}</div>
-                <div class="mp-dir">{{ m.direction }}</div>
+            <div class="mp-card-head">
+              <div class="ec-avatar" style="background:{{ m.color }};">{{ m.initials }}</div>
+              <div class="ec-info">
+                <div class="ec-name">{{ m.name }}</div>
+                <div class="ec-role">{{ m.direction }}</div>
               </div>
               <div class="mp-chk"></div>
             </div>
@@ -193,11 +193,11 @@
             {% for m in other_employees %}
             <div class="mp-card mp-dim" data-id="{{ m.id }}" data-search="{{ m.name|lower }} {{ m.direction|lower }}"
                  onclick="mpToggle('{{ m.id }}', this)">
-              <div class="mp-card-row">
-                <div class="mp-av" style="background:{{ m.color }};">{{ m.initials }}</div>
-                <div class="mp-info">
-                  <div class="mp-name">{{ m.name }}</div>
-                  <div class="mp-dir">{{ m.direction }}</div>
+              <div class="mp-card-head">
+                <div class="ec-avatar" style="background:{{ m.color }};">{{ m.initials }}</div>
+                <div class="ec-info">
+                  <div class="ec-name">{{ m.name }}</div>
+                  <div class="ec-role">{{ m.direction }}</div>
                 </div>
                 <div class="mp-chk"></div>
               </div>

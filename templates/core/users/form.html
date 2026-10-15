@@ -172,12 +172,12 @@
             <div class="card-content">
                 <div class="item-list" style="gap:8px;">
                     {% for role_obj in form.role.field.queryset %}
-                    <div style="padding:10px 12px;background:#f8fafc;border-radius:6px;border-left:3px solid #6366f1;">
+                    <div style="padding:10px 12px;background:var(--gray-50);border-radius:6px;border-left:3px solid var(--primary-500);">
                         <p class="font-medium text-sm">{{ role_obj.name }}</p>
                         {% if role_obj.description %}
                         <p class="text-xs text-gray-500">{{ role_obj.description|truncatechars:60 }}</p>
                         {% endif %}
-                        <p class="text-xs" style="color:#9ca3af;margin-top:2px;">{{ role_obj.permissions.count }} permission(s)</p>
+                        <p class="text-xs" style="color:var(--gray-400);margin-top:2px;">{{ role_obj.permissions.count }} permission(s)</p>
                     </div>
                     {% endfor %}
                 </div>

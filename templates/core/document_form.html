@@ -6,93 +6,160 @@
 {% block page_title %}{{ title }}{% endblock %}
 {% block page_subtitle %}{% if document %}{% trans 'Modifier le document' %}{% else %}{% trans 'Créer un nouveau document' %}{% endif %}{% endblock %}
 
+{% block extra_css %}
+<style>
+.df-card { max-width: 780px; }
+
+.df-sec { margin-bottom: 26px; }
+.df-sec-head { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 14px; }
+.df-sec-num { width: 24px; height: 24px; border-radius: 50%; background: var(--primary-500); color: #fff; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.df-sec-title { font-size: 14px; font-weight: 700; color: var(--gray-800); margin: 0; }
+.df-sec-hint { font-size: 12px; color: var(--gray-500); margin: 3px 0 0; }
+
+.df-panel { background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 16px; }
+
+.df-actions { display: flex; gap: 12px; align-items: center; padding-top: 20px; border-top: 1px solid var(--gray-100); }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="card" style="max-width: 700px;">
-    <div class="card-header">
-        <h3 class="card-title">{% trans 'Informations du document' %}</h3>
+<div class="card df-card">
+  <div class="card-header">
+    <div>
+      <h3 class="card-title">{% trans 'Informations du document' %}</h3>
+      <p class="text-sm text-gray-500">{% trans 'Renseignez les détails du document à créer ou modifier.' %}</p>
     </div>
-    <div class="card-content">
-        <form method="post" id="mainForm">
-            {% csrf_token %}
-            
-            <div class="form-group">
-                <label class="form-label" for="id_title">{% trans 'Titre' %} <span class="required">*</span></label>
-                {{ form.title }}
-                {% if form.title.errors %}<p class="form-error">{{ form.title.errors.0 }}</p>{% endif %}
-            </div>
+  </div>
+  <div class="card-content">
+    <form method="post" id="mainForm">
+      {% csrf_token %}
 
-            <div class="grid grid-2" style="gap: 16px;">
-                <div class="form-group">
-                    <label class="form-label" for="id_doc_type">{% trans 'Type' %} <span class="required">*</span></label>
-                    {{ form.doc_type }}
-                    {% if form.doc_type.errors %}<p class="form-error">{{ form.doc_type.errors.0 }}</p>{% endif %}
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="id_direction">{% trans 'Direction' %} <span class="required">*</span></label>
-                    {{ form.direction }}
-                    {% if form.direction.errors %}<p class="form-error">{{ form.direction.errors.0 }}</p>{% endif %}
-                </div>
-            </div>
+      <!-- Section 1 : Titre -->
+      <div class="df-sec">
+        <div class="df-sec-head">
+          <span class="df-sec-num">1</span>
+          <div>
+            <p class="df-sec-title">{% trans 'Titre du document' %}</p>
+            <p class="df-sec-hint">{% trans 'Nom descriptif du document.' %}</p>
+          </div>
+        </div>
+        <div class="df-panel">
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label" for="id_title">{% trans 'Titre' %} <span class="required">*</span></label>
+            {{ form.title }}
+            {% if form.title.errors %}<p class="form-error">{{ form.title.errors.0 }}</p>{% endif %}
+          </div>
+        </div>
+      </div>
 
-            <div class="grid grid-3" style="gap: 16px;">
-                <div class="form-group">
-                    <label class="form-label" for="id_status">{% trans 'Statut' %}</label>
-                    {{ form.status }}
-                    {% if form.status.errors %}<p class="form-error">{{ form.status.errors.0 }}</p>{% endif %}
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="id_priority">{% trans 'Priorité' %}</label>
-                    {{ form.priority }}
-                    {% if form.priority.errors %}<p class="form-error">{{ form.priority.errors.0 }}</p>{% endif %}
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="id_due_date">{% trans 'Date limite' %} <span class="required">*</span></label>
-                    {{ form.due_date }}
-                    {% if form.due_date.errors %}<p class="form-error">{{ form.due_date.errors.0 }}</p>{% endif %}
-                </div>
+      <!-- Section 2 : Classification -->
+      <div class="df-sec">
+        <div class="df-sec-head">
+          <span class="df-sec-num">2</span>
+          <div>
+            <p class="df-sec-title">{% trans 'Classification' %}</p>
+            <p class="df-sec-hint">{% trans 'Type et direction responsable.' %}</p>
+          </div>
+        </div>
+        <div class="df-panel">
+          <div class="grid grid-2" style="gap:16px;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="id_doc_type">{% trans 'Type' %} <span class="required">*</span></label>
+              {{ form.doc_type }}
+              {% if form.doc_type.errors %}<p class="form-error">{{ form.doc_type.errors.0 }}</p>{% endif %}
             </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="id_direction">{% trans 'Direction' %} <span class="required">*</span></label>
+              {{ form.direction }}
+              {% if form.direction.errors %}<p class="form-error">{{ form.direction.errors.0 }}</p>{% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
 
-            <div class="grid grid-2" style="gap: 16px;">
-                <div class="form-group">
-                    <label class="form-label" for="id_created_by">{% trans 'Créé par' %} <span class="required">*</span></label>
-                    {{ form.created_by }}
-                    {% if form.created_by.errors %}<p class="form-error">{{ form.created_by.errors.0 }}</p>{% endif %}
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="id_file">{% trans 'Fichier' %}</label>
-                    {% if document and document.file %}
-                    <div class="file-drop-current">
-                        <i class="fa-solid fa-file" width="14" height="14"></i>
-                        <span>{% trans 'Fichier actuel' %} : <a href="{% url 'core:document_file_proxy' document.slug|default:document.pk %}" target="_blank">{{ document.file|truncatechars:40 }}</a></span>
-                    </div>
-                    {% endif %}
-                    <div class="file-drop" data-existing-url="{{ document.file|default:'' }}">
-                        {{ form.file }}
-                        <input type="file" name="_file_upload" style="position:absolute;opacity:0;pointer-events:none;">
-                        <div class="file-drop-zone">
-                            <i class="fa-solid fa-cloud-arrow-up" width="36" height="36"></i>
-                            <p class="file-drop-title">{% trans 'Cliquez ou glissez un fichier' %}</p>
-                            <p class="file-drop-sub">PDF, Word, Excel, images…</p>
-                        </div>
-                        <div class="file-drop-selected">
-                            <i class="fa-solid fa-file-circle-check" width="16" height="16"></i>
-                            <span class="file-drop-name"></span>
-                            <button type="button" class="file-drop-clear"><i class="fa-solid fa-xmark"></i></button>
-                        </div>
-                    </div>
-                    {% if form.file.errors %}<p class="form-error">{{ form.file.errors.0 }}</p>{% endif %}
-                </div>
+      <!-- Section 3 : Statut et échéance -->
+      <div class="df-sec">
+        <div class="df-sec-head">
+          <span class="df-sec-num">3</span>
+          <div>
+            <p class="df-sec-title">{% trans 'Statut et échéance' %}</p>
+            <p class="df-sec-hint">{% trans 'État actuel et date limite.' %}</p>
+          </div>
+        </div>
+        <div class="df-panel">
+          <div class="grid grid-3" style="gap:16px;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="id_status">{% trans 'Statut' %}</label>
+              {{ form.status }}
+              {% if form.status.errors %}<p class="form-error">{{ form.status.errors.0 }}</p>{% endif %}
             </div>
-            
-            <div class="flex gap-3" style="margin-top: 24px;">
-                <button type="submit" class="btn btn-primary">
-                    <i class="fa-solid fa-check" width="16" height="16" ></i>
-                    {% if document %}{% trans 'Enregistrer' %}{% else %}{% trans 'Créer' %}{% endif %}
-                </button>
-                <a href="{% url 'core:documents' %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="id_priority">{% trans 'Priorité' %}</label>
+              {{ form.priority }}
+              {% if form.priority.errors %}<p class="form-error">{{ form.priority.errors.0 }}</p>{% endif %}
             </div>
-        </form>
-    </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="id_due_date">{% trans 'Date limite' %} <span class="required">*</span></label>
+              {{ form.due_date }}
+              {% if form.due_date.errors %}<p class="form-error">{{ form.due_date.errors.0 }}</p>{% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 4 : Auteur et fichier -->
+      <div class="df-sec">
+        <div class="df-sec-head">
+          <span class="df-sec-num">4</span>
+          <div>
+            <p class="df-sec-title">{% trans 'Auteur et fichier' %}</p>
+            <p class="df-sec-hint">{% trans 'Créateur du document et pièce jointe.' %}</p>
+          </div>
+        </div>
+        <div class="df-panel">
+          <div class="grid grid-2" style="gap:16px;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="id_created_by">{% trans 'Créé par' %} <span class="required">*</span></label>
+              {{ form.created_by }}
+              {% if form.created_by.errors %}<p class="form-error">{{ form.created_by.errors.0 }}</p>{% endif %}
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="id_file">{% trans 'Fichier' %}</label>
+              {% if document and document.file %}
+              <div class="file-drop-current">
+                <i class="fa-solid fa-file" width="14" height="14"></i>
+                <span>{% trans 'Fichier actuel' %} : <a href="{% url 'core:document_file_proxy' document.slug|default:document.pk %}" target="_blank">{{ document.file|truncatechars:40 }}</a></span>
+              </div>
+              {% endif %}
+              <div class="file-drop" data-existing-url="{{ document.file|default:'' }}">
+                {{ form.file }}
+                <input type="file" name="_file_upload" style="position:absolute;opacity:0;pointer-events:none;">
+                <div class="file-drop-zone">
+                  <i class="fa-solid fa-cloud-arrow-up" width="36" height="36"></i>
+                  <p class="file-drop-title">{% trans 'Cliquez ou glissez un fichier' %}</p>
+                  <p class="file-drop-sub">PDF, Word, Excel, images…</p>
+                </div>
+                <div class="file-drop-selected">
+                  <i class="fa-solid fa-file-circle-check" width="16" height="16"></i>
+                  <span class="file-drop-name"></span>
+                  <button type="button" class="file-drop-clear"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+              </div>
+              {% if form.file.errors %}<p class="form-error">{{ form.file.errors.0 }}</p>{% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="df-actions">
+        <button type="submit" class="btn btn-primary">
+          <i class="fa-solid fa-check" width="16" height="16"></i>
+          {% if document %}{% trans 'Enregistrer' %}{% else %}{% trans 'Créer' %}{% endif %}
+        </button>
+        <a href="{% url 'core:documents' %}" class="btn btn-outline">{% trans 'Annuler' %}</a>
+      </div>
+    </form>
+  </div>
 </div>
 {% endblock %}
 

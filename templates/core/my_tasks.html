@@ -10,29 +10,29 @@
 <style>
 /* ── Empty state ── */
 .mt-empty { text-align:center; padding:64px 24px; }
-.mt-empty svg { display:block; margin:0 auto 16px; color:#d1d5db; }
-.mt-empty p { font-size:16px; color:#6b7280; }
+.mt-empty svg { display:block; margin:0 auto 16px; color:var(--gray-300); }
+.mt-empty p { font-size:16px; color:var(--gray-500); }
 
 /* ── Group list ── */
 .mt-list { display:flex; flex-direction:column; gap:24px; }
 
 /* ── Card header ── */
 .mt-card-hdr { display:flex; justify-content:space-between; align-items:center; }
-.mt-project-link { color:#1e3a5f; text-decoration:none; }
+.mt-project-link { color:var(--primary-600); text-decoration:none; }
 .mt-project-link:hover { text-decoration:underline; }
-.mt-summary { font-size:13px; color:#64748b; margin-top:2px; }
+.mt-summary { font-size:13px; color:var(--gray-500); margin-top:2px; }
 .mt-summary .overdue-date { color:#dc2626; font-weight:600; }
 .mt-hdr-right { display:flex; align-items:center; gap:10px; flex-shrink:0; }
-.mt-prog-track { width:100px; height:6px; background:#e5e7eb; border-radius:9999px; overflow:hidden; }
+.mt-prog-track { width:100px; height:6px; background:var(--gray-200); border-radius:9999px; overflow:hidden; }
 .mt-prog-fill { height:100%; }
 .mt-prog-fill.high { background:#16a34a; }
 .mt-prog-fill.mid  { background:#3b82f6; }
 .mt-prog-fill.low  { background:#f59e0b; }
-.mt-pct { font-size:12px; font-weight:600; color:#1f2937; }
+.mt-pct { font-size:12px; font-weight:600; color:var(--gray-800); }
 
 /* ── Task rows ── */
 .mt-rows { display:flex; flex-direction:column; gap:8px; }
-.mt-row { display:flex; align-items:center; gap:12px; padding:10px 14px; border-radius:8px; border:1px solid #d1d5db; background:#fff; }
+.mt-row { display:flex; align-items:center; gap:12px; padding:10px 14px; border-radius:var(--radius); border:1px solid var(--gray-300); background:#fff; }
 .mt-row.done    { border-color:#86efac; background:#f0fdf4; }
 .mt-row.overdue { border-color:#fca5a5; background:#fef2f2; }
 
@@ -42,9 +42,9 @@
 .mt-type.sub   { background:#ede9fe; color:#6d28d9; }
 
 /* ── Name ── */
-.mt-name { flex:1; min-width:0; font-size:13px; font-weight:500; color:#1e3a5f; }
-.mt-name.done { text-decoration:line-through; color:#9ca3af; font-weight:400; }
-.mt-sub-ref { font-size:11px; color:#9ca3af; margin-left:6px; }
+.mt-name { flex:1; min-width:0; font-size:13px; font-weight:500; color:var(--primary-600); }
+.mt-name.done { text-decoration:line-through; color:var(--gray-400); font-weight:400; }
+.mt-sub-ref { font-size:11px; color:var(--gray-400); margin-left:6px; }
 
 /* ── Status badge (jalons) ── */
 .mt-sbadge { font-size:10px; font-weight:500; border-radius:4px; padding:1px 6px; white-space:nowrap; }
@@ -55,16 +55,16 @@
 .mt-sbadge.s-termine     { background:#bbf7d0; color:#14532d; }
 
 /* ── Date ── */
-.mt-date { font-size:11px; white-space:nowrap; color:#6b7280; }
+.mt-date { font-size:11px; white-space:nowrap; color:var(--gray-500); }
 .mt-date.overdue { color:#dc2626; font-weight:600; }
 .mt-done-at { font-size:11px; color:#16a34a; white-space:nowrap; }
 
 /* ── Toggle checkbox ── */
-.mt-chk { flex-shrink:0; width:18px; height:18px; border-radius:4px; border:2px solid #64748b; background:#fff; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; color:#fff; font-size:10px; }
+.mt-chk { flex-shrink:0; width:18px; height:18px; border-radius:4px; border:2px solid var(--gray-500); background:#fff; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; color:#fff; font-size:10px; }
 .mt-chk.done { border-color:#16a34a; background:#16a34a; }
 .mt-chk-ro { flex-shrink:0; width:18px; height:18px; border-radius:4px; display:inline-flex; align-items:center; justify-content:center; color:#fff; font-size:10px; }
 .mt-chk-ro.done    { border:2px solid #16a34a; background:#16a34a; }
-.mt-chk-ro.pending { border:2px solid #9ca3af; background:#f3f4f6; }
+.mt-chk-ro.pending { border:2px solid var(--gray-400); background:var(--gray-100); }
 </style>
 {% endblock %}
 

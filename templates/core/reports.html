@@ -13,8 +13,8 @@
 .rpt-kpi {
     background: white;
     border-radius: 10px;
-    border: 1px solid #e5e7eb;
-    border-left: 4px solid #94a3b8;
+    border: 1px solid var(--gray-200);
+    border-left: 4px solid var(--gray-400);
     padding: 16px 18px;
     display: flex;
     align-items: center;
@@ -35,21 +35,21 @@
 }
 .rpt-kpi.blue   .rpt-kpi-icon { background: #dbeafe; color: #1d4ed8; }
 .rpt-kpi.green  .rpt-kpi-icon { background: #dcfce7; color: #15803d; }
-.rpt-kpi.red    .rpt-kpi-icon { background: #fee2e2; color: #b91c1c; }
+.rpt-kpi.red    .rpt-kpi-icon { background: #fee2e2; color: #b91c1b; }
 .rpt-kpi.purple .rpt-kpi-icon { background: #ede9fe; color: #6d28d9; }
 .rpt-kpi.amber  .rpt-kpi-icon { background: #fef3c7; color: #b45309; }
 .rpt-kpi.cyan   .rpt-kpi-icon { background: #cffafe; color: #0e7490; }
 
-.rpt-kpi-val { font-size: 22px; font-weight: 700; color: #111827; margin: 0; line-height: 1.2; }
-.rpt-kpi-lbl { font-size: 12px; color: #6b7280; margin: 2px 0 0; }
+.rpt-kpi-val { font-size: 22px; font-weight: 700; color: var(--gray-900); margin: 0; line-height: 1.2; }
+.rpt-kpi-lbl { font-size: 12px; color: var(--gray-500); margin: 2px 0 0; }
 
 /* ── Project rows ── */
 .rpt-list { display: flex; flex-direction: column; gap: 10px; }
 .rpt-prow {
     background: white;
     border-radius: 10px;
-    border: 1px solid #e5e7eb;
-    border-left: 4px solid #94a3b8;
+    border: 1px solid var(--gray-200);
+    border-left: 4px solid var(--gray-400);
     padding: 16px 20px;
     transition: box-shadow .15s, transform .15s;
     cursor: pointer;
@@ -70,8 +70,8 @@
     .rpt-pgrid > *:last-child { grid-column: 1 / -1; }
 }
 
-.rpt-pname { font-weight: 600; font-size: 14px; color: #111827; margin: 0 0 3px; }
-.rpt-psub  { font-size: 12px; color: #6b7280; display: flex; align-items: center; gap: 4px; margin: 0; }
+.rpt-pname { font-weight: 600; font-size: 14px; color: var(--gray-900); margin: 0 0 3px; }
+.rpt-psub  { font-size: 12px; color: var(--gray-500); display: flex; align-items: center; gap: 4px; margin: 0; }
 
 /* Direction badge — couleur dynamique */
 .rpt-dir-badge {

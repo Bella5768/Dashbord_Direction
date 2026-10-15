@@ -7,7 +7,7 @@
 
 {% block content %}
 
-<div style="background:linear-gradient(135deg,#1c3550 0%,#2a4a6f 60%,#3b82f6 100%);color:white;border-radius:14px;padding:24px 30px;margin-bottom:24px;position:relative;overflow:hidden;">
+<div style="background:linear-gradient(135deg,var(--primary-700) 0%,var(--primary-500) 60%,#3b82f6 100%);color:white;border-radius:var(--radius-md);padding:24px 30px;margin-bottom:24px;position:relative;overflow:hidden;">
     <div style="position:absolute;right:-40px;top:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(255,255,255,.15),transparent 70%);border-radius:50%;pointer-events:none;"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;position:relative;z-index:1;">
         <div>
@@ -15,11 +15,11 @@
             <p style="margin:6px 0 0;opacity:.85;font-size:13px;">{% trans "Gérez les rôles globaux et les permissions associées à chaque profil." %}</p>
         </div>
         <div style="display:flex;gap:10px;">
-            <a href="{% url 'core:project_roles_list' %}" class="btn" style="background:rgba(255,255,255,.15);color:white;border:1px solid rgba(255,255,255,.3);font-weight:600;">
+            <a href="{% url 'core:project_roles_list' %}" class="btn btn-outline" style="background:rgba(255,255,255,.15);color:white;border-color:rgba(255,255,255,.3);">
                 <i class="fa-solid fa-folder" width="16" height="16"></i>
                 {% trans "Rôles projet" %}
             </a>
-            <a href="{% url 'core:role_create' %}" class="btn" style="background:white;color:#1c3550;font-weight:700;border:none;box-shadow:0 4px 12px rgba(0,0,0,.15);">
+            <a href="{% url 'core:role_create' %}" class="btn btn-primary">
                 <i class="fa-solid fa-circle-plus" width="16" height="16"></i>
                 {% trans "Nouveau rôle" %}
             </a>

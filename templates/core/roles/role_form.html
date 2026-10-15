@@ -64,7 +64,7 @@
                     <!-- En-tête du module -->
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid
                         {% if subject == 'all' %}#fee2e2{% elif subject == 'Project' %}#dbeafe{% elif subject == 'Milestone' %}#d1fae5{% elif subject == 'Budget' %}#d1fae5{% elif subject == 'User' %}#ede9fe{% elif subject == 'Employee' %}#e0e7ff{% elif subject == 'LeaveRequest' %}#fef3c7{% elif subject == 'Partner' %}#ccfbf1{% elif subject == 'Document' %}#e2e8f0{% elif subject == 'Request' %}#ffedd5{% elif subject == 'Event' %}#cffafe{% elif subject == 'Direction' %}#f1f5f9{% elif subject == 'Role' %}#fce7f3{% else %}#f3f4f6{% endif %};">
-                        <span id="module-lbl-{{ subject }}" style="font-weight:600;font-size:13px;color:#374151;">
+                        <span id="module-lbl-{{ subject }}" style="font-weight:600;font-size:13px;color:var(--gray-700);">
                             {% if subject == 'all' %}{% trans "Tout (super-admin)" %}
                             {% elif subject == 'Project' %}{% trans "Projets" %}
                             {% elif subject == 'Milestone' %}{% trans "Jalons / Tâches" %}
@@ -89,11 +89,11 @@
                     <!-- Checkboxes -->
                     <div style="display:flex;flex-wrap:wrap;gap:6px;">
                         {% for perm in perms %}
-                        <label class="perm-label" style="display:flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid #e5e7eb;border-radius:6px;cursor:pointer;background:#fff;user-select:none;transition:border-color .12s,background .12s;">
+                        <label class="perm-label" style="display:flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--gray-200);border-radius:6px;cursor:pointer;background:#fff;user-select:none;transition:border-color .12s,background .12s;">
                             <input type="checkbox" name="permissions" value="{{ perm.pk }}"
                                    {% if perm.pk in role_perm_ids %}checked{% endif %}
-                                   style="width:14px;height:14px;accent-color:#6366f1;cursor:pointer;flex-shrink:0;">
-                            <span style="font-size:12px;color:#374151;line-height:1.3;">
+                                   style="width:14px;height:14px;accent-color:var(--primary-600);cursor:pointer;flex-shrink:0;">
+                            <span style="font-size:12px;color:var(--gray-700);line-height:1.3;">
                                 <strong>{{ perm.get_action_display }}</strong>
                                 {% if perm.condition %}
                                 <br><span style="color:#9ca3af;font-size:10px;">{{ perm.get_condition_display }}</span>
@@ -118,7 +118,7 @@
             <div class="card-header"><h3 class="card-title">{% trans "Récapitulatif" %}</h3></div>
             <div class="card-content">
                 <div style="text-align:center;padding:8px 0 16px;">
-                    <p style="font-size:32px;font-weight:700;color:#6366f1;margin:0;" id="perm-count">0</p>
+                    <p style="font-size:32px;font-weight:700;color:var(--primary-600);margin:0;" id="perm-count">0</p>
                     <p class="text-sm text-gray-500">{% trans "permissions sélectionnées" %}</p>
                 </div>
                 {% if editing and role.users.count %}
