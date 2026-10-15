@@ -3,13 +3,25 @@ Notifications in-app — création centralisée.
 
 Chaque helper crée une ou plusieurs entrées Notification pour les
 destinataires concernés, en silence (aucune exception ne remonte).
+
+Les titres et messages sont traduits selon la langue préférée de
+l'utilisateur (profil utilisateur), à l'instar des emails.
 """
 from django.urls import reverse
+from django.utils.translation import gettext as _, override
+
+
+def _user_language(user):
+    """Retourne la langue préférée d'un utilisateur (profil)."""
+    try:
+        return getattr(getattr(user, 'profile', None), 'language', None) or 'fr'
+    except Exception:
+        return 'fr'
 
 
 def push_project_update(project_id, data):
     """Diffuse une mise à jour de projet à tous les membres connectés (toutes pages)."""
-    data = {**data, 'project_id': project_id}  # project_id always included for client-side filtering
+    data = {**data, 'project_id': project_id}
     try:
         from channels.layers import get_channel_layer
         from asgiref.sync import async_to_sync
@@ -75,22 +87,24 @@ def _create(receiver, notif_type, title, message='', link=''):
     """Créer une notification et la pousser via WebSocket."""
     try:
         from .models import Notification
-        n = Notification.objects.create(
-            receiver=receiver,
-            notif_type=notif_type,
-            title=title,
-            message=message,
-            link=link,
-        )
-        _push_ws(receiver.id, {
-            'id': n.id,
-            'type': notif_type,
-            'title': title,
-            'message': message,
-            'link': link,
-            'is_read': False,
-            'created_at': n.created_at.strftime('%d/%m à %H:%M'),
-        })
+        lang = _user_language(receiver)
+        with override(lang):
+            n = Notification.objects.create(
+                receiver=receiver,
+                notif_type=notif_type,
+                title=title,
+                message=message,
+                link=link,
+            )
+            _push_ws(receiver.id, {
+                'id': n.id,
+                'type': notif_type,
+                'title': title,
+                'message': message,
+                'link': link,
+                'is_read': False,
+                'created_at': n.created_at.strftime('%d/%m à %H:%M'),
+            })
     except Exception:
         pass
 
@@ -115,28 +129,25 @@ def notify_jalon_completed(milestone, actor_user):
     project = milestone.project
     link = reverse('core:project_detail', args=[project.slug]) + '#jalons'
 
-    # Notifier le manager du projet (si c'est un User distinct de l'acteur)
     manager_user = getattr(project, 'manager_user', None)
     if manager_user and manager_user != actor_user:
-        _create(
-            manager_user,
-            'jalon_complete',
-            f"Jalon complété — {project.name}",
-            f"« {milestone.name} » a été marqué comme terminé par {actor_user.get_full_name() or actor_user.username}.",
-            link,
-        )
+        lang = _user_language(manager_user)
+        with override(lang):
+            title = _("Jalon complété — {project}").format(project=project.name)
+            msg = _("« {milestone} » a été marqué comme terminé par {actor}.").format(
+                milestone=milestone.name,
+                actor=actor_user.get_full_name() or actor_user.username,
+            )
+        _create(manager_user, 'jalon_complete', title, msg, link)
 
-    # Notifier les autres membres assignés à ce jalon
     for emp in milestone.assigned_to.all():
         user = _user_from_employee(emp)
         if user and user != actor_user and user != manager_user:
-            _create(
-                user,
-                'jalon_complete',
-                f"Jalon complété — {project.name}",
-                f"« {milestone.name} » est terminé.",
-                link,
-            )
+            lang = _user_language(user)
+            with override(lang):
+                title = _("Jalon complété — {project}").format(project=project.name)
+                msg = _("« {milestone} » est terminé.").format(milestone=milestone.name)
+            _create(user, 'jalon_complete', title, msg, link)
 
 
 def notify_sous_etape_completed(sub_milestone, actor_user):
@@ -148,13 +159,14 @@ def notify_sous_etape_completed(sub_milestone, actor_user):
     for emp in milestone.assigned_to.all():
         user = _user_from_employee(emp)
         if user and user != actor_user:
-            _create(
-                user,
-                'sous_etape_complete',
-                f"Sous-étape complétée — {project.name}",
-                f"« {sub_milestone.name} » (jalon : {milestone.name}) est terminée.",
-                link,
-            )
+            lang = _user_language(user)
+            with override(lang):
+                title = _("Sous-étape complétée — {project}").format(project=project.name)
+                msg = _("« {sub} » (jalon : {milestone}) est terminée.").format(
+                    sub=sub_milestone.name,
+                    milestone=milestone.name,
+                )
+            _create(user, 'sous_etape_complete', title, msg, link)
 
 
 # ------------------------------------------------------------------
@@ -168,14 +180,15 @@ def notify_membre_ajoute(member, actor_user):
         return
     project = member.project
     link = reverse('core:project_detail', args=[project.slug])
-    role_label = member.project_role.name if member.project_role else 'membre'
-    _create(
-        user,
-        'membre_projet',
-        f"Vous avez été ajouté au projet « {project.name} »",
-        f"Rôle : {role_label}. Ajouté par {actor_user.get_full_name() or actor_user.username}.",
-        link,
-    )
+    role_label = member.project_role.name if member.project_role else _('Membre')
+    lang = _user_language(user)
+    with override(lang):
+        title = _("Vous avez été ajouté au projet « {project} »").format(project=project.name)
+        msg = _("Rôle : {role}. Ajouté par {actor}.").format(
+            role=role_label,
+            actor=actor_user.get_full_name() or actor_user.username,
+        )
+    _create(user, 'membre_projet', title, msg, link)
 
 
 # ------------------------------------------------------------------
@@ -190,13 +203,11 @@ def notify_commentaire(project, actor_user):
     for pm in project.members.select_related('employee__user_profile__user').all():
         user = _user_from_employee(pm.employee)
         if user and user != actor_user:
-            _create(
-                user,
-                'commentaire',
-                f"Nouveau commentaire — {project.name}",
-                f"{author} a laissé un commentaire sur le projet.",
-                link,
-            )
+            lang = _user_language(user)
+            with override(lang):
+                title = _("Nouveau commentaire — {project}").format(project=project.name)
+                msg = _("{author} a laissé un commentaire sur le projet.").format(author=author)
+            _create(user, 'commentaire', title, msg, link)
 
 
 # ------------------------------------------------------------------
@@ -215,14 +226,19 @@ def notify_conge_avis(leave, actor_user):
         return
     link = reverse('core:leave_detail', args=[leave.id])
     favorable = leave.status == 'avis_favorable'
-    verdict = "favorable" if favorable else "défavorable"
-    _create(
-        user,
-        'conge_avis',
-        f"Avis hiérarchique {verdict} sur votre congé",
-        f"Votre demande de congé du {leave.start_date} au {leave.end_date} a reçu un avis {verdict}.",
-        link,
-    )
+    lang = _user_language(user)
+    with override(lang):
+        if favorable:
+            title = _("Avis hiérarchique favorable sur votre congé")
+            msg = _("Votre demande de congé du {start} au {end} a reçu un avis favorable.").format(
+                start=leave.start_date, end=leave.end_date,
+            )
+        else:
+            title = _("Avis hiérarchique défavorable sur votre congé")
+            msg = _("Votre demande de congé du {start} au {end} a reçu un avis défavorable.").format(
+                start=leave.start_date, end=leave.end_date,
+            )
+    _create(user, 'conge_avis', title, msg, link)
 
 
 def notify_conge_rh(leave, actor_user):
@@ -232,14 +248,19 @@ def notify_conge_rh(leave, actor_user):
         return
     link = reverse('core:leave_detail', args=[leave.id])
     conforme = leave.status == 'rh_conforme'
-    verdict = "conforme" if conforme else "non conforme"
-    _create(
-        user,
-        'conge_rh',
-        f"Vérification RH : {verdict}",
-        f"Votre demande de congé du {leave.start_date} au {leave.end_date} est déclarée {verdict} par les RH.",
-        link,
-    )
+    lang = _user_language(user)
+    with override(lang):
+        if conforme:
+            title = _("Vérification RH : conforme")
+            msg = _("Votre demande de congé du {start} au {end} est déclarée conforme par les RH.").format(
+                start=leave.start_date, end=leave.end_date,
+            )
+        else:
+            title = _("Vérification RH : non conforme")
+            msg = _("Votre demande de congé du {start} au {end} est déclarée non conforme par les RH.").format(
+                start=leave.start_date, end=leave.end_date,
+            )
+    _create(user, 'conge_rh', title, msg, link)
 
 
 # ------------------------------------------------------------------
@@ -280,11 +301,7 @@ def _users_from_directions(directions):
 
 
 def notify_event_members_updated(event, actor_user, exclude_employee_ids=None):
-    """Notifie les EventMember existants de la modification d'un événement.
-
-    exclude_employee_ids — set d'IDs à exclure (membres nouvellement ajoutés
-    dans le même cycle : ils reçoivent déjà une notif d'invitation).
-    """
+    """Notifie les EventMember existants de la modification d'un événement."""
     link = reverse('core:event_detail', args=[event.slug])
     actor_name = actor_user.get_full_name() or actor_user.username
     date_fmt = event.date.strftime('%d/%m/%Y')
@@ -298,13 +315,13 @@ def notify_event_members_updated(event, actor_user, exclude_employee_ids=None):
     for m in members:
         user = _user_from_employee(m.employee)
         if user and user != actor_user:
-            _create(
-                user,
-                'event_update',
-                f"Événement modifié — {event.title}",
-                f"« {event.title} » du {date_fmt} a été modifié par {actor_name}.",
-                link,
-            )
+            lang = _user_language(user)
+            with override(lang):
+                title = _("Événement modifié — {event}").format(event=event.title)
+                msg = _("« {event} » du {date} a été modifié par {actor}.").format(
+                    event=event.title, date=date_fmt, actor=actor_name,
+                )
+            _create(user, 'event_update', title, msg, link)
 
 
 def notify_event_deleted(event_title, event_date, directions, actor_user):
@@ -313,13 +330,13 @@ def notify_event_deleted(event_title, event_date, directions, actor_user):
     date_fmt = event_date.strftime('%d/%m/%Y')
     for user in _users_from_directions(directions):
         if user != actor_user:
-            _create(
-                user,
-                'event_cancel',
-                f"Événement annulé — {event_title}",
-                f"« {event_title} » prévu le {date_fmt} a été annulé par {actor_name}.",
-                '',
-            )
+            lang = _user_language(user)
+            with override(lang):
+                title = _("Événement annulé — {event}").format(event=event_title)
+                msg = _("« {event} » prévu le {date} a été annulé par {actor}.").format(
+                    event=event_title, date=date_fmt, actor=actor_name,
+                )
+            _create(user, 'event_cancel', title, msg, '')
 
 
 def notify_event_member_invited(event_member, actor_user):
@@ -332,13 +349,13 @@ def notify_event_member_invited(event_member, actor_user):
     actor_name = actor_user.get_full_name() or actor_user.username
     date_fmt = event.date.strftime('%d/%m/%Y')
     time_fmt = event.time.strftime('%H:%M')
-    _create(
-        user,
-        'event_invite',
-        f"Invitation — {event.title}",
-        f"Vous êtes invité à « {event.title} » le {date_fmt} à {time_fmt}. Organisé par {actor_name}.",
-        link,
-    )
+    lang = _user_language(user)
+    with override(lang):
+        title = _("Invitation — {event}").format(event=event.title)
+        msg = _("Vous êtes invité à « {event} » le {date} à {time}. Organisé par {actor}.").format(
+            event=event.title, date=date_fmt, time=time_fmt, actor=actor_name,
+        )
+    _create(user, 'event_invite', title, msg, link)
 
 
 def notify_event_rsvp(event_member, actor_user):
@@ -350,13 +367,13 @@ def notify_event_rsvp(event_member, actor_user):
     link = reverse('core:event_detail', args=[event.slug])
     employee_name = event_member.employee.name
     status_label = event_member.get_status_display()
-    _create(
-        creator,
-        'event_rsvp',
-        f"Réponse RSVP — {event.title}",
-        f"{employee_name} a répondu « {status_label} » à l'invitation pour « {event.title} ».",
-        link,
-    )
+    lang = _user_language(creator)
+    with override(lang):
+        title = _("Réponse RSVP — {event}").format(event=event.title)
+        msg = _("{employee} a répondu « {status} » à l'invitation pour « {event} ».").format(
+            employee=employee_name, status=status_label, event=event.title,
+        )
+    _create(creator, 'event_rsvp', title, msg, link)
 
 
 def notify_conge_decision(leave, actor_user):
@@ -366,11 +383,16 @@ def notify_conge_decision(leave, actor_user):
         return
     link = reverse('core:leave_detail', args=[leave.id])
     approved = leave.status == 'approuvee'
-    verdict = "approuvée" if approved else "rejetée"
-    _create(
-        user,
-        'conge_decision',
-        f"Votre congé a été {verdict}",
-        f"La décision finale sur votre demande du {leave.start_date} au {leave.end_date} est : {verdict}.",
-        link,
-    )
+    lang = _user_language(user)
+    with override(lang):
+        if approved:
+            title = _("Votre congé a été approuvée")
+            msg = _("La décision finale sur votre demande du {start} au {end} est : approuvée.").format(
+                start=leave.start_date, end=leave.end_date,
+            )
+        else:
+            title = _("Votre congé a été rejetée")
+            msg = _("La décision finale sur votre demande du {start} au {end} est : rejetée.").format(
+                start=leave.start_date, end=leave.end_date,
+            )
+    _create(user, 'conge_decision', title, msg, link)
