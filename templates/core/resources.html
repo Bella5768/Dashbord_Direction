@@ -9,16 +9,6 @@
 
 {% block content %}
 <style>
-.bf-select {
-    height: 34px;
-    padding: 0 10px;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    font-size: 13px;
-    color: #374151;
-    background: #fff;
-    cursor: pointer;
-}
 #budgetRowsBody tr.bf-group-row { cursor: pointer; }
 #budgetRowsBody tr.bf-group-row:hover { background: #f8fafc; }
 #budgetRowsBody tr.bf-detail-row > td { background: #f8fafc; padding: 8px 12px; }
@@ -45,61 +35,34 @@
 {{ budget_filter_options|json_script:"budgetFilterOptions" }}
 
 <!-- Filtres budget -->
-<div class="card mb-4">
-    <div class="card-content" style="padding:14px 16px;">
-        <div id="budgetFilters" style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
-            <div>
-                <label style="display:block;font-size:11px;color:#64748b;margin-bottom:4px;">{% trans 'Vue' %}</label>
-                <select id="bfView" class="bf-select">
-                    <option value="global">{% trans 'Global' %}</option>
-                    <option value="project" selected>{% trans 'Par projet' %}</option>
-                    <option value="direction">{% trans 'Par direction' %}</option>
-                </select>
-            </div>
-            <div>
-                <label style="display:block;font-size:11px;color:#64748b;margin-bottom:4px;">{% trans 'Direction' %}</label>
-                <select id="bfDirection" class="bf-select">
-                    <option value="">{% trans 'Toutes' %}</option>
-                    {% for d in budget_filter_options.directions %}<option value="{{ d }}" {% if d == budget_initial_dir %}selected{% endif %}>{{ d }}</option>{% endfor %}
-                </select>
-            </div>
-            <div>
-                <label style="display:block;font-size:11px;color:#64748b;margin-bottom:4px;">{% trans 'Projet' %}</label>
-                <select id="bfProject" class="bf-select"><option value="">{% trans 'Tous' %}</option></select>
-            </div>
-            <div>
-                <label style="display:block;font-size:11px;color:#64748b;margin-bottom:4px;">{% trans 'Statut' %}</label>
-                <select id="bfStatus" class="bf-select">
-                    <option value="">{% trans 'Tous' %}</option>
-                    {% for s in budget_filter_options.statuses %}<option value="{{ s }}" data-lbl="{% if s == 'planifie' %}{% trans 'Planifié' %}{% elif s == 'en_cours' %}{% trans 'En cours' %}{% elif s == 'suspendu' %}{% trans 'Suspendu' %}{% elif s == 'termine' %}{% trans 'Terminé' %}{% elif s == 'en_retard' %}{% trans 'En retard' %}{% else %}{{ s }}{% endif %}">{{ s }}</option>{% endfor %}
-                </select>
-            </div>
-            <div>
-                <label style="display:block;font-size:11px;color:#64748b;margin-bottom:4px;">{% trans 'Priorité' %}</label>
-                <select id="bfPriority" class="bf-select">
-                    <option value="">{% trans 'Toutes' %}</option>
-                    {% for p in budget_filter_options.priorities %}<option value="{{ p }}" data-lbl="{% if p == 'basse' %}{% trans 'Basse' %}{% elif p == 'haute' %}{% trans 'Haute' %}{% else %}{% trans 'Moyenne' %}{% endif %}">{{ p }}</option>{% endfor %}
-                </select>
-            </div>
-            <div>
-                <label style="display:block;font-size:11px;color:#64748b;margin-bottom:4px;">{% trans 'Devise' %}</label>
-                <select id="bfCurrency" class="bf-select">
-                    <option value="">{% trans 'Toutes' %}</option>
-                    {% for c in budget_filter_options.currencies %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
-                </select>
-            </div>
-            <div>
-                <label style="display:block;font-size:11px;color:#64748b;margin-bottom:4px;">{% trans 'Conso. min. (%)' %}</label>
-                <input id="bfThreshold" type="number" min="0" max="100" step="5" value="0" class="bf-select" style="width:90px;">
-            </div>
-            <div>
-                <button type="button" id="bfReset" class="btn btn-outline btn-sm">
-                    <i class="fa-solid fa-rotate-left" width="14" height="14"></i> {% trans 'Réinitialiser' %}
-                </button>
-            </div>
-        </div>
-        <p id="bfSummary" style="margin:10px 0 0;font-size:12px;color:#64748b;"></p>
-    </div>
+<div class="filters-bar" id="budgetFilters">
+    <select id="bfView" class="form-control" title="{% trans 'Vue' %}" style="max-width:170px;">
+        <option value="global">{% trans 'Global' %}</option>
+        <option value="project" selected>{% trans 'Par projet' %}</option>
+        <option value="direction">{% trans 'Par direction' %}</option>
+    </select>
+    <select id="bfDirection" class="form-control" title="{% trans 'Direction' %}">
+        <option value="">{% trans 'Toutes les directions' %}</option>
+        {% for d in budget_filter_options.directions %}<option value="{{ d }}" {% if d == budget_initial_dir %}selected{% endif %}>{{ d }}</option>{% endfor %}
+    </select>
+    <select id="bfProject" class="form-control" title="{% trans 'Projet' %}"><option value="">{% trans 'Tous les projets' %}</option></select>
+    <select id="bfStatus" class="form-control" title="{% trans 'Statut' %}">
+        <option value="">{% trans 'Tous les statuts' %}</option>
+        {% for s in budget_filter_options.statuses %}<option value="{{ s }}">{% if s == 'planifie' %}{% trans 'Planifié' %}{% elif s == 'en_cours' %}{% trans 'En cours' %}{% elif s == 'suspendu' %}{% trans 'Suspendu' %}{% elif s == 'termine' %}{% trans 'Terminé' %}{% elif s == 'en_retard' %}{% trans 'En retard' %}{% else %}{{ s }}{% endif %}</option>{% endfor %}
+    </select>
+    <select id="bfPriority" class="form-control" title="{% trans 'Priorité' %}">
+        <option value="">{% trans 'Toutes les priorités' %}</option>
+        {% for p in budget_filter_options.priorities %}<option value="{{ p }}">{% if p == 'basse' %}{% trans 'Basse' %}{% elif p == 'haute' %}{% trans 'Haute' %}{% else %}{% trans 'Moyenne' %}{% endif %}</option>{% endfor %}
+    </select>
+    <select id="bfCurrency" class="form-control" title="{% trans 'Devise' %}">
+        <option value="">{% trans 'Toutes les devises' %}</option>
+        {% for c in budget_filter_options.currencies %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+    </select>
+    <input id="bfThreshold" type="number" min="0" max="100" step="5" value="0" class="form-control" title="{% trans 'Consommation minimale (%)' %}" placeholder="{% trans 'Conso. min %' %}" style="max-width:120px;">
+    <button type="button" id="bfReset" class="btn btn-outline" title="{% trans 'Réinitialiser' %}">
+        <i class="fa-solid fa-rotate-left" width="16" height="16"></i> {% trans 'Réinitialiser' %}
+    </button>
+    <p id="bfSummary" style="flex-basis:100%;margin:0;font-size:12px;color:#64748b;"></p>
 </div>
 
 <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
@@ -437,7 +400,7 @@
                 legend: { position: 'right' },
                 csigCenter: { format: function (v) { return CSIGMoney.compact(v); }, real: [], label: "{% trans 'total' %}" },
                 tooltip: { callbacks: { label: function (ctx) {
-                    var real = pieChart.options.plugins.csigCenter.real || [];
+                    var real = CSIGCharts.centerReal(pieChart);
                     return ctx.label + ' : ' + CSIGMoney.compact(real[ctx.dataIndex]);
                 } } }
             }
@@ -473,7 +436,7 @@
         pieChart.data.labels = labels;
         pieChart.data.datasets[0].data = CSIGCharts.spread(real);
         pieChart.data.datasets[0].backgroundColor = labels.map(function (_, i) { return PIE_PALETTE[i % PIE_PALETTE.length]; });
-        pieChart.options.plugins.csigCenter.real = real;
+        CSIGCharts.setCenterReal(pieChart, real);
         pieChart.update();
         consumptionChart.data.labels = labels;
         consumptionChart.data.datasets[0].data = gs.map(function (g) { return aggregate(g.rows).rate; });

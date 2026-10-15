@@ -15,11 +15,24 @@
 
   var DEFAULT_MIN_SHARE = 0.02; // 2 % d'arc minimum visible
 
+  // Chart.js résout les options de plugin comme des options « scriptable » :
+  // toute fonction d'options.plugins.<id> est rappelée avec un objet contexte
+  // {chart,type,...}. On lit donc la config BRUTE (chart.config.options) pour
+  // récupérer les callbacks `format` tels quels, et non la version résolue.
+  //
+  // On ne retombe PAS sur chart.options.plugins : Chart.js y synthétise un
+  // objet vide pour les plugins enregistrés mais non configurés sur ce graphe,
+  // ce qui activerait les plugins partout (total fantôme, étiquettes parasites).
+  function pluginOptions(chart, id) {
+    var raw = chart.config && chart.config.options && chart.config.options.plugins;
+    return (raw && raw[id]) || null;
+  }
+
   // Valeur affichée au centre d'un doughnut / pie.
   var centerValue = {
     id: 'csigCenter',
     beforeDatasetsDraw: function (chart) {
-      var cfg = chart.options && chart.options.plugins && chart.options.plugins.csigCenter;
+      var cfg = pluginOptions(chart, 'csigCenter');
       if (!cfg || cfg.enabled === false) return;
       var ds = chart.data.datasets && chart.data.datasets[0];
       if (!ds) return;
@@ -48,7 +61,7 @@
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = cfg.color || '#1e293b';
-      ctx.font = cfg.font || '700 20px Inter, system-ui, sans-serif';
+      ctx.font = cfg.font || '700 16px Inter, system-ui, sans-serif';
       ctx.fillText(main, x, y - (sub ? 8 : 0));
       if (sub) {
         ctx.font = cfg.subFont || '600 11px Inter, system-ui, sans-serif';
@@ -63,7 +76,7 @@
   var valueLabels = {
     id: 'csigValues',
     afterDatasetsDraw: function (chart) {
-      var cfg = chart.options && chart.options.plugins && chart.options.plugins.csigValues;
+      var cfg = pluginOptions(chart, 'csigValues');
       if (!cfg || cfg.enabled === false) return;
       var fmt = cfg.format || function (v) { return String(v); };
       var ctx = chart.ctx;
@@ -106,6 +119,15 @@
       var s = spread.reduce(function (a, b) { return a + b; }, 0);
       var k = s ? total / s : 1;
       return spread.map(function (v) { return v * k; });
+    },
+    // Valeurs « réelles » du centre (sans étalonnage d'arc minimum).
+    centerReal: function (chart) {
+      var cfg = pluginOptions(chart, 'csigCenter');
+      return (cfg && cfg.real) || [];
+    },
+    setCenterReal: function (chart, real) {
+      var cfg = pluginOptions(chart, 'csigCenter');
+      if (cfg) cfg.real = real;
     },
     // Renvoie un handler onClick qui redirige selon le segment cliqué.
     redirect: function (resolve) {
