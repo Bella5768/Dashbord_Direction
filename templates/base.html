@@ -617,15 +617,20 @@
         var unread = n.is_read ? '' : ' unread';
         var dot = n.is_read ? '' : '<div class="notif-unread-dot"></div>';
         var href = n.link || '#';
+        var safeId = String(n.id).replace(/"/g, '&quot;');
+        var safeHref = String(href).replace(/"/g, '&quot;');
+        var safeTitle = String(n.title || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        var safeMsg = String(n.message || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        var safeTime = String(n.created_at || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         return (
-          '<div class="notif-item' + unread + '" data-id="' + n.id + '" data-href="' + href + '">' +
+          '<div class="notif-item' + unread + '" data-id="' + safeId + '" data-href="' + safeHref + '">' +
             '<div class="notif-item-icon">' +
               '<i class="fa-solid ' + icon + '"></i>' +
             '</div>' +
             '<div class="notif-item-body">' +
-              '<p class="notif-item-title">' + n.title + '</p>' +
-              (n.message ? '<p class="notif-item-msg">' + n.message + '</p>' : '') +
-              '<span class="notif-item-time">' + n.created_at + '</span>' +
+              '<p class="notif-item-title">' + safeTitle + '</p>' +
+              (n.message ? '<p class="notif-item-msg">' + safeMsg + '</p>' : '') +
+              '<span class="notif-item-time">' + safeTime + '</span>' +
             '</div>' +
             dot +
           '</div>'
@@ -697,6 +702,7 @@
       /* ── WebSocket temps réel ──────────────────────────────── */
       var _ws = null;
       var _wsRetry = null;
+      var _wsHeartbeat = null;
 
       function connectWS() {
         try {
@@ -704,12 +710,21 @@
           var url = proto + '//' + location.host + '/ws/notifications/';
           _ws = new WebSocket(url);
 
-          _ws.onopen = function() { _wsRetry = null; };
+          _ws.onopen = function() {
+            _wsRetry = null;
+            if (_wsHeartbeat) clearInterval(_wsHeartbeat);
+            _wsHeartbeat = setInterval(function() {
+              if (_ws && _ws.readyState === WebSocket.OPEN) {
+                _ws.send(JSON.stringify({type: 'ping'}));
+              }
+            }, 30000);
+          };
 
           _ws.onerror = function() {};
 
           _ws.onmessage = function(e) {
             var data = JSON.parse(e.data);
+            if (data.type === 'pong') return;
             if (data.msg_type === 'proj') {
               if (typeof window._onProjUpdate === 'function') window._onProjUpdate(data);
               return;
@@ -718,9 +733,7 @@
               if (typeof window._onCalendarUpdate === 'function') window._onCalendarUpdate(data);
               return;
             }
-            /* Badge instantané */
             updateBadge(_unreadCount + 1);
-            /* Si le dropdown est ouvert, insérer l'item en tête */
             if (dropdown && dropdown.classList.contains('open') && listEl) {
               var empty = listEl.querySelector('.notif-empty');
               if (empty) listEl.innerHTML = '';
@@ -733,6 +746,7 @@
 
           _ws.onclose = function() {
             _ws = null;
+            if (_wsHeartbeat) { clearInterval(_wsHeartbeat); _wsHeartbeat = null; }
             var delay = _wsRetry ? Math.min(_wsRetry * 2, 30000) : 3000;
             _wsRetry = delay;
             setTimeout(connectWS, delay);

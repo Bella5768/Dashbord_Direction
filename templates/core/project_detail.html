@@ -1624,7 +1624,7 @@ function jkCard(m, col) {
   var asgn = m.assigned
     ? '<span style="font-size:10px;color:#334155;overflow:hidden;text-overflow:ellipsis;max-width:110px;white-space:nowrap;"><i class="fa-solid fa-user" style="margin-right:3px;color:'+col.accent+';"></i>'+escH(m.assigned)+'</span>'
     : '<span style="font-size:10px;background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 5px;font-weight:500;">'+DETAIL_I18N.unassigned+'</span>';
-  return '<div draggable="true" ondragstart="jkDragStart(event,'+m.id+')" data-mid="'+m.id+'"'
+  return '<div draggable="true" ondragstart="jkDragStart(event,\''+m.id+'\')" data-mid="'+m.id+'"'
        + ' style="background:#fff;border:1.5px solid '+col.border+';border-left:3px solid '+col.accent+';border-radius:8px;padding:10px;cursor:grab;'
        + 'box-shadow:0 1px 4px rgba(0,0,0,.08);transition:box-shadow .15s;"'
        + ' onmouseenter="this.style.boxShadow=\'0 4px 12px rgba(0,0,0,.12)\'"'
