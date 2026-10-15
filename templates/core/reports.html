@@ -26,6 +26,9 @@
 .rpt-kpi.purple { border-left-color: #8b5cf6; }
 .rpt-kpi.amber  { border-left-color: #f59e0b; }
 .rpt-kpi.cyan   { border-left-color: #06b6d4; }
+.rpt-kpi[data-proj-filter] { transition: box-shadow .15s, transform .15s; }
+.rpt-kpi[data-proj-filter]:hover { box-shadow: 0 4px 12px rgba(0,0,0,.08); }
+.rpt-kpi.active { outline: 2px solid #3b82f6; outline-offset: 1px; }
 
 .rpt-kpi-icon {
     width: 40px; height: 40px;
@@ -242,28 +245,28 @@
 <div id="tab-projets" class="tab-content" style="display:none;">
 
     <div class="grid grid-4 mb-6">
-        <div class="rpt-kpi blue">
+        <div class="rpt-kpi blue" data-proj-filter="all" role="button" tabindex="0" style="cursor:pointer;">
             <div class="rpt-kpi-icon"><i class="fa-solid fa-folder" width="18" height="18"></i></div>
             <div>
                 <p class="rpt-kpi-val">{{ total_projects }}</p>
                 <p class="rpt-kpi-lbl">{% trans 'Total projets' %}</p>
             </div>
         </div>
-        <div class="rpt-kpi green">
+        <div class="rpt-kpi green" data-proj-filter="termine" role="button" tabindex="0" style="cursor:pointer;">
             <div class="rpt-kpi-icon"><i class="fa-solid fa-circle-check" width="18" height="18"></i></div>
             <div>
                 <p class="rpt-kpi-val">{{ projects_completed }}</p>
                 <p class="rpt-kpi-lbl">{% trans 'Terminés' %}</p>
             </div>
         </div>
-        <div class="rpt-kpi cyan">
+        <div class="rpt-kpi cyan" data-proj-filter="en_cours" role="button" tabindex="0" style="cursor:pointer;">
             <div class="rpt-kpi-icon"><i class="fa-solid fa-spinner" width="18" height="18"></i></div>
             <div>
                 <p class="rpt-kpi-val">{{ projects_en_cours }}</p>
                 <p class="rpt-kpi-lbl">{% trans 'En cours' %}</p>
             </div>
         </div>
-        <div class="rpt-kpi red">
+        <div class="rpt-kpi red" data-proj-filter="en_retard" role="button" tabindex="0" style="cursor:pointer;">
             <div class="rpt-kpi-icon"><i class="fa-solid fa-triangle-exclamation" width="18" height="18"></i></div>
             <div>
                 <p class="rpt-kpi-val">{{ projects_en_retard }}</p>
@@ -274,7 +277,7 @@
 
     <div class="rpt-list">
         {% for project in all_projects %}
-        <div class="rpt-prow s-{{ project.status }}" onclick="window.location.href='{% url 'core:project_detail' project.slug|default:project.pk %}'">
+        <div class="rpt-prow s-{{ project.status }}" data-status="{% if project.computed_status == 'en_retard' %}en_retard{% else %}{{ project.status }}{% endif %}" onclick="window.location.href='{% url 'core:project_detail' project.slug|default:project.pk %}'">
             <div class="rpt-pgrid cols-5">
                 <!-- Nom + responsable -->
                 <div>
@@ -401,7 +404,7 @@
                     </thead>
                     <tbody>
                         {% for item in budget_by_direction %}
-                        <tr>
+                        <tr style="cursor:pointer;" onclick="window.location.href='{% url 'core:resources' %}?tab=budget&dir={{ item.direction|urlencode }}'">
                             <td>
                                 <p class="font-medium">{{ item.direction }}</p>
                                 <p class="text-xs text-gray-500">{{ item.name }}</p>
@@ -467,7 +470,7 @@
 
     <div class="rpt-list">
         {% for project in all_projects %}
-        <div class="rpt-prow s-{{ project.status }}" onclick="window.location.href='{% url 'core:project_detail' project.slug|default:project.pk %}'">
+        <div class="rpt-prow s-{{ project.status }}" data-status="{% if project.computed_status == 'en_retard' %}en_retard{% else %}{{ project.status }}{% endif %}" onclick="window.location.href='{% url 'core:project_detail' project.slug|default:project.pk %}'">
             <div class="rpt-pgrid cols-4">
                 <!-- Nom + responsable -->
                 <div>
@@ -553,21 +556,46 @@ new Chart(document.getElementById('projectsByDirectionChart'), {
             }
         ]
     },
-    options: { ...CHART_OPTS, scales: { x: { grid: { display: false } }, y: { ticks: { stepSize: 1 } } } }
+    options: {
+        ...CHART_OPTS,
+        plugins: { ...CHART_OPTS.plugins, csigValues: { format: v => String(v) } },
+        onClick: CSIGCharts.redirect(function (i) {
+            var codes = [{% for item in projects_by_direction %}'{{ item.direction|escapejs }}'{% if not forloop.last %},{% endif %}{% endfor %}];
+            return "{% url 'core:projects' %}?direction=" + encodeURIComponent(codes[i]);
+        }),
+        onHover: CSIGCharts.pointerOnHover(),
+        scales: { x: { grid: { display: false } }, y: { ticks: { stepSize: 1 } } }
+    }
 });
 
 // Projets par statut (doughnut)
-new Chart(document.getElementById('projectsByStatusChart'), {
-    type: 'doughnut',
-    data: {
-        labels: [{% for item in projects_by_status %}'{{ item.name }}'{% if not forloop.last %},{% endif %}{% endfor %}],
-        datasets: [{
-            data: [{% for item in projects_by_status %}{{ item.value }}{% if not forloop.last %},{% endif %}{% endfor %}],
-            backgroundColor: CHART_COLORS, borderWidth: 0, hoverOffset: 4,
-        }]
-    },
-    options: { ...CHART_OPTS, plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 12 } } } }, cutout: '65%' }
-});
+(function () {
+    var _statusData = [{% for item in projects_by_status %}{{ item.value }}{% if not forloop.last %},{% endif %}{% endfor %}];
+    var _statusTotal = _statusData.reduce((a, b) => a + b, 0);
+    new Chart(document.getElementById('projectsByStatusChart'), {
+        type: 'doughnut',
+        data: {
+            labels: [{% for item in projects_by_status %}'{{ item.name }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+            datasets: [{
+                data: _statusData,
+                backgroundColor: CHART_COLORS, borderWidth: 0, hoverOffset: 4,
+            }]
+        },
+        options: {
+            ...CHART_OPTS,
+            cutout: '65%',
+            plugins: {
+                legend: { position: 'right', labels: { boxWidth: 12, font: { size: 12 } } },
+                csigCenter: { format: v => String(v), label: "{% trans 'projets' %}" },
+                tooltip: { callbacks: { label: ctx => ctx.label + ' : ' + ctx.parsed + ' (' + (_statusTotal ? Math.round(ctx.parsed / _statusTotal * 100) : 0) + '%)' } }
+            },
+            onClick: CSIGCharts.redirect(function (i) {
+                return "{% url 'core:projects' %}?status=" + ['en_cours', 'termine', 'planifie'][i];
+            }),
+            onHover: CSIGCharts.pointerOnHover()
+        }
+    });
+})();
 
 // Budget charts (lazy init)
 let budgetChartsInit = false;
@@ -598,8 +626,11 @@ function initBudgetCharts() {
             ...CHART_OPTS,
             plugins: {
                 ...CHART_OPTS.plugins,
+                csigValues: { format: v => CSIGMoney.compact(v) },
                 tooltip: { callbacks: { label: ctx => ctx.dataset.label + ' : ' + CSIGMoney.compact(ctx.parsed.y) } }
             },
+            onClick: CSIGCharts.redirect(function (i, chart) { return "{% url 'core:resources' %}?tab=budget&dir=" + encodeURIComponent(chart.data.labels[i]); }),
+            onHover: CSIGCharts.pointerOnHover(),
             scales: {
                 x: { grid: { display: false } },
                 y: {
@@ -631,11 +662,36 @@ function initBudgetCharts() {
             ...CHART_OPTS,
             plugins: {
                 legend: { position: 'right', labels: { boxWidth: 12, font: { size: 12 } } },
+                csigCenter: { format: v => v + '%', hideIdleTotal: true, showSub: false },
                 tooltip: { callbacks: { label: ctx => ctx.label + ' : ' + ctx.raw + '% {% trans "consommé" %}' } }
             },
-            cutout: '65%'
+            cutout: '65%',
+            onClick: CSIGCharts.redirect(function (i, chart) { return "{% url 'core:resources' %}?tab=budget&dir=" + encodeURIComponent(chart.data.labels[i]); }),
+            onHover: CSIGCharts.pointerOnHover()
         }
     });
 }
+
+// Filtrage instantané de la liste projets depuis les cartes KPI (sans reload)
+document.addEventListener('DOMContentLoaded', function () {
+    var kpis = document.querySelectorAll('.rpt-kpi[data-proj-filter]');
+    if (!kpis.length) return;
+    function apply(filter) {
+        document.querySelectorAll('.rpt-prow[data-status]').forEach(function (row) {
+            row.style.display = (filter === 'all' || row.dataset.status === filter) ? '' : 'none';
+        });
+    }
+    kpis.forEach(function (card) {
+        function activate() {
+            kpis.forEach(function (c) { c.classList.remove('active'); });
+            card.classList.add('active');
+            apply(card.dataset.projFilter);
+        }
+        card.addEventListener('click', activate);
+        card.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); }
+        });
+    });
+});
 </script>
 {% endblock %}

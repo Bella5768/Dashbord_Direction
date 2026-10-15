@@ -1278,6 +1278,48 @@ def resources(request):
     total_consumed = round(total_consumed)
     total_allocated_usd = round(total_allocated_usd, 2)
     total_consumed_usd = round(total_consumed_usd, 2)
+
+    # Socle de données transmis au client pour le hub budget (filtres + agrégations sans reload)
+    budget_rows = []
+    for b in budgets:
+        proj = getattr(b, 'project', None)
+        direction = getattr(b, 'direction', None)
+        if proj is not None:
+            direction = direction or proj.direction
+        _alloc = float(b.allocated or 0)
+        _rate = round((float(b.consumed or 0) / _alloc) * 100, 1) if _alloc > 0 else 0
+        budget_rows.append({
+            'id': str(b.id) if b.id else None,
+            'type': 'project' if proj is not None else 'direction',
+            'name': proj.name if proj is not None else (direction.name if direction else ''),
+            'direction': direction.code if direction else '',
+            'direction_name': direction.name if direction else '',
+            'project_id': str(proj.id) if proj is not None else None,
+            'project_slug': (proj.slug or str(proj.id)) if proj is not None else None,
+            'status': proj.computed_status if proj is not None else '',
+            'priority': proj.priority if proj is not None else '',
+            'currency': b.currency,
+            'allocated_gnf': b.allocated_gnf,
+            'consumed_gnf': b.consumed_gnf,
+            'available_gnf': b.available_gnf,
+            'allocated_usd': b.allocated_usd,
+            'consumed_usd': b.consumed_usd,
+            'available_usd': b.available_usd,
+            'rate': _rate,
+            'progress': float(proj.progress or 0) if proj is not None else 0,
+            'start_date': proj.start_date.isoformat() if proj is not None and proj.start_date else '',
+            'end_date': proj.end_date.isoformat() if proj is not None and proj.end_date else '',
+        })
+
+    budget_filter_options = {
+        'directions': sorted(
+            {r['direction'] for r in budget_rows if r['direction']},
+        ),
+        'statuses': sorted({r['status'] for r in budget_rows if r['status']}),
+        'priorities': sorted({r['priority'] for r in budget_rows if r['priority']}),
+        'currencies': sorted({r['currency'] for r in budget_rows if r['currency']}),
+    }
+    budget_initial_dir = request.GET.get('dir', '').strip()
     
     # Employees data : scopé sur la portée réelle du droit 'Employee'
     employees_base = _apply_read_scope(Employee.objects.select_related('direction'), profile, 'Employee')
@@ -1317,6 +1359,9 @@ def resources(request):
         'total_consumed_usd': total_consumed_usd,
         'total_available_usd': round(total_allocated_usd - total_consumed_usd, 2),
         'consumption_rate': round((float(total_consumed) / float(total_allocated) * 100), 1) if total_allocated > 0 else 0,
+        'budget_rows': budget_rows,
+        'budget_filter_options': budget_filter_options,
+        'budget_initial_dir': budget_initial_dir,
         'can_view_budgets': can_view_budgets,
         'can_manage_budgets': can_manage_budgets,
         'can_view_all_budget_directions': can_view_all_budget_directions,
@@ -3182,6 +3227,19 @@ def project_detail(request, project_id):
     can_add_documents = profile.can_add_project_documents(project)
     user_employee = profile.employee
 
+    # Rythme de consommation : % de budget consommé vs % de temps écoulé.
+    from django.utils import timezone as _tz
+    _today = _tz.localdate()
+    budget_time_elapsed = None
+    budget_burn_status = ''
+    if project.start_date and project.end_date:
+        _total_days = (project.end_date - project.start_date).days
+        if _total_days > 0:
+            _done_days = (_today - project.start_date).days
+            budget_time_elapsed = round(max(0, min(_done_days, _total_days)) / _total_days * 100, 1)
+            _delta = project.budget_percentage - budget_time_elapsed
+            budget_burn_status = 'over' if _delta > 10 else ('under' if _delta < -10 else 'on')
+
     # Statistiques de charge par membre : {employee_id: {'total': n, 'done': n}}
     from django.db.models import Count, Q as Qm
     milestones_qs = project.milestones.prefetch_related('assigned_to', 'sub_milestones__assigned_to').all()
@@ -3324,6 +3382,9 @@ def project_detail(request, project_id):
         'overdue_milestones': overdue_milestones,
         'upcoming_milestones': upcoming_milestones,
         'open_needs_count': open_needs_count,
+        'budget_time_elapsed': budget_time_elapsed,
+        'budget_burn_status': budget_burn_status,
+        'budget_available': (project.budget or 0) - (project.budget_consumed or 0),
     }
     return render(request, 'core/project_detail.html', context)
 
@@ -4531,6 +4592,8 @@ def sub_milestone_toggle(request, sub_milestone_id):
         'completed': sub_milestone.completed,
         'milestone_progress': milestone.progress,
         'milestone_completed': milestone.completed,
+        'milestone_status': milestone.status,
+        'milestone_status_label': milestone.get_status_display(),
         'project_progress': project.progress,
         'actor': request.user.get_full_name() or request.user.username,
     })
@@ -4587,6 +4650,8 @@ def milestone_toggle(request, milestone_id):
         'milestone_id': milestone.id,
         'completed': milestone.completed,
         'progress': milestone.progress,
+        'status': milestone.status,
+        'status_label': milestone.get_status_display(),
         'project_progress': project.progress,
         'actor': request.user.get_full_name() or request.user.username,
     })
@@ -4614,10 +4679,12 @@ def milestone_update_status(request, milestone_id):
     old_status = milestone.status
     milestone.status = new_status
     if new_status == 'termine':
+        now = timezone.now()
+        milestone.sub_milestones.filter(completed=False).update(completed=True, completed_at=now)
         milestone.completed = True
         milestone.manual_progress = 100
         if not milestone.completed_at:
-            milestone.completed_at = timezone.now()
+            milestone.completed_at = now
     else:
         milestone.completed = False
         if new_status == 'a_faire':

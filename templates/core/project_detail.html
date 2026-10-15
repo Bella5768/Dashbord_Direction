@@ -360,7 +360,36 @@
               <span style="display:flex;align-items:center;gap:4px;color:#6b7280;"><span style="width:8px;height:8px;border-radius:2px;background:#e2e8f0;display:inline-block;"></span>{% trans "Alloué" %}</span>
               <strong style="color:#374151;">{{ project.budget|number_format }} {{ project.currency }} <span style="font-weight:400;color:#9ca3af;font-size:11px;">(≈ {{ project.budget_equiv_display }})</span></strong>
             </div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;">
+              <span style="display:flex;align-items:center;gap:4px;color:#6b7280;"><span style="width:8px;height:8px;border-radius:2px;background:{% if budget_available < 0 %}#ef4444{% else %}#10b981{% endif %};display:inline-block;"></span>{% trans "Reste" %}</span>
+              <strong style="color:{% if budget_available < 0 %}#ef4444{% else %}#374151{% endif %};">{{ budget_available|number_format }} {{ project.currency }}</strong>
+            </div>
           </div>
+
+          {% if budget_time_elapsed is not None %}
+          <div style="margin-top:12px;padding-top:10px;border-top:1px solid #f1f5f9;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <span style="font-size:11px;color:#6b7280;">{% trans "Rythme de consommation" %}</span>
+              {% if budget_burn_status == 'over' %}
+              <span class="badge badge-danger" style="font-size:10px;">{% trans "En avance" %}</span>
+              {% elif budget_burn_status == 'under' %}
+              <span class="badge badge-success" style="font-size:10px;">{% trans "Économe" %}</span>
+              {% else %}
+              <span class="badge badge-info" style="font-size:10px;">{% trans "À jour" %}</span>
+              {% endif %}
+            </div>
+            <div style="position:relative;">
+              <div class="progress" style="height:8px;">
+                <div class="progress-bar {% if project.budget_percentage > 90 %}red{% elif project.budget_percentage > 70 %}amber{% else %}green{% endif %}" style="width:{{ project.budget_percentage }}%;"></div>
+              </div>
+              <span title="{% trans 'Temps écoulé' %}" style="position:absolute;top:-3px;left:{{ budget_time_elapsed }}%;width:2px;height:14px;background:#334155;transform:translateX(-1px);"></span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:#94a3b8;margin-top:3px;">
+              <span>{% trans "Consommé" %} : {{ project.budget_percentage }}%</span>
+              <span>{% trans "Temps écoulé" %} : {{ budget_time_elapsed }}%</span>
+            </div>
+          </div>
+          {% endif %}
         </div>
       </div>
       {% endif %}
@@ -537,11 +566,14 @@
             cutout: '72%', responsive: false,
             plugins: {
               legend: { display: false },
+              csigCenter: {format: function(v){ return String(v); }, label: "{% trans 'jalons' %}", percentOnHover: true},
               tooltip: { callbacks: { label: function(ctx) {
                 var pct = DS.total > 0 ? Math.round(ctx.raw / DS.total * 100) : 0;
                 return ' ' + ctx.raw + ' (' + pct + '%)';
               }}}
             },
+            onClick: function(){ var s = document.getElementById('jalons'); if (s) s.scrollIntoView({behavior:'smooth'}); },
+            onHover: CSIGCharts.pointerOnHover(),
             animation: { duration: 700, easing: 'easeInOutQuart' }
           }
         });
@@ -569,6 +601,7 @@
             indexAxis: 'y', responsive: true, maintainAspectRatio: false,
             plugins: {
               legend: { display: false },
+              csigValues: {format: function(v){ return v.toFixed(1) + '%'; }},
               tooltip: { callbacks: { label: function(ctx) { return ' ' + ctx.raw.toFixed(1) + '%'; } } }
             },
             scales: {
@@ -756,7 +789,7 @@
               <div class="mrow-acts">
                 <form method="post" action="{% url 'core:milestone_update_status' milestone.slug|default:milestone.pk %}" style="display:inline;">
                   {% csrf_token %}
-                  <select name="status" onchange="onStatusChange({{milestone.id}}, this.value)" title="{% trans 'Changer le statut' %}" class="mrow-status-sel">
+                  <select name="status" onchange="onStatusChange('{{milestone.id}}', this.value)" title="{% trans 'Changer le statut' %}" class="mrow-status-sel">
                     <option value="a_faire" {% if milestone.status == 'a_faire' %}selected{% endif %}>{% trans 'À faire' %}</option>
                     <option value="en_cours" {% if milestone.status == 'en_cours' %}selected{% endif %}>{% trans 'En cours' %}</option>
                     <option value="bloque" {% if milestone.status == 'bloque' %}selected{% endif %}>{% trans 'Bloqué' %}</option>
@@ -1886,6 +1919,20 @@ function renderCalendar() {
     else row.classList.remove('mrow-done');
   }
 
+  function setMilestoneStatus(mid, status, label) {
+    if (!status) return;
+    var badge = document.getElementById('mstatus-' + mid);
+    if (badge) {
+      badge.textContent = label;
+      badge.className = 'mrow-sbadge s-' + status;
+    }
+    var row = document.querySelector('[data-mid="' + mid + '"]');
+    if (row) {
+      var sel = row.querySelector('select[name="status"]');
+      if (sel && sel.value !== status) sel.value = status;
+    }
+  }
+
   function setSubProgress(sid, completed) {
     var item = document.querySelector('[data-sid="' + sid + '"]');
     if (!item) return;
@@ -1962,14 +2009,15 @@ function renderCalendar() {
   function handleUpdate(data) {
     if (data.event === 'milestone_toggle') {
       setMilestoneProgress(data.milestone_id, data.progress, data.completed);
+      setMilestoneStatus(data.milestone_id, data.status, data.status_label);
       setProjectProgress(data.project_progress);
     } else if (data.event === 'sous_etape_toggle') {
       setSubProgress(data.sub_id, data.completed);
       setMilestoneProgress(data.milestone_id, data.milestone_progress, data.milestone_completed);
+      setMilestoneStatus(data.milestone_id, data.milestone_status, data.milestone_status_label);
       setProjectProgress(data.project_progress);
     } else if (data.event === 'milestone_status') {
-      var badge = document.getElementById('mstatus-' + data.milestone_id);
-      if (badge) { badge.textContent = data.status_label; badge.className = 'mrow-sbadge s-' + data.status; }
+      setMilestoneStatus(data.milestone_id, data.status, data.status_label);
       setMilestoneProgress(data.milestone_id, data.progress, data.completed);
       setProjectProgress(data.project_progress);
     } else if (data.event === 'section_refresh') {

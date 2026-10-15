@@ -748,8 +748,32 @@ class Milestone(SluggableModel):
         return round((completed / total) * 100)
     
     def save(self, *args, **kwargs):
-        """Enforce la cohérence entre completed, status et completed_at avant chaque écriture."""
+        """Enforce la cohérence progression / completed / status / completed_at.
+
+        Le statut est dérivé de la progression :
+        0 % -> « À faire », 1-99 % -> « En cours », 100 % -> « Terminé ».
+        Les statuts manuels « Bloqué » et « En révision » sont préservés.
+        """
         from django.utils import timezone
+
+        if self.status not in ('bloque', 'en_revision'):
+            total = self.sub_milestones.count() if self.pk else 0
+            if total:
+                done = self.sub_milestones.filter(completed=True).count()
+                self.completed = (done == total)
+                progress = round((done / total) * 100)
+            else:
+                progress = 100 if self.completed else (self.manual_progress or 0)
+            if progress >= 100:
+                self.completed = True
+                self.status = 'termine'
+            elif progress <= 0:
+                self.completed = False
+                self.status = 'a_faire'
+            else:
+                self.completed = False
+                self.status = 'en_cours'
+
         if self.completed:
             self.status = 'termine'
             if not self.completed_at:
@@ -758,6 +782,10 @@ class Milestone(SluggableModel):
             if self.status == 'termine':
                 self.status = 'en_cours'
             self.completed_at = None
+
+        update_fields = kwargs.get('update_fields')
+        if update_fields is not None:
+            kwargs['update_fields'] = set(update_fields) | {'status', 'completed', 'completed_at'}
         super().save(*args, **kwargs)
 
     def update_completion(self):

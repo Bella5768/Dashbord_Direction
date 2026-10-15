@@ -8,6 +8,26 @@
 {% block page_subtitle %}{% trans 'Gestion des budgets et des ressources humaines' %}{% endblock %}
 
 {% block content %}
+<style>
+.bf-select {
+    height: 34px;
+    padding: 0 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #374151;
+    background: #fff;
+    cursor: pointer;
+}
+#budgetRowsBody tr.bf-group-row { cursor: pointer; }
+#budgetRowsBody tr.bf-group-row:hover { background: #f8fafc; }
+#budgetRowsBody tr.bf-detail-row > td { background: #f8fafc; padding: 8px 12px; }
+.bf-detail-inner { font-size: 12px; color: #475569; }
+.bf-detail-inner .bf-line { display: flex; gap: 16px; padding: 4px 0; border-bottom: 1px solid #eef2f7; }
+.bf-detail-inner .bf-line:last-child { border-bottom: 0; }
+.bf-chevron { transition: transform .15s; display: inline-block; }
+.bf-chevron.open { transform: rotate(90deg); }
+</style>
 <!-- Tabs -->
 <div class="tabs">
     <button type="button" class="tab-btn {% if tab == 'budget' %}active{% endif %}" data-tab="budget">
@@ -21,6 +41,67 @@
 </div>
 
 {% if tab == 'budget' %}
+{{ budget_rows|json_script:"budgetRowsData" }}
+{{ budget_filter_options|json_script:"budgetFilterOptions" }}
+
+<!-- Filtres budget -->
+<div class="card mb-4">
+    <div class="card-content" style="padding:14px 16px;">
+        <div id="budgetFilters" style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
+            <div>
+                <label style="display:block;font-size:11px;color:#64748b;margin-bottom:4px;">{% trans 'Vue' %}</label>
+                <select id="bfView" class="bf-select">
+                    <option value="global">{% trans 'Global' %}</option>
+                    <option value="project" selected>{% trans 'Par projet' %}</option>
+                    <option value="direction">{% trans 'Par direction' %}</option>
+                </select>
+            </div>
+            <div>
+                <label style="display:block;font-size:11px;color:#64748b;margin-bottom:4px;">{% trans 'Direction' %}</label>
+                <select id="bfDirection" class="bf-select">
+                    <option value="">{% trans 'Toutes' %}</option>
+                    {% for d in budget_filter_options.directions %}<option value="{{ d }}" {% if d == budget_initial_dir %}selected{% endif %}>{{ d }}</option>{% endfor %}
+                </select>
+            </div>
+            <div>
+                <label style="display:block;font-size:11px;color:#64748b;margin-bottom:4px;">{% trans 'Projet' %}</label>
+                <select id="bfProject" class="bf-select"><option value="">{% trans 'Tous' %}</option></select>
+            </div>
+            <div>
+                <label style="display:block;font-size:11px;color:#64748b;margin-bottom:4px;">{% trans 'Statut' %}</label>
+                <select id="bfStatus" class="bf-select">
+                    <option value="">{% trans 'Tous' %}</option>
+                    {% for s in budget_filter_options.statuses %}<option value="{{ s }}" data-lbl="{% if s == 'planifie' %}{% trans 'Planifié' %}{% elif s == 'en_cours' %}{% trans 'En cours' %}{% elif s == 'suspendu' %}{% trans 'Suspendu' %}{% elif s == 'termine' %}{% trans 'Terminé' %}{% elif s == 'en_retard' %}{% trans 'En retard' %}{% else %}{{ s }}{% endif %}">{{ s }}</option>{% endfor %}
+                </select>
+            </div>
+            <div>
+                <label style="display:block;font-size:11px;color:#64748b;margin-bottom:4px;">{% trans 'Priorité' %}</label>
+                <select id="bfPriority" class="bf-select">
+                    <option value="">{% trans 'Toutes' %}</option>
+                    {% for p in budget_filter_options.priorities %}<option value="{{ p }}" data-lbl="{% if p == 'basse' %}{% trans 'Basse' %}{% elif p == 'haute' %}{% trans 'Haute' %}{% else %}{% trans 'Moyenne' %}{% endif %}">{{ p }}</option>{% endfor %}
+                </select>
+            </div>
+            <div>
+                <label style="display:block;font-size:11px;color:#64748b;margin-bottom:4px;">{% trans 'Devise' %}</label>
+                <select id="bfCurrency" class="bf-select">
+                    <option value="">{% trans 'Toutes' %}</option>
+                    {% for c in budget_filter_options.currencies %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+                </select>
+            </div>
+            <div>
+                <label style="display:block;font-size:11px;color:#64748b;margin-bottom:4px;">{% trans 'Conso. min. (%)' %}</label>
+                <input id="bfThreshold" type="number" min="0" max="100" step="5" value="0" class="bf-select" style="width:90px;">
+            </div>
+            <div>
+                <button type="button" id="bfReset" class="btn btn-outline btn-sm">
+                    <i class="fa-solid fa-rotate-left" width="14" height="14"></i> {% trans 'Réinitialiser' %}
+                </button>
+            </div>
+        </div>
+        <p id="bfSummary" style="margin:10px 0 0;font-size:12px;color:#64748b;"></p>
+    </div>
+</div>
+
 <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
     <div data-currency-switch></div>
 </div>
@@ -29,28 +110,28 @@
     <div class="stat-box stat-box-static">
         <div class="stat-box-icon"><i class="fa-solid fa-wallet" width="20" height="20"></i></div>
         <div class="stat-box-body">
-            <p class="stat-box-value"><span data-money data-gnf="{{ total_allocated|unlocalize }}" data-usd="{{ total_allocated_usd|unlocalize }}">{{ total_allocated|number_format }}</span></p>
+            <p class="stat-box-value"><span id="bsAllocated" data-money data-gnf="{{ total_allocated|unlocalize }}" data-usd="{{ total_allocated_usd|unlocalize }}">{{ total_allocated|number_format }}</span></p>
             <p class="stat-box-label">{% trans 'Budget total' %}</p>
         </div>
     </div>
     <div class="stat-box amber stat-box-static">
         <div class="stat-box-icon"><i class="fa-solid fa-arrow-trend-up" width="20" height="20"></i></div>
         <div class="stat-box-body">
-            <p class="stat-box-value"><span data-money data-gnf="{{ total_consumed|unlocalize }}" data-usd="{{ total_consumed_usd|unlocalize }}">{{ total_consumed|number_format }}</span></p>
+            <p class="stat-box-value"><span id="bsConsumed" data-money data-gnf="{{ total_consumed|unlocalize }}" data-usd="{{ total_consumed_usd|unlocalize }}">{{ total_consumed|number_format }}</span></p>
             <p class="stat-box-label">{% trans 'Consommé' %}</p>
         </div>
     </div>
     <div class="stat-box green stat-box-static">
         <div class="stat-box-icon"><i class="fa-solid fa-coins" width="20" height="20"></i></div>
         <div class="stat-box-body">
-            <p class="stat-box-value"><span data-money data-gnf="{{ total_available|unlocalize }}" data-usd="{{ total_available_usd|unlocalize }}">{{ total_available|number_format }}</span></p>
+            <p class="stat-box-value"><span id="bsAvailable" data-money data-gnf="{{ total_available|unlocalize }}" data-usd="{{ total_available_usd|unlocalize }}">{{ total_available|number_format }}</span></p>
             <p class="stat-box-label">{% trans 'Disponible' %}</p>
         </div>
     </div>
     <div class="stat-box blue stat-box-static">
         <div class="stat-box-icon"><i class="fa-solid fa-percent" width="20" height="20"></i></div>
         <div class="stat-box-body">
-            <p class="stat-box-value">{{ consumption_rate }}%</p>
+            <p class="stat-box-value"><span id="bsRate">{{ consumption_rate }}%</span></p>
             <p class="stat-box-label">{% trans 'Taux de consommation' %}</p>
         </div>
     </div>
@@ -84,7 +165,7 @@
 <!-- Budget Table -->
 <div class="card">
     <div class="card-header">
-        <h3 class="card-title">{% trans 'Détail des budgets par projet' %}</h3>
+        <h3 class="card-title">{% trans 'Détail des budgets' %}</h3>
         {% if can_manage_budgets %}
         <a href="{% url 'core:budget_create' %}" class="btn btn-primary btn-sm">
             <i class="fa-solid fa-circle-plus" width="16" height="16" ></i>
@@ -109,72 +190,7 @@
                         <th style="text-align: center;">{% trans 'Actions' %}</th>
                     </tr>
                 </thead>
-                <tbody>
-                    {% for budget in budgets %}
-                    <tr {% if budget.id %}data-href="{% url 'core:budget_edit' budget.id %}"{% endif %}>
-                        <td>
-                            <div class="flex items-center gap-2">
-                                <div style="width: 12px; height: 12px; border-radius: 50%; background-color: {% if budget.project %}#3b82f6{% elif budget.direction %}{{ budget.direction.color }}{% else %}#9ca3af{% endif %};"></div>
-                                <div>
-                                    {% if budget.project %}
-                                    <p class="font-medium">{{ budget.project.name }}</p>
-                                    <p class="text-xs text-gray-500">{% trans 'Projet' %}</p>
-                                    {% elif budget.direction %}
-                                    <p class="font-medium">{{ budget.direction.code }}</p>
-                                    <p class="text-xs text-gray-500">{{ budget.direction.name }}</p>
-                                    {% else %}
-                                    <p class="font-medium">{% trans 'Sans affectation' %}</p>
-                                    <p class="text-xs text-gray-500">{% trans 'Budget général' %}</p>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </td>
-                        <td style="text-align: right; font-weight: 500;">
-                            <span data-money data-gnf="{{ budget.allocated_gnf|unlocalize }}" data-usd="{{ budget.allocated_usd|unlocalize }}">{{ budget.allocated_gnf|number_format }}</span>
-                        </td>
-                        <td style="text-align: right; color: #16a34a;">
-                            <span data-money data-gnf="{{ budget.consumed_gnf|unlocalize }}" data-usd="{{ budget.consumed_usd|unlocalize }}">{{ budget.consumed_gnf|number_format }}</span>
-                        </td>
-                        <td style="text-align: right; color: #2563eb;">
-                            <span data-money data-gnf="{{ budget.available_gnf|unlocalize }}" data-usd="{{ budget.available_usd|unlocalize }}">{{ budget.available_gnf|number_format }}</span>
-                        </td>
-                        <td style="text-align: center;">
-                            <div class="flex items-center gap-2">
-                                <div class="progress" style="flex: 1;">
-                                    <div class="progress-bar {% if budget.consumption_rate > 80 %}red{% elif budget.consumption_rate > 60 %}amber{% else %}green{% endif %}" style="width: {{ budget.consumption_rate }}%"></div>
-                                </div>
-                                <span class="text-sm font-medium" style="width: 40px; text-align: right;">{{ budget.consumption_rate }}%</span>
-                            </div>
-                        </td>
-                        <td style="text-align: center;">
-                            <span class="badge {% if budget.consumption_rate > 80 %}badge-danger{% elif budget.consumption_rate > 60 %}badge-warning{% else %}badge-success{% endif %}">
-                                {% if budget.consumption_rate > 80 %}{% trans 'Critique' %}{% elif budget.consumption_rate > 60 %}{% trans 'Attention' %}{% else %}{% trans 'Normal' %}{% endif %}
-                            </span>
-                        </td>
-                        <td style="text-align: center;">
-                            {% if can_manage_budgets %}
-                            <div class="flex gap-2 justify-center">
-                                {% if budget.id %}
-                                <a href="{% url 'core:budget_edit' budget.id %}" class="action-btn primary" title="{% trans 'Modifier' %}">
-                                    <i class="fa-solid fa-pencil" width="16" height="16" ></i>
-                                </a>
-                                <a href="#" class="action-btn danger" title="{% trans 'Supprimer' %}"
-                                   data-delete-url="{% url 'core:budget_delete' budget.id %}"
-                                   data-delete-type="{% trans 'le budget' %}"
-                                   data-delete-name="{{ budget.project.name|default:budget.direction.name }}">
-                                    <i class="fa-solid fa-trash-can" width="16" height="16" ></i>
-                                </a>
-                                {% elif budget.project %}
-                                <a href="{% url 'core:project_edit' budget.project.slug|default:budget.project.pk %}" class="action-btn" title="{% trans 'Modifier le projet' %}">
-                                    <i class="fa-solid fa-pencil" width="16" height="16" ></i>
-                                </a>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
+                <tbody id="budgetRowsBody"></tbody>
             </table>
         </div>
         {% endif %}
@@ -312,69 +328,251 @@
 {% block extra_js %}
 {% if tab == 'budget' %}
 <script>
-// Pie Chart
-const _PIE_PALETTE = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ec4899','#ef4444','#06b6d4','#64748b','#f97316','#84cc16'];
-const _pieLabels = [{% for b in budgets %}'{% if b.project %}{{ b.project.name|escapejs }}{% elif b.direction %}{{ b.direction.code|escapejs }}{% else %}{% trans "Sans affectation" %}{% endif %}'{% if not forloop.last %}, {% endif %}{% endfor %}];
-const _pieDataGnf = [{% for b in budgets %}{{ b.allocated_gnf|unlocalize }}{% if not forloop.last %}, {% endif %}{% endfor %}];
-const _pieDataUsd = [{% for b in budgets %}{{ b.allocated_usd|unlocalize }}{% if not forloop.last %}, {% endif %}{% endfor %}];
-const _pieBg     = _pieLabels.map((_, i) => _PIE_PALETTE[i % _PIE_PALETTE.length]);
-const pieCtx = document.getElementById('budgetPieChart').getContext('2d');
-const _isUsd = () => CSIGMoney.currency === 'USD';
-const pieChart = new Chart(pieCtx, {
-    type: 'doughnut',
-    data: {
-        labels: _pieLabels,
-        datasets: [{
-            data: _isUsd() ? _pieDataUsd : _pieDataGnf,
-            backgroundColor: _pieBg,
-            borderWidth: 0,
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'right',
-            },
-            tooltip: { callbacks: { label: ctx => ctx.label + ' : ' + CSIGMoney.compact(ctx.parsed) } }
-        }
-    }
-});
-CSIGMoney.onChange(function () {
-    pieChart.data.datasets[0].data = _isUsd() ? _pieDataUsd : _pieDataGnf;
-    pieChart.update();
-});
+(function () {
+    'use strict';
+    var ROWS = JSON.parse(document.getElementById('budgetRowsData').textContent || '[]');
+    var PIE_PALETTE = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ec4899','#ef4444','#06b6d4','#64748b','#f97316','#84cc16'];
+    var NULL_UUID = '00000000-0000-0000-0000-000000000000';
+    var EDIT_BASE = "{% url 'core:budget_edit' '00000000-0000-0000-0000-000000000000' %}";
+    var DELETE_BASE = "{% url 'core:budget_delete' '00000000-0000-0000-0000-000000000000' %}";
+    var PROJECT_BASE = "{% url 'core:project_detail' '__slug__' %}";
+    var CAN_MANAGE = {% if can_manage_budgets %}true{% else %}false{% endif %};
+    var LBL = {
+        planifie: "{% trans 'Planifié' %}", en_cours: "{% trans 'En cours' %}",
+        suspendu: "{% trans 'Suspendu' %}", termine: "{% trans 'Terminé' %}", en_retard: "{% trans 'En retard' %}",
+        critique: "{% trans 'Critique' %}", attention: "{% trans 'Attention' %}", normal: "{% trans 'Normal' %}",
+        general: "{% trans 'général' %}", sansAffect: "{% trans 'Sans affectation' %}", total: "{% trans 'Total' %}"
+    };
+    var STATUS_BADGE = { en_retard: 'badge-danger', suspendu: 'badge-warning', termine: 'badge-success', en_cours: 'badge-secondary', planifie: 'badge-secondary' };
 
-// Consumption Chart
-const consumptionCtx = document.getElementById('consumptionChart').getContext('2d');
-new Chart(consumptionCtx, {
-    type: 'bar',
-    data: {
-        labels: _pieLabels,
-        datasets: [{
-            label: '{% trans "Taux de consommation" %} (%)',
-            data: [{% for b in budgets %}{{ b.consumption_rate|unlocalize }}{% if not forloop.last %}, {% endif %}{% endfor %}],
-            backgroundColor: _pieBg,
-            borderRadius: 4,
-        }]
-    },
-    options: {
-        indexAxis: 'y',
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                display: false,
+    var isUsd = function () { return CSIGMoney.currency === 'USD'; };
+    var pick = function (r, k) { return isUsd() ? r[k + '_usd'] : r[k + '_gnf']; };
+    var moneySpan = function (r, k) {
+        return '<span data-money data-gnf="' + r[k + '_gnf'] + '" data-usd="' + r[k + '_usd'] + '"></span>';
+    };
+    var rateOf = function (a, c) { return a > 0 ? Math.round((c / a) * 1000) / 10 : 0; };
+    var barClass = function (rate) { return rate > 80 ? 'red' : (rate > 60 ? 'amber' : 'green'); };
+    var critBadge = function (rate) {
+        if (rate > 80) return '<span class="badge badge-danger">' + LBL.critique + '</span>';
+        if (rate > 60) return '<span class="badge badge-warning">' + LBL.attention + '</span>';
+        return '<span class="badge badge-success">' + LBL.normal + '</span>';
+    };
+
+    var els = {
+        view: document.getElementById('bfView'),
+        direction: document.getElementById('bfDirection'),
+        project: document.getElementById('bfProject'),
+        status: document.getElementById('bfStatus'),
+        priority: document.getElementById('bfPriority'),
+        currency: document.getElementById('bfCurrency'),
+        threshold: document.getElementById('bfThreshold'),
+        reset: document.getElementById('bfReset'),
+        summary: document.getElementById('bfSummary'),
+        tbody: document.getElementById('budgetRowsBody')
+    };
+    if (!els.tbody) return;
+
+    // Options projet dynamiques (dépend de la direction)
+    var allProjects = {};
+    ROWS.forEach(function (r) { if (r.project_id) allProjects[r.project_id] = r.name; });
+    function fillProjects() {
+        var dir = els.direction.value;
+        var keep = els.project.value;
+        var opts = ['<option value="">{% trans "Tous" %}</option>'];
+        Object.keys(allProjects).sort(function (a, b) { return allProjects[a].localeCompare(allProjects[b]); }).forEach(function (pid) {
+            var row = ROWS.filter(function (r) { return r.project_id === pid; })[0];
+            if (dir && row && row.direction !== dir) return;
+            opts.push('<option value="' + pid + '"' + (pid === keep ? ' selected' : '') + '>' + allProjects[pid] + '</option>');
+        });
+        els.project.innerHTML = opts.join('');
+    }
+    fillProjects();
+
+    function filtered() {
+        var dir = els.direction.value, proj = els.project.value, st = els.status.value,
+            pr = els.priority.value, cur = els.currency.value, thr = parseFloat(els.threshold.value) || 0;
+        return ROWS.filter(function (r) {
+            if (dir && r.direction !== dir) return false;
+            if (proj && r.project_id !== proj) return false;
+            if (st && r.status !== st) return false;
+            if (pr && r.priority !== pr) return false;
+            if (cur && r.currency !== cur) return false;
+            if (thr > 0 && r.rate < thr) return false;
+            return true;
+        });
+    }
+
+    function aggregate(rows) {
+        var a = 0, c = 0, ag = 0, cg = 0;
+        rows.forEach(function (r) { a += r.allocated_usd; c += r.consumed_usd; ag += r.allocated_gnf; cg += r.consumed_gnf; });
+        return { allocated_usd: a, consumed_usd: c, allocated_gnf: ag, consumed_gnf: cg, rate: rateOf(ag, cg) };
+    }
+
+    function groups(rows) {
+        var view = els.view.value;
+        if (view === 'global') return [{ key: '__all__', label: LBL.total, rows: rows }];
+        var map = {};
+        rows.forEach(function (r) {
+            var key, label;
+            if (view === 'direction') {
+                key = r.direction || '__none__';
+                label = r.direction_name || LBL.sansAffect;
+            } else {
+                if (r.type === 'project') { key = 'p:' + r.project_id; label = r.name; }
+                else { key = 'd:' + (r.direction || '__none__'); label = (r.direction_name || LBL.sansAffect) + ' (' + LBL.general + ')'; }
             }
-        },
-        scales: {
-            x: {
-                max: 100,
+            (map[key] = map[key] || { key: key, label: label, rows: [] }).rows.push(r);
+        });
+        return Object.keys(map).map(function (k) { return map[k]; })
+            .sort(function (x, y) { return aggregate(y.rows).allocated_gnf - aggregate(x.rows).allocated_gnf; });
+    }
+
+    // Charts
+    var pieChart = new Chart(document.getElementById('budgetPieChart'), {
+        type: 'doughnut',
+        data: { labels: [], datasets: [{ data: [], backgroundColor: PIE_PALETTE, borderWidth: 0 }] },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'right' },
+                csigCenter: { format: function (v) { return CSIGMoney.compact(v); }, real: [], label: "{% trans 'total' %}" },
+                tooltip: { callbacks: { label: function (ctx) {
+                    var real = pieChart.options.plugins.csigCenter.real || [];
+                    return ctx.label + ' : ' + CSIGMoney.compact(real[ctx.dataIndex]);
+                } } }
             }
         }
+    });
+    var consumptionChart = new Chart(document.getElementById('consumptionChart'), {
+        type: 'bar',
+        data: { labels: [], datasets: [{ label: '{% trans "Taux de consommation" %} (%)', data: [], backgroundColor: PIE_PALETTE, borderRadius: 4 }] },
+        options: {
+            indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false }, csigValues: { format: function (v) { return v + '%'; } } },
+            scales: { x: { max: 100 } }
+        }
+    });
+
+    function render() {
+        var rows = filtered();
+        var gs = groups(rows);
+        var total = aggregate(rows);
+
+        // Stats
+        var aEl = document.getElementById('bsAllocated'), cEl = document.getElementById('bsConsumed'),
+            avEl = document.getElementById('bsAvailable'), rEl = document.getElementById('bsRate');
+        aEl.setAttribute('data-gnf', total.allocated_gnf); aEl.setAttribute('data-usd', total.allocated_usd);
+        cEl.setAttribute('data-gnf', total.consumed_gnf); cEl.setAttribute('data-usd', total.consumed_usd);
+        avEl.setAttribute('data-gnf', total.allocated_gnf - total.consumed_gnf); avEl.setAttribute('data-usd', total.allocated_usd - total.consumed_usd);
+        rEl.textContent = total.rate + '%';
+        CSIGMoney.apply();
+
+        // Charts
+        var labels = gs.map(function (g) { return g.label; });
+        var real = gs.map(function (g) { var a = aggregate(g.rows); return isUsd() ? a.allocated_usd : a.allocated_gnf; });
+        pieChart.data.labels = labels;
+        pieChart.data.datasets[0].data = CSIGCharts.spread(real);
+        pieChart.data.datasets[0].backgroundColor = labels.map(function (_, i) { return PIE_PALETTE[i % PIE_PALETTE.length]; });
+        pieChart.options.plugins.csigCenter.real = real;
+        pieChart.update();
+        consumptionChart.data.labels = labels;
+        consumptionChart.data.datasets[0].data = gs.map(function (g) { return aggregate(g.rows).rate; });
+        consumptionChart.data.datasets[0].backgroundColor = labels.map(function (_, i) { return PIE_PALETTE[i % PIE_PALETTE.length]; });
+        consumptionChart.update();
+
+        // Table
+        var html = '';
+        if (!gs.length || !rows.length) {
+            html = '<tr><td colspan="7" style="text-align:center;padding:32px;color:#94a3b8;">{% trans "Aucun budget ne correspond aux filtres." %}</td></tr>';
+        } else {
+            gs.forEach(function (g, i) {
+                var a = aggregate(g.rows);
+                var canDrill = g.rows.length > 0;
+                html += '<tr class="bf-group-row" data-gidx="' + i + '">' +
+                    '<td><div class="flex items-center gap-2">' +
+                        (canDrill ? '<i class="fa-solid fa-chevron-right bf-chevron" data-chev="' + i + '"></i>' : '<span style="width:12px;display:inline-block;"></span>') +
+                        '<div style="width:12px;height:12px;border-radius:50%;background:' + PIE_PALETTE[i % PIE_PALETTE.length] + ';"></div>' +
+                        '<p class="font-medium" style="margin:0;">' + g.label + '</p>' +
+                    '</div></td>' +
+                    '<td style="text-align:right;font-weight:500;">' + moneySpan(a, 'allocated') + '</td>' +
+                    '<td style="text-align:right;color:#16a34a;">' + moneySpan(a, 'consumed') + '</td>' +
+                    '<td style="text-align:right;color:#2563eb;">' + moneySpan({ allocated_gnf: a.allocated_gnf - a.consumed_gnf, allocated_usd: a.allocated_usd - a.consumed_usd }, 'allocated') + '</td>' +
+                    '<td style="text-align:center;"><div class="flex items-center gap-2"><div class="progress" style="flex:1;"><div class="progress-bar ' + barClass(a.rate) + '" style="width:' + Math.min(a.rate, 100) + '%"></div></div><span class="text-sm font-medium" style="width:44px;text-align:right;">' + a.rate + '%</span></div></td>' +
+                    '<td style="text-align:center;">' + critBadge(a.rate) + '</td>' +
+                    '<td style="text-align:center;">' + actionsFor(g) + '</td>' +
+                '</tr>';
+                html += '<tr class="bf-detail-row" data-didx="' + i + '" style="display:none;"><td colspan="7"><div class="bf-detail-inner">' + detailFor(g) + '</div></td></tr>';
+            });
+        }
+        els.tbody.innerHTML = html;
+        CSIGMoney.apply(els.tbody);
+
+        els.summary.textContent = rows.length + " {% trans 'ligne(s) budgétaire(s)' %} · " + gs.length + " {% trans 'groupe(s)' %}";
+
+        bindRows();
     }
-});
+
+    function actionsFor(g) {
+        if (g.rows.length === 1 && g.rows[0].id) {
+            var r = g.rows[0];
+            var btn = '<a href="' + EDIT_BASE.replace(NULL_UUID, r.id) + '" class="action-btn primary" title="{% trans 'Modifier' %}"><i class="fa-solid fa-pencil" width="16" height="16"></i></a>';
+            if (CAN_MANAGE) btn += '<a href="#" class="action-btn danger" title="{% trans 'Supprimer' %}" data-delete-url="' + DELETE_BASE.replace(NULL_UUID, r.id) + '" data-delete-type="{% trans 'le budget' %}" data-delete-name="' + r.name + '"><i class="fa-solid fa-trash-can" width="16" height="16"></i></a>';
+            return '<div class="flex gap-2 justify-center">' + btn + '</div>';
+        }
+        if (g.rows[0] && g.rows[0].type === 'project') {
+            return '<a href="' + PROJECT_BASE.replace('__slug__', g.rows[0].project_slug) + '" class="action-btn" title="{% trans 'Voir le projet' %}"><i class="fa-solid fa-arrow-up-right-from-square" width="16" height="16"></i></a>';
+        }
+        return '';
+    }
+
+    function detailFor(g) {
+        return g.rows.map(function (r) {
+            var a = '<span data-money data-gnf="' + r.allocated_gnf + '" data-usd="' + r.allocated_usd + '"></span>';
+            var c = '<span data-money data-gnf="' + r.consumed_gnf + '" data-usd="' + r.consumed_usd + '"></span>';
+            var badge = r.status ? '<span class="badge ' + (STATUS_BADGE[r.status] || 'badge-secondary') + '">' + (LBL[r.status] || r.status) + '</span>' : '';
+            var link = r.type === 'project'
+                ? '<a href="' + PROJECT_BASE.replace('__slug__', r.project_slug) + '">' + r.name + '</a>'
+                : (r.name || LBL.sansAffect);
+            var lineAction = r.id
+                ? '<a href="' + EDIT_BASE.replace(NULL_UUID, r.id) + '" style="margin-left:auto;">{% trans 'Modifier' %}</a>'
+                : '';
+            return '<div class="bf-line"><span style="min-width:180px;font-weight:600;">' + link + '</span>' +
+                '<span>' + "{% trans 'Alloué' %}" + ' : ' + a + '</span>' +
+                '<span>' + "{% trans 'Consommé' %}" + ' : ' + c + '</span>' +
+                '<span>' + r.rate + '%</span>' + badge + lineAction + '</div>';
+        }).join('');
+    }
+
+    function bindRows() {
+        els.tbody.querySelectorAll('.bf-group-row').forEach(function (row) {
+            row.addEventListener('click', function (e) {
+                if (e.target.closest('a')) return;
+                var i = row.getAttribute('data-gidx');
+                var detail = els.tbody.querySelector('.bf-detail-row[data-didx="' + i + '"]');
+                var chev = row.querySelector('.bf-chevron');
+                if (!detail) return;
+                var open = detail.style.display !== 'none';
+                detail.style.display = open ? 'none' : 'table-row';
+                if (chev) chev.classList.toggle('open', !open);
+            });
+        });
+    }
+
+    // Events
+    ['view', 'direction', 'status', 'priority', 'currency'].forEach(function (k) {
+        els[k].addEventListener('change', function () { if (k === 'direction') fillProjects(); render(); });
+    });
+    var t = null;
+    els.threshold.addEventListener('input', function () { clearTimeout(t); t = setTimeout(render, 250); });
+    els.reset.addEventListener('click', function () {
+        els.view.value = 'project'; els.direction.value = ''; els.status.value = '';
+        els.priority.value = ''; els.currency.value = ''; els.threshold.value = '0';
+        fillProjects(); render();
+    });
+    CSIGMoney.onChange(function () { fillProjects(); render(); });
+
+    render();
+})();
 </script>
 {% endif %}
 
