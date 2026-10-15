@@ -1,59 +1,57 @@
-{% extends 'base.html' %}
+{% extends 'registration/auth_base.html' %}
 {% load i18n %}
 
 {% block title %}{% trans 'Connexion' %}{% endblock %}
-{% block page_title %}{% trans 'Bienvenue' %}{% endblock %}
-{% block page_subtitle %}{% trans 'Connectez-vous pour accéder à votre espace' %}{% endblock %}
 
-{% block content %}
-<div class="card" style="max-width: 440px; margin: 0 auto;">
-  <div class="card-header" style="text-align: center; padding-bottom: 0;">
-    <div style="width: 64px; height: 64px; margin: 0 auto 16px; background: var(--primary-500); border-radius: 16px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-      <img src="{% static 'logocsig.png' %}" alt="CSIG" style="width: 100%; height: 100%; object-fit: contain;">
-    </div>
-  </div>
-  <div class="card-content">
-    {% if request.GET.logout == '1' %}
-    <div class="alert alert-success" style="margin-bottom: 20px;">
-      <i class="fa-solid fa-circle-check"></i>
-      <span>{% trans 'Vous avez été déconnecté avec succès.' %}</span>
-    </div>
-    {% endif %}
-    {% for message in messages %}
-    <div class="alert alert-error" style="margin-bottom: 20px;">
-      <i class="fa-solid fa-circle-xmark"></i>
-      <span>{{ message }}</span>
-    </div>
-    {% endfor %}
+{% block auth_content %}
+<div class="auth-form-header">
+    <h2>{% trans 'Bienvenue' %}</h2>
+    <p>{% trans 'Connectez-vous pour accéder à votre espace' %}</p>
+</div>
 
-    <form method="post">
-      {% csrf_token %}
-      <div class="form-group">
-        <label class="form-label" for="username">{% trans "Nom d'utilisateur" %}</label>
-        <input type="text" name="username" id="username" class="form-control" placeholder="{% trans "Entrez votre nom d'utilisateur" %}" required autofocus>
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="password">{% trans 'Mot de passe' %}</label>
-        <input type="password" name="password" id="password" class="form-control" placeholder="{% trans 'Entrez votre mot de passe' %}" required>
-      </div>
-      <div class="form-group" style="display: flex; justify-content: space-between; align-items: center;">
-        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 400;">
-          <input type="checkbox" name="remember" style="width: 16px; height: 16px; margin: 0;">
-          <span>{% trans 'Se souvenir de moi' %}</span>
+{% if request.GET.logout == '1' %}
+<div class="auth-error" style="background:#f0fdf4; border-color:#bbf7d0; color:#16a34a;">
+    <i class="fa-solid fa-circle-check"></i>
+    <span>{% trans 'Vous avez été déconnecté avec succès.' %}</span>
+</div>
+{% endif %}
+{% for message in messages %}
+<div class="auth-error">
+    <i class="fa-solid fa-circle-xmark"></i>
+    <span>{{ message }}</span>
+</div>
+{% endfor %}
+
+<form method="post" class="auth-form">
+    {% csrf_token %}
+    <div class="auth-form-group">
+        <label for="username">{% trans "Nom d'utilisateur" %}</label>
+        <div class="auth-input-wrapper">
+            <i class="fa-solid fa-user"></i>
+            <input type="text" name="username" id="username" class="form-control" placeholder="{% trans "Entrez votre nom d'utilisateur" %}" required autofocus>
+        </div>
+    </div>
+    <div class="auth-form-group">
+        <label for="password">{% trans 'Mot de passe' %}</label>
+        <div class="auth-input-wrapper">
+            <i class="fa-solid fa-lock"></i>
+            <input type="password" name="password" id="password" class="form-control" placeholder="{% trans 'Entrez votre mot de passe' %}" required>
+        </div>
+    </div>
+    <div class="auth-form-options">
+        <label class="auth-remember">
+            <input type="checkbox" name="remember">
+            <span>{% trans 'Se souvenir de moi' %}</span>
         </label>
-        <a href="{% url 'core:password_reset_info' %}" style="font-size: 13px; color: var(--primary-600); text-decoration: none;">{% trans 'Mot de passe oublié ?' %}</a>
-      </div>
-      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 8px;">
+        <a href="{% url 'core:password_reset_info' %}" class="auth-forgot">{% trans 'Mot de passe oublié ?' %}</a>
+    </div>
+    <button type="submit" class="auth-btn">
         <i class="fa-solid fa-right-to-bracket"></i>
         {% trans 'Se connecter' %}
-      </button>
-    </form>
+    </button>
+</form>
 
-    <div style="margin-top: 24px; text-align: center; padding-top: 20px; border-top: 1px solid var(--gray-100);">
-      <p style="font-size: 13px; color: var(--gray-500);">© 2026 CSIG - {% trans 'Direction Générale' %}</p>
-    </div>
-  </div>
+<div class="auth-footer">
+    <p>&copy; 2026 CSIG - {% trans 'Direction Générale' %}</p>
 </div>
 {% endblock %}
-
-{% load static %}
