@@ -779,6 +779,7 @@ def notify_event_directions_email(event, actor_user, action='created'):
         .filter(direction__in=directions)
         .exclude(email='')
         .exclude(email__isnull=True)
+        .select_related('user_profile')
     )
     for emp in employees:
         with override(_recipient_language(employee=emp, email=emp.email)):

@@ -573,7 +573,8 @@
         count:   '{% url "core:notifications_count" %}',
         recent:  '{% url "core:notifications_recent" %}',
         readAll: '{% url "core:notifications_mark_all_read" %}',
-        readOne: '/notifications/{id}/read/',
+        readOne: '{% url "core:notification_mark_read" notif_id="00000000-0000-0000-0000-000000000000" %}',
+        readOnePlaceholder: '00000000-0000-0000-0000-000000000000',
       };
       var CSRF = '{{ csrf_token }}';
       var bellBtn    = document.getElementById('notif-bell-btn');
@@ -613,16 +614,31 @@
         conge_decision: 'fa-bell',
       };
 
+      function escapeText(s) {
+        return String(s == null ? '' : s)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+      function escapeAttr(s) { return escapeText(s); }
+      /* N'autorise que les liens internes/relatifs ou http(s) : bloque
+         javascript:, data:, vbscript:, file: (vecteur XSS via le lien). */
+      function safeUrl(u) {
+        var s = String(u == null ? '' : u).trim();
+        if (!s) return '#';
+        if (/^(javascript|data|vbscript|file):/i.test(s)) return '#';
+        return s;
+      }
+
       function buildItem(n) {
         var icon = ICONS[n.type] || 'fa-bell';
         var unread = n.is_read ? '' : ' unread';
         var dot = n.is_read ? '' : '<div class="notif-unread-dot"></div>';
-        var href = n.link || '#';
-        var safeId = String(n.id).replace(/"/g, '&quot;');
-        var safeHref = String(href).replace(/"/g, '&quot;');
-        var safeTitle = String(n.title || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-        var safeMsg = String(n.message || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        var safeTime = String(n.created_at || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        var href = safeUrl(n.link || '#');
+        var safeId = escapeAttr(n.id);
+        var safeHref = escapeAttr(href);
+        var safeTitle = escapeText(n.title);
+        var safeMsg = escapeText(n.message);
+        var safeTime = escapeText(n.created_at);
         return (
           '<div class="notif-item' + unread + '" data-id="' + safeId + '" data-href="' + safeHref + '">' +
             '<div class="notif-item-icon">' +
@@ -678,13 +694,20 @@
           if (!item) return;
           var id = item.dataset.id;
           var href = item.dataset.href;
-          fetch(URLS.readOne.replace('{id}', id), {
-            method: 'POST',
-            headers: {'X-CSRFToken': CSRF, 'X-Requested-With': 'XMLHttpRequest'},
-          }).catch(function(){});
+          var wasUnread = item.classList.contains('unread');
           item.classList.remove('unread');
           var dot = item.querySelector('.notif-unread-dot');
           if (dot) dot.remove();
+          /* keepalive : la requête survit à la navigation déclenchée juste après */
+          fetch(URLS.readOne.replace(URLS.readOnePlaceholder, id), {
+            method: 'POST', keepalive: true,
+            headers: {'X-CSRFToken': CSRF, 'X-Requested-With': 'XMLHttpRequest'},
+          }).then(function(r){ return r.ok ? r.json() : null; })
+            .then(function(d){
+              if (d && typeof d.unread === 'number') updateBadge(d.unread);
+              else if (wasUnread) updateBadge(Math.max(0, _unreadCount - 1));
+            })
+            .catch(function(){ if (wasUnread) updateBadge(Math.max(0, _unreadCount - 1)); });
           if (href && href !== '#') window.location.href = href;
         });
       }

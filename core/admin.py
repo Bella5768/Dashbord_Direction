@@ -1,7 +1,7 @@
 import types
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import Direction, Project, Milestone, Document, Partner, Event, EventMember, Request, Employee, Budget, UserProfile, LeaveRequest, LeaveDocument, User
+from .models import Direction, Project, Milestone, Document, Partner, Event, EventMember, Request, Employee, Budget, UserProfile, LeaveRequest, LeaveDocument, User, Notification
 
 # Restreindre l'admin Django aux superusers uniquement (pas à tous les is_staff)
 admin.site.has_permission = types.MethodType(
@@ -158,3 +158,12 @@ class LeaveRequestAdmin(admin.ModelAdmin):
 class LeaveDocumentAdmin(admin.ModelAdmin):
     list_display = ['leave_request', 'label', 'uploaded_at']
     search_fields = ['label']
+
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ['created_at', 'receiver', 'notif_type', 'title', 'is_read']
+    list_filter = ['notif_type', 'is_read', 'created_at']
+    search_fields = ['title', 'message', 'receiver__username']
+    readonly_fields = ['created_at']
+    date_hierarchy = 'created_at'

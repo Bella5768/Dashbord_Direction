@@ -7,8 +7,29 @@ destinataires concernés, en silence (aucune exception ne remonte).
 Les titres et messages sont traduits selon la langue préférée de
 l'utilisateur (profil utilisateur), à l'instar des emails.
 """
+import logging
+
 from django.urls import reverse
 from django.utils.translation import gettext as _, override
+
+
+logger = logging.getLogger(__name__)
+
+
+def _jsonable(value):
+    """Rend une valeur sérialisable JSON (UUID, dates, proxies de traduction…).
+
+    Les payloads diffusés via le channel layer traversent `json.dumps` côté
+    consumer ; tout objet non natif (notamment les UUID des PK) doit donc être
+    converti en str, sinon la diffusion échoue silencieusement.
+    """
+    if value is None or isinstance(value, (bool, int, float, str)):
+        return value
+    if isinstance(value, dict):
+        return {str(k): _jsonable(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple, set)):
+        return [_jsonable(v) for v in value]
+    return str(value)
 
 
 def _user_language(user):
@@ -21,7 +42,7 @@ def _user_language(user):
 
 def push_project_update(project_id, data):
     """Diffuse une mise à jour de projet à tous les membres connectés (toutes pages)."""
-    data = {**data, 'project_id': project_id}
+    data = _jsonable({**data, 'project_id': project_id})
     try:
         from channels.layers import get_channel_layer
         from asgiref.sync import async_to_sync
@@ -32,7 +53,7 @@ def push_project_update(project_id, data):
                 {'type': 'project.update', 'data': data},
             )
     except Exception:
-        pass
+        logger.exception("push_project_update : diffusion impossible (project=%s)", project_id)
 
 
 def push_section_refresh(project_id, section, actor='', project_progress=None):
@@ -80,10 +101,10 @@ def _push_ws(receiver_id, notif_data):
         if layer:
             async_to_sync(layer.group_send)(
                 f'notif_user_{receiver_id}',
-                {'type': 'notif.new', 'data': notif_data},
+                {'type': 'notif.new', 'data': _jsonable(notif_data)},
             )
     except Exception:
-        pass
+        logger.exception("_push_ws : diffusion impossible (receiver=%s)", receiver_id)
 
 
 def _create(receiver, notif_type, title, message='', link=''):
@@ -109,7 +130,7 @@ def _create(receiver, notif_type, title, message='', link=''):
                 'created_at': n.created_at.strftime('%d/%m à %H:%M'),
             })
     except Exception:
-        pass
+        logger.exception("_create : échec de création/diffusion de la notification (type=%s)", notif_type)
 
 
 def _user_from_employee(employee):
@@ -143,7 +164,7 @@ def notify_jalon_completed(milestone, actor_user):
             )
         _create(manager_user, 'jalon_complete', title, msg, link)
 
-    for emp in milestone.assigned_to.all():
+    for emp in milestone.assigned_to.select_related('user_profile__user').all():
         user = _user_from_employee(emp)
         if user and user != actor_user and user != manager_user:
             lang = _user_language(user)
@@ -159,7 +180,7 @@ def notify_sous_etape_completed(sub_milestone, actor_user):
     project = milestone.project
     link = reverse('core:project_detail', args=[project.slug]) + '#jalons'
 
-    for emp in milestone.assigned_to.all():
+    for emp in milestone.assigned_to.select_related('user_profile__user').all():
         user = _user_from_employee(emp)
         if user and user != actor_user:
             lang = _user_language(user)
@@ -279,14 +300,14 @@ def push_calendar_update(action, event_id, event_date):
         if layer:
             async_to_sync(layer.group_send)(
                 'calendar',
-                {'type': 'calendar.update', 'data': {
+                {'type': 'calendar.update', 'data': _jsonable({
                     'action': action,
                     'event_id': event_id,
                     'date': str(event_date),
-                }},
+                })},
             )
     except Exception:
-        pass
+        logger.exception("push_calendar_update : diffusion impossible (action=%s)", action)
 
 
 def _users_from_directions(directions):
@@ -300,6 +321,7 @@ def _users_from_directions(directions):
         )
         return [p.user for p in profiles]
     except Exception:
+        logger.exception("_users_from_directions : échec de résolution des destinataires")
         return []
 
 
@@ -313,7 +335,7 @@ def notify_event_members_updated(event, actor_user, exclude_employee_ids=None):
     members = (
         event.event_members
         .exclude(employee_id__in=exclude)
-        .select_related('employee')
+        .select_related('employee__user_profile__user')
     )
     for m in members:
         user = _user_from_employee(m.employee)

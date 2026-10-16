@@ -42,6 +42,7 @@ from .models import (
     Employee,
     Event,
     Milestone,
+    Notification,
     Permission,
     Project,
     ProjectMember,
@@ -328,6 +329,123 @@ class RegressionSlugVideTests(SmokeBase):
         self._login(self.admin)
         resp = self._get_ok(reverse('core:project_detail', args=[self.project.slug]))
         self.assertEqual(resp.status_code, 200)
+
+
+class _CaptureChannelLayer:
+    """Channel layer factice : mémorise les group_send pour inspection."""
+
+    def __init__(self):
+        self.sent = []
+
+    async def group_send(self, group, message):
+        self.sent.append((group, message))
+
+
+class NotificationCenterTests(SmokeBase):
+    """Centre de notification : sérialisation WS, marquage lu, page paginée."""
+
+    def test_push_project_update_payload_serialisable(self):
+        """Les UUID (PK) doivent être convertis en str : le consumer fait
+        json.dumps du payload, sinon la diffusion temps réel échoue."""
+        import json as _json
+
+        from . import notifs
+
+        layer = _CaptureChannelLayer()
+        with mock.patch('channels.layers.get_channel_layer', return_value=layer):
+            notifs.push_milestone_status(
+                self.project.id, self.parent.id, 'termine', 'Terminé', True, 100,
+                self.project.progress, subs=[{'id': str(self.sub.id), 'completed': True}],
+            )
+        self.assertEqual(len(layer.sent), 1)
+        group, message = layer.sent[0]
+        self.assertEqual(group, f'project_{self.project.id}')
+        _json.dumps(message['data'])  # ne doit pas lever TypeError
+        self.assertIsInstance(message['data']['milestone_id'], str)
+        self.assertIsInstance(message['data']['project_id'], str)
+
+    def test_create_notification_payload_serialisable(self):
+        import json as _json
+
+        from . import notifs
+
+        layer = _CaptureChannelLayer()
+        with mock.patch('channels.layers.get_channel_layer', return_value=layer):
+            notifs._create(self.employe_user, 'commentaire', 'Titre', 'Msg', '/x/')
+        self.assertEqual(len(layer.sent), 1)
+        group, message = layer.sent[0]
+        self.assertEqual(group, f'notif_user_{self.employe_user.id}')
+        _json.dumps(message['data'])
+        self.assertIsInstance(message['data']['id'], str)
+        self.assertTrue(
+            Notification.objects.filter(receiver=self.employe_user, notif_type='commentaire').exists()
+        )
+
+    def test_jsonable_convertit_uuid_et_profondeur(self):
+        import json as _json
+        import uuid as _uuid
+
+        from . import notifs
+
+        value = notifs._jsonable({'a': _uuid.uuid4(), 'b': [_uuid.uuid4()], 'c': None, 'd': 5})
+        _json.dumps(value)
+        self.assertIsInstance(value['a'], str)
+        self.assertIsInstance(value['b'][0], str)
+
+    def test_mark_read_renvoie_le_compteur_non_lu(self):
+        n1 = Notification.objects.create(receiver=self.employe_user, notif_type='commentaire', title='a')
+        Notification.objects.create(receiver=self.employe_user, notif_type='commentaire', title='b')
+        self._login(self.employe_user)
+        resp = self.client.post(reverse('core:notification_mark_read', args=[n1.id]))
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json(), {'ok': True, 'unread': 1})
+        n1.refresh_from_db()
+        self.assertTrue(n1.is_read)
+
+    def test_mark_read_uuid_inconnu_renvoie_404(self):
+        import uuid as _uuid
+
+        self._login(self.employe_user)
+        resp = self.client.post(reverse('core:notification_mark_read', args=[_uuid.uuid4()]))
+        self.assertEqual(resp.status_code, 404)
+        self.assertFalse(resp.json()['ok'])
+
+    def test_mark_read_borne_au_destinataire(self):
+        n = Notification.objects.create(receiver=self.admin, notif_type='commentaire', title='a')
+        self._login(self.employe_user)
+        resp = self.client.post(reverse('core:notification_mark_read', args=[n.id]))
+        self.assertEqual(resp.status_code, 404)
+        n.refresh_from_db()
+        self.assertFalse(n.is_read)
+
+    def test_mark_read_method_get_interdit(self):
+        n = Notification.objects.create(receiver=self.employe_user, notif_type='commentaire', title='a')
+        self._login(self.employe_user)
+        resp = self.client.get(reverse('core:notification_mark_read', args=[n.id]))
+        self.assertEqual(resp.status_code, 405)
+
+    def test_page_notifications_paginee_sans_effet_de_bord(self):
+        for i in range(60):
+            Notification.objects.create(
+                receiver=self.employe_user, notif_type='commentaire', title=f'n{i}'
+            )
+        self._login(self.employe_user)
+
+        resp = self.client.get(reverse('core:notifications_list'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.content.count(b'data-notif-id='), 50)
+        self.assertIn(b'?page=2', resp.content)
+        # Aucune notification ne doit être marquée lue par un simple GET.
+        self.assertEqual(
+            Notification.objects.filter(receiver=self.employe_user, is_read=False).count(), 60
+        )
+
+        resp2 = self.client.get(reverse('core:notifications_list'), {'page': 2})
+        self.assertEqual(resp2.status_code, 200)
+        self.assertEqual(resp2.content.count(b'data-notif-id='), 10)
+        self.assertEqual(
+            Notification.objects.filter(receiver=self.employe_user, is_read=False).count(), 60
+        )
 
 
 class EmailLanguageTests(TestCase):

@@ -971,10 +971,16 @@ def _dashboard_pending_leaves(user, profile, direction_id):
 
 @login_required
 def notifications_list(request):
-    """Page complète des notifications de l'utilisateur connecté."""
-    notifs = request.user.notifications_received.all()[:50]
-    request.user.notifications_received.filter(is_read=False).update(is_read=True)
-    return render(request, 'core/notifications_list.html', {'notifications': notifs})
+    """Page complète des notifications de l'utilisateur connecté (paginée, 50/page)."""
+    from django.core.paginator import Paginator
+    qs = request.user.notifications_received.all()
+    paginator = Paginator(qs, 50)
+    page = paginator.get_page(request.GET.get('page'))
+    return render(request, 'core/notifications_list.html', {
+        'notifications': page.object_list,
+        'page_obj': page,
+        'unread_count': request.user.notifications_received.filter(is_read=False).count(),
+    })
 
 
 @login_required
@@ -1012,13 +1018,12 @@ def notification_mark_read(request, notif_id):
     from django.http import JsonResponse
     if request.method != 'POST':
         return JsonResponse({'error': 'method not allowed'}, status=405)
-    try:
-        n = request.user.notifications_received.get(pk=notif_id)
-        n.mark_read()
-    except (AttributeError, ValueError) as e:
-        from .error_logging import ErrorLogger
-        ErrorLogger.log_exception(e, context={'function': 'notification_mark_read', 'notif_id': notif_id}, user=request.user)
-    return JsonResponse({'ok': True})
+    n = request.user.notifications_received.filter(pk=notif_id).first()
+    if n is None:
+        return JsonResponse({'ok': False, 'error': 'not found'}, status=404)
+    n.mark_read()
+    unread = request.user.notifications_received.filter(is_read=False).count()
+    return JsonResponse({'ok': True, 'unread': unread})
 
 
 @login_required
