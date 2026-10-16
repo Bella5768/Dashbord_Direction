@@ -756,6 +756,8 @@ class BudgetRbacScopeTests(SmokeBase):
         resp = self._get_ok(reverse('core:resources') + '?tab=budget')
         self.assertEqual(resp.status_code, 200)
         self.assertNotContains(resp, 'id="bfDirection"')
+        # L'affichage « Par direction » n'a pas plus de sens sur une seule direction.
+        self.assertNotContains(resp, 'value="direction"')
 
     def test_filtre_direction_present_avec_acces_budget_global(self):
         dg = self._make_user('budget_dg_global', self.dir_a, 'directeur_general')
@@ -764,6 +766,7 @@ class BudgetRbacScopeTests(SmokeBase):
         resp = self._get_ok(reverse('core:resources') + '?tab=budget')
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'id="bfDirection"')
+        self.assertContains(resp, 'value="direction"')
 
     def test_scoped_budget_rows_ne_renvoie_que_le_perimetre_du_profil(self):
         """Primitive partagée par Ressources, Rapports et l'export PDF."""

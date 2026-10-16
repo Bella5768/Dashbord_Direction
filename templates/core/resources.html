@@ -68,7 +68,7 @@
                 <label class="form-label" for="bfView">{% trans 'Affichage' %}</label>
                 <select id="bfView" class="form-control">
                     <option value="project" selected>{% trans 'Par projet' %}</option>
-                    <option value="direction">{% trans 'Par direction' %}</option>
+                    {% if can_view_all_budget_directions %}<option value="direction">{% trans 'Par direction' %}</option>{% endif %}
                     <option value="global">{% trans 'Tout le budget (global)' %}</option>
                 </select>
             </div>
