@@ -42,14 +42,18 @@
 </style>
 <!-- Tabs -->
 <div class="tabs">
+    {% if can_view_budgets %}
     <button type="button" class="tab-btn {% if tab == 'budget' %}active{% endif %}" data-tab="budget">
         <i class="fa-solid fa-credit-card" ></i>
         {% trans 'Budget' %}
     </button>
+    {% endif %}
+    {% if can_view_employees %}
     <button type="button" class="tab-btn {% if tab == 'rh' %}active{% endif %}" data-tab="rh">
         <i class="fa-solid fa-user-gear" ></i>
         {% trans 'Ressources Humaines' %}
     </button>
+    {% endif %}
 </div>
 
 {% if tab == 'budget' %}

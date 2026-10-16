@@ -609,6 +609,20 @@ class BudgetRbacScopeTests(SmokeBase):
         ])
         cls.viewer = cls._make_user('budget_viewer', cls.dir_a, role_nobudget)
 
+        # Lecteur RH : droit Employee seulement, aucun droit Budget.
+        role_rh = Role.objects.create(name='Lecteur RH seul', slug='lecteur_rh_seul')
+        role_rh.permissions.set([
+            Permission.objects.get_or_create(action='read', subject='Employee', condition='same_direction')[0],
+        ])
+        cls.rh_only = cls._make_user('budget_rh_only', cls.dir_a, role_rh)
+
+        # Lecteur Budget : droit Budget seulement, aucun droit Employee.
+        role_budget = Role.objects.create(name='Lecteur Budget seul', slug='lecteur_budget_seul')
+        role_budget.permissions.set([
+            Permission.objects.get_or_create(action='read', subject='Budget', condition='same_direction')[0],
+        ])
+        cls.budget_only = cls._make_user('budget_only', cls.dir_a, role_budget)
+
     @classmethod
     def _make_user(cls, username, direction, role):
         user = User.objects.create_user(username, password='x')
@@ -650,6 +664,33 @@ class BudgetRbacScopeTests(SmokeBase):
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, self.dir_a.code)
         self.assertNotContains(resp, self.dir_b.code)
+
+    def test_ressources_onglet_budget_absent_sans_droit_budget(self):
+        self.assertTrue(self.rh_only.profile.can_view_employees())
+        self.assertFalse(self.rh_only.profile.can_view_budgets())
+
+        self._login(self.rh_only)
+        resp = self._get_ok(reverse('core:resources'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertNotContains(resp, 'data-tab="budget"')
+        self.assertContains(resp, 'data-tab="rh"')
+
+    def test_ressources_onglet_budget_demande_est_rabattu_sur_rh(self):
+        self._login(self.rh_only)
+        resp = self._get_ok(reverse('core:resources') + '?tab=budget')
+        self.assertEqual(resp.status_code, 200)
+        # Aucune donnée budget n'est transmise au client.
+        self.assertNotContains(resp, 'budgetRowsData')
+        self.assertNotContains(resp, 'budgetFilterOptions')
+
+    def test_ressources_onglet_rh_absent_sans_droit_employes(self):
+        self.assertTrue(self.budget_only.profile.can_view_budgets())
+        self.assertFalse(self.budget_only.profile.can_view_employees())
+        self._login(self.budget_only)
+        resp = self._get_ok(reverse('core:resources'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'data-tab="budget"')
+        self.assertNotContains(resp, 'data-tab="rh"')
 
     def test_panneau_budget_projet_masque_sans_droit(self):
         self._login(self.viewer)

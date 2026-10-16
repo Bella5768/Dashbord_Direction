@@ -1363,6 +1363,7 @@ def resources(request):
         'budget_filter_options': budget_filter_options,
         'budget_initial_dir': budget_initial_dir,
         'can_view_budgets': can_view_budgets,
+        'can_view_employees': can_view_employees,
         'can_manage_budgets': can_manage_budgets,
         'can_view_all_budget_directions': can_view_all_budget_directions,
         'employees': employees,
