@@ -2091,19 +2091,27 @@ def reports(request):
     ]
     total_projects = proj_agg['total']
     projects_completed = proj_agg['termine']
-    _accessible_proj_ids = set(_scoped_projects.values_list('id', flat=True))
-    _budget_rows = list(Budget.objects.filter(
-        Q(project_id__in=_accessible_proj_ids) | Q(direction__in=directions)
-    ))
-    _project_ids_with_budget_row = {b.project_id for b in _budget_rows if b.project_id}
-    _project_direct_rows = list(_scoped_projects.exclude(id__in=_project_ids_with_budget_row))
-    total_budget = convert_sum(_budget_rows, 'allocated', 'GNF') + convert_sum(_project_direct_rows, 'budget', 'GNF')
-    total_consumed = convert_sum(_budget_rows, 'consumed', 'GNF') + convert_sum(_project_direct_rows, 'budget_consumed', 'GNF')
-    total_budget_usd = convert_sum(_budget_rows, 'allocated', 'USD') + convert_sum(_project_direct_rows, 'budget', 'USD')
-    total_consumed_usd = convert_sum(_budget_rows, 'consumed', 'USD') + convert_sum(_project_direct_rows, 'budget_consumed', 'USD')
-    budget_rate = round((total_consumed / total_budget * 100)) if total_budget > 0 else 0
-    active_partners = Partner.objects.filter(status='actif').count()
     _profile = request.user.profile
+    can_view_budgets = _profile.can_view_budgets()
+
+    # Budget — borné au périmètre réel du profil (scope Budget + projets
+    # accessibles). Sans droit Budget, rien n'est agrégé ni transmis au client.
+    _budget_rows = []
+    _inline_projects = []
+    total_budget = total_consumed = 0
+    total_budget_usd = total_consumed_usd = 0.0
+    budget_rate = 0
+    if can_view_budgets:
+        _budget_rows_qs, _inline_projects_qs = _scoped_budget_rows(_profile, _scoped_projects)
+        _budget_rows = list(_budget_rows_qs)
+        _inline_projects = list(_inline_projects_qs)
+        total_budget = convert_sum(_budget_rows, 'allocated', 'GNF') + convert_sum(_inline_projects, 'budget', 'GNF')
+        total_consumed = convert_sum(_budget_rows, 'consumed', 'GNF') + convert_sum(_inline_projects, 'budget_consumed', 'GNF')
+        total_budget_usd = convert_sum(_budget_rows, 'allocated', 'USD') + convert_sum(_inline_projects, 'budget', 'USD')
+        total_consumed_usd = convert_sum(_budget_rows, 'consumed', 'USD') + convert_sum(_inline_projects, 'budget_consumed', 'USD')
+        budget_rate = round((total_consumed / total_budget * 100)) if total_budget > 0 else 0
+
+    active_partners = Partner.objects.filter(status='actif').count()
     pending_docs = _apply_read_scope(
         Document.objects.select_related('direction'), _profile, 'Document'
     ).exclude(status='signe').count()
@@ -2111,35 +2119,33 @@ def reports(request):
     # Tous les projets accessibles pour le tableau
     all_projects = _scoped_projects.select_related('direction')
 
-    # Budget par direction : Budget(direction) + Budget(project__direction) + Project.budget direct
+    # Budget par direction : uniquement les lignes/budgets du périmètre du profil.
     budget_by_direction = []
-    for direction in directions:
-        # Source 1 : Budget rows linked directly to the direction
-        dir_rows = list(direction.budgets.all())
+    if can_view_budgets:
+        for direction in directions:
+            # Lignes Budget rattachées directement à la direction (sans projet)
+            dir_rows = [b for b in _budget_rows if b.project_id is None and b.direction_id == direction.id]
 
-        # Source 2 : Budget rows linked to accessible projects in this direction
-        proj_rows = list(Budget.objects.filter(
-            project_id__in=_accessible_proj_ids, project__direction=direction
-        ))
+            # Lignes Budget rattachées à un projet de cette direction
+            proj_rows = [b for b in _budget_rows if b.project_id and b.project.direction_id == direction.id]
 
-        # Source 3 : Project.budget for accessible projects not covered by a Budget row
-        covered_ids = {b.project_id for b in proj_rows}
-        direct_rows = list(_scoped_projects.filter(direction=direction).exclude(id__in=covered_ids))
+            # Project.budget saisi directement (projets accessibles non couverts par une ligne)
+            direct_rows = [p for p in _inline_projects if p.direction_id == direction.id]
 
-        alloc_gnf = convert_sum(dir_rows, 'allocated', 'GNF') + convert_sum(proj_rows, 'allocated', 'GNF') + convert_sum(direct_rows, 'budget', 'GNF')
-        cons_gnf  = convert_sum(dir_rows, 'consumed', 'GNF') + convert_sum(proj_rows, 'consumed', 'GNF') + convert_sum(direct_rows, 'budget_consumed', 'GNF')
-        alloc_usd = convert_sum(dir_rows, 'allocated', 'USD') + convert_sum(proj_rows, 'allocated', 'USD') + convert_sum(direct_rows, 'budget', 'USD')
-        cons_usd  = convert_sum(dir_rows, 'consumed', 'USD') + convert_sum(proj_rows, 'consumed', 'USD') + convert_sum(direct_rows, 'budget_consumed', 'USD')
+            alloc_gnf = convert_sum(dir_rows, 'allocated', 'GNF') + convert_sum(proj_rows, 'allocated', 'GNF') + convert_sum(direct_rows, 'budget', 'GNF')
+            cons_gnf  = convert_sum(dir_rows, 'consumed', 'GNF') + convert_sum(proj_rows, 'consumed', 'GNF') + convert_sum(direct_rows, 'budget_consumed', 'GNF')
+            alloc_usd = convert_sum(dir_rows, 'allocated', 'USD') + convert_sum(proj_rows, 'allocated', 'USD') + convert_sum(direct_rows, 'budget', 'USD')
+            cons_usd  = convert_sum(dir_rows, 'consumed', 'USD') + convert_sum(proj_rows, 'consumed', 'USD') + convert_sum(direct_rows, 'budget_consumed', 'USD')
 
-        budget_by_direction.append({
-            'direction': direction.code,
-            'name': direction.name,
-            'allocated': round(alloc_gnf),
-            'consumed': round(cons_gnf),
-            'allocated_usd': round(alloc_usd, 2),
-            'consumed_usd': round(cons_usd, 2),
-            'rate': round((cons_gnf / alloc_gnf * 100)) if alloc_gnf > 0 else 0,
-        })
+            budget_by_direction.append({
+                'direction': direction.code,
+                'name': direction.name,
+                'allocated': round(alloc_gnf),
+                'consumed': round(cons_gnf),
+                'allocated_usd': round(alloc_usd, 2),
+                'consumed_usd': round(cons_usd, 2),
+                'rate': round((cons_gnf / alloc_gnf * 100)) if alloc_gnf > 0 else 0,
+            })
     
     # Performance par projet (scopé)
     projects_en_retard = _scoped_projects.filter(
@@ -2171,6 +2177,7 @@ def reports(request):
         'projects_en_retard': projects_en_retard,
         'projects_en_cours': projects_en_cours,
         'avg_progress': round(avg_progress),
+        'can_view_budgets': can_view_budgets,
     }
     return render(request, 'core/reports.html', context)
 
@@ -3226,13 +3233,14 @@ def project_detail(request, project_id):
     can_add_milestones = profile.can_add_project_milestones(project)
     can_add_documents = profile.can_add_project_documents(project)
     user_employee = profile.employee
+    can_view_budgets = profile.can_view_budgets()
 
     # Rythme de consommation : % de budget consommé vs % de temps écoulé.
     from django.utils import timezone as _tz
     _today = _tz.localdate()
     budget_time_elapsed = None
     budget_burn_status = ''
-    if project.start_date and project.end_date:
+    if can_view_budgets and project.start_date and project.end_date:
         _total_days = (project.end_date - project.start_date).days
         if _total_days > 0:
             _done_days = (_today - project.start_date).days
@@ -3384,7 +3392,8 @@ def project_detail(request, project_id):
         'open_needs_count': open_needs_count,
         'budget_time_elapsed': budget_time_elapsed,
         'budget_burn_status': budget_burn_status,
-        'budget_available': (project.budget or 0) - (project.budget_consumed or 0),
+        'budget_available': ((project.budget or 0) - (project.budget_consumed or 0)) if can_view_budgets else 0,
+        'can_view_budgets': can_view_budgets,
     }
     return render(request, 'core/project_detail.html', context)
 

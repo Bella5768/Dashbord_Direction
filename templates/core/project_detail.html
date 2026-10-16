@@ -210,7 +210,7 @@
         <span class="pdetail-mv">{{ project.end_date|date:"d/m/Y" }}</span>
       </span>
       {% endif %}
-      {% if project.budget %}
+      {% if can_view_budgets and project.budget %}
       <span class="pdetail-mi">
         <i class="fa-solid fa-circle-dollar-sign" ></i>
         <span class="pdetail-ml">{% trans 'Budget' %}</span>
@@ -341,7 +341,7 @@
       </div>
 
       <!-- Budget — barre Chart.js -->
-      {% if project.budget %}
+      {% if can_view_budgets and project.budget %}
       <div class="card">
         <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
           <h3 class="card-title">{% trans "Budget" %}</h3>
@@ -532,7 +532,7 @@
       bloque:      {{ dashboard_stats.bloque }},
       a_faire:     {{ dashboard_stats.a_faire }}
     };
-    var BUDGET_PCT = {{ project.budget_percentage|stringformat:".1f" }};
+    {% if can_view_budgets %}var BUDGET_PCT = {{ project.budget_percentage|stringformat:".1f" }};{% endif %}
     var TEAM = [
       {% for mc in members_cards|dictsortreversed:"task_count"|slice:":6" %}{ name: '{{ mc.name|escapejs }}', done: {{ mc.task_done }}, remaining: {{ mc.task_remaining }} }{% if not forloop.last %},{% endif %}
       {% endfor %}
@@ -579,6 +579,7 @@
         });
       }
 
+      {% if can_view_budgets %}
       /* ── Budget horizontal bar ────────────────────────────── */
       var budgetEl = document.getElementById('dash-budget-{{ project.id }}');
       if (budgetEl) {
@@ -612,6 +613,7 @@
           }
         });
       }
+      {% endif %}
 
       /* ── Bar équipe horizontal stacked ────────────────────── */
       var teamEl = document.getElementById('dash-team-{{ project.id }}');

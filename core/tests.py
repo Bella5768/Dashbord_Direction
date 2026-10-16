@@ -37,6 +37,7 @@ import django.test.client as _dj_client
 from . import notifications
 from .exchange import CACHE_KEY, DEFAULT_USD_GNF_RATE
 from .models import (
+    Budget,
     Direction,
     Employee,
     Event,
@@ -562,6 +563,99 @@ class ReportsDirecteurScopeTests(SmokeBase):
         self.assertTrue(resp.content.startswith(b'%PDF'))
         # Le contenu du PDF ne doit pas nommer un projet d'une autre direction.
         self.assertNotIn(b'Projet Beta Rapport', resp.content)
+
+
+class BudgetRbacScopeTests(SmokeBase):
+    """Le budget agrégé (Rapports, Ressources, Détail projet) respecte le
+    périmètre RBAC du profil.
+
+    Régression : la vue ``reports`` agrégait les budget sur les projets
+    accessibles ET sur ``direction.budgets.all()`` sans passer par le scope
+    Budget. Un membre sans droit Budget (ou un directeur d'une autre direction)
+    voyait donc dans Rapports des montants invisibles dans Ressources, dont des
+    lignes budgétaires de direction.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.dir_a = Direction.objects.create(name='Direction Budget A', code='BGA')
+        cls.dir_b = Direction.objects.create(name='Direction Budget B', code='BGB')
+
+        today = timezone.now().date()
+        cls.proj_a = Project.objects.create(
+            name='Projet Budget Alpha', status='en_cours',
+            start_date=today - timedelta(days=5), end_date=today + timedelta(days=30),
+            manager='Manager Alpha', direction=cls.dir_a,
+        )
+        cls.proj_b = Project.objects.create(
+            name='Projet Budget Beta', status='en_cours',
+            start_date=today - timedelta(days=5), end_date=today + timedelta(days=30),
+            manager='Manager Beta', direction=cls.dir_b,
+        )
+
+        # Ligne projet sur A + ligne « direction » sur B (le cas qui fuyait).
+        Budget.objects.create(project=cls.proj_a, allocated=10000000, consumed=2500000)
+        Budget.objects.create(direction=cls.dir_b, allocated=99000000, consumed=1000000)
+
+        cls.directeur_a = cls._make_user('budget_directeur_a', cls.dir_a, 'directeur')
+
+        # Lecteur Projets + Rapports, SANS aucun droit Budget.
+        role_nobudget = Role.objects.create(name='Lecteur sans budget', slug='lecteur_sans_budget')
+        role_nobudget.permissions.set([
+            Permission.objects.get_or_create(action='read', subject='Project', condition='')[0],
+            Permission.objects.get_or_create(action='read', subject='Report', condition='')[0],
+        ])
+        cls.viewer = cls._make_user('budget_viewer', cls.dir_a, role_nobudget)
+
+    @classmethod
+    def _make_user(cls, username, direction, role):
+        user = User.objects.create_user(username, password='x')
+        profile = user.profile
+        profile.role = role if isinstance(role, Role) else Role.objects.get(slug=role)
+        profile.direction = direction
+        profile.save()
+        return user
+
+    def test_lecteur_sans_droit_budget_ne_voit_aucune_ui_budget_dans_reports(self):
+        prof = self.viewer.profile
+        self.assertFalse(prof.can_view_budgets())
+        self.assertTrue(prof.can_view_reports())
+
+        self._login(self.viewer)
+        resp = self._get_ok(reverse('core:reports'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertNotContains(resp, 'id="tab-budget"')
+        self.assertNotContains(resp, 'budgetByDirectionChart')
+        self.assertNotContains(resp, 'stat-box amber')
+
+    def test_lecteur_sans_droit_budget_recoit_403_sur_onglet_budget(self):
+        self._login(self.viewer)
+        resp = self.client.get(reverse('core:resources') + '?tab=budget')
+        self.assertEqual(resp.status_code, 403)
+
+    def test_directeur_ne_voit_pas_le_budget_de_l_autre_direction_dans_reports(self):
+        self._login(self.directeur_a)
+        resp = self._get_ok(reverse('core:reports'))
+        self.assertEqual(resp.status_code, 200)
+        # L'onglet Budget est bien rendu pour un profil habilité…
+        self.assertContains(resp, 'budgetByDirectionChart')
+        # …mais la ligne « budget direction » de B ne doit jamais apparaître.
+        self.assertNotContains(resp, self.dir_b.code)
+
+    def test_directeur_budget_ressources_borne_a_sa_direction(self):
+        self._login(self.directeur_a)
+        resp = self._get_ok(reverse('core:resources') + '?tab=budget')
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, self.dir_a.code)
+        self.assertNotContains(resp, self.dir_b.code)
+
+    def test_panneau_budget_projet_masque_sans_droit(self):
+        self._login(self.viewer)
+        resp = self._get_ok(reverse('core:project_detail', args=[self.proj_a.slug]))
+        self.assertEqual(resp.status_code, 200)
+        self.assertNotContains(resp, 'dash-budget-' + str(self.proj_a.pk))
 
 
 class ProjectFormBudgetNegativeTests(SmokeBase):

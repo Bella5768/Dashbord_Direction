@@ -67,9 +67,11 @@
 .rpt-pgrid { display: grid; align-items: center; gap: 16px; }
 .rpt-pgrid.cols-5 { grid-template-columns: 2.5fr 100px 1.2fr 1.4fr 80px; }
 .rpt-pgrid.cols-4 { grid-template-columns: 2.5fr 100px 2fr 80px; }
+.rpt-pgrid.cols-3 { grid-template-columns: 2.5fr 100px 1.4fr; }
 @media (max-width: 900px) {
     .rpt-pgrid.cols-5,
-    .rpt-pgrid.cols-4 { grid-template-columns: 1fr 1fr; }
+    .rpt-pgrid.cols-4,
+    .rpt-pgrid.cols-3 { grid-template-columns: 1fr 1fr; }
     .rpt-pgrid > *:last-child { grid-column: 1 / -1; }
 }
 
@@ -161,10 +163,12 @@
             <i class="fa-solid fa-folder" width="14" height="14"></i>
             {% trans 'Projets' %}
         </button>
+        {% if can_view_budgets %}
         <button class="tab-btn" onclick="switchTab('budget', this)">
             <i class="fa-solid fa-credit-card" width="14" height="14"></i>
             {% trans 'Budget' %}
         </button>
+        {% endif %}
         <button class="tab-btn" onclick="switchTab('performance', this)">
             <i class="fa-solid fa-arrow-trend-up" width="14" height="14"></i>
             {% trans 'Performance' %}
@@ -194,6 +198,7 @@
                 <p class="stat-box-label">{% trans 'Terminés' %}</p>
             </div>
         </a>
+        {% if can_view_budgets %}
         <a class="stat-box amber" href="{% url 'core:resources' %}?tab=budget">
             <div class="stat-box-icon"><i class="fa-solid fa-percent" width="20" height="20"></i></div>
             <div class="stat-box-body">
@@ -201,6 +206,7 @@
                 <p class="stat-box-label">{% trans 'Budget consommé' %}</p>
             </div>
         </a>
+        {% endif %}
         <a class="stat-box purple" href="{% url 'core:partners' %}?status=actif&type=all">
             <div class="stat-box-icon"><i class="fa-solid fa-handshake" width="20" height="20"></i></div>
             <div class="stat-box-body">
@@ -278,7 +284,7 @@
     <div class="rpt-list">
         {% for project in all_projects %}
         <div class="rpt-prow s-{{ project.status }}" data-status="{% if project.computed_status == 'en_retard' %}en_retard{% else %}{{ project.status }}{% endif %}" onclick="window.location.href='{% url 'core:project_detail' project.slug|default:project.pk %}'">
-            <div class="rpt-pgrid cols-5">
+            <div class="rpt-pgrid {% if can_view_budgets %}cols-5{% else %}cols-3{% endif %}">
                 <!-- Nom + responsable -->
                 <div>
                     <p class="rpt-pname">{{ project.name }}</p>
@@ -309,6 +315,7 @@
                         <div class="rpt-prog-fill {% if project.progress >= 80 %}rpt-bar-high{% elif project.progress >= 50 %}rpt-bar-mid{% elif project.progress >= 25 %}rpt-bar-low{% else %}rpt-bar-crit{% endif %}" style="width:{{ project.progress }}%;"></div>
                     </div>
                 </div>
+                {% if can_view_budgets %}
                 <!-- Budget -->
                 <div>
                     <p class="rpt-b-main">{{ project.budget|number_format }} {{ project.currency }}</p>
@@ -324,6 +331,7 @@
                         {{ project.budget_percentage }}%
                     </span>
                 </div>
+                {% endif %}
             </div>
         </div>
         {% empty %}
@@ -336,6 +344,7 @@
 </div>
 
 <!-- ==================== TAB: BUDGET ==================== -->
+{% if can_view_budgets %}
 <div id="tab-budget" class="tab-content" style="display:none;">
 
     <div class="grid grid-3 mb-6">
@@ -433,6 +442,7 @@
         </div>
     </div>
 </div>
+{% endif %}
 
 <!-- ==================== TAB: PERFORMANCE ==================== -->
 <div id="tab-performance" class="tab-content" style="display:none;">
@@ -471,7 +481,7 @@
     <div class="rpt-list">
         {% for project in all_projects %}
         <div class="rpt-prow s-{{ project.status }}" data-status="{% if project.computed_status == 'en_retard' %}en_retard{% else %}{{ project.status }}{% endif %}" onclick="window.location.href='{% url 'core:project_detail' project.slug|default:project.pk %}'">
-            <div class="rpt-pgrid cols-4">
+            <div class="rpt-pgrid {% if can_view_budgets %}cols-4{% else %}cols-3{% endif %}">
                 <!-- Nom + responsable -->
                 <div>
                     <p class="rpt-pname">{{ project.name }}</p>
@@ -502,12 +512,14 @@
                         <div class="rpt-prog-fill {% if project.progress >= 80 %}rpt-bar-high{% elif project.progress >= 50 %}rpt-bar-mid{% elif project.progress >= 25 %}rpt-bar-low{% else %}rpt-bar-crit{% endif %}" style="width:{{ project.progress }}%;"></div>
                     </div>
                 </div>
+                {% if can_view_budgets %}
                 <!-- Budget % -->
                 <div style="text-align:center;">
                     <span class="rpt-bcirc {% if project.budget_percentage > 80 %}alert{% elif project.budget_percentage > 60 %}warn{% else %}ok{% endif %}">
                         {{ project.budget_percentage }}%
                     </span>
                 </div>
+                {% endif %}
             </div>
         </div>
         {% empty %}
@@ -599,8 +611,10 @@ new Chart(document.getElementById('projectsByDirectionChart'), {
 
 // Budget charts (lazy init)
 let budgetChartsInit = false;
+{% if can_view_budgets %}
 function initBudgetCharts() {
     if (budgetChartsInit) return;
+    if (!document.getElementById('budgetByDirectionChart')) return;
     budgetChartsInit = true;
 
     const _bbd_labels   = [{% for item in budget_by_direction %}'{{ item.direction|escapejs }}'{% if not forloop.last %},{% endif %}{% endfor %}];
@@ -671,6 +685,9 @@ function initBudgetCharts() {
         }
     });
 }
+{% else %}
+function initBudgetCharts() {}
+{% endif %}
 
 // Filtrage instantané de la liste projets depuis les cartes KPI (sans reload)
 document.addEventListener('DOMContentLoaded', function () {
