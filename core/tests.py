@@ -44,6 +44,7 @@ from .models import (
     Event,
     Milestone,
     Notification,
+    Partner,
     Permission,
     Project,
     ProjectMember,
@@ -933,6 +934,56 @@ class DirecteurDocumentScopeTests(SmokeBase):
         self.assertTrue(self.admin.profile.can_act_on_document(self.doc_b))
         resp = self.client.get(reverse('core:document_edit', args=[self.doc_b.slug]))
         self.assertEqual(resp.status_code, 200)
+
+
+class DirecteurPartnerAccessTests(SmokeBase):
+    """Les partenaires restent aux rôles globaux (DG/admin).
+
+    ``Partner`` n'a pas de ``direction`` : la portée ``same_direction`` est
+    inévaluable. Le directeur, borné à sa direction, n'a donc plus aucune règle
+    ``Partner`` — il perd la consultation et la gestion.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.dir_a = Direction.objects.create(name='Direction Part A', code='PAA')
+        cls.partner = Partner.objects.create(
+            name='Partenaire Global', partner_type='entreprise', status='actif',
+            contact_person='Contact', email='contact@example.com', phone='620000000',
+        )
+        cls.directeur_a = cls._make_user('dir_part_a', cls.dir_a, 'directeur')
+        cls.dg = cls._make_user('dg_part', cls.dir_a, 'directeur_general')
+
+    @classmethod
+    def _make_user(cls, username, direction, role_slug):
+        user = User.objects.create_user(username, password='x')
+        profile = user.profile
+        profile.role = Role.objects.get(slug=role_slug)
+        profile.direction = direction
+        profile.save()
+        return user
+
+    def test_role_directeur_sans_permission_partner(self):
+        role = Role.objects.get(slug='directeur')
+        self.assertFalse(role.permissions.filter(subject='Partner').exists())
+
+    def test_directeur_ne_consulte_pas_les_partenaires(self):
+        prof = self.directeur_a.profile
+        self.assertFalse(prof.can_read_partners())
+        self.assertFalse(prof.can_manage_partners())
+        self._login(self.directeur_a)
+        resp = self.client.get(reverse('core:partners'))
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(resp.url, reverse('core:dashboard'))
+
+    def test_directeur_general_voit_les_partenaires(self):
+        self.assertTrue(self.dg.profile.can_read_partners())
+        self._login(self.dg)
+        resp = self._get_ok(reverse('core:partners'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, self.partner.name)
 
 
 class BudgetRbacScopeTests(SmokeBase):
