@@ -72,6 +72,7 @@
                     <option value="global">{% trans 'Tout le budget (global)' %}</option>
                 </select>
             </div>
+            {% if can_view_all_budget_directions %}
             <div class="form-group">
                 <label class="form-label" for="bfDirection">{% trans 'Direction' %}</label>
                 <select id="bfDirection" class="form-control">
@@ -79,6 +80,7 @@
                     {% for d in budget_filter_options.directions %}<option value="{{ d }}" {% if d == budget_initial_dir %}selected{% endif %}>{{ d }}</option>{% endfor %}
                 </select>
             </div>
+            {% endif %}
             <div class="form-group">
                 <label class="form-label" for="bfProject">{% trans 'Projet' %}</label>
                 <select id="bfProject" class="form-control"><option value="">{% trans 'Tous les projets' %}</option></select>
@@ -374,11 +376,15 @@
     };
     if (!els.tbody) return;
 
+    // Le filtre Direction n'existe que pour les profils à accès global : sans lui,
+    // la valeur de filtrage est vide (périmètre déjà borné côté serveur).
+    var dirValue = function () { return els.direction ? els.direction.value : ''; };
+
     // Options projet dynamiques (dépend de la direction)
     var allProjects = {};
     ROWS.forEach(function (r) { if (r.project_id) allProjects[r.project_id] = r.name; });
     function fillProjects() {
-        var dir = els.direction.value;
+        var dir = dirValue();
         var keep = els.project.value;
         var opts = ['<option value="">{% trans "Tous" %}</option>'];
         Object.keys(allProjects).sort(function (a, b) { return allProjects[a].localeCompare(allProjects[b]); }).forEach(function (pid) {
@@ -391,7 +397,7 @@
     fillProjects();
 
     function filtered() {
-        var dir = els.direction.value, proj = els.project.value, st = els.status.value,
+        var dir = dirValue(), proj = els.project.value, st = els.status.value,
             pr = els.priority.value;
         return ROWS.filter(function (r) {
             if (dir && r.direction !== dir) return false;
@@ -560,10 +566,11 @@
 
     // Events
     ['view', 'direction', 'status', 'priority'].forEach(function (k) {
+        if (!els[k]) return;
         els[k].addEventListener('change', function () { if (k === 'direction') fillProjects(); render(); });
     });
     els.reset.addEventListener('click', function () {
-        els.view.value = 'project'; els.direction.value = ''; els.status.value = '';
+        els.view.value = 'project'; if (els.direction) els.direction.value = ''; els.status.value = '';
         els.priority.value = '';
         fillProjects(); render();
     });

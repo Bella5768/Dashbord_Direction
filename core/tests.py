@@ -629,6 +629,30 @@ class BudgetRbacScopeTests(SmokeBase):
 
         cls.directeur_a = cls._make_user('budget_directeur_a', cls.dir_a, 'directeur')
 
+        # Régression : l'appartenance (membre / manager) rend un projet d'une
+        # AUTRE direction *accessible* (ouvrable) sans ouvrir le droit Budget.
+        # Le budget inline de ce projet ne doit donc jamais être agrégé.
+        cls.proj_b_leak = Project.objects.create(
+            name='Projet Budget Beta Membre', status='en_cours',
+            start_date=today - timedelta(days=5), end_date=today + timedelta(days=30),
+            manager='Manager Beta', direction=cls.dir_b,
+            budget=5000000, budget_consumed=1000000,
+        )
+        # Budget inline d'un projet de la VRAIE direction : doit rester visible
+        # (non-régression de la restriction).
+        cls.proj_a_inline = Project.objects.create(
+            name='Projet Budget Alpha Inline', status='en_cours',
+            start_date=today - timedelta(days=5), end_date=today + timedelta(days=30),
+            manager='Manager Alpha', direction=cls.dir_a,
+            budget=5000000, budget_consumed=2500000,
+        )
+        _dir_a_emp = Employee.objects.create(
+            name='Directeur Budget A', role='Directeur', direction=cls.dir_a
+        )
+        cls.directeur_a.profile.employee = _dir_a_emp
+        cls.directeur_a.profile.save()
+        ProjectMember.objects.create(project=cls.proj_b_leak, employee=_dir_a_emp)
+
         # Lecteur Projets + Rapports, SANS aucun droit Budget.
         role_nobudget = Role.objects.create(name='Lecteur sans budget', slug='lecteur_sans_budget')
         role_nobudget.permissions.set([
@@ -683,8 +707,10 @@ class BudgetRbacScopeTests(SmokeBase):
         self.assertEqual(resp.status_code, 200)
         # L'onglet Budget est bien rendu pour un profil habilité…
         self.assertContains(resp, 'budgetByDirectionChart')
-        # …mais la ligne « budget direction » de B ne doit jamais apparaître.
-        self.assertNotContains(resp, self.dir_b.code)
+        # …et le taux n'inclut pas le budget de l'autre direction : agrégat de la
+        # direction A = (2,5M + 2,5M) / (10M + 5M) = 33 % (30 % si B fuyait).
+        self.assertContains(resp, '33%')
+        self.assertNotContains(resp, '30%')
 
     def test_directeur_budget_ressources_borne_a_sa_direction(self):
         self._login(self.directeur_a)
@@ -720,6 +746,25 @@ class BudgetRbacScopeTests(SmokeBase):
         self.assertContains(resp, 'data-tab="budget"')
         self.assertNotContains(resp, 'data-tab="rh"')
 
+    def test_filtre_direction_absent_sans_acces_budget_global(self):
+        """Le filtre Direction n'a de sens que pour un accès budget global :
+        un directeur, borné à sa direction, ne doit pas le voir."""
+        self.assertFalse(
+            self.directeur_a.profile.can_view_all_budget_directions()
+        )
+        self._login(self.directeur_a)
+        resp = self._get_ok(reverse('core:resources') + '?tab=budget')
+        self.assertEqual(resp.status_code, 200)
+        self.assertNotContains(resp, 'id="bfDirection"')
+
+    def test_filtre_direction_present_avec_acces_budget_global(self):
+        dg = self._make_user('budget_dg_global', self.dir_a, 'directeur_general')
+        self.assertTrue(dg.profile.can_view_all_budget_directions())
+        self._login(dg)
+        resp = self._get_ok(reverse('core:resources') + '?tab=budget')
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'id="bfDirection"')
+
     def test_scoped_budget_rows_ne_renvoie_que_le_perimetre_du_profil(self):
         """Primitive partagée par Ressources, Rapports et l'export PDF."""
         from .views import _scoped_budget_rows, get_accessible_projects_qs
@@ -731,7 +776,31 @@ class BudgetRbacScopeTests(SmokeBase):
         # projet de B) ne doit sortir.
         self.assertEqual({b.direction_id for b in rows if b.direction_id}, set())
         self.assertEqual({b.project.direction_id for b in rows}, {self.dir_a.id})
-        self.assertEqual([p.id for p in inline], [])
+        # Les budgets inline suivent le même périmètre : ceux de la direction du
+        # profil oui, ceux d'un projet « membre » d'une autre direction non.
+        inline_ids = {p.id for p in inline}
+        self.assertIn(self.proj_a_inline.id, inline_ids)
+        self.assertNotIn(self.proj_b_leak.id, inline_ids)
+
+    def test_budget_ne_fuit_pas_par_appartenance_a_un_projet_hors_direction(self):
+        """Régression : membre d'un projet d'une autre direction, le directeur
+        ouvre le projet mais ne doit pas voir son budget inline."""
+        from .views import _scoped_budget_rows, get_accessible_projects_qs
+
+        accessible = get_accessible_projects_qs(self.directeur_a)
+        self.assertIn(
+            self.proj_b_leak.id, set(accessible.values_list('id', flat=True))
+        )
+        rows, inline = _scoped_budget_rows(self.directeur_a.profile, accessible)
+        self.assertNotIn(self.proj_b_leak.id, {p.id for p in inline})
+        self.assertNotIn(self.dir_b.id, {b.direction_id for b in rows})
+
+    def test_ressources_budget_directeur_ignore_le_projet_membre_hors_direction(self):
+        self._login(self.directeur_a)
+        resp = self._get_ok(reverse('core:resources') + '?tab=budget')
+        self.assertEqual(resp.status_code, 200)
+        self.assertNotContains(resp, 'Projet Budget Beta Membre')
+        self.assertContains(resp, 'Projet Budget Alpha Inline')
 
     def test_export_pdf_rapports_sans_droit_budget_n_expose_pas_le_budget(self):
         self.assertFalse(self.viewer.profile.can_view_budgets())
@@ -750,7 +819,9 @@ class BudgetRbacScopeTests(SmokeBase):
         self.assertEqual(resp.status_code, 200)
         text = pdf_text(resp.content)
         self.assertIn(b'Budget consomm', text)
-        self.assertNotIn(self.dir_b.code.encode(), text)
+        # Taux agrégé = (2,5M + 2,5M) / (10M + 5M) = 33 %. Le budget inline du
+        # projet « membre » de la direction B (1M consommé) est exclu : sinon 30 %.
+        self.assertIn(b'33%', text)
 
     def test_panneau_budget_projet_masque_sans_droit(self):
         self._login(self.viewer)

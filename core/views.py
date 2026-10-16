@@ -833,6 +833,20 @@ def _project_budget_totals(project_qs):
     return totals, budget_percentage
 
 
+def _budget_inline_projects(profile, project_qs, covered_project_ids):
+    """Projets porteurs d'un budget inline, bornés au périmètre Budget du profil.
+
+    `project_qs` (projets *accessibles*) peut contenir des projets d'une autre
+    direction via l'appartenance (membre / manager) : l'accès au projet n'ouvre
+    pas le droit Budget. On reborne donc sur `_apply_read_scope(..., 'Budget')`
+    pour qu'un directeur ne voie que les budgets de sa direction.
+    """
+    scoped = _apply_read_scope(project_qs, profile, 'Budget')
+    return scoped.exclude(id__in=covered_project_ids).filter(
+        Q(budget__gt=0) | Q(budget_consumed__gt=0)
+    )
+
+
 def _scoped_budget_rows(profile, project_qs):
     """Lignes budgétaires et budgets inline dans le périmètre réel du profil.
 
@@ -844,9 +858,7 @@ def _scoped_budget_rows(profile, project_qs):
         Budget.objects.select_related('project', 'direction'), profile
     )
     covered = {b.project_id for b in budget_rows if b.project_id}
-    inline_projects = project_qs.exclude(id__in=covered).filter(
-        Q(budget__gt=0) | Q(budget_consumed__gt=0)
-    )
+    inline_projects = _budget_inline_projects(profile, project_qs, covered)
     return budget_rows, inline_projects
 
 
@@ -1242,7 +1254,9 @@ def resources(request):
 
     # 2) Synthese : Project.budget saisi directement sur le projet (sans ligne Budget dediee)
     if can_view_budgets:
-        _inline_qs = get_accessible_projects_qs(request.user).exclude(id__in=projects_with_budget_row).filter(Q(budget__gt=0) | Q(budget_consumed__gt=0))
+        _inline_qs = _budget_inline_projects(
+            profile, get_accessible_projects_qs(request.user), projects_with_budget_row
+        )
         for p in _inline_qs:
             budgets.append(SimpleNamespace(
                 id=None,
