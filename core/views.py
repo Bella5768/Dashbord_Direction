@@ -4731,19 +4731,39 @@ def milestone_update_status(request, milestone_id):
         milestone.completed = False
         if new_status == 'a_faire':
             milestone.manual_progress = 0
+            # Un jalon remis « À faire » repart de zéro : ses sous-étapes sont
+            # décochées pour que les cases reflètent l'état non terminé.
+            milestone.sub_milestones.filter(completed=True).update(completed=False, completed_at=None)
         milestone.completed_at = None
     milestone.save()
 
-    status_old = valid.get(old_status, old_status)
-    status_new = valid[new_status]
+    status_old = str(valid.get(old_status, old_status))
+    status_new = str(valid[new_status])
     log_project_activity(project, 'modif_statut_jalon', "Statut de '%(name)s' : %(status_old)s → %(status_new)s", request.user, context={'name': milestone.name, 'status_old': status_old, 'status_new': status_new})
     if milestone.completed and old_status != 'termine':
         from .notifications import notify_task_completed
         for emp in milestone.assigned_to.all():
             notify_task_completed('jalon', milestone.name, project, emp, milestone.assigned_by, request.user)
     project.refresh_from_db()
-    push_milestone_status(project.id, milestone.id, new_status, valid[new_status], milestone.completed, milestone.progress, project.progress)
-    messages.success(request, _("Statut mis à jour : {status}.").format(status=valid[new_status]))
+
+    # État faisant foi après dérivation statut ↔ progression ↔ sous-étapes.
+    status_label = str(milestone.get_status_display())
+    subs = [{'id': str(s.id), 'completed': s.completed} for s in milestone.sub_milestones.all()]
+    push_milestone_status(project.id, milestone.id, milestone.status, status_label,
+                          milestone.completed, milestone.progress, project.progress, subs=subs)
+    messages.success(request, _("Statut mis à jour : {status}.").format(status=status_label))
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'ok': True,
+            'milestone_id': str(milestone.id),
+            'status': milestone.status,
+            'status_label': status_label,
+            'completed': milestone.completed,
+            'progress': milestone.progress,
+            'project_progress': project.progress,
+            'subs': subs,
+        })
     return redirect('core:project_detail', project_id=project.slug)
 
 

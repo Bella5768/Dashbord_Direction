@@ -55,9 +55,9 @@ def push_project_meta(project):
     })
 
 
-def push_milestone_status(project_id, milestone_id, status, status_label, completed, milestone_progress, project_progress):
-    """Mise à jour in-place du statut d'un jalon (badge + progression)."""
-    push_project_update(project_id, {
+def push_milestone_status(project_id, milestone_id, status, status_label, completed, milestone_progress, project_progress, subs=None):
+    """Mise à jour in-place du statut d'un jalon (badge + progression + cases)."""
+    payload = {
         'event': 'milestone_status',
         'milestone_id': milestone_id,
         'status': status,
@@ -65,7 +65,10 @@ def push_milestone_status(project_id, milestone_id, status, status_label, comple
         'completed': completed,
         'progress': milestone_progress,
         'project_progress': project_progress,
-    })
+    }
+    if subs is not None:
+        payload['subs'] = subs
+    push_project_update(project_id, payload)
 
 
 def _push_ws(receiver_id, notif_data):

@@ -833,6 +833,70 @@ class BudgetRbacScopeTests(SmokeBase):
         self.assertNotContains(resp, 'dash-budget-' + str(self.proj_a.pk))
 
 
+class MilestoneStatusSyncTests(SmokeBase):
+    """Changer le statut d'un jalon tient ses cases (jalon + sous-étapes) à jour.
+
+    Régression : « Terminé » ne cochait pas la case et laissait les sous-étapes
+    décochées ; à l'inverse, repasser sur un autre statut laissait les cases
+    cochées, si bien que le statut retombait aussitôt sur « Terminé ».
+    """
+
+    def setUp(self):
+        super().setUp()
+        self._login(self.admin)
+
+    def _post_status(self, milestone, status):
+        return self.client.post(
+            reverse('core:milestone_update_status', args=[milestone.slug]),
+            {'status': status}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+    def test_ajax_renvoie_letat_faisant_foi(self):
+        resp = self._post_status(self.leaf, 'termine')
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertTrue(data['ok'])
+        self.assertEqual(data['status'], 'termine')
+        self.assertTrue(data['completed'])
+        self.assertEqual(data['progress'], 100)
+        self.leaf.refresh_from_db()
+        self.assertTrue(self.leaf.completed)
+        self.assertEqual(self.leaf.status, 'termine')
+        self.assertIsNotNone(self.leaf.completed_at)
+
+    def test_ajax_repasse_a_faire_decoche_le_jalon(self):
+        self._post_status(self.leaf, 'termine')
+        data = self._post_status(self.leaf, 'a_faire').json()
+        self.assertEqual(data['status'], 'a_faire')
+        self.assertFalse(data['completed'])
+        self.assertEqual(data['progress'], 0)
+        self.leaf.refresh_from_db()
+        self.assertFalse(self.leaf.completed)
+        self.assertIsNone(self.leaf.completed_at)
+
+    def test_termine_coche_les_sous_etapes(self):
+        data = self._post_status(self.parent, 'termine').json()
+        self.assertTrue(data['completed'])
+        self.assertEqual(data['progress'], 100)
+        self.sub.refresh_from_db()
+        self.assertTrue(self.sub.completed)
+        self.assertEqual(data['subs'], [{'id': str(self.sub.id), 'completed': True}])
+
+    def test_repasse_a_faire_decoche_les_sous_etapes(self):
+        self._post_status(self.parent, 'termine')
+        data = self._post_status(self.parent, 'a_faire').json()
+        self.assertFalse(data['completed'])
+        self.assertEqual(data['progress'], 0)
+        self.sub.refresh_from_db()
+        self.assertFalse(self.sub.completed)
+        self.assertEqual(data['subs'], [{'id': str(self.sub.id), 'completed': False}])
+
+    def test_sans_entete_ajax_redirige(self):
+        resp = self.client.post(
+            reverse('core:milestone_update_status', args=[self.leaf.slug]),
+            {'status': 'termine'})
+        self.assertEqual(resp.status_code, 302)
+
+
 class ProjectFormBudgetNegativeTests(SmokeBase):
     """Le budget d'un projet ne peut pas être négatif (alignement client/serveur).
 

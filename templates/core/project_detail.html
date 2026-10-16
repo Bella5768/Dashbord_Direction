@@ -724,7 +724,7 @@
                 </button>
               </form>
               {% else %}
-              <span class="mrow-check num{% if milestone.completed %} done{% endif %}">
+              <span class="mrow-check num{% if milestone.completed %} done{% endif %}" data-idx="{{ forloop.counter }}">
                 {% if milestone.completed %}<i class="fa-solid fa-check"></i>{% else %}{{ forloop.counter }}{% endif %}
               </span>
               {% endif %}
@@ -1591,35 +1591,88 @@ function _renderView(v) {
 }
 
 // ── Persistance cross-vue ────────────────────────────────────────────────────
+// Applique l'état d'un jalon (statut, complété, progression, sous-étapes) à la
+// vue Liste. Source de vérité = réponse serveur (dérivation statut↔cases) ; sert
+// aussi de mise à jour optimiste en attendant la réponse.
+function _applyMilestoneDom(id, state) {
+  var m = MILESTONES_DATA.find(function(x){ return x.id === id; });
+  if (m) {
+    if (state.status) m.status = state.status;
+    if (typeof state.completed === 'boolean') m.completed = state.completed;
+    if (typeof state.progress === 'number') m.progress = state.progress;
+  }
+  var row = document.querySelector('[data-mid="' + id + '"]');
+  if (row) {
+    // Badge de statut
+    var badge = document.getElementById('mstatus-' + id);
+    if (badge && state.status) {
+      badge.className = 'mrow-sbadge s-' + state.status;
+      badge.setAttribute('style', 'font-size:10px;border-radius:4px;padding:1px 6px;white-space:nowrap;' + (STATUS_BADGE[state.status] || ''));
+      badge.textContent = state.status_label || STATUS_LABELS[state.status] || state.status;
+    }
+    // <select> de statut
+    var sel = row.querySelector('select[name="status"]');
+    if (sel && state.status && sel.value !== state.status) sel.value = state.status;
+    // Case à cocher du jalon (bouton toggle, ou pastille numérotée si sous-étapes)
+    if (typeof state.completed === 'boolean') {
+      var chk = row.querySelector('.mrow-check');
+      if (chk) {
+        chk.classList.toggle('done', state.completed);
+        if (chk.tagName === 'BUTTON' || state.completed) {
+          chk.innerHTML = state.completed ? '<i class="fa-solid fa-check"></i>' : '';
+        } else {
+          chk.textContent = chk.getAttribute('data-idx') || '';
+        }
+      }
+      row.classList.toggle('mrow-done', state.completed);
+    }
+    // Progression
+    if (typeof state.progress === 'number') {
+      var fill = row.querySelector('.mrow-prog-fill');
+      if (fill) {
+        fill.style.width = state.progress + '%';
+        fill.className = 'mrow-prog-fill ' + (state.progress >= 80 ? 'high' : state.progress >= 50 ? 'mid' : 'low');
+      }
+      var val = row.querySelector('.mrow-prog-val');
+      if (val) val.textContent = state.progress + '%';
+    }
+    // Cases des sous-étapes
+    if (state.subs) {
+      state.subs.forEach(function(s){
+        var item = row.querySelector('[data-sid="' + s.id + '"]');
+        if (!item) return;
+        var sc = item.querySelector('.msub-check');
+        if (sc) { sc.classList.toggle('done', s.completed); sc.innerHTML = s.completed ? '<i class="fa-solid fa-check"></i>' : ''; }
+        var ro = item.querySelector('.msub-check-ro');
+        if (ro) { ro.classList.toggle('done', s.completed); ro.classList.toggle('pending', !s.completed); ro.innerHTML = s.completed ? '<i class="fa-solid fa-check"></i>' : ''; }
+        var nm = item.querySelector('.msub-name');
+        if (nm) nm.classList.toggle('done', s.completed);
+      });
+    }
+  }
+  // Invalider les vues dérivées (kanban/gantt/calendrier) puis re-rendre l'active
+  _rendered.kanban = false; _rendered.gantt = false; _rendered.calendrier = false;
+  if (_currentView !== 'list') { _renderView(_currentView); _rendered[_currentView] = true; }
+}
+
 function onStatusChange(id, newStatus) {
   var m = MILESTONES_DATA.find(function(x){ return x.id === id; });
   if (!m || m.status === newStatus) return;
-  m.status = newStatus;
 
-  // Mettre à jour le badge dans la vue Liste
-  var badge = document.getElementById('mstatus-' + id);
-  if (badge) {
-    badge.setAttribute('style', 'font-size:10px;border-radius:4px;padding:1px 6px;white-space:nowrap;' + (STATUS_BADGE[newStatus] || ''));
-    badge.textContent = STATUS_LABELS[newStatus] || newStatus;
-  }
-  // Synchroniser le <select> dans la vue Liste
-  var row = document.querySelector('[data-mid="' + id + '"]');
-  if (row) {
-    var sel = row.querySelector('select[name="status"]');
-    if (sel && sel.value !== newStatus) sel.value = newStatus;
-  }
+  // Mise à jour optimiste (réconciliée ensuite par la réponse serveur).
+  _applyMilestoneDom(id, { status: newStatus, completed: newStatus === 'termine' });
 
-  // Re-rendre les vues dynamiques (on invalide puis on re-rend la vue active)
-  _rendered.kanban     = false;
-  _rendered.gantt      = false;
-  _rendered.calendrier = false;
-  if (_currentView !== 'list') { _renderView(_currentView); _rendered[_currentView] = true; }
-
-  // POST serveur
+  // POST serveur : la réponse fait foi (le statut peut être dérivé de la
+  // progression / des sous-étapes — ex. 'en_cours' sur un jalon 100 % fait).
   var fd = new FormData();
   fd.append('status', newStatus);
   fd.append('csrfmiddlewaretoken', _CSRF);
-  fetch(statusUrl(id), {method:'POST', body:fd, credentials:'same-origin'}).catch(function(){});
+  fetch(statusUrl(id), {
+    method:'POST', body:fd, credentials:'same-origin',
+    headers:{'X-Requested-With':'XMLHttpRequest'}
+  }).then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(data){ if (data && data.ok) _applyMilestoneDom(id, data); })
+    .catch(function(){});
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -2019,8 +2072,12 @@ function renderCalendar() {
       setMilestoneStatus(data.milestone_id, data.milestone_status, data.milestone_status_label);
       setProjectProgress(data.project_progress);
     } else if (data.event === 'milestone_status') {
-      setMilestoneStatus(data.milestone_id, data.status, data.status_label);
-      setMilestoneProgress(data.milestone_id, data.progress, data.completed);
+      if (typeof _applyMilestoneDom === 'function') {
+        _applyMilestoneDom(data.milestone_id, data);
+      } else {
+        setMilestoneStatus(data.milestone_id, data.status, data.status_label);
+        setMilestoneProgress(data.milestone_id, data.progress, data.completed);
+      }
       setProjectProgress(data.project_progress);
     } else if (data.event === 'section_refresh') {
       refreshPanel(data.section);
