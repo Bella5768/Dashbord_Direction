@@ -77,6 +77,32 @@ def _store_rendered_templates_safe(store, signal, sender, template, context, **k
 
 _dj_client.store_rendered_templates = _store_rendered_templates_safe
 
+
+def pdf_text(content):
+    """Texte décodé d'un PDF ReportLab (flux ASCII85 + Flate).
+
+    Sans ce décodage, les chaînes du PDF sont compressées : un
+    ``assertIn(b'Budget', resp.content)`` passerait ou échouerait au hasard.
+    """
+    import base64
+    import re as _re
+    import zlib
+
+    chunks = []
+    for match in _re.finditer(rb'stream\r?\n(.*?)endstream', content, _re.S):
+        raw = match.group(1).strip(b'\r\n')
+        if raw.endswith(b'~>'):
+            raw = raw[:-2]
+        try:
+            chunks.append(zlib.decompress(base64.a85decode(raw)))
+        except Exception:
+            try:
+                chunks.append(zlib.decompress(raw))
+            except Exception:
+                continue
+    return b'\n'.join(chunks)
+
+
 # Pages principales (GET, sans argument d'URL, sans mutation — logout et les
 # endpoints toggle/delete POST-exclants sont volontairement absents).
 MAIN_URLS = [
@@ -562,7 +588,9 @@ class ReportsDirecteurScopeTests(SmokeBase):
         self.assertEqual(resp['Content-Type'], 'application/pdf')
         self.assertTrue(resp.content.startswith(b'%PDF'))
         # Le contenu du PDF ne doit pas nommer un projet d'une autre direction.
-        self.assertNotIn(b'Projet Beta Rapport', resp.content)
+        text = pdf_text(resp.content)
+        self.assertIn(b'Projet Alpha Rapport', text)
+        self.assertNotIn(b'Projet Beta Rapport', text)
 
 
 class BudgetRbacScopeTests(SmokeBase):
@@ -691,6 +719,38 @@ class BudgetRbacScopeTests(SmokeBase):
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'data-tab="budget"')
         self.assertNotContains(resp, 'data-tab="rh"')
+
+    def test_scoped_budget_rows_ne_renvoie_que_le_perimetre_du_profil(self):
+        """Primitive partagée par Ressources, Rapports et l'export PDF."""
+        from .views import _scoped_budget_rows, get_accessible_projects_qs
+
+        rows, inline = _scoped_budget_rows(
+            self.directeur_a.profile, get_accessible_projects_qs(self.directeur_a)
+        )
+        # Aucune ligne du périmètre B (ni rattachée à la direction B, ni à un
+        # projet de B) ne doit sortir.
+        self.assertEqual({b.direction_id for b in rows if b.direction_id}, set())
+        self.assertEqual({b.project.direction_id for b in rows}, {self.dir_a.id})
+        self.assertEqual([p.id for p in inline], [])
+
+    def test_export_pdf_rapports_sans_droit_budget_n_expose_pas_le_budget(self):
+        self.assertFalse(self.viewer.profile.can_view_budgets())
+        self._login(self.viewer)
+        resp = self.client.get(reverse('core:export_reports_pdf'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue(resp.content.startswith(b'%PDF'))
+        text = pdf_text(resp.content)
+        self.assertNotIn(b'Budget consomm', text)
+        self.assertIn(b'Projets totaux', text)
+
+    def test_export_pdf_rapports_directeur_contient_le_budget_de_sa_direction(self):
+        self.assertTrue(self.directeur_a.profile.can_view_budgets())
+        self._login(self.directeur_a)
+        resp = self.client.get(reverse('core:export_reports_pdf'))
+        self.assertEqual(resp.status_code, 200)
+        text = pdf_text(resp.content)
+        self.assertIn(b'Budget consomm', text)
+        self.assertNotIn(self.dir_b.code.encode(), text)
 
     def test_panneau_budget_projet_masque_sans_droit(self):
         self._login(self.viewer)

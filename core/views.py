@@ -2378,15 +2378,21 @@ def export_reports_pdf(request):
     ]
     total_projects = proj_agg['total']
     projects_completed = proj_agg['termine']
-    _scoped_ids = set(_scoped.values_list('id', flat=True))
-    _exp_budget_rows = list(Budget.objects.filter(
-        Q(project_id__in=_scoped_ids) | Q(direction__in=directions)
-    ))
-    total_budget = convert_sum(_exp_budget_rows, 'allocated', 'GNF')
-    total_consumed = convert_sum(_exp_budget_rows, 'consumed', 'GNF')
-    budget_rate = round((total_consumed / total_budget * 100)) if total_budget > 0 else 0
-    active_partners = Partner.objects.filter(status='actif').count()
     _exp_profile = request.user.profile
+    _exp_can_view_budgets = _exp_profile.can_view_budgets()
+
+    # Budget — même périmètre que la page Rapports : scope Budget + projets
+    # accessibles. Sans droit Budget, rien n'est agrégé ni imprimé.
+    budget_rate = 0
+    if _exp_can_view_budgets:
+        _exp_budget_rows, _exp_inline_projects = _scoped_budget_rows(_exp_profile, _scoped)
+        _exp_budget_rows = list(_exp_budget_rows)
+        _exp_inline_projects = list(_exp_inline_projects)
+        total_budget = convert_sum(_exp_budget_rows, 'allocated', 'GNF') + convert_sum(_exp_inline_projects, 'budget', 'GNF')
+        total_consumed = convert_sum(_exp_budget_rows, 'consumed', 'GNF') + convert_sum(_exp_inline_projects, 'budget_consumed', 'GNF')
+        budget_rate = round((total_consumed / total_budget * 100)) if total_budget > 0 else 0
+
+    active_partners = Partner.objects.filter(status='actif').count()
     pending_docs = _apply_read_scope(
         Document.objects.select_related('direction'), _exp_profile, 'Document'
     ).exclude(status='signe').count()
@@ -2446,7 +2452,10 @@ def export_reports_pdf(request):
         [Paragraph('<b>Indicateur</b>', header_cell), Paragraph('<b>Valeur</b>', header_cell)],
         [Paragraph('Projets totaux', cell_text), Paragraph(str(total_projects), cell_text)],
         [Paragraph('Projets terminés', cell_text), Paragraph(str(projects_completed), cell_text)],
-        [Paragraph('Budget consommé', cell_text), Paragraph(f'{budget_rate}%', cell_text)],
+    ]
+    if _exp_can_view_budgets:
+        kpi_data.append([Paragraph('Budget consommé', cell_text), Paragraph(f'{budget_rate}%', cell_text)])
+    kpi_data += [
         [Paragraph('Partenaires actifs', cell_text), Paragraph(str(active_partners), cell_text)],
         [Paragraph('Documents en attente', cell_text), Paragraph(str(pending_docs), cell_text)],
     ]
@@ -2541,23 +2550,32 @@ def export_reports_pdf(request):
         Paragraph('<b>Direction</b>', header_cell),
         Paragraph('<b>Statut</b>', header_cell),
         Paragraph('<b>Progression</b>', header_cell),
-        Paragraph('<b>Budget</b>', header_cell),
-        Paragraph('<b>Consommé</b>', header_cell),
-        Paragraph('<b>Taux</b>', header_cell),
     ]]
+    _proj_col_widths = [1.5*inch, 1.0*inch, 0.8*inch, 1.1*inch]
+    if _exp_can_view_budgets:
+        projects_data[0] += [
+            Paragraph('<b>Budget</b>', header_cell),
+            Paragraph('<b>Consommé</b>', header_cell),
+            Paragraph('<b>Taux</b>', header_cell),
+        ]
+        _proj_col_widths += [0.9*inch, 0.9*inch, 0.55*inch]
     name_cell = ParagraphStyle('ReportName', parent=cell_text_sm, fontName='Helvetica-Bold', textColor=colors.HexColor(letterhead.NAVY))
     for project in all_projects:
-        projects_data.append([
+        _proj_row = [
             Paragraph(project.name, name_cell),
             Paragraph(project.direction.code if project.direction else '-', cell_text_sm),
             Paragraph(project.get_status_display(), cell_text_sm),
             Paragraph(f"{project.progress}%", cell_text_sm),
-            Paragraph(format_currency(convert_currency(float(project.budget or 0), project.currency, 'GNF', rate=project.rate_snapshot), 'GNF'), cell_text_sm),
-            Paragraph(format_currency(convert_currency(float(project.budget_consumed or 0), project.currency, 'GNF', rate=project.rate_snapshot), 'GNF'), cell_text_sm),
-            Paragraph(f"{project.budget_percentage}%", cell_text_sm),
-        ])
+        ]
+        if _exp_can_view_budgets:
+            _proj_row += [
+                Paragraph(format_currency(convert_currency(float(project.budget or 0), project.currency, 'GNF', rate=project.rate_snapshot), 'GNF'), cell_text_sm),
+                Paragraph(format_currency(convert_currency(float(project.budget_consumed or 0), project.currency, 'GNF', rate=project.rate_snapshot), 'GNF'), cell_text_sm),
+                Paragraph(f"{project.budget_percentage}%", cell_text_sm),
+            ]
+        projects_data.append(_proj_row)
 
-    projects_table = Table(projects_data, colWidths=letterhead.fit_col_widths([1.5*inch, 1.0*inch, 0.8*inch, 1.1*inch, 0.9*inch, 0.9*inch, 0.55*inch], available), repeatRows=1)
+    projects_table = Table(projects_data, colWidths=letterhead.fit_col_widths(_proj_col_widths, available), repeatRows=1)
     projects_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor(letterhead.NAVY)),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
