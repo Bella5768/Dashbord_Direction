@@ -1005,6 +1005,9 @@ def notifications_recent(request):
             'link': n.link,
             'is_read': n.is_read,
             'created_at': n.created_at.strftime('%d/%m à %H:%M'),
+            'created_at_iso': n.created_at.isoformat(),
+            'icon': n.icon,
+            'tone': n.tone,
         }
         for n in qs
     ]

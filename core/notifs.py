@@ -128,6 +128,9 @@ def _create(receiver, notif_type, title, message='', link=''):
                 'link': link,
                 'is_read': False,
                 'created_at': n.created_at.strftime('%d/%m à %H:%M'),
+                'created_at_iso': n.created_at.isoformat(),
+                'icon': n.icon,
+                'tone': n.tone,
             })
     except Exception:
         logger.exception("_create : échec de création/diffusion de la notification (type=%s)", notif_type)

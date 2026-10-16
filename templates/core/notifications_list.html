@@ -6,47 +6,54 @@
 {% block page_subtitle %}{% trans "Historique de vos notifications" %}{% endblock %}
 
 {% block content %}
-<div class="card" style="max-width:720px;">
-  <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
-    <h3 class="card-title">{% trans "Toutes les notifications" %}</h3>
+<div class="card notif-page-card">
+  <div class="card-header notif-page-hdr">
+    <h3 class="card-title">
+      {% trans "Toutes les notifications" %}
+      {% if unread_count %}<span class="notif-count-pill">{{ unread_count }}</span>{% endif %}
+    </h3>
     {% if unread_count %}
-    <button type="button" id="notif-page-mark-all" class="btn btn-outline btn-sm">{% trans "Tout marquer comme lu" %}</button>
+    <button type="button" id="notif-page-mark-all" class="btn btn-outline btn-sm">
+      <i class="fa-solid fa-check-double"></i> {% trans "Tout marquer comme lu" %}
+    </button>
     {% endif %}
   </div>
   <div class="card-content" style="padding:0;">
     {% if notifications %}
-    <ul id="notif-page-list" style="list-style:none;margin:0;padding:0;">
+    <div id="notif-page-list">
       {% for n in notifications %}
-      <li data-notif-id="{{ n.id }}" class="notif-page-item{% if not n.is_read %} unread{% endif %}" style="padding:14px 20px;border-bottom:1px solid var(--gray-100);display:flex;gap:14px;align-items:flex-start;{% if not n.is_read %}background:#f0f7ff;{% endif %}">
-        <div style="flex-shrink:0;width:36px;height:36px;border-radius:50%;background:var(--primary-100);display:flex;align-items:center;justify-content:center;">
-          <i class="fa-solid fa-bell" width="16" height="16" style="color:var(--primary-600);"></i>
+      <div data-notif-id="{{ n.id }}" data-href="{{ n.link }}"
+           class="notif-item notif-page-item{% if not n.is_read %} unread{% endif %}"
+           role="button" tabindex="0">
+        <div class="notif-item-icon tone-{{ n.tone }}"><i class="fa-solid {{ n.icon }}"></i></div>
+        <div class="notif-item-body">
+          <p class="notif-item-title">{{ n.title }}</p>
+          {% if n.message %}<p class="notif-item-msg">{{ n.message }}</p>{% endif %}
+          <span class="notif-item-time">{{ n.created_at|date:"d/m/Y à H:i" }}</span>
         </div>
-        <div style="flex:1;min-width:0;">
-          <p style="font-size:13px;font-weight:{% if not n.is_read %}600{% else %}500{% endif %};color:var(--gray-900);margin:0 0 3px;">{{ n.title }}</p>
-          {% if n.message %}<p style="font-size:12px;color:var(--gray-500);margin:0 0 4px;">{{ n.message }}</p>{% endif %}
-          <span style="font-size:11px;color:var(--gray-400);">{{ n.created_at|date:"d/m/Y à H:i" }}</span>
-        </div>
-        {% if n.link %}
-        <a href="{{ n.link }}" class="notif-page-link" data-notif-id="{{ n.id }}" style="flex-shrink:0;font-size:12px;color:var(--primary-600);text-decoration:none;white-space:nowrap;align-self:center;">{% trans "Voir" %} →</a>
-        {% endif %}
-      </li>
+        {% if not n.is_read %}<span class="notif-unread-dot" aria-hidden="true"></span>{% endif %}
+        {% if n.link %}<i class="fa-solid fa-chevron-right notif-page-go" aria-hidden="true"></i>{% endif %}
+      </div>
       {% endfor %}
-    </ul>
+    </div>
 
     {% if page_obj.paginator.num_pages > 1 %}
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;">
+    <div class="notif-page-pager">
       {% if page_obj.has_previous %}
       <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-outline btn-sm">← {% trans "Plus récentes" %}</a>
-      {% else %}<span></span>{% endif %}
-      <span style="font-size:12px;color:var(--gray-400);">{% blocktrans with num=page_obj.number total=page_obj.paginator.num_pages %}Page {{ num }} / {{ total }}{% endblocktrans %}</span>
+      {% else %}<span class="notif-page-pager-spacer"></span>{% endif %}
+      <span class="notif-page-pager-info">{% blocktrans with num=page_obj.number total=page_obj.paginator.num_pages %}Page {{ num }} / {{ total }}{% endblocktrans %}</span>
       {% if page_obj.has_next %}
       <a href="?page={{ page_obj.next_page_number }}" class="btn btn-outline btn-sm">{% trans "Plus anciennes" %} →</a>
-      {% else %}<span></span>{% endif %}
+      {% else %}<span class="notif-page-pager-spacer"></span>{% endif %}
     </div>
     {% endif %}
 
     {% else %}
-    <p style="text-align:center;padding:40px 0;color:var(--gray-400);font-size:13px;">{% trans "Aucune notification pour l'instant." %}</p>
+    <div class="notif-empty">
+      <i class="fa-solid fa-bell-slash" style="font-size:28px;color:var(--gray-300);"></i>
+      <span>{% trans "Aucune notification pour l'instant." %}</span>
+    </div>
     {% endif %}
   </div>
 </div>
@@ -61,6 +68,13 @@
     placeholder: '00000000-0000-0000-0000-000000000000',
   };
   var CSRF = '{{ csrf_token }}';
+
+  function safeUrl(u) {
+    var s = String(u == null ? '' : u).trim();
+    if (!s) return '';
+    if (/^(javascript|data|vbscript|file):/i.test(s)) return '';
+    return s;
+  }
 
   function markOneRead(id) {
     return fetch(URLS.readOne.replace(URLS.placeholder, id), {
@@ -81,14 +95,27 @@
     });
   }
 
-  document.querySelectorAll('.notif-page-link').forEach(function(a){
-    a.addEventListener('click', function(){
-      var id = a.dataset.notifId;
+  var list = document.getElementById('notif-page-list');
+  if (list) {
+    list.addEventListener('click', function(e){
+      var item = e.target.closest('.notif-page-item');
+      if (!item) return;
+      var id = item.dataset.notifId;
+      var href = safeUrl(item.dataset.href);
       if (id) markOneRead(id).catch(function(){});
-      var li = a.closest('.notif-page-item');
-      if (li) { li.classList.remove('unread'); li.style.background = ''; }
+      item.classList.remove('unread');
+      var dot = item.querySelector('.notif-unread-dot');
+      if (dot) dot.remove();
+      if (href) window.location.href = href;
     });
-  });
+    list.addEventListener('keydown', function(e){
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      var item = e.target.closest('.notif-page-item');
+      if (!item) return;
+      e.preventDefault();
+      item.click();
+    });
+  }
 })();
 </script>
 {% endblock %}

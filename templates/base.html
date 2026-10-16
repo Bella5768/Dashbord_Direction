@@ -215,13 +215,18 @@
                       </button>
                       <div class="notif-dropdown" id="notif-dropdown">
                         <div class="notif-dropdown-hdr">
-                          <span class="notif-dropdown-title">{% trans "Notifications" %}</span>
-                          <button class="notif-mark-all-btn" id="notif-mark-all-btn">{% trans "Tout lire" %}</button>
+                          <span class="notif-dropdown-title">
+                            {% trans "Notifications" %}
+                            <span class="notif-count-pill" id="notif-count-pill" hidden>0</span>
+                          </span>
+                          <button class="notif-mark-all-btn" id="notif-mark-all-btn" type="button">
+                            <i class="fa-solid fa-check-double"></i>{% trans "Tout lire" %}
+                          </button>
                         </div>
                         <div class="notif-list" id="notif-list">
                           <p class="notif-empty">{% trans "Chargement…" %}</p>
                         </div>
-                        <a href="{% url 'core:notifications_list' %}" class="notif-see-all">{% trans "Voir toutes les notifications" %} →</a>
+                        <a href="{% url 'core:notifications_list' %}" class="notif-see-all">{% trans "Voir toutes les notifications" %}<i class="fa-solid fa-arrow-right"></i></a>
                       </div>
                     </div>
 
@@ -579,6 +584,7 @@
       var CSRF = '{{ csrf_token }}';
       var bellBtn    = document.getElementById('notif-bell-btn');
       var badge      = document.getElementById('notif-badge');
+      var countPill  = document.getElementById('notif-count-pill');
       var dropdown   = document.getElementById('notif-dropdown');
       var listEl     = document.getElementById('notif-list');
       var markAllBtn = document.getElementById('notif-mark-all-btn');
@@ -587,6 +593,10 @@
       var _unreadCount = 0;
       function updateBadge(count) {
         _unreadCount = count;
+        if (countPill) {
+          countPill.textContent = count > 99 ? '99+' : count;
+          countPill.hidden = count <= 0;
+        }
         if (!badge) return;
         if (count > 0) {
           badge.textContent = count > 99 ? '99+' : count;
@@ -608,11 +618,36 @@
         jalon_complete: 'fa-circle-check',
         sous_etape_complete: 'fa-square-check',
         membre_projet: 'fa-user-plus',
-        commentaire: 'fa-comment',
+        commentaire: 'fa-comment-dots',
         conge_avis: 'fa-thumbs-up',
         conge_rh: 'fa-file-circle-check',
-        conge_decision: 'fa-bell',
+        conge_decision: 'fa-clipboard-check',
+        event_invite: 'fa-calendar-plus',
+        event_update: 'fa-calendar-day',
+        event_cancel: 'fa-calendar-xmark',
+        event_rsvp: 'fa-calendar-check',
       };
+      var TONES = {
+        jalon_complete: 'green', sous_etape_complete: 'green',
+        membre_projet: 'blue', commentaire: 'primary',
+        conge_avis: 'amber', conge_rh: 'blue', conge_decision: 'purple',
+        event_invite: 'purple', event_update: 'purple',
+        event_cancel: 'red', event_rsvp: 'amber',
+      };
+      var N_I18N = { now: "{% trans "À l'instant" %}" };
+      function iconFor(n) { return n.icon || ICONS[n.type] || 'fa-bell'; }
+      function toneFor(n) { return n.tone || TONES[n.type] || 'primary'; }
+      function notifTime(n) {
+        if (!n.created_at_iso) return n.created_at || '';
+        var d = new Date(n.created_at_iso);
+        if (isNaN(d.getTime())) return n.created_at || '';
+        var mins = Math.floor((Date.now() - d.getTime()) / 60000);
+        if (mins < 1) return N_I18N.now;
+        if (mins < 60) return mins + ' min';
+        var hours = Math.floor(mins / 60);
+        if (hours < 24) return hours + ' h';
+        return n.created_at || '';
+      }
 
       function escapeText(s) {
         return String(s == null ? '' : s)
@@ -630,19 +665,18 @@
       }
 
       function buildItem(n) {
-        var icon = ICONS[n.type] || 'fa-bell';
         var unread = n.is_read ? '' : ' unread';
-        var dot = n.is_read ? '' : '<div class="notif-unread-dot"></div>';
+        var dot = n.is_read ? '' : '<span class="notif-unread-dot" aria-hidden="true"></span>';
         var href = safeUrl(n.link || '#');
         var safeId = escapeAttr(n.id);
         var safeHref = escapeAttr(href);
         var safeTitle = escapeText(n.title);
         var safeMsg = escapeText(n.message);
-        var safeTime = escapeText(n.created_at);
+        var safeTime = escapeText(notifTime(n));
         return (
-          '<div class="notif-item' + unread + '" data-id="' + safeId + '" data-href="' + safeHref + '">' +
-            '<div class="notif-item-icon">' +
-              '<i class="fa-solid ' + icon + '"></i>' +
+          '<div class="notif-item' + unread + '" data-id="' + safeId + '" data-href="' + safeHref + '" role="button" tabindex="0">' +
+            '<div class="notif-item-icon tone-' + toneFor(n) + '">' +
+              '<i class="fa-solid ' + iconFor(n) + '"></i>' +
             '</div>' +
             '<div class="notif-item-body">' +
               '<p class="notif-item-title">' + safeTitle + '</p>' +

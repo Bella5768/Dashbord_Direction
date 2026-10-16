@@ -1644,6 +1644,34 @@ class Notification(UUIDModel):
         ('event_rsvp',          _('Réponse à une invitation')),
     ]
 
+    # Icône Font Awesome et tonalité de couleur par type (design du centre).
+    ICON_MAP = {
+        'jalon_complete':      'fa-circle-check',
+        'sous_etape_complete': 'fa-square-check',
+        'membre_projet':       'fa-user-plus',
+        'commentaire':         'fa-comment-dots',
+        'conge_avis':          'fa-thumbs-up',
+        'conge_rh':            'fa-file-circle-check',
+        'conge_decision':      'fa-clipboard-check',
+        'event_invite':        'fa-calendar-plus',
+        'event_update':        'fa-calendar-day',
+        'event_cancel':        'fa-calendar-xmark',
+        'event_rsvp':          'fa-calendar-check',
+    }
+    TONE_MAP = {
+        'jalon_complete':      'green',
+        'sous_etape_complete': 'green',
+        'membre_projet':       'blue',
+        'commentaire':         'primary',
+        'conge_avis':          'amber',
+        'conge_rh':            'blue',
+        'conge_decision':      'purple',
+        'event_invite':        'purple',
+        'event_update':        'purple',
+        'event_cancel':        'red',
+        'event_rsvp':          'amber',
+    }
+
     receiver    = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications_received', verbose_name=_("Destinataire"))
     notif_type  = models.CharField(max_length=30, choices=TYPE_CHOICES, verbose_name=_("Type"))
     title       = models.CharField(max_length=200, verbose_name=_("Titre"))
@@ -1667,6 +1695,14 @@ class Notification(UUIDModel):
         if not self.is_read:
             self.is_read = True
             self.save(update_fields=['is_read'])
+
+    @property
+    def icon(self):
+        return self.ICON_MAP.get(self.notif_type, 'fa-bell')
+
+    @property
+    def tone(self):
+        return self.TONE_MAP.get(self.notif_type, 'primary')
 
 
 class LeaveDocument(UUIDModel):
