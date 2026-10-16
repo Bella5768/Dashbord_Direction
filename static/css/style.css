@@ -2739,7 +2739,25 @@ a.calendar-event-pill:hover { opacity: .82; filter: brightness(.95); }
 .notif-see-all:hover i { transform: translateX(3px); }
 
 /* ── Page « Toutes les notifications » ─────────────────────────────────── */
-.notif-page-card { max-width: 760px; }
+.notif-page-card {
+    max-width: 760px;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 112px);
+    max-height: calc(100vh - 112px);
+}
+.notif-page-card .card-header { flex-shrink: 0; }
+.notif-page-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--gray-300) transparent;
+}
+.notif-page-scroll::-webkit-scrollbar { width: 8px; }
+.notif-page-scroll::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 999px; }
+.notif-page-scroll::-webkit-scrollbar-thumb:hover { background: var(--gray-300); }
 .notif-page-hdr .card-title {
     display: inline-flex;
     align-items: center;

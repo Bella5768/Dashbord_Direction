@@ -18,7 +18,7 @@
     </button>
     {% endif %}
   </div>
-  <div class="card-content" style="padding:0;">
+  <div class="card-content notif-page-scroll" id="notif-page-scroll" style="padding:0;">
     {% if notifications %}
     <div id="notif-page-list" data-next-page="{% if page_obj.has_next %}{{ page_obj.next_page_number }}{% endif %}">
       {% include 'core/_notif_items.html' %}
@@ -118,6 +118,7 @@
   var loader   = document.getElementById('notif-page-loader');
   var endMsg   = document.getElementById('notif-page-end');
   var pager    = document.getElementById('notif-page-pager');
+  var scrollEl = document.getElementById('notif-page-scroll');
   var nextPage = list ? parseInt(list.dataset.nextPage || '', 10) : NaN;
   var loading  = false;
   var observer = null;
@@ -151,7 +152,7 @@
 
   observer = new IntersectionObserver(function(entries){
     if (entries.some(function(e){ return e.isIntersecting; })) loadMore();
-  }, {rootMargin: '300px'});
+  }, {root: scrollEl || null, rootMargin: '300px'});
   observer.observe(sentinel);
 })();
 </script>
