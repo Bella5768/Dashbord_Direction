@@ -1771,3 +1771,87 @@ class ProjectResponsableManageTests(SmokeBase):
         self.assertEqual(resp.status_code, 302)
         self.proj_b.refresh_from_db()
         self.assertEqual(self.proj_b.direction_id, self.dir_b.pk)
+
+
+class UserRoleEscalationTests(SmokeBase):
+    """Le garde anti-escalade s'applique sur la page de modification d'utilisateur.
+
+    Régression : ``UserUpdateForm`` filtrait les rôles assignables par
+    ``exclude(is_system=True)`` alors que TOUS les rôles seedés sont système →
+    sélecteur vide (impossible de conserver un rôle à l'édition), et aucun
+    contrôle serveur n'empêchait d'attribuer un rôle supérieur.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.dir_a = Direction.objects.create(name='Direction User A', code='USA')
+
+        cls.victim = User.objects.create_user('victime', password='x', email='victime@example.com')
+        cls.victim.profile.role = Role.objects.get(slug='employe')
+        cls.victim.profile.direction = cls.dir_a
+        cls.victim.profile.save()
+
+        cls.admin_user = User.objects.create_user('adm_lie', password='x', email='admlie@example.com')
+        cls.admin_user.profile.role = Role.objects.get(slug='admin')
+        cls.admin_user.profile.save()
+
+        cls.dg = cls._make_user('dg_user', cls.dir_a, 'directeur_general')
+
+    @classmethod
+    def _make_user(cls, username, direction, role_slug):
+        user = User.objects.create_user(username, password='x')
+        profile = user.profile
+        profile.role = Role.objects.get(slug=role_slug)
+        profile.direction = direction
+        profile.save()
+        return user
+
+    def _post_data(self, role, username='victime'):
+        return {
+            'username': username,
+            'email': 'victime@example.com',
+            'first_name': 'Victime',
+            'last_name': 'Test',
+            'is_active': 'on',
+            'role': role.pk if role is not None else '',
+        }
+
+    def test_formulaire_exclut_les_roles_superieurs(self):
+        from .forms import UserUpdateForm
+        form = UserUpdateForm(instance=self.victim, editor=self.dg)
+        slugs = set(form.fields['role'].queryset.values_list('slug', flat=True))
+        self.assertNotIn('admin', slugs)
+        self.assertIn('employe', slugs)
+        self.assertIn('directeur', slugs)
+
+    def test_user_edit_refuse_role_superieur(self):
+        self._login(self.dg)
+        resp = self.client.post(
+            reverse('core:user_edit', args=[self.victim.pk]),
+            self._post_data(Role.objects.get(slug='admin')),
+        )
+        self.assertLess(resp.status_code, 500)
+        self.victim.profile.refresh_from_db()
+        self.assertEqual(self.victim.profile.role.slug, 'employe')
+
+    def test_user_edit_attribue_role_inferieur(self):
+        self._login(self.dg)
+        resp = self.client.post(
+            reverse('core:user_edit', args=[self.victim.pk]),
+            self._post_data(Role.objects.get(slug='directeur')),
+        )
+        self.assertEqual(resp.status_code, 302)
+        self.victim.profile.refresh_from_db()
+        self.assertEqual(self.victim.profile.role.slug, 'directeur')
+
+    def test_user_edit_conserve_un_role_superieur_inchange(self):
+        self._login(self.dg)
+        resp = self.client.post(
+            reverse('core:user_edit', args=[self.admin_user.pk]),
+            self._post_data(Role.objects.get(slug='admin'), username='adm_lie'),
+        )
+        self.assertEqual(resp.status_code, 302)
+        self.admin_user.profile.refresh_from_db()
+        self.assertEqual(self.admin_user.profile.role.slug, 'admin')

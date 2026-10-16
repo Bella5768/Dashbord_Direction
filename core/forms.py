@@ -42,22 +42,28 @@ class UserCreateForm(forms.Form):
 
     def __init__(self, *args, editor=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.editor = editor
         self.fields['employee'].queryset = (
             Employee.objects
             .filter(user_profile__isnull=True)
             .select_related('direction')
             .order_by('name')
         )
-        # Restreindre les rôles assignables aux rôles que l'éditeur possède lui-même
-        if editor is not None and not editor.is_superuser:
-            profile = getattr(editor, 'profile', None)
-            if profile and profile.role_id:
-                assignable = profile.role.permissions.values_list('id', flat=True)
-                self.fields['role'].queryset = Role.objects.filter(
-                    permissions__id__in=assignable
-                ).distinct().exclude(is_system=True)
-            else:
-                self.fields['role'].queryset = Role.objects.none()
+        # Anti-escalade : ne proposer que les rôles que l'éditeur peut accorder.
+        if editor is not None:
+            editor_profile = getattr(editor, 'profile', None)
+            self.fields['role'].queryset = (
+                editor_profile.assignable_roles() if editor_profile is not None
+                else Role.objects.none()
+            )
+
+    def clean_role(self):
+        role = self.cleaned_data.get('role')
+        if role is not None:
+            profile = getattr(self.editor, 'profile', None) if self.editor is not None else None
+            if profile is None or not profile.can_assign_role(role):
+                raise forms.ValidationError(_("Vous ne pouvez pas attribuer un rôle supérieur au vôtre."))
+        return role
 
     def clean_employee(self):
         emp = self.cleaned_data.get('employee')
@@ -124,16 +130,34 @@ class UserUpdateForm(forms.ModelForm):
             self.fields['employee'].initial = profile.employee
             self.fields['phone'].initial = profile.phone
 
-        # Restreindre les rôles assignables aux rôles que l'éditeur possède lui-même
-        if editor is not None and not editor.is_superuser:
+        # Anti-escalade : ne proposer que les rôles que l'éditeur peut accorder,
+        # en conservant le rôle déjà porté (sinon une édition anodine le
+        # réinitialiserait).
+        self.editor = editor
+        if editor is not None:
             editor_profile = getattr(editor, 'profile', None)
-            if editor_profile and editor_profile.role_id:
-                assignable = editor_profile.role.permissions.values_list('id', flat=True)
-                self.fields['role'].queryset = Role.objects.filter(
-                    permissions__id__in=assignable
-                ).distinct().exclude(is_system=True)
+            if editor_profile is not None:
+                allowed_ids = list(editor_profile.assignable_roles().values_list('id', flat=True))
+                current_role = self.fields['role'].initial
+                if current_role is not None and current_role.pk not in allowed_ids:
+                    allowed_ids.append(current_role.pk)
+                self.fields['role'].queryset = Role.objects.filter(id__in=allowed_ids).order_by('name')
             else:
                 self.fields['role'].queryset = Role.objects.none()
+
+    def clean_role(self):
+        role = self.cleaned_data.get('role')
+        current_role = None
+        if hasattr(self, 'instance') and hasattr(self.instance, 'profile'):
+            current_role = self.instance.profile.role
+        # Le rôle inchangé reste autorisé (sinon un éditeur ne pourrait plus
+        # modifier un compte portant un rôle supérieur au sien) ; seul un
+        # changement vers un rôle supérieur est refusé.
+        if role is not None and role != current_role:
+            profile = getattr(self.editor, 'profile', None) if self.editor is not None else None
+            if profile is None or not profile.can_assign_role(role):
+                raise forms.ValidationError(_("Vous ne pouvez pas attribuer un rôle supérieur au vôtre."))
+        return role
 
     def clean_username(self):
         username = self.cleaned_data.get('username', '').strip()

@@ -3450,7 +3450,6 @@ def project_detail(request, project_id):
         'is_readonly': is_readonly,
         'can_edit_project': can_edit_project,
         'can_delete_project': profile.can_delete_project(project),
-        'can_edit_project_manager': _user_can_manage_employee(request.user, project.manager_employee),
         'can_add_milestones': can_add_milestones,
         'can_add_documents': can_add_documents,
         'user_employee': user_employee,
