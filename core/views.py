@@ -3436,6 +3436,7 @@ def project_detail(request, project_id):
         'can_perform_actions': can_perform_actions,
         'is_readonly': is_readonly,
         'can_edit_project': can_edit_project,
+        'can_delete_project': profile.can_delete_project(project),
         'can_add_milestones': can_add_milestones,
         'can_add_documents': can_add_documents,
         'user_employee': user_employee,
@@ -4211,13 +4212,14 @@ def project_edit(request, project_id):
 @login_required
 def project_delete(request, project_id):
     """Supprimer un projet"""
-    # Permission delete:Project (RBAC) ou DG/admin en fallback
-    if not (request.user.profile.can('delete', 'Project') or request.user.profile.is_directeur_general()):
+    project = get_sluggable_or_404(Project, project_id)
+
+    # Permission delete:Project évaluée sur l'instance (portée same_direction)
+    # ou DG/admin en fallback.
+    if not request.user.profile.can_delete_project(project):
         messages.error(request, _("Vous n'avez pas la permission de supprimer ce projet."))
         return redirect('core:projects')
-    
-    project = get_sluggable_or_404(Project, project_id)
-    
+
     if request.method == 'POST':
         project.delete()
         messages.success(request, _("Projet supprimé."))

@@ -426,6 +426,15 @@ class UserProfile(UUIDModel):
         from .ability import Ability
         return Ability(self.user).can_manage_project_members(project)
 
+    def can_delete_project(self, project):
+        """Peut supprimer ce projet.
+
+        RBAC ``delete:Project`` évaluée sur l'instance (le directeur a
+        ``delete Project same_direction``) ; le DG/admin reste couvert par sa
+        règle globale ou par ``is_directeur_general``.
+        """
+        return self.can('delete', 'Project', project) or self.is_directeur_general()
+
     def can_perform_actions_as_member(self, project):
         from .ability import Ability
         return not Ability(self.user).is_project_readonly(project)

@@ -169,7 +169,7 @@
       {% if can_edit_project %}
       <a href="{% url 'core:project_edit' project.slug|default:project.pk %}" class="btn btn-primary btn-sm">{% trans 'Modifier' %}</a>
       {% endif %}
-      {% if user.profile.is_directeur_general %}
+      {% if can_delete_project %}
       <a href="#" class="btn btn-sm" style="background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;"
          data-delete-url="{% url 'core:project_delete' project.slug|default:project.pk %}"
          data-delete-type="{% trans 'le projet' %}"

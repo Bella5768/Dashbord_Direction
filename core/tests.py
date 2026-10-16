@@ -741,6 +741,83 @@ class ReportsDirecteurScopeTests(SmokeBase):
         self.assertNotIn(b'Projet Beta Rapport', text)
 
 
+class DirecteurProjectDeleteTests(SmokeBase):
+    """Un directeur supprime les projets de sa direction — et seulement ceux-là.
+
+    Régression : la permission ``delete Project`` n'existait qu'en variante
+    globale (DG/admin) et la vue évaluait ``can('delete', 'Project')`` sans
+    instance, donc la portée ``same_direction`` ne pouvait jamais s'appliquer.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.dir_a = Direction.objects.create(name='Direction Suppr A', code='SPA')
+        cls.dir_b = Direction.objects.create(name='Direction Suppr B', code='SPB')
+
+        today = timezone.now().date()
+        cls.proj_a = Project.objects.create(
+            name='Projet Suppr A', status='en_cours',
+            start_date=today, end_date=today + timedelta(days=10),
+            manager='Manager A', direction=cls.dir_a,
+        )
+        cls.proj_b = Project.objects.create(
+            name='Projet Suppr B', status='en_cours',
+            start_date=today, end_date=today + timedelta(days=10),
+            manager='Manager B', direction=cls.dir_b,
+        )
+
+        cls.directeur_a = cls._make_user('dir_suppr_a', cls.dir_a, 'directeur')
+        cls.chef = cls._make_user('chef_suppr', cls.dir_a, 'chef_projet')
+
+    @classmethod
+    def _make_user(cls, username, direction, role_slug):
+        user = User.objects.create_user(username, password='x')
+        profile = user.profile
+        profile.role = Role.objects.get(slug=role_slug)
+        profile.direction = direction
+        profile.save()
+        return user
+
+    def test_permission_delete_project_bornee_a_la_direction(self):
+        prof = self.directeur_a.profile
+        self.assertEqual(prof.read_scope('Project'), 'direction')
+        self.assertTrue(prof.can_delete_project(self.proj_a))
+        self.assertFalse(prof.can_delete_project(self.proj_b))
+
+    def test_directeur_supprime_projet_de_sa_direction(self):
+        self._login(self.directeur_a)
+        resp = self.client.post(reverse('core:project_delete', args=[self.proj_a.slug]))
+        self.assertEqual(resp.status_code, 302)
+        self.assertFalse(Project.objects.filter(pk=self.proj_a.pk).exists())
+
+    def test_directeur_ne_supprime_pas_projet_autre_direction(self):
+        self._login(self.directeur_a)
+        resp = self.client.post(reverse('core:project_delete', args=[self.proj_b.slug]))
+        self.assertEqual(resp.status_code, 302)
+        self.assertTrue(Project.objects.filter(pk=self.proj_b.pk).exists())
+
+    def test_chef_projet_ne_peut_pas_supprimer(self):
+        self._login(self.chef)
+        resp = self.client.post(reverse('core:project_delete', args=[self.proj_a.slug]))
+        self.assertEqual(resp.status_code, 302)
+        self.assertTrue(Project.objects.filter(pk=self.proj_a.pk).exists())
+
+    def test_admin_supprime_nimporte_quel_projet(self):
+        self._login(self.admin)
+        resp = self.client.post(reverse('core:project_delete', args=[self.proj_b.slug]))
+        self.assertEqual(resp.status_code, 302)
+        self.assertFalse(Project.objects.filter(pk=self.proj_b.pk).exists())
+
+    def test_bouton_supprimer_visible_pour_directeur(self):
+        self._login(self.directeur_a)
+        resp = self._get_ok(reverse('core:project_detail', args=[self.proj_a.slug]))
+        self.assertContains(
+            resp, reverse('core:project_delete', args=[self.proj_a.slug])
+        )
+
+
 class BudgetRbacScopeTests(SmokeBase):
     """Le budget agrégé (Rapports, Ressources, Détail projet) respecte le
     périmètre RBAC du profil.
