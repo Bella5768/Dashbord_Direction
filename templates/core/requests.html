@@ -160,12 +160,16 @@ document.addEventListener('DOMContentLoaded', function() {
     var directionSelect = form ? form.querySelector('select[name="direction"]') : null;
     var searchTimer = null;
 
-    var statBoxes = document.querySelectorAll('.stat-box[data-status]');
+    function setActiveStatus(status) {
+        document.querySelectorAll('.stat-box[data-status]').forEach(function (b) {
+            b.classList.toggle('active', b.dataset.status === status);
+        });
+        if (statusSelect) statusSelect.value = status;
+    }
 
     function fetchAndSwap() {
         var params = new URLSearchParams();
-        var st = document.querySelector('.stat-box[data-status].active');
-        var status = st ? st.dataset.status : 'all';
+        var status = statusSelect ? statusSelect.value : 'all';
         if (status !== 'all') params.set('status', status);
         if (directionSelect && directionSelect.value !== 'all') params.set('direction', directionSelect.value);
         if (searchInput && searchInput.value.trim()) params.set('search', searchInput.value.trim());
@@ -186,29 +190,45 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (newContent && contentEl) contentEl.innerHTML = newContent.innerHTML;
                 if (contentEl) contentEl.style.opacity = '1';
                 statsRow.style.opacity = '1';
+                bindStatBoxes();
             })
             .catch(function() { window.location.href = newUrl; });
     }
 
-    statBoxes.forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            statBoxes.forEach(function(b) { b.classList.remove('active'); });
-            this.classList.add('active');
-            fetchAndSwap();
-        });
-    });
-
-    if (statusSelect) statusSelect.addEventListener('change', fetchAndSwap);
-    if (directionSelect) directionSelect.addEventListener('change', fetchAndSwap);
-
-    if (searchInput) {
-        searchInput.addEventListener('input', function() {
-            clearTimeout(searchTimer);
-            searchTimer = setTimeout(fetchAndSwap, 300);
+    // Cartes de statut : rebind apres chaque swap (le innerHTML detruit les ecouteurs).
+    function bindStatBoxes() {
+        document.querySelectorAll('.stat-box[data-status]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                setActiveStatus(this.dataset.status);
+                fetchAndSwap();
+            });
         });
     }
+    bindStatBoxes();
 
-    window.addEventListener('popstate', fetchAndSwap);
+    // Selects + recherche en AJAX : handlers en phase capture pour neutraliser
+    // l'auto-submit global de main.js (initializeFilters / search-box).
+    if (form) {
+        form.addEventListener('change', function (e) {
+            if (e.target.name === 'status') setActiveStatus(e.target.value);
+            e.stopPropagation();
+            fetchAndSwap();
+        }, true);
+        form.addEventListener('input', function (e) {
+            e.stopPropagation();
+            if (e.target.name !== 'search') return;
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(fetchAndSwap, 300);
+        }, true);
+    }
+
+    window.addEventListener('popstate', function () {
+        var p = new URLSearchParams(window.location.search);
+        setActiveStatus(p.get('status') || 'all');
+        if (directionSelect) directionSelect.value = p.get('direction') || 'all';
+        if (searchInput) searchInput.value = p.get('search') || '';
+        fetchAndSwap();
+    });
 });
 </script>
 {% endblock %}

@@ -604,12 +604,19 @@ document.addEventListener('DOMContentLoaded', function() {
         var dirSelect = document.querySelector('.filters-bar select[name="dir"]');
         var workloadStatBoxes = document.querySelectorAll('.stat-box[data-workload]');
         var workloadInput = document.querySelector('.filters-bar input[name="workload"]');
+        var form = document.querySelector('.filters-bar');
         var searchTimer = null;
 
+        function setActiveWorkload(w) {
+            document.querySelectorAll('.stat-box[data-workload]').forEach(function (b) {
+                b.classList.toggle('active', (b.dataset.workload || '') === w);
+            });
+            if (workloadInput) workloadInput.value = w;
+        }
+
         function fetchAndSwap() {
-            var workload = '';
             var active = document.querySelector('.stat-box[data-workload].active');
-            if (active) workload = active.dataset.workload || '';
+            var workload = active ? (active.dataset.workload || '') : '';
             if (workloadInput) workloadInput.value = workload;
 
             var params = new URLSearchParams();
@@ -643,15 +650,21 @@ document.addEventListener('DOMContentLoaded', function() {
             workloadStatBoxes = document.querySelectorAll('.stat-box[data-workload]');
             workloadStatBoxes.forEach(function(btn) {
                 btn.addEventListener('click', function() {
-                    workloadStatBoxes.forEach(function(b) { b.classList.remove('active'); });
-                    this.classList.add('active');
+                    setActiveWorkload(this.dataset.workload || '');
                     fetchAndSwap();
                 });
             });
         }
         bindWorkloadBoxes();
 
-        if (dirSelect) dirSelect.addEventListener('change', fetchAndSwap);
+        // Le select de direction est auto-soumis par main.js (initializeFilters) :
+        // handler en phase capture pour garder l'AJAX et eviter le rechargement.
+        if (form) {
+            form.addEventListener('change', function (e) {
+                e.stopPropagation();
+                fetchAndSwap();
+            }, true);
+        }
 
         if (searchInput) {
             searchInput.addEventListener('input', function() {
@@ -660,7 +673,13 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
-        window.addEventListener('popstate', fetchAndSwap);
+        window.addEventListener('popstate', function () {
+            var p = new URLSearchParams(window.location.search);
+            setActiveWorkload(p.get('workload') || '');
+            if (dirSelect) dirSelect.value = p.get('dir') || '';
+            if (searchInput) searchInput.value = p.get('search') || '';
+            fetchAndSwap();
+        });
     }
 });
 </script>
