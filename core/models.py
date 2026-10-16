@@ -169,6 +169,20 @@ class ProjectRole(UUIDModel):
         return self.name
 
 
+# Hiérarchie des rôles système : un profil ne peut attribuer à un compte qu'un
+# rôle de rang inférieur ou égal au sien. Les rôles hors de cette table (rôles
+# personnalisés) ne sont attribuables que par un superutilisateur ou si leurs
+# permissions sont toutes détenues par l'éditeur (cf. UserProfile.can_assign_role).
+ROLE_RANK = {
+    'visiteur': 0,
+    'employe': 1,
+    'chef_projet': 2,
+    'directeur': 3,
+    'directeur_general': 4,
+    'admin': 5,
+}
+
+
 # =====================================================================
 # Profil utilisateur
 # =====================================================================
@@ -203,6 +217,42 @@ class UserProfile(UUIDModel):
     @property
     def role_slug(self):
         return self.role.slug if self.role else None
+
+    def _role_permission_ids(self, role):
+        return set(role.permissions.values_list('id', flat=True))
+
+    def can_assign_role(self, role):
+        """Puis-je attribuer ce rôle à un compte ?
+
+        Anti-escalade : le rang du rôle visé doit être ≤ au rang de mon rôle.
+        Un rôle hors hiérarchie (personnalisé) n'est accordé que si toutes ses
+        permissions sont déjà les miennes. Seul un superutilisateur peut tout
+        attribuer.
+        """
+        if role is None:
+            return True
+        if self.user.is_superuser:
+            return True
+        if self.role_id is None:
+            return False
+        editor_rank = ROLE_RANK.get(self.role_slug)
+        target_rank = ROLE_RANK.get(role.slug)
+        if editor_rank is not None and target_rank is not None:
+            return target_rank <= editor_rank
+        if editor_rank is None:
+            # Rôle éditeur personnalisé : jamais de rôle système, et un rôle
+            # personnalisé seulement si l'éditeur détient déjà ses permissions.
+            return target_rank is None and self._role_permission_ids(role) <= self._role_permission_ids(self.role)
+        # Rôle cible personnalisé : permissions ⊆ celles de l'éditeur.
+        return self._role_permission_ids(role) <= self._role_permission_ids(self.role)
+
+    def assignable_roles(self):
+        """Queryset des rôles que je peux attribuer (cf. can_assign_role)."""
+        if self.user.is_superuser:
+            return Role.objects.all().order_by('name')
+        return Role.objects.filter(
+            id__in=[r.id for r in Role.objects.prefetch_related('permissions') if self.can_assign_role(r)]
+        ).order_by('name')
 
     def get_project_membership(self, project):
         """Trouve le ProjectMember lié à cet utilisateur pour un projet donné."""

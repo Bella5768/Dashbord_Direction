@@ -38,14 +38,23 @@ class ProjectForm(forms.ModelForm):
         self.fields['direction'].empty_label = _("-- Aucune direction --")
         # manager_employee : filtrer les internes uniquement
         self.fields['manager_employee'].queryset = Employee.objects.filter(is_external=False).order_by('name')
-        # Restreindre la direction pour les non-admin/non-DG
+        # Direction verrouillée pour les non-admin/non-DG : sur celle du projet en
+        # édition (un responsable peut gérer un projet d'une autre direction sans
+        # pouvoir le déplacer), sinon sur celle du profil à la création.
         if user is not None:
             _pf_profile = getattr(user, 'profile', None)
-            if _pf_profile and not (_pf_profile.is_admin() or _pf_profile.is_directeur_general()) and _pf_profile.direction_id:
+            if _pf_profile and not (_pf_profile.is_admin() or _pf_profile.is_directeur_general()):
                 from .models import Direction
-                self.fields['direction'].queryset = Direction.objects.filter(id=_pf_profile.direction_id)
-                if not self.initial.get('direction'):
-                    self.initial['direction'] = _pf_profile.direction_id
+                locked_id = None
+                if is_edit and self.instance.direction_id:
+                    locked_id = self.instance.direction_id
+                elif _pf_profile.direction_id:
+                    locked_id = _pf_profile.direction_id
+                if locked_id:
+                    self.fields['direction'].queryset = Direction.objects.filter(id=locked_id)
+                    self.initial['direction'] = locked_id
+                    self.fields['direction'].disabled = True
+                    self.fields['direction'].help_text = _("Verrouillé sur la direction du projet.")
         self.fields['manager_employee'].required = True
         self.fields['manager_employee'].empty_label = _("-- Sélectionner un responsable --")
         self.fields['manager_employee'].label = _("Responsable du projet")
@@ -568,6 +577,16 @@ class EmployeeForm(forms.ModelForm):
             self.fields['direction'].initial = profile.direction_id
             self.fields['direction'].disabled = True
             self.fields['direction'].help_text = _("Verrouillé sur votre direction.")
+
+        # Anti-escalade : ne proposer que les rôles que l'éditeur peut accorder,
+        # en conservant le rôle déjà porté par le compte (sinon une édition
+        # anodine réinitialiserait le rôle système).
+        if profile is not None:
+            allowed_ids = list(profile.assignable_roles().values_list('id', flat=True))
+            current_role = self.fields['system_role'].initial
+            if current_role is not None and current_role.pk not in allowed_ids:
+                allowed_ids.append(current_role.pk)
+            self.fields['system_role'].queryset = Role.objects.filter(id__in=allowed_ids).order_by('name')
 
     def clean_email(self):
         email = self.cleaned_data.get('email', '').strip()

@@ -388,12 +388,23 @@ def _create_or_update_user_for_employee(request, employee, system_role):
 
     try:
         linked_profile = employee.user_profile
+    except ObjectDoesNotExist:
+        linked_profile = None
+
+    # Anti-escalade : on ne peut pas attribuer (ou modifier vers) un rôle
+    # supérieur au sien, même via la fiche employé. La règle n'est appliquée que
+    # lorsque le rôle change réellement, pour ne pas bloquer une édition où le
+    # rôle est simplement conservé.
+    editor_profile = getattr(request.user, 'profile', None)
+    if system_role is not None and (linked_profile is None or linked_profile.role_id != system_role.id):
+        if editor_profile is None or not editor_profile.can_assign_role(system_role):
+            return False, _("Vous ne pouvez pas attribuer un rôle supérieur au vôtre.")
+
+    if linked_profile is not None:
         linked_profile.role = system_role
         linked_profile.direction = employee.direction
         linked_profile.save(update_fields=['role', 'direction', 'updated_at'])
         return True, _("Le rôle système du compte lié a été mis à jour.")
-    except ObjectDoesNotExist:
-        pass
 
     username = _generate_username(employee.name)
     name_parts = employee.name.strip().split()
@@ -1402,6 +1413,8 @@ def resources(request):
         'can_view_budgets': can_view_budgets,
         'can_view_employees': can_view_employees,
         'can_manage_budgets': can_manage_budgets,
+        'can_manage_employees': _user_can_manage_employee(request.user),
+        'can_manage_users': profile.can_manage_users(),
         'can_view_all_budget_directions': can_view_all_budget_directions,
         'employees': employees,
         'employees_count': employees_count,
@@ -3437,6 +3450,7 @@ def project_detail(request, project_id):
         'is_readonly': is_readonly,
         'can_edit_project': can_edit_project,
         'can_delete_project': profile.can_delete_project(project),
+        'can_edit_project_manager': _user_can_manage_employee(request.user, project.manager_employee),
         'can_add_milestones': can_add_milestones,
         'can_add_documents': can_add_documents,
         'user_employee': user_employee,
@@ -4181,7 +4195,7 @@ def project_edit(request, project_id):
             project.save(update_fields=['manager_employee'])
 
     if request.method == 'POST':
-        form = ProjectForm(request.POST, instance=project)
+        form = ProjectForm(request.POST, instance=project, user=request.user)
         if form.is_valid():
             old_manager_id = project.manager_employee_id
             project = form.save(commit=False)
@@ -4198,7 +4212,7 @@ def project_edit(request, project_id):
             messages.success(request, _("Projet modifié avec succès."))
             return redirect('core:project_detail', project_id=project.slug)
     else:
-        form = ProjectForm(instance=project)
+        form = ProjectForm(instance=project, user=request.user)
 
     _edit_rate = float(project.rate_snapshot) if project.rate_snapshot else get_usd_gnf_rate()['rate']
     return render(request, 'core/project_form.html', {

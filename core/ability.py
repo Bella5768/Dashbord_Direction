@@ -174,11 +174,23 @@ class Ability:
         except ProjectMember.DoesNotExist:
             return False
 
+    def _is_project_responsible(self, project) -> bool:
+        """L'utilisateur est-il le responsable (manager_employee) désigné ?
+
+        Principe : le responsable d'un projet le gère, quelle que soit sa
+        direction ou son rôle système. Auparavant ce droit ne venait que de la
+        synchro « responsable ⇒ membre (rôle Responsable) » ; si l'adhésion
+        manquait, le responsable ne pouvait rien faire.
+        """
+        if project is None:
+            return False
+        return self._cond_is_project_manager(project, getattr(self.user, 'profile', None))
+
     def can_view_project(self, project) -> bool:
         return (
             self.can('read', 'Project')
             or self.can('read', 'Project', project)
-            or self._cond_is_project_manager(project, getattr(self.user, 'profile', None))
+            or self._is_project_responsible(project)
             or self._cond_is_project_member(project, getattr(self.user, 'profile', None))
         )
 
@@ -187,6 +199,7 @@ class Ability:
             self.can('update', 'Project')
             or self.can('update', 'Project', project)
             or self._project_member_perm(project, 'update', 'Project')
+            or self._is_project_responsible(project)
         )
 
     def can_add_project_milestones(self, project) -> bool:
@@ -194,6 +207,7 @@ class Ability:
             self.can('create', 'Milestone')
             or self.can('create', 'Milestone', project)
             or self._project_member_perm(project, 'create', 'Milestone')
+            or self._is_project_responsible(project)
         )
 
     def can_edit_project_milestones(self, project) -> bool:
@@ -201,6 +215,7 @@ class Ability:
             self.can('update', 'Milestone')
             or self.can('update', 'Milestone', project)
             or self._project_member_perm(project, 'update', 'Milestone')
+            or self._is_project_responsible(project)
         )
 
     def can_add_project_documents(self, project) -> bool:
@@ -208,6 +223,7 @@ class Ability:
             self.can('create', 'Document')
             or self.can('create', 'Document', project)
             or self._project_member_perm(project, 'create', 'Document')
+            or self._is_project_responsible(project)
         )
 
     def can_edit_project_documents(self, project) -> bool:
@@ -215,6 +231,7 @@ class Ability:
             self.can('update', 'Document')
             or self.can('update', 'Document', project)
             or self._project_member_perm(project, 'update', 'Document')
+            or self._is_project_responsible(project)
         )
 
     def can_add_project_needs(self, project) -> bool:
@@ -222,6 +239,7 @@ class Ability:
             self.can('create', 'Request')
             or self.can('create', 'Request', project)
             or self._project_member_perm(project, 'create', 'Request')
+            or self._is_project_responsible(project)
         )
 
     def can_add_project_comments(self, project) -> bool:
@@ -229,6 +247,7 @@ class Ability:
             self.can('create', 'Comment')
             or self.can('create', 'Comment', project)
             or self._project_member_perm(project, 'create', 'Comment')
+            or self._is_project_responsible(project)
         )
 
     def can_manage_project_members(self, project) -> bool:
@@ -236,6 +255,7 @@ class Ability:
             self.can('manage', 'ProjectMember')
             or self.can('manage', 'ProjectMember', project)
             or self._project_member_perm(project, 'manage', 'ProjectMember')
+            or self._is_project_responsible(project)
         )
 
     def is_project_readonly(self, project) -> bool:

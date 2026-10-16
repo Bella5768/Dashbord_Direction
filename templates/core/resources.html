@@ -262,17 +262,19 @@
             <i class="fa-solid fa-file-arrow-down" width="16" height="16"></i>
             {% trans 'Exporter PDF' %}
         </a>
+        {% if can_manage_employees %}
         <a href="{% url 'core:employee_create' %}" class="btn btn-primary">
             <i class="fa-solid fa-circle-plus" width="16" height="16"></i>
             {% trans 'Nouvel employé' %}
         </a>
+        {% endif %}
     </div>
 </div>
 
 <!-- Employees Grid -->
 <div id="filter-content" class="grid grid-3" style="margin-top:20px;">
     {% for employee in employees %}
-    <div class="employee-card {% if employee.workload >= 85 %}workload-high{% elif employee.workload >= 70 %}workload-medium{% else %}workload-low{% endif %}" data-href="{% url 'core:employee_edit' employee.slug|default:employee.pk %}">
+    <div class="employee-card {% if employee.workload >= 85 %}workload-high{% elif employee.workload >= 70 %}workload-medium{% else %}workload-low{% endif %}" {% if can_manage_employees %}data-href="{% url 'core:employee_edit' employee.slug|default:employee.pk %}"{% endif %}>
 
         <div class="ec-header">
             <div class="ec-avatar" style="background: {{ employee.direction.color }}; color: #fff;overflow:hidden;">{% if employee.avatar_url %}<img src="{{ employee.avatar_url }}" alt="" style="width:100%;height:100%;object-fit:cover;">{% else %}{{ employee.name|first|upper }}{% endif %}</div>
@@ -283,11 +285,12 @@
                     <span class="badge badge-secondary">{{ employee.direction.code }}</span>
                     {% if employee.id in employees_with_profile %}
                     <span class="badge badge-success" style="font-size:10px;">{% trans 'Compte actif' %}</span>
-                    {% else %}
+                    {% elif can_manage_users %}
                     <a href="{% url 'core:user_create' %}?employee_id={{ employee.id }}" class="badge badge-secondary" style="font-size:10px;text-decoration:none;" title="{% trans 'Créer un compte' %}">+ {% trans 'Compte' %}</a>
                     {% endif %}
                 </div>
             </div>
+            {% if can_manage_employees %}
             <div class="ec-actions">
                 <a href="{% url 'core:employee_edit' employee.slug|default:employee.pk %}" class="action-btn primary" title="{% trans 'Modifier' %}">
                     <i class="fa-solid fa-pencil" width="14" height="14"></i>
@@ -296,6 +299,7 @@
                     <i class="fa-solid fa-trash-can" width="14" height="14"></i>
                 </a>
             </div>
+            {% endif %}
         </div>
 
         <div>

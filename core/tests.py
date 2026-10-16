@@ -1545,3 +1545,229 @@ class ValidationCrashGuardsHttpTests(SmokeBase):
         self._login(self.admin)
         resp = self.client.get(reverse('core:project_detail', args=['zzz-pas-un-uuid']))
         self.assertEqual(resp.status_code, 404)
+
+
+class EmployeeRoleEscalationTests(SmokeBase):
+    """Un éditeur ne peut attribuer un rôle supérieur au sien (anti-escalade).
+
+    Régression : ``EmployeeForm.system_role`` proposait TOUS les rôles et
+    ``_create_or_update_user_for_employee`` les affectait sans contrôle — un
+    directeur pouvait se hisser (ou hisser un employé de sa direction) en
+    ``directeur_general`` voire ``admin``.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.dir_a = Direction.objects.create(name='Direction Esc A', code='ESA')
+        cls.emp = Employee.objects.create(
+            name='Employe Escalade', role='Developpeur', direction=cls.dir_a,
+            email='escalade@example.com',
+        )
+        cls.directeur = cls._make_user('dir_esc', cls.dir_a, 'directeur')
+        cls.dg = cls._make_user('dg_esc', cls.dir_a, 'directeur_general')
+
+    @classmethod
+    def _make_user(cls, username, direction, role_slug):
+        user = User.objects.create_user(username, password='x')
+        profile = user.profile
+        profile.role = Role.objects.get(slug=role_slug)
+        profile.direction = direction
+        profile.save()
+        return user
+
+    def _post_data(self, role):
+        return {
+            'name': self.emp.name,
+            'direction': self.dir_a.pk,
+            'role': 'Developpeur',
+            'email': self.emp.email,
+            'workload': '50',
+            'system_role': role.pk if role is not None else '',
+        }
+
+    def test_can_assign_role_respecte_la_hierarchie(self):
+        prof = self.directeur.profile
+        self.assertTrue(prof.can_assign_role(Role.objects.get(slug='employe')))
+        self.assertTrue(prof.can_assign_role(Role.objects.get(slug='chef_projet')))
+        self.assertTrue(prof.can_assign_role(Role.objects.get(slug='directeur')))
+        self.assertFalse(prof.can_assign_role(Role.objects.get(slug='directeur_general')))
+        self.assertFalse(prof.can_assign_role(Role.objects.get(slug='admin')))
+        self.assertTrue(self.admin.profile.can_assign_role(Role.objects.get(slug='admin')))
+
+    def test_formulaire_exclut_les_roles_superieurs(self):
+        from .forms_project import EmployeeForm
+        form = EmployeeForm(user=self.directeur)
+        slugs = set(form.fields['system_role'].queryset.values_list('slug', flat=True))
+        self.assertNotIn('admin', slugs)
+        self.assertNotIn('directeur_general', slugs)
+        self.assertIn('employe', slugs)
+
+    def test_employee_edit_refuse_role_superieur(self):
+        self._login(self.directeur)
+        resp = self.client.post(
+            reverse('core:employee_edit', args=[self.emp.slug]),
+            self._post_data(Role.objects.get(slug='admin')),
+        )
+        self.assertLess(resp.status_code, 500)
+        self.assertFalse(UserProfile.objects.filter(employee=self.emp).exists())
+
+    def test_employee_edit_attribue_role_inferieur(self):
+        self._login(self.directeur)
+        resp = self.client.post(
+            reverse('core:employee_edit', args=[self.emp.slug]),
+            self._post_data(Role.objects.get(slug='employe')),
+        )
+        self.assertEqual(resp.status_code, 302)
+        linked = UserProfile.objects.get(employee=self.emp)
+        self.assertEqual(linked.role.slug, 'employe')
+
+    def test_helper_refuse_role_superieur(self):
+        from types import SimpleNamespace
+        from .views import _create_or_update_user_for_employee
+        request = SimpleNamespace(user=self.directeur)
+        ok, _msg = _create_or_update_user_for_employee(
+            request, self.emp, Role.objects.get(slug='directeur_general')
+        )
+        self.assertFalse(ok)
+        self.assertFalse(UserProfile.objects.filter(employee=self.emp).exists())
+
+
+class ResourcesEmployeeActionsGatingTests(SmokeBase):
+    """Les boutons d'action RH ne s'affichent que pour qui a le droit de gérer."""
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.dir_a = Direction.objects.create(name='Direction RH A', code='RHA')
+        cls.emp = Employee.objects.create(
+            name='Employe RH', role='Analyste', direction=cls.dir_a,
+            email='rh@example.com',
+        )
+        cls.chef = cls._make_user('chef_rh', cls.dir_a, 'chef_projet')
+        cls.dg = cls._make_user('dg_rh', cls.dir_a, 'directeur_general')
+
+    @classmethod
+    def _make_user(cls, username, direction, role_slug):
+        user = User.objects.create_user(username, password='x')
+        profile = user.profile
+        profile.role = Role.objects.get(slug=role_slug)
+        profile.direction = direction
+        profile.save()
+        return user
+
+    def _rh_tab(self, user):
+        self._login(user)
+        return self._get_ok(reverse('core:resources') + '?tab=rh')
+
+    def test_chef_projet_ne_voit_pas_les_actions(self):
+        resp = self._rh_tab(self.chef)
+        self.assertNotContains(resp, reverse('core:employee_create'))
+        self.assertNotContains(resp, reverse('core:employee_edit', args=[self.emp.slug]))
+        self.assertNotContains(resp, reverse('core:employee_delete', args=[self.emp.slug]))
+        self.assertNotContains(resp, reverse('core:user_create'))
+
+    def test_directeur_general_voit_les_actions(self):
+        resp = self._rh_tab(self.dg)
+        self.assertContains(resp, reverse('core:employee_create'))
+        self.assertContains(resp, reverse('core:employee_edit', args=[self.emp.slug]))
+        self.assertContains(resp, reverse('core:employee_delete', args=[self.emp.slug]))
+        self.assertContains(resp, reverse('core:user_create'))
+
+
+class ProjectResponsableManageTests(SmokeBase):
+    """Le responsable (manager_employee) gère son projet, même d'une autre direction.
+
+    Régression : le droit ne venait que de la synchro « responsable ⇒ membre
+    (rôle Responsable) ». Sans cette adhésion, un directeur responsable d'un
+    projet d'une autre direction ne pouvait rien y faire.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.dir_a = Direction.objects.create(name='Direction Resp A', code='RSA')
+        cls.dir_b = Direction.objects.create(name='Direction Resp B', code='RSB')
+
+        today = timezone.now().date()
+        cls.emp_x = Employee.objects.create(
+            name='Resp X', role='Chef', direction=cls.dir_a,
+        )
+        cls.emp_y = Employee.objects.create(
+            name='Resp Y', role='Chef', direction=cls.dir_a,
+        )
+        cls.proj_b = Project.objects.create(
+            name='Projet B de X', status='en_cours',
+            start_date=today, end_date=today + timedelta(days=10),
+            manager='Resp X', direction=cls.dir_b, manager_employee=cls.emp_x,
+        )
+        cls.proj_b2 = Project.objects.create(
+            name='Projet B2 de Y', status='en_cours',
+            start_date=today, end_date=today + timedelta(days=10),
+            manager='Resp Y', direction=cls.dir_b, manager_employee=cls.emp_y,
+        )
+
+        cls.directeur = cls._make_user('dir_resp', cls.dir_a, 'directeur', cls.emp_x)
+
+    @classmethod
+    def _make_user(cls, username, direction, role_slug, employee=None):
+        user = User.objects.create_user(username, password='x')
+        profile = user.profile
+        profile.role = Role.objects.get(slug=role_slug)
+        profile.direction = direction
+        if employee is not None:
+            profile.employee = employee
+        profile.save()
+        return user
+
+    def _post_data(self, direction):
+        today = timezone.now().date()
+        return {
+            'name': self.proj_b.name,
+            'direction': direction.pk,
+            'status': 'en_cours',
+            'priority': 'moyenne',
+            'currency': 'GNF',
+            'start_date': today.isoformat(),
+            'end_date': (today + timedelta(days=10)).isoformat(),
+            'manager_employee': self.emp_x.pk,
+            'budget': '0',
+            'budget_consumed': '0',
+        }
+
+    def test_responsable_dune_autre_direction_gere_son_projet(self):
+        prof = self.directeur.profile
+        self.assertTrue(prof.can_edit_project(self.proj_b))
+        self.assertTrue(prof.can_manage_project_members(self.proj_b))
+        self.assertTrue(prof.can_add_project_milestones(self.proj_b))
+
+    def test_non_responsable_ne_gere_pas_le_projet(self):
+        prof = self.directeur.profile
+        self.assertFalse(prof.can_edit_project(self.proj_b2))
+        self._login(self.directeur)
+        resp = self.client.get(reverse('core:project_edit', args=[self.proj_b2.slug]))
+        self.assertEqual(resp.status_code, 302)
+
+    def test_page_edition_accessible_au_responsable(self):
+        self._login(self.directeur)
+        resp = self.client.get(reverse('core:project_edit', args=[self.proj_b.slug]))
+        self.assertEqual(resp.status_code, 200)
+
+    def test_direction_verrouillee_pour_un_non_global(self):
+        from .forms_project import ProjectForm
+        form = ProjectForm(instance=self.proj_b, user=self.directeur)
+        self.assertTrue(form.fields['direction'].disabled)
+        self.assertEqual(form.initial['direction'], self.dir_b.pk)
+
+    def test_responsable_ne_peut_pas_deplacer_le_projet(self):
+        self._login(self.directeur)
+        resp = self.client.post(
+            reverse('core:project_edit', args=[self.proj_b.slug]),
+            self._post_data(self.dir_a),
+        )
+        self.assertEqual(resp.status_code, 302)
+        self.proj_b.refresh_from_db()
+        self.assertEqual(self.proj_b.direction_id, self.dir_b.pk)
