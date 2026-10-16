@@ -353,6 +353,20 @@ class UserProfile(UUIDModel):
     def can_view_documents(self):
         return self._has_permission('read', 'Document') or self._has_permission('manage', 'Document')
 
+    def can_manage_documents(self):
+        """Peut créer des documents.
+
+        Vrai dès qu'une règle ``manage``/``approve`` sur ``Document`` existe,
+        conditionnelle ou non : la portée exacte (sa direction) est vérifiée par
+        instance à la modification. Un test sans instance (``can``) échouerait
+        sur ``manage Document same_direction`` et masquerait la création.
+        """
+        return self._has_permission('manage', 'Document') or self._has_permission('approve', 'Document')
+
+    def can_act_on_document(self, doc):
+        """Peut modifier / signer / supprimer CE document (RBAC sur l'instance)."""
+        return self.can('manage', 'Document', doc) or self.can('approve', 'Document', doc)
+
     # Demandes
     def can_view_requests(self):
         """Peut consulter le module Demandes.

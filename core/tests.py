@@ -39,6 +39,7 @@ from .exchange import CACHE_KEY, DEFAULT_USD_GNF_RATE
 from .models import (
     Budget,
     Direction,
+    Document,
     Employee,
     Event,
     Milestone,
@@ -816,6 +817,122 @@ class DirecteurProjectDeleteTests(SmokeBase):
         self.assertContains(
             resp, reverse('core:project_delete', args=[self.proj_a.slug])
         )
+
+
+class DirecteurDocumentScopeTests(SmokeBase):
+    """Le directeur ne gère que les documents de sa direction.
+
+    Régression : les permissions ``read``/``manage``/``approve Document`` du
+    directeur étaient globales et les vues d'écriture testaient
+    ``can_approve_documents()`` sans instance — la portée ``same_direction``
+    n'aurait jamais pu s'appliquer. Les documents portent une ``direction``.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.dir_a = Direction.objects.create(name='Direction Doc A', code='DCA')
+        cls.dir_b = Direction.objects.create(name='Direction Doc B', code='DCB')
+
+        today = timezone.now().date()
+        cls.doc_a = Document.objects.create(
+            title='Document Alpha', doc_type='note', direction=cls.dir_a,
+            created_by='Auteur A', due_date=today + timedelta(days=10),
+        )
+        cls.doc_b = Document.objects.create(
+            title='Document Beta', doc_type='note', direction=cls.dir_b,
+            created_by='Auteur B', due_date=today + timedelta(days=10),
+        )
+
+        cls.directeur_a = cls._make_user('dir_doc_a', cls.dir_a, 'directeur')
+        cls.chef_a = cls._make_user('chef_doc_a', cls.dir_a, 'chef_projet')
+
+    @classmethod
+    def _make_user(cls, username, direction, role_slug):
+        user = User.objects.create_user(username, password='x')
+        profile = user.profile
+        profile.role = Role.objects.get(slug=role_slug)
+        profile.direction = direction
+        profile.save()
+        return user
+
+    def _doc_payload(self, direction):
+        return {
+            'title': 'Document nouveau',
+            'doc_type': 'note',
+            'status': 'a_valider',
+            'priority': 'moyenne',
+            'direction': direction.pk,
+            'created_by': 'Auteur',
+            'due_date': (timezone.now().date() + timedelta(days=10)).isoformat(),
+        }
+
+    def test_permission_document_du_directeur_est_bornee(self):
+        prof = self.directeur_a.profile
+        self.assertEqual(prof.read_scope('Document'), 'direction')
+        self.assertTrue(prof.can_manage_documents())
+        self.assertTrue(prof.can_act_on_document(self.doc_a))
+        self.assertFalse(prof.can_act_on_document(self.doc_b))
+
+    def test_liste_documents_ne_montre_que_sa_direction(self):
+        self._login(self.directeur_a)
+        resp = self._get_ok(reverse('core:documents'))
+        self.assertContains(resp, self.doc_a.title)
+        self.assertNotContains(resp, self.doc_b.title)
+
+    def test_directeur_modifie_document_de_sa_direction(self):
+        self._login(self.directeur_a)
+        resp = self.client.get(reverse('core:document_edit', args=[self.doc_a.slug]))
+        self.assertEqual(resp.status_code, 200)
+
+    def test_directeur_ne_modifie_pas_document_autre_direction(self):
+        self._login(self.directeur_a)
+        resp = self.client.get(reverse('core:document_edit', args=[self.doc_b.slug]))
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(resp.url, reverse('core:documents'))
+
+    def test_directeur_ne_supprime_pas_document_autre_direction(self):
+        self._login(self.directeur_a)
+        resp = self.client.post(reverse('core:document_delete', args=[self.doc_b.slug]))
+        self.assertEqual(resp.status_code, 302)
+        self.assertTrue(Document.objects.filter(pk=self.doc_b.pk).exists())
+
+    def test_directeur_supprime_document_de_sa_direction(self):
+        self._login(self.directeur_a)
+        resp = self.client.post(reverse('core:document_delete', args=[self.doc_a.slug]))
+        self.assertEqual(resp.status_code, 302)
+        self.assertFalse(Document.objects.filter(pk=self.doc_a.pk).exists())
+
+    def test_creation_bornee_a_la_direction_du_directeur(self):
+        self._login(self.directeur_a)
+        # Une autre direction est refusée : le document serait invisible.
+        resp = self.client.post(
+            reverse('core:document_create'), self._doc_payload(self.dir_b)
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertFalse(Document.objects.filter(title='Document nouveau').exists())
+        # Sa direction est acceptée.
+        resp = self.client.post(
+            reverse('core:document_create'), self._doc_payload(self.dir_a)
+        )
+        self.assertEqual(resp.status_code, 302)
+        self.assertTrue(Document.objects.filter(title='Document nouveau').exists())
+
+    def test_chef_projet_ne_cree_pas_de_document(self):
+        self._login(self.chef_a)
+        self.assertFalse(self.chef_a.profile.can_manage_documents())
+        resp = self.client.post(
+            reverse('core:document_create'), self._doc_payload(self.dir_a)
+        )
+        self.assertEqual(resp.status_code, 302)
+        self.assertFalse(Document.objects.filter(title='Document nouveau').exists())
+
+    def test_admin_gere_documents_de_toutes_directions(self):
+        self._login(self.admin)
+        self.assertTrue(self.admin.profile.can_act_on_document(self.doc_b))
+        resp = self.client.get(reverse('core:document_edit', args=[self.doc_b.slug]))
+        self.assertEqual(resp.status_code, 200)
 
 
 class BudgetRbacScopeTests(SmokeBase):

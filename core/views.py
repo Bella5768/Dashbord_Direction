@@ -5585,19 +5585,20 @@ def project_member_delete(request, member_id):
 def document_create(request):
     """Créer un nouveau document"""
     from .forms_project import DocumentForm
-    
-    if not request.user.profile.can_approve_documents():
+
+    profile = request.user.profile
+    if not profile.can_manage_documents():
         messages.error(request, _("Vous n'avez pas les permissions."))
         return redirect('core:documents')
-    
+
     if request.method == 'POST':
-        form = DocumentForm(request.POST, request.FILES)
+        form = DocumentForm(request.POST, request.FILES, profile=profile)
         if form.is_valid():
             form.save()
             messages.success(request, _("Document créé avec succès."))
             return redirect('core:documents')
     else:
-        form = DocumentForm()
+        form = DocumentForm(profile=profile)
     
     return render(request, 'core/document_form.html', {'form': form, 'title': 'Nouveau document'})
 
@@ -5606,21 +5607,21 @@ def document_create(request):
 def document_edit(request, doc_id):
     """Modifier un document"""
     from .forms_project import DocumentForm
-    
-    if not request.user.profile.can_approve_documents():
+
+    doc = get_sluggable_or_404(Document, doc_id)
+    profile = request.user.profile
+    if not profile.can_act_on_document(doc):
         messages.error(request, _("Vous n'avez pas les permissions."))
         return redirect('core:documents')
-    
-    doc = get_sluggable_or_404(Document, doc_id)
-    
+
     if request.method == 'POST':
-        form = DocumentForm(request.POST, request.FILES, instance=doc)
+        form = DocumentForm(request.POST, request.FILES, instance=doc, profile=profile)
         if form.is_valid():
             form.save()
             messages.success(request, _("Document modifié avec succès."))
             return redirect('core:documents')
     else:
-        form = DocumentForm(instance=doc)
+        form = DocumentForm(instance=doc, profile=profile)
     
     return render(request, 'core/document_form.html', {'form': form, 'document': doc, 'title': f'Modifier {doc.title}'})
 
@@ -5628,12 +5629,11 @@ def document_edit(request, doc_id):
 @login_required
 def document_delete(request, doc_id):
     """Supprimer un document"""
-    if not request.user.profile.can_approve_documents():
+    doc = get_sluggable_or_404(Document, doc_id)
+    if not request.user.profile.can_act_on_document(doc):
         messages.error(request, _("Vous n'avez pas les permissions."))
         return redirect('core:documents')
-    
-    doc = get_sluggable_or_404(Document, doc_id)
-    
+
     if request.method == 'POST':
         doc.delete()
         messages.success(request, _("Document supprimé."))
@@ -5646,11 +5646,11 @@ def document_delete(request, doc_id):
 @require_POST
 def document_sign(request, doc_id):
     """Signer un document"""
-    if not request.user.profile.can_approve_documents():
+    doc = get_sluggable_or_404(Document, doc_id)
+    if not request.user.profile.can_act_on_document(doc):
         messages.error(request, _("Vous n'avez pas les permissions."))
         return redirect('core:documents')
-    
-    doc = get_sluggable_or_404(Document, doc_id)
+
     doc.status = 'signe'
     doc.signed_at = timezone.now().date()
     doc.save()
@@ -5662,11 +5662,11 @@ def document_sign(request, doc_id):
 @require_POST
 def document_validate(request, doc_id):
     """Valider un document"""
-    if not request.user.profile.can_approve_documents():
+    doc = get_sluggable_or_404(Document, doc_id)
+    if not request.user.profile.can_act_on_document(doc):
         messages.error(request, _("Vous n'avez pas les permissions."))
         return redirect('core:documents')
-    
-    doc = get_sluggable_or_404(Document, doc_id)
+
     doc.status = 'a_signer'
     doc.save()
     messages.success(request, _("Document '{title}' validé, en attente de signature.").format(title=doc.title))

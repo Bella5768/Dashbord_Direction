@@ -130,11 +130,19 @@ class DocumentForm(forms.ModelForm):
             'file': forms.HiddenInput(),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, profile=None, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
             if field_name != 'file':
                 field.widget.attrs['class'] = 'form-control'
+        # Portée « sa direction » : ne proposer que la direction du profil, sinon
+        # le document créé sortirait du périmètre visible du rédacteur.
+        if profile is not None and profile.read_scope('Document') == 'direction':
+            if profile.direction_id:
+                self.fields['direction'].queryset = Direction.objects.filter(pk=profile.direction_id)
+                self.fields['direction'].initial = profile.direction_id
+            else:
+                self.fields['direction'].queryset = Direction.objects.none()
 
     def clean(self):
         cleaned = super().clean()
