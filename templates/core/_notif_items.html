@@ -1,0 +1,15 @@
+{% load i18n %}
+{% for n in notifications %}
+<div data-notif-id="{{ n.id }}" data-href="{{ n.link }}"
+     class="notif-item notif-page-item{% if not n.is_read %} unread{% endif %}"
+     role="button" tabindex="0">
+  <div class="notif-item-icon tone-{{ n.tone }}"><i class="fa-solid {{ n.icon }}"></i></div>
+  <div class="notif-item-body">
+    <p class="notif-item-title">{{ n.title }}</p>
+    {% if n.message %}<p class="notif-item-msg">{{ n.message }}</p>{% endif %}
+    <span class="notif-item-time">{{ n.created_at|date:"d/m/Y à H:i" }}</span>
+  </div>
+  {% if not n.is_read %}<span class="notif-unread-dot" aria-hidden="true"></span>{% endif %}
+  {% if n.link %}<i class="fa-solid fa-chevron-right notif-page-go" aria-hidden="true"></i>{% endif %}
+</div>
+{% endfor %}

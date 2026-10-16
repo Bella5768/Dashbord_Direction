@@ -20,25 +20,20 @@
   </div>
   <div class="card-content" style="padding:0;">
     {% if notifications %}
-    <div id="notif-page-list">
-      {% for n in notifications %}
-      <div data-notif-id="{{ n.id }}" data-href="{{ n.link }}"
-           class="notif-item notif-page-item{% if not n.is_read %} unread{% endif %}"
-           role="button" tabindex="0">
-        <div class="notif-item-icon tone-{{ n.tone }}"><i class="fa-solid {{ n.icon }}"></i></div>
-        <div class="notif-item-body">
-          <p class="notif-item-title">{{ n.title }}</p>
-          {% if n.message %}<p class="notif-item-msg">{{ n.message }}</p>{% endif %}
-          <span class="notif-item-time">{{ n.created_at|date:"d/m/Y à H:i" }}</span>
-        </div>
-        {% if not n.is_read %}<span class="notif-unread-dot" aria-hidden="true"></span>{% endif %}
-        {% if n.link %}<i class="fa-solid fa-chevron-right notif-page-go" aria-hidden="true"></i>{% endif %}
-      </div>
-      {% endfor %}
+    <div id="notif-page-list" data-next-page="{% if page_obj.has_next %}{{ page_obj.next_page_number }}{% endif %}">
+      {% include 'core/_notif_items.html' %}
     </div>
 
+    <div id="notif-page-loader" class="notif-page-loader" hidden>
+      <span class="notif-spinner" aria-hidden="true"></span>{% trans "Chargement…" %}
+    </div>
+    <div id="notif-page-end" class="notif-page-end" hidden>
+      <i class="fa-solid fa-circle-check" aria-hidden="true"></i>{% trans "Vous avez tout vu." %}
+    </div>
+    <div id="notif-scroll-sentinel" aria-hidden="true"></div>
+
     {% if page_obj.paginator.num_pages > 1 %}
-    <div class="notif-page-pager">
+    <div class="notif-page-pager" id="notif-page-pager">
       {% if page_obj.has_previous %}
       <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-outline btn-sm">← {% trans "Plus récentes" %}</a>
       {% else %}<span class="notif-page-pager-spacer"></span>{% endif %}
@@ -65,6 +60,7 @@
   var URLS = {
     readAll: '{% url "core:notifications_mark_all_read" %}',
     readOne: '{% url "core:notification_mark_read" notif_id="00000000-0000-0000-0000-000000000000" %}',
+    feed:    '{% url "core:notifications_feed" %}',
     placeholder: '00000000-0000-0000-0000-000000000000',
   };
   var CSRF = '{{ csrf_token }}';
@@ -116,6 +112,47 @@
       item.click();
     });
   }
+
+  /* ── Scroll infini (repli : pagination si indisponible) ── */
+  var sentinel = document.getElementById('notif-scroll-sentinel');
+  var loader   = document.getElementById('notif-page-loader');
+  var endMsg   = document.getElementById('notif-page-end');
+  var pager    = document.getElementById('notif-page-pager');
+  var nextPage = list ? parseInt(list.dataset.nextPage || '', 10) : NaN;
+  var loading  = false;
+  var observer = null;
+
+  function showPager() { if (pager) pager.hidden = false; }
+
+  if (!list || isNaN(nextPage) || !('IntersectionObserver' in window) || !sentinel) {
+    showPager();
+    return;
+  }
+
+  if (pager) pager.hidden = true;
+
+  function loadMore() {
+    if (loading || !nextPage) return;
+    loading = true;
+    if (loader) loader.hidden = false;
+    fetch(URLS.feed + '?page=' + nextPage, {headers: {'X-Requested-With': 'XMLHttpRequest'}})
+      .then(function(r){ if (!r.ok) throw new Error('feed'); return r.json(); })
+      .then(function(d){
+        list.insertAdjacentHTML('beforeend', d.html);
+        nextPage = d.has_next ? d.next_page : null;
+        if (!nextPage) {
+          if (endMsg) endMsg.hidden = false;
+          if (observer) observer.disconnect();
+        }
+      })
+      .catch(function(){ showPager(); if (observer) observer.disconnect(); })
+      .then(function(){ loading = false; if (loader) loader.hidden = true; });
+  }
+
+  observer = new IntersectionObserver(function(entries){
+    if (entries.some(function(e){ return e.isIntersecting; })) loadMore();
+  }, {rootMargin: '300px'});
+  observer.observe(sentinel);
 })();
 </script>
 {% endblock %}

@@ -111,7 +111,7 @@ MAIN_URLS = [
     'calendar', 'documents', 'reports', 'partners', 'users_list',
     'roles_list', 'project_roles_list', 'directions_list', 'leave_list',
     'my_tasks', 'profile', 'password_change', 'password_reset_info',
-    'notifications_list', 'notifications_count', 'notifications_recent',
+    'notifications_list', 'notifications_count', 'notifications_recent', 'notifications_feed',
     'project_create', 'project_import', 'event_create', 'document_create',
     'employee_create', 'budget_create', 'request_create', 'partner_create',
     'user_create', 'request_new_activation', 'role_create',
@@ -446,6 +446,36 @@ class NotificationCenterTests(SmokeBase):
         self.assertEqual(
             Notification.objects.filter(receiver=self.employe_user, is_read=False).count(), 60
         )
+
+    def test_feed_scroll_infini(self):
+        for i in range(60):
+            Notification.objects.create(
+                receiver=self.employe_user, notif_type='commentaire', title=f'n{i}'
+            )
+        self._login(self.employe_user)
+
+        data = self.client.get(reverse('core:notifications_feed'), {'page': 1}).json()
+        self.assertTrue(data['has_next'])
+        self.assertEqual(data['next_page'], 2)
+        self.assertEqual(data['html'].count('data-notif-id='), 50)
+
+        data2 = self.client.get(reverse('core:notifications_feed'), {'page': 2}).json()
+        self.assertFalse(data2['has_next'])
+        self.assertIsNone(data2['next_page'])
+        self.assertEqual(data2['html'].count('data-notif-id='), 10)
+
+    def test_feed_borne_au_destinataire(self):
+        Notification.objects.create(receiver=self.admin, notif_type='commentaire', title='admin-only')
+        Notification.objects.create(receiver=self.employe_user, notif_type='commentaire', title='mine')
+        self._login(self.employe_user)
+        data = self.client.get(reverse('core:notifications_feed')).json()
+        self.assertEqual(data['html'].count('data-notif-id='), 1)
+        self.assertIn('mine', data['html'])
+        self.assertNotIn('admin-only', data['html'])
+
+    def test_feed_requiert_connexion(self):
+        resp = self.client.get(reverse('core:notifications_feed'))
+        self.assertIn(resp.status_code, (301, 302))
 
 
 class EmailLanguageTests(TestCase):

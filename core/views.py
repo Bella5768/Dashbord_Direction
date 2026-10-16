@@ -1016,6 +1016,21 @@ def notifications_recent(request):
 
 
 @login_required
+def notifications_feed(request):
+    """Fragment HTML d'une page de notifications (scroll infini, JSON)."""
+    from django.core.paginator import Paginator
+    from django.http import JsonResponse
+    from django.template.loader import render_to_string
+    qs = request.user.notifications_received.all()
+    page = Paginator(qs, 50).get_page(request.GET.get('page'))
+    return JsonResponse({
+        'html': render_to_string('core/_notif_items.html', {'notifications': page.object_list}),
+        'has_next': page.has_next(),
+        'next_page': page.next_page_number() if page.has_next() else None,
+    })
+
+
+@login_required
 def notification_mark_read(request, notif_id):
     """Marquer une notification comme lue (POST)."""
     from django.http import JsonResponse

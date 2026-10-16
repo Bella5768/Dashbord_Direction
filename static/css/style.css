@@ -2774,6 +2774,39 @@ a.calendar-event-pill:hover { opacity: .82; filter: brightness(.95); }
     color: var(--gray-500);
     white-space: nowrap;
 }
+.notif-page-loader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    padding: 18px;
+    font-size: 12px;
+    color: var(--gray-500);
+    border-top: 1px solid var(--gray-100);
+}
+.notif-page-loader[hidden] { display: none; }
+.notif-spinner {
+    width: 15px;
+    height: 15px;
+    border: 2px solid var(--gray-200);
+    border-top-color: var(--primary-500);
+    border-radius: 50%;
+    animation: notifSpin 0.7s linear infinite;
+}
+@keyframes notifSpin { to { transform: rotate(360deg); } }
+.notif-page-end {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 18px;
+    font-size: 12px;
+    color: var(--gray-400);
+    border-top: 1px solid var(--gray-100);
+}
+.notif-page-end[hidden] { display: none; }
+.notif-page-end i { color: var(--green-500); }
+#notif-scroll-sentinel { height: 1px; }
 
 /* ── Icônes : couleur distincte du texte adjacent ───────────────────────────
    Principe : les icônes de métadonnées, statut et alerte ont leur propre
