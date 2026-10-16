@@ -82,12 +82,14 @@
                     </div>
                     {% if form.workload.errors %}<p class="form-error">{{ form.workload.errors.0 }}</p>{% endif %}
                 </div>
+                {% if form.system_role %}
                 <div class="form-group">
                     <label class="form-label" for="{{ form.system_role.id_for_label }}">{{ form.system_role.label }}</label>
                     {{ form.system_role }}
                     {% if form.system_role.errors %}<p class="form-error">{{ form.system_role.errors.0 }}</p>{% endif %}
                     <span class="form-help">{% trans "Sélectionnez un rôle pour créer automatiquement un compte utilisateur." %}</span>
                 </div>
+                {% endif %}
             </div>
 
             <div class="form-group">

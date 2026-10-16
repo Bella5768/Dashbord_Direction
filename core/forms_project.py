@@ -578,10 +578,15 @@ class EmployeeForm(forms.ModelForm):
             self.fields['direction'].disabled = True
             self.fields['direction'].help_text = _("Verrouillé sur votre direction.")
 
-        # Anti-escalade : ne proposer que les rôles que l'éditeur peut accorder,
-        # en conservant le rôle déjà porté par le compte (sinon une édition
-        # anodine réinitialiserait le rôle système).
-        if profile is not None:
+        # Le compte utilisateur lié (champ « rôle système ») relève de la gestion
+        # des utilisateurs : réservé aux profils qui détiennent ce droit. Sans
+        # lui, le champ disparaît et aucun compte n'est créé ni modifié.
+        if not (profile and profile.has_manage_users_permission()):
+            self.fields.pop('system_role', None)
+        else:
+            # Anti-escalade : ne proposer que les rôles que l'éditeur peut
+            # accorder, en conservant le rôle déjà porté (sinon une édition
+            # anodine le réinitialiserait).
             allowed_ids = list(profile.assignable_roles().values_list('id', flat=True))
             current_role = self.fields['system_role'].initial
             if current_role is not None and current_role.pk not in allowed_ids:

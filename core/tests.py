@@ -1596,25 +1596,30 @@ class EmployeeRoleEscalationTests(SmokeBase):
         self.assertFalse(prof.can_assign_role(Role.objects.get(slug='admin')))
         self.assertTrue(self.admin.profile.can_assign_role(Role.objects.get(slug='admin')))
 
-    def test_formulaire_exclut_les_roles_superieurs(self):
+    def test_champ_role_systeme_reserve_aux_gestionnaires(self):
         from .forms_project import EmployeeForm
-        form = EmployeeForm(user=self.directeur)
+        self.assertNotIn('system_role', EmployeeForm(user=self.directeur).fields)
+        self.assertIn('system_role', EmployeeForm(user=self.dg).fields)
+
+    def test_formulaire_gestionnaire_exclut_les_roles_superieurs(self):
+        from .forms_project import EmployeeForm
+        form = EmployeeForm(user=self.dg)
         slugs = set(form.fields['system_role'].queryset.values_list('slug', flat=True))
         self.assertNotIn('admin', slugs)
-        self.assertNotIn('directeur_general', slugs)
         self.assertIn('employe', slugs)
+        self.assertIn('directeur', slugs)
 
-    def test_employee_edit_refuse_role_superieur(self):
+    def test_directeur_ne_cree_pas_de_compte(self):
         self._login(self.directeur)
         resp = self.client.post(
             reverse('core:employee_edit', args=[self.emp.slug]),
-            self._post_data(Role.objects.get(slug='admin')),
+            self._post_data(Role.objects.get(slug='employe')),
         )
-        self.assertLess(resp.status_code, 500)
+        self.assertEqual(resp.status_code, 302)
         self.assertFalse(UserProfile.objects.filter(employee=self.emp).exists())
 
-    def test_employee_edit_attribue_role_inferieur(self):
-        self._login(self.directeur)
+    def test_gestionnaire_cree_un_compte(self):
+        self._login(self.dg)
         resp = self.client.post(
             reverse('core:employee_edit', args=[self.emp.slug]),
             self._post_data(Role.objects.get(slug='employe')),
@@ -1623,12 +1628,21 @@ class EmployeeRoleEscalationTests(SmokeBase):
         linked = UserProfile.objects.get(employee=self.emp)
         self.assertEqual(linked.role.slug, 'employe')
 
+    def test_gestionnaire_refuse_role_superieur(self):
+        self._login(self.dg)
+        resp = self.client.post(
+            reverse('core:employee_edit', args=[self.emp.slug]),
+            self._post_data(Role.objects.get(slug='admin')),
+        )
+        self.assertLess(resp.status_code, 500)
+        self.assertFalse(UserProfile.objects.filter(employee=self.emp).exists())
+
     def test_helper_refuse_role_superieur(self):
         from types import SimpleNamespace
         from .views import _create_or_update_user_for_employee
-        request = SimpleNamespace(user=self.directeur)
+        request = SimpleNamespace(user=self.dg)
         ok, _msg = _create_or_update_user_for_employee(
-            request, self.emp, Role.objects.get(slug='directeur_general')
+            request, self.emp, Role.objects.get(slug='admin')
         )
         self.assertFalse(ok)
         self.assertFalse(UserProfile.objects.filter(employee=self.emp).exists())
